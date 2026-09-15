@@ -36,6 +36,8 @@ overrides:
   tar@<=7.5.20: '>=7.5.21'
   brace-expansion@<=5.0.7: '>=5.0.8'
   uuid@<11.1.1: '>=11.1.1'
+  '@humanfs/node': '>=0.16.8'
+  joi: '>=18.2.5'
 
 patchedDependencies:
   plist@3.1.0:
@@ -57,7 +59,7 @@ importers:
         version: 8.1.0(@capacitor/core@8.5.2)
       '@hookform/resolvers':
         specifier: ^5.8.0
-        version: 5.9.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(joi@18.2.3)(react-hook-form@7.88.0(react@19.3.0))(zod@4.6.5)
+        version: 5.9.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(joi@18.2.9)(react-hook-form@7.88.0(react@19.3.0))(zod@4.6.5)
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.18
         version: 1.1.23(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -690,7 +692,7 @@ packages:
       fluentvalidation-ts: ^3.0.0
       fp-ts: ^2.7.0
       io-ts: ^2.0.0
-      joi: ^17.0.0 || ^18.0.0
+      joi: '>=18.2.5'
       nope-validator: '>=0.12.0'
       react-hook-form: ^7.55.0
       superstruct: '>=0.12.0'
@@ -749,13 +751,17 @@ packages:
       zod:
         optional: true
 
-  '@humanfs/core@0.19.1':
-    resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
-    engines: {node: '>=18.18.0'}
+  '@humanfs/core@0.20.0':
+    resolution: {integrity: sha512-Orgc4b+pAZ2xUypBhpKoV8n8BFEXYDVPACi8FAthjWuL4J5mg00I5CmhbQu93Zrmchbu6Icy7nST3rZjqh5eUA==}
+    engines: {node: '>=24.0.0'}
 
-  '@humanfs/node@0.16.7':
-    resolution: {integrity: sha512-/zUx+yOsIrG4Y43Eh2peDeKCxlRt/gET6aHfaKpuq267qXdYDFViVHfMaLyygZOnl0kGWxFIgsBy8QFuTLUXEQ==}
-    engines: {node: '>=18.18.0'}
+  '@humanfs/node@0.17.0':
+    resolution: {integrity: sha512-XFwVlKpp0UO2cAr+Jz+kIpZX0YSNU08XJucvFJeQxMA+IE8ySUAN5CE3j9bIUTaJs/ICka2bjn8fHzXKe3VF4Q==}
+    engines: {node: '>=24.0.0'}
+
+  '@humanfs/types@0.16.0':
+    resolution: {integrity: sha512-tqHbCVTrg67GX3oOFPwSv+lpjyEX7B6kCr1he9EB8w9fy5LSs5SFBpqPUSYoZGtbg6O/+NVVJVlVKwEIP4YbWw==}
+    engines: {node: '>=24.0.0'}
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -3001,8 +3007,8 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  joi@18.2.3:
-    resolution: {integrity: sha512-N5A3KTWQpPWT4ExxxPlUx7WmykGXRzhNidWhV41d6Abu9YfI2NyWCJuxdPnslJCPWtbRpSVOWSnSS6GakLM/Rg==}
+  joi@18.2.9:
+    resolution: {integrity: sha512-2mD929bUVKUhOLQQEVhlf6EZ0Mlo0DeRb5MO7cViR9AXLtBauuccEtB1py9Ocxpo/P7ucnh442iY/iOwrh3IQw==}
     engines: {node: '>= 20'}
 
   js-tokens@10.0.0:
@@ -4834,22 +4840,27 @@ snapshots:
     dependencies:
       '@hapi/hoek': 11.0.7
 
-  '@hookform/resolvers@5.9.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(joi@18.2.3)(react-hook-form@7.88.0(react@19.3.0))(zod@4.6.5)':
+  '@hookform/resolvers@5.9.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(joi@18.2.9)(react-hook-form@7.88.0(react@19.3.0))(zod@4.6.5)':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.88.0(react@19.3.0)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       ajv: 8.20.0
-      joi: 18.2.3
+      joi: 18.2.9
       zod: 4.6.5
 
-  '@humanfs/core@0.19.1': {}
-
-  '@humanfs/node@0.16.7':
+  '@humanfs/core@0.20.0':
     dependencies:
-      '@humanfs/core': 0.19.1
+      '@humanfs/types': 0.16.0
+
+  '@humanfs/node@0.17.0':
+    dependencies:
+      '@humanfs/core': 0.20.0
+      '@humanfs/types': 0.16.0
       '@humanwhocodes/retry': 0.4.3
+
+  '@humanfs/types@0.16.0': {}
 
   '@humanwhocodes/module-importer@1.0.1': {}
 
@@ -6807,7 +6818,7 @@ snapshots:
       '@eslint/config-helpers': 0.7.0
       '@eslint/core': 1.2.1
       '@eslint/plugin-kit': 0.7.3
-      '@humanfs/node': 0.16.7
+      '@humanfs/node': 0.17.0
       '@humanwhocodes/module-importer': 1.0.1
       '@humanwhocodes/retry': 0.4.3
       '@types/estree': 1.0.8
@@ -7216,7 +7227,7 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  joi@18.2.3:
+  joi@18.2.9:
     dependencies:
       '@hapi/address': 5.1.1
       '@hapi/formula': 3.0.2
@@ -8380,7 +8391,7 @@ snapshots:
   wait-on@9.1.0:
     dependencies:
       axios: 1.18.1
-      joi: 18.2.3
+      joi: 18.2.9
       lodash: 4.18.1
       minimist: 1.2.8
       rxjs: 7.8.2
