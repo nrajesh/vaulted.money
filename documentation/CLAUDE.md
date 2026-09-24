@@ -130,6 +130,24 @@ Sanitise formula-injection prefixes (`=`, `+`, `-`, `@`) before writing CSV outp
 
 ---
 
+## Dependency updates — lessons learned
+
+Dependabot opens one grouped PR against `pre-prod` every week. These patterns came from fixing those PRs when CI went red.
+
+**Reproduce every CI step before pushing a fix**
+CircleCI runs lint, typecheck, format check, `pnpm test:coverage`, `pnpm build` and `pnpm audit --prod --audit-level=moderate`. `pnpm validate` covers only the first three, so run the rest too (see Quality checks). A new security advisory can fail the audit even when no code changed. Fix it with a patched version in `pnpm.overrides`.
+
+**Bisect the grouped update, then fix the cause**
+When a grouped bump breaks something, check out `pre-prod`, bump the suspect packages one at a time (`pnpm add -D <pkg>@<version>`), and rerun the failing check to find the culprit. Fix the root cause rather than pinning the old version. Pin only when upstream is incompatible, and then add a Dependabot `ignore` entry with a tracking link, as `.github/dependabot.yml` does for TypeScript.
+
+**Tests must not depend on focus left behind by earlier tests**
+Since jsdom 30.1, removing a focused element (which Testing Library's cleanup does) hands focus to the Document, and the next `focus()` fires a `blur` on `window`. Radix menus and selects close on window blur, so a dropdown test that ran after another focus-moving test never saw its menu open. `src/tests/setup.ts` resets focus before every test; keep that reset when editing the setup file. `src/tests/test-environment-focus.test.tsx` guards it.
+
+**Commit the regenerated acknowledgments**
+`pnpm build` and the test suite regenerate `src/data/acknowledgments.generated.ts` from installed versions. Commit the regenerated file along with the dependency bump so the Acknowledgments page lists the versions that actually ship.
+
+---
+
 ## Quality checks
 
 ```bash
@@ -139,6 +157,7 @@ tsc --noEmit        # TypeScript
 pnpm test:coverage  # Vitest + coverage
 pnpm build          # Production build
 pnpm validate       # Combined lint + typecheck
+pnpm audit --prod --audit-level=moderate  # Security audit (CI blocks on this)
 ```
 
 ---
