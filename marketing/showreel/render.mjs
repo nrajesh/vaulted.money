@@ -3,7 +3,7 @@
  * Renders the showreel composition (index.html) to an MP4, frame by frame.
  *
  * Zero npm dependencies: it drives headless Chromium over the Chrome DevTools
- * Protocol using Node's built-in WebSocket, and pipes screenshots into ffmpeg.
+ * Protocol (lib/chrome.mjs) and pipes screenshots into ffmpeg.
  *
  * Every frame is rendered deterministically: the page exposes
  * `window.__render(seconds)`, which poses the whole scene for that instant.
@@ -25,11 +25,11 @@ import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { createServer as createNetServer } from "node:net";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DURATION, WIDTH, HEIGHT } from "./timeline.mjs";
 import { renderSoundtrack } from "./soundtrack.mjs";
+import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(ROOT, "out");
@@ -52,6 +52,10 @@ const workers = Math.max(1, Number(option("workers", 3)));
 const fromSeconds = Number(option("from", 0));
 const toSeconds = Math.min(DURATION, Number(option("to", DURATION)));
 const stills = option("stills", "").split(",").filter(Boolean).map(Number);
+// JPEG (q95) sub-frames capture ~30% faster, and averaging eight of them plus
+// film grain makes the result visually identical to PNG (≈45 dB PSNR).
+// Stills are always lossless PNG.
+const imageFormat = stills.length ? "png" : option("format", "jpeg");
 const outputFile = option(
   "out",
   join(
@@ -60,15 +64,6 @@ const outputFile = option(
   ),
 );
 
-const CHROME_CANDIDATES = [
-  process.env.CHROME_PATH,
-  "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell",
-  "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
-  "/usr/bin/chromium",
-  "/usr/bin/google-chrome",
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-].filter(Boolean);
-const chromePath = CHROME_CANDIDATES.find((candidate) => existsSync(candidate));
 const ffmpegPath = process.env.FFMPEG_PATH || "ffmpeg";
 
 // ── Fonts ───────────────────────────────────────────────────────────────────
@@ -108,6 +103,24 @@ export async function ensureFonts() {
   if (!localBlocks.length)
     throw new Error("No font faces found in the Google Fonts response");
   writeFileSync(cssPath, localBlocks.join("\n"));
+}
+
+// ── Real app screens ────────────────────────────────────────────────────────
+// The film is built from captures of the running app; make them on first run.
+async function ensureScreens() {
+  if (existsSync(join(OUT_DIR, "screens", "manifest.json"))) return;
+  console.log("• No captured screens yet: running capture.mjs");
+  await new Promise((resolve, reject) => {
+    const capture = spawn(process.execPath, [join(ROOT, "capture.mjs")], {
+      stdio: "inherit",
+    });
+    capture.on("error", reject);
+    capture.on("close", (code) =>
+      code === 0
+        ? resolve()
+        : reject(new Error(`capture.mjs exited with ${code}`)),
+    );
+  });
 }
 
 // ── Static file server (ES modules cannot load from file://) ────────────────
@@ -150,123 +163,11 @@ export function startStaticServer(port = 0) {
   });
 }
 
-function freePort() {
-  return new Promise((resolve, reject) => {
-    const probe = createNetServer();
-    probe.once("error", reject);
-    probe.listen(0, "127.0.0.1", () => {
-      const { port } = probe.address();
-      probe.close(() => resolve(port));
-    });
-  });
-}
-
-// ── Minimal Chrome DevTools Protocol client ─────────────────────────────────
-class DevToolsSession {
-  #socket;
-  #nextId = 1;
-  #pending = new Map();
-
-  static async connect(webSocketUrl) {
-    const session = new DevToolsSession();
-    session.#socket = new WebSocket(webSocketUrl);
-    session.#socket.addEventListener("message", (event) =>
-      session.#onMessage(event),
-    );
-    await new Promise((resolve, reject) => {
-      session.#socket.addEventListener("open", resolve, { once: true });
-      session.#socket.addEventListener("error", reject, { once: true });
-    });
-    return session;
-  }
-
-  #onMessage(event) {
-    const message = JSON.parse(event.data);
-    if (!message.id || !this.#pending.has(message.id)) return;
-    const { resolve, reject } = this.#pending.get(message.id);
-    this.#pending.delete(message.id);
-    if (message.error)
-      reject(new Error(`${message.error.message} (${message.error.code})`));
-    else resolve(message.result);
-  }
-
-  send(method, params = {}) {
-    const id = this.#nextId++;
-    this.#socket.send(JSON.stringify({ id, method, params }));
-    return new Promise((resolve, reject) =>
-      this.#pending.set(id, { resolve, reject }),
-    );
-  }
-
-  async evaluate(expression) {
-    const { result, exceptionDetails } = await this.send("Runtime.evaluate", {
-      expression,
-      awaitPromise: true,
-      returnByValue: true,
-    });
-    if (exceptionDetails) {
-      throw new Error(
-        exceptionDetails.exception?.description ?? exceptionDetails.text,
-      );
-    }
-    return result.value;
-  }
-
-  close() {
-    this.#socket.close();
-  }
-}
-
 export async function launchPage(pageUrl) {
-  const debuggingPort = await freePort();
-  const chrome = spawn(
-    chromePath,
-    [
-      "--headless",
-      `--remote-debugging-port=${debuggingPort}`,
-      "--hide-scrollbars",
-      "--mute-audio",
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-background-timer-throttling",
-      "--disable-renderer-backgrounding",
-      "--font-render-hinting=none",
-      `--window-size=${WIDTH},${HEIGHT}`,
-      // Chromium refuses to sandbox as root (e.g. in CI containers).
-      ...(process.getuid?.() === 0 ? ["--no-sandbox"] : []),
-      "about:blank",
-    ],
-    { stdio: ["ignore", "ignore", "pipe"] },
-  );
-  chrome.stderr.resume();
-
-  // Wait for the DevTools endpoint to come up.
-  let targets;
-  for (let attempt = 0; attempt < 100; attempt++) {
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:${debuggingPort}/json/list`,
-      );
-      targets = await response.json();
-      if (targets.some((target) => target.type === "page")) break;
-    } catch {
-      // Not listening yet.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  const pageTarget = targets?.find((target) => target.type === "page");
-  if (!pageTarget) throw new Error("Chromium did not expose a page target");
-
-  const session = await DevToolsSession.connect(
-    pageTarget.webSocketDebuggerUrl,
-  );
-  await session.send("Page.enable");
-  await session.send("Runtime.enable");
-  await session.send("Emulation.setDeviceMetricsOverride", {
+  const { session, close } = await launchChrome({
     width: WIDTH,
     height: HEIGHT,
     deviceScaleFactor: scale,
-    mobile: false,
   });
   await session.send("Page.navigate", { url: pageUrl });
 
@@ -284,17 +185,15 @@ export async function launchPage(pageUrl) {
     async capture(seconds) {
       await session.evaluate(`window.__render(${seconds})`);
       const { data } = await session.send("Page.captureScreenshot", {
-        format: "png",
+        format: imageFormat,
+        ...(imageFormat === "jpeg" ? { quality: 95 } : {}),
         optimizeForSpeed: true,
         captureBeyondViewport: false,
       });
       return Buffer.from(data, "base64");
     },
     evaluate: (expression) => session.evaluate(expression),
-    close() {
-      session.close();
-      chrome.kill("SIGKILL");
-    },
+    close,
   };
 }
 
@@ -352,7 +251,7 @@ async function renderVideo(pages) {
     "-framerate",
     String(fps * blurSamples),
     "-c:v",
-    "png",
+    imageFormat === "jpeg" ? "mjpeg" : "png",
     "-i",
     "-",
     "-ss",
@@ -416,7 +315,13 @@ async function renderVideo(pages) {
   const results = new Array(samples.length);
   const lookAhead = pages.length * 6;
   let written = 0;
-  let wake = () => {};
+  // Every worker that runs too far ahead parks here until the writer
+  // catches up; all of them are woken whenever a frame is written.
+  const parked = new Set();
+  const wake = () => {
+    for (const resume of parked) resume();
+    parked.clear();
+  };
   const workerLoops = pages.map(async (page, workerIndex) => {
     for (
       let index = workerIndex;
@@ -424,7 +329,7 @@ async function renderVideo(pages) {
       index += pages.length
     ) {
       while (index - written > lookAhead) {
-        await new Promise((resolve) => (wake = resolve));
+        await new Promise((resolve) => parked.add(resolve));
       }
       results[index] = await page.capture(samples[index]);
       wake();
@@ -510,6 +415,7 @@ async function main() {
   if (!chromePath) throw new Error("No Chromium found. Set CHROME_PATH.");
   mkdirSync(OUT_DIR, { recursive: true });
   await ensureFonts();
+  await ensureScreens();
 
   const server = await startStaticServer();
   const pageUrl = `http://127.0.0.1:${server.address().port}/index.html?render`;

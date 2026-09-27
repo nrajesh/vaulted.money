@@ -10,17 +10,22 @@ import { style } from "../lib/dom.mjs";
 const FLASHES = [
   { time: CUES.diveImpact, strength: 1, decay: 7 },
   { time: CUES.noCloud, strength: 0.1, decay: 9 },
-  { time: CUES.track, strength: 0.14, decay: 9 },
-  { time: CUES.budget, strength: 0.22, decay: 8 },
-  { time: CUES.insight, strength: 0.14, decay: 9 },
-  { time: CUES.everywhere, strength: 0.14, decay: 9 },
+  { time: CUES.desktopIn, strength: 0.12, decay: 9 },
+  { time: CUES.categorized, strength: 0.08, decay: 10 },
+  { time: CUES.budgets, strength: 0.1, decay: 9 },
+  { time: CUES.reports, strength: 0.14, decay: 9 },
+  { time: CUES.everywhere, strength: 0.2, decay: 8 },
+  { time: CUES.montage, strength: 0.25, decay: 9 },
   { time: CUES.lockup, strength: 0.55, decay: 7 },
 ];
 
 const SHAKES = [
   { time: CUES.diveImpact, strength: 16 },
-  { time: CUES.budget, strength: 9 },
-  { time: CUES.everywhere, strength: 6 },
+  { time: CUES.desktopIn, strength: 5 },
+  { time: CUES.categorizeClick, strength: 3 },
+  { time: CUES.reports, strength: 6 },
+  { time: CUES.everywhere, strength: 9 },
+  { time: CUES.montage, strength: 6 },
   { time: CUES.lockup, strength: 18 },
 ];
 

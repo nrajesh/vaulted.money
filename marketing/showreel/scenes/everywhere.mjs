@@ -1,20 +1,21 @@
 /**
- * Scene 7 — "Every device. Fully offline. Free & open source." (bar 7).
+ * Bars 15–17 — "Every device. Every currency. Fully offline. Free & open
+ * source."
  *
- * Desktop, tablet and phone spring up in layered depth, each running the
- * same ledger. The headline rolls through three claims on the beat; each
- * claim gets its own proof on the devices (platform list, offline badges,
- * a `git clone` typing itself). On beat 27.4 everything is pulled into a
- * single point — where the logo is about to be born.
+ * A desktop window, a tablet (in the light theme) and a phone spring up in
+ * layered depth, each showing a real capture of the app. The headline rolls
+ * through four claims on the beat and each gets its proof on screen:
+ * currency chips from the demo ledgers, offline badges, and a real
+ * `git clone` typing itself. On beat 67.4 everything cuts to the montage.
  */
 import { CUES, beat } from "../timeline.mjs";
 import { clamp, ease, lerp, noise, progress, spring } from "../lib/motion.mjs";
 import { glyphs, html, icon, show, style } from "../lib/dom.mjs";
-import { logoSvg } from "../lib/logo.mjs";
+import { screen, screenImage } from "../lib/screens.mjs";
 
-const START = beat(23.6);
-const END = CUES.lockup + 0.05;
-const CONVERGE = beat(27.35);
+const START = beat(55.2);
+const END = CUES.montage + 0.05;
+const EXIT = beat(67.4);
 
 const PHRASES = [
   {
@@ -22,6 +23,12 @@ const PHRASES = [
     plain: "Every",
     serif: "device.",
     sub: "WEB · MACOS · WINDOWS · LINUX · iOS · ANDROID",
+  },
+  {
+    time: CUES.currency,
+    plain: "Every",
+    serif: "currency.",
+    sub: "ACCOUNTS IN ANY CURRENCY, SIDE BY SIDE",
   },
   {
     time: CUES.offline,
@@ -37,38 +44,48 @@ const PHRASES = [
   },
 ];
 const CLONE = "git clone https://github.com/nrajesh/vaulted.money";
+/** The currencies the app's own demo ledgers use. */
+const CURRENCIES = [
+  ["€", "EUR"],
+  ["$", "USD"],
+  ["£", "GBP"],
+  ["₹", "INR"],
+];
 
-/** Device layout: centre (x, y), size, depth and turn. */
+/** Device layout: centre, outer size, depth, turn, and the capture shown. */
 const DEVICES = [
   {
     kind: "tablet",
-    x: 430,
-    y: 690,
-    width: 430,
-    height: 560,
-    z: 70,
-    turn: 20,
+    x: 400,
+    y: 700,
+    width: 640,
+    height: 460,
+    z: 80,
+    turn: 18,
     delay: 0.1,
+    shot: "tablet-budgets-light",
   },
   {
     kind: "desktop",
     x: 960,
-    y: 660,
-    width: 1000,
-    height: 600,
+    y: 640,
+    width: 1020,
+    height: 680,
     z: 0,
     turn: 0,
     delay: 0,
+    shot: "desktop-analytics-dark",
   },
   {
     kind: "phone",
-    x: 1530,
+    x: 1540,
     y: 720,
-    width: 250,
-    height: 520,
-    z: 110,
-    turn: -20,
+    width: 260,
+    height: 540,
+    z: 120,
+    turn: -18,
     delay: 0.18,
+    shot: "mobile-transactions-dark",
   },
 ];
 
@@ -78,79 +95,39 @@ let phraseElements;
 let subline;
 let devices;
 let badges;
+let chips;
 let terminal;
 let terminalText;
 
-const kpi = (label, value, tone = "") =>
-  `<div class="mini-kpi ${tone}"><small>${label}</small><b>${value}</b></div>`;
-
-const miniRows = (count) =>
-  Array.from(
-    { length: count },
-    (_, index) =>
-      `<div class="mini-row"><i class="tone-${["mint", "blue", "gold", "violet", "rose", "cyan"][index % 6]}"></i><span></span><em></em></div>`,
-  ).join("");
-
-function screenMarkup(kind) {
-  const chart = `
-    <svg class="mini-chart" viewBox="0 0 400 120" preserveAspectRatio="none">
-      <path class="mini-area" d="M0 100 C50 92,70 70,120 76 S190 44,240 52 S320 20,400 16 L400 120 L0 120Z"/>
-      <path class="mini-line" pathLength="1" d="M0 100 C50 92,70 70,120 76 S190 44,240 52 S320 20,400 16"/>
-    </svg>`;
-  if (kind === "desktop") {
-    return `
-      <div class="win-bar"><i></i><i></i><i></i><span>Vaulted Money</span></div>
-      <div class="win-body">
-        <aside>
-          <div class="mini-brand">${logoSvg("desk-logo")}<span class="gradient-text">Vaulted Money</span></div>
-          ${["house", "receipt", "wallet", "chart-pie", "calendar", "piggy-bank"].map((name, index) => `<div class="nav ${index === 0 ? "active" : ""}">${icon(name, 18)}<span></span></div>`).join("")}
-        </aside>
-        <main>
-          <div class="mini-heading">Dashboard</div>
-          <div class="mini-kpis">${kpi("Balance", "€24,812")}${kpi("Income", "+€3,840", "mint")}${kpi("Spent", "−€1,301")}</div>
-          <div class="mini-panel">${chart}</div>
-          <div class="mini-panel rows">${miniRows(4)}</div>
-        </main>
-      </div>`;
-  }
-  if (kind === "tablet") {
-    return `
-      <div class="tab-body">
-        <div class="mini-heading">Budgets</div>
-        <div class="mini-rings">${[72, 45, 91, 64].map((value, index) => `<div class="mini-ring ${index === 2 ? "warn" : ""}" style="--p:${value}"><b>${value}%</b></div>`).join("")}</div>
-        <div class="mini-panel">${chart}</div>
-        <div class="mini-panel rows">${miniRows(3)}</div>
-      </div>`;
-  }
+function deviceMarkup(device) {
+  const capture = screen(device.shot);
+  const inset =
+    device.kind === "desktop" ? 10 : device.kind === "tablet" ? 16 : 9;
+  const bar = device.kind === "desktop" ? 30 : 0;
+  const innerWidth = device.width - inset * 2;
+  const scale = innerWidth / capture.width;
   return `
-    <div class="phone-mini">
-      <div class="mini-island"></div>
-      <div class="mini-balance"><small>Total balance</small><b>€24,812.40</b></div>
-      <div class="mini-panel">${chart}</div>
-      <div class="mini-panel rows">${miniRows(5)}</div>
+    <div class="device device-${device.kind}" style="width:${device.width}px;height:${device.height}px">
+      ${bar ? `<div class="device-bar"><i></i><i></i><i></i></div>` : ""}
+      <div class="device-screen" style="height:${device.height - inset * 2 - bar}px">
+        <div class="device-shot" style="transform:scale(${scale})">${screenImage(device.shot)}</div>
+      </div>
+      <span class="offline-badge">${icon("wifi-off", 16)}Offline</span>
     </div>`;
 }
 
 export function mount() {
   root = html(`
     <section class="everywhere">
-      <div class="devices">
-        ${DEVICES.map(
-          (device) => `
-          <div class="device device-${device.kind}" style="width:${device.width}px;height:${device.height}px">
-            <div class="device-screen">${screenMarkup(device.kind)}</div>
-            <span class="offline-badge">${icon("wifi-off", 16)}Offline</span>
-          </div>`,
-        ).join("")}
+      <div class="devices">${DEVICES.map(deviceMarkup).join("")}</div>
+      <div class="currency-chips">
+        ${CURRENCIES.map(([symbol, code]) => `<span class="currency-chip"><b>${symbol}</b>${code}</span>`).join("")}
       </div>
       <div class="terminal"><span class="prompt">$</span><span class="typed"></span><span class="caret"></span><span class="mit">${icon("code-xml", 16)}MIT</span></div>
     </section>`);
   headline = html(`
     <div class="everywhere-headline">
-      ${PHRASES.map(
-        (phrase) => `
-        <div class="phrase">${glyphs(phrase.plain)}&nbsp;${glyphs(phrase.serif, "serif")}</div>`,
-      ).join("")}
+      ${PHRASES.map((phrase) => `<div class="phrase">${glyphs(phrase.plain)}&nbsp;${glyphs(phrase.serif, "serif")}</div>`).join("")}
       <div class="everywhere-sub"></div>
     </div>`);
   document.getElementById("screen-layer").append(root);
@@ -159,6 +136,7 @@ export function mount() {
   subline = headline.querySelector(".everywhere-sub");
   devices = [...root.querySelectorAll(".device")];
   badges = [...root.querySelectorAll(".offline-badge")];
+  chips = [...root.querySelectorAll(".currency-chip")];
   terminal = root.querySelector(".terminal");
   terminalText = terminal.querySelector(".typed");
 }
@@ -169,38 +147,51 @@ export function render(t) {
   show(headline, visible);
   if (!visible) return;
 
-  const converge = ease.inExpo(progress(t, CONVERGE, CUES.lockup));
+  // Everything punches out towards the camera for the montage cut.
+  const exit = ease.inExpo(progress(t, EXIT, CUES.montage));
 
-  // ── Devices spring up, then everything collapses into the logo's centre ─
   devices.forEach((element, index) => {
     const device = DEVICES[index];
-    const rise = spring(t - (beat(23.75) + device.delay), {
+    const rise = spring(t - (CUES.everywhere - beat(0.4) + device.delay), {
       stiffness: 140,
       damping: 15,
     });
     const bob = noise(t * 0.8, index + 3) * 8;
-    const x = lerp(device.x, 960, converge);
-    const y = lerp(device.y + (1 - rise) * 700, 430, converge) + bob;
+    const scroll =
+      device.kind === "phone"
+        ? ease.inOutSine(progress(t, CUES.everywhere, EXIT)) * 700
+        : 0;
     style(element, {
-      opacity:
-        clamp(rise * 3) * (1 - progress(t, CUES.lockup - 0.08, CUES.lockup)),
+      opacity: clamp(rise * 3) * (1 - exit),
       transform:
-        `translate(${x - device.width / 2}px, ${y - device.height / 2}px) translateZ(${device.z}px) ` +
-        `rotateY(${device.turn * (1 - converge) + (1 - rise) * device.turn}deg) ` +
-        `rotateX(${(1 - rise) * 30}deg) rotateZ(${converge * (index - 1) * 40}deg) ` +
-        `scale(${lerp(1, 0.02, converge)})`,
+        `translate(${device.x - device.width / 2}px, ${device.y - device.height / 2 + (1 - rise) * 700 + bob}px) ` +
+        `translateZ(${device.z + exit * 600}px) rotateY(${device.turn * (1 + (1 - rise))}deg) ` +
+        `rotateX(${(1 - rise) * 30}deg)`,
     });
-    element.querySelectorAll(".mini-line").forEach((line) => {
-      style(line, {
-        strokeDashoffset:
-          1 - ease.inOutCubic(progress(t, beat(24.2), beat(26.2))),
-      });
+    if (scroll) {
+      const shot = element.querySelector(".device-shot img");
+      style(shot, { transform: `translateY(${-scroll}px)` });
+    }
+  });
+
+  // Every currency: the chips the demo ledgers use float up over the devices.
+  chips.forEach((chip, index) => {
+    const at = CUES.currency + 0.1 + index * beat(0.5);
+    const pop = spring(t - at, { stiffness: 200, damping: 14 });
+    const leave = ease.inCubic(
+      progress(t, CUES.offline - 0.2, CUES.offline + 0.15),
+    );
+    style(chip, {
+      opacity: clamp(pop * 2) * (1 - leave),
+      transform:
+        `translate(${360 + index * 330}px, ${lerp(420, 330 + (index % 2) * 40, pop) - leave * 60}px) ` +
+        `scale(${Math.max(0, pop)}) rotate(${(index % 2 ? 1 : -1) * 3}deg)`,
     });
   });
 
-  // Offline badges pop on beat 25.5.
+  // Fully offline: badges pop on every device.
   badges.forEach((badge, index) => {
-    const pop = spring(t - (PHRASES[1].time + index * 0.06), {
+    const pop = spring(t - (CUES.offline + 0.1 + index * 0.08), {
       stiffness: 260,
       damping: 16,
     });
@@ -210,19 +201,19 @@ export function render(t) {
     });
   });
 
-  // `git clone` types itself on beat 26.5.
-  const typing = progress(t, PHRASES[2].time + 0.05, PHRASES[2].time + 0.62);
-  const terminalIn = spring(t - PHRASES[2].time + 0.05, {
+  // Free & open source: the real clone command types itself.
+  const typing = progress(t, CUES.openSource + 0.1, CUES.openSource + 0.9);
+  const terminalIn = spring(t - CUES.openSource, {
     stiffness: 220,
     damping: 18,
   });
   style(terminal, {
-    opacity: clamp(terminalIn * 2) * (1 - converge),
-    transform: `translate(-50%, ${(1 - terminalIn) * 40}px) scale(${lerp(1, 0.2, converge)})`,
+    opacity: clamp(terminalIn * 2) * (1 - exit),
+    transform: `translate(-50%, ${(1 - terminalIn) * 40}px)`,
   });
   terminalText.textContent = CLONE.slice(0, Math.round(CLONE.length * typing));
 
-  // ── Headline rolls through its three claims ────────────────────────────
+  // ── Headline rolls through its four claims ─────────────────────────────
   phraseElements.forEach((element, index) => {
     const phrase = PHRASES[index];
     const next = PHRASES[index + 1];
@@ -234,7 +225,7 @@ export function render(t) {
           phrase.time + 0.4 + glyphIndex * 0.016,
         ),
       );
-      const leaveStart = next ? next.time - 0.2 : CONVERGE;
+      const leaveStart = next ? next.time - 0.2 : EXIT;
       const leave = ease.inCubic(
         progress(
           t,
@@ -250,8 +241,9 @@ export function render(t) {
   const current =
     [...PHRASES].reverse().find((phrase) => t >= phrase.time - 0.05) ??
     PHRASES[0];
-  const age = t - current.time;
-  const characters = Math.round(clamp(age / 0.4) * current.sub.length);
+  const characters = Math.round(
+    clamp((t - current.time) / 0.4) * current.sub.length,
+  );
   subline.textContent = current.sub.slice(0, characters);
-  style(subline, { opacity: 1 - converge });
+  style(subline, { opacity: 1 - exit });
 }

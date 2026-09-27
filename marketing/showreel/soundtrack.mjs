@@ -2,10 +2,12 @@
 /**
  * The soundtrack, synthesised from scratch: no samples, no dependencies.
  *
- * Music: 8 bars at 128 BPM. Bar 1 is a riser while the vault is forged;
- * bars 2–7 are a four-on-the-floor groove over Am9 – Fmaj9 – Cadd9 – G6 –
- * Am9 – Fmaj9 with a sidechained pad and bass; bar 8 resolves to Cmaj9 on
- * the logo hit and rings out as the picture fades.
+ * Music: 20 bars at 128 BPM. Bar 1 is a riser while the vault is forged;
+ * bars 2–12 are a four-on-the-floor groove cycling Am9 – Fmaj9 – Cadd9 – G6
+ * with a sidechained pad and bass; bars 13–14 drop the drums for the light
+ * theme (a breakdown with a bell arpeggio and a riser); the drums slam back
+ * on bar 15, bar 18 builds with a snare roll under the montage, and bars
+ * 19–20 resolve to Cmaj9 on the logo and ring out as the picture fades.
  *
  * Sound design hangs off the same cue sheet as the animation (timeline.mjs),
  * and the forge ticks use the vault scene's own spark arrival times, so every
@@ -144,10 +146,13 @@ const envelope = (time, attack, decay) =>
   time < attack ? time / attack : Math.exp(-(time - attack) / decay);
 
 // ── Groove ──────────────────────────────────────────────────────────────────
-const GROOVE_START = beat(4);
-const GROOVE_END = beat(27);
+/** Bars (1-based) where the full groove plays; 13–14 are the breakdown. */
+const GROOVE_BARS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18];
+const barStart = (bar) => (bar - 1) * BAR;
 const kicks = [];
-for (let n = 4; n < 27; n++) kicks.push(beat(n));
+for (const bar of GROOVE_BARS) {
+  for (let step = 0; step < 4; step++) kicks.push(barStart(bar) + beat(step));
+}
 
 /** 0..1 ducking amount per sample from the most recent kick (the "pump"). */
 const duckCurve = (() => {
@@ -220,16 +225,36 @@ function hat(buses, time, { gain = 0.1, open = false, pan = 0.25 } = {}) {
 }
 
 // ── Harmony ─────────────────────────────────────────────────────────────────
+const CHORD = {
+  Am9: { root: 33, notes: [57, 60, 64, 67, 71] },
+  Fmaj9: { root: 29, notes: [53, 57, 60, 64, 67] },
+  Cadd9: { root: 36, notes: [55, 60, 62, 64, 67] },
+  G6: { root: 31, notes: [55, 59, 62, 64, 71] },
+  Cmaj9: { root: 36, notes: [52, 55, 59, 62, 64, 67, 72] },
+};
+/** The chord for each bar (index 0 = bar 1, which is the drone). */
 const CHORDS = [
   null,
-  { root: 33, notes: [57, 60, 64, 67, 71] }, // Am9
-  { root: 29, notes: [53, 57, 60, 64, 67] }, // Fmaj9
-  { root: 36, notes: [55, 60, 62, 64, 67] }, // Cadd9
-  { root: 31, notes: [55, 59, 62, 64, 71] }, // G6
-  { root: 33, notes: [57, 60, 64, 67, 71] }, // Am9
-  { root: 29, notes: [53, 57, 60, 64, 69] }, // Fmaj9
-  { root: 36, notes: [52, 55, 59, 62, 64, 67, 72] }, // Cmaj9 (the lockup)
-];
+  "Am9",
+  "Fmaj9",
+  "Cadd9",
+  "G6", // bars 2–5
+  "Am9",
+  "Fmaj9",
+  "Cadd9",
+  "G6", // bars 6–9
+  "Am9",
+  "Fmaj9",
+  "Cadd9", // bars 10–12
+  "Fmaj9",
+  "G6", // bars 13–14, the breakdown
+  "Am9",
+  "Fmaj9",
+  "Cadd9",
+  "G6", // bars 15–18
+  "Cmaj9",
+  "Cmaj9", // bars 19–20, the logo
+].map((name) => (name ? CHORD[name] : null));
 
 function pad(
   buses,
@@ -527,7 +552,7 @@ function reverb(wet) {
 
 // ── Arrangement ─────────────────────────────────────────────────────────────
 function arrange(buses) {
-  // Bar 1 — forge: drone, ignition, spark ticks, lock, dive.
+  // ── Bar 1: forge — drone, ignition, spark ticks, lock, dive ─────────────
   bell(buses, CUES.ignite, midi(93), {
     gain: 0.22,
     decay: 0.9,
@@ -565,8 +590,7 @@ function arrange(buses) {
     send: 0.4,
     seed: 11,
   });
-  const arrivals = forgeArrivals();
-  arrivals.forEach((time, index) => {
+  forgeArrivals().forEach((time, index) => {
     tick(buses, time, {
       frequency: 3200 + (index % 5) * 380,
       gain: 0.1,
@@ -591,47 +615,78 @@ function arrange(buses) {
   });
   impact(buses, CUES.diveImpact, { gain: 1, crash: 0.3 });
 
-  // Bars 2–7 — the groove.
+  // ── The groove ──────────────────────────────────────────────────────────
   for (const time of kicks) kick(buses, time, { gain: 0.55 });
-  for (let n = 5; n < 27; n += 2) clap(buses, beat(n));
-  for (let n = 4; n < 27; n++) {
-    hat(buses, beat(n + 0.5), { gain: 0.12, pan: 0.3 });
-    // Busier 16ths once the product montage gets going.
-    if (n >= 12) {
-      hat(buses, beat(n + 0.25), { gain: 0.05, pan: -0.35 });
-      hat(buses, beat(n + 0.75), { gain: 0.05, pan: -0.35 });
+  for (const bar of GROOVE_BARS) {
+    const start = barStart(bar);
+    clap(buses, start + beat(1));
+    clap(buses, start + beat(3));
+    for (let step = 0; step < 4; step++) {
+      hat(buses, start + beat(step + 0.5), { gain: 0.12, pan: 0.3 });
+      // Busier sixteenths once the product tour starts (bar 5 onwards).
+      if (bar >= 5) {
+        hat(buses, start + beat(step + 0.25), { gain: 0.05, pan: -0.35 });
+        hat(buses, start + beat(step + 0.75), { gain: 0.05, pan: -0.35 });
+      }
     }
   }
-  for (let bar = 1; bar <= 6; bar++) {
-    const { root, notes } = CHORDS[bar];
-    const start = bar * BAR;
+  for (let bar = 2; bar <= 18; bar++) {
+    const { root, notes } = CHORDS[bar - 1];
+    const start = barStart(bar);
+    const breakdown = bar === 13 || bar === 14;
     pad(buses, start, BAR - 0.02, notes, {
-      gain: 0.065,
-      cutoff: 2200 + bar * 400,
-      attack: 0.03,
+      gain: breakdown ? 0.075 : 0.065,
+      cutoff: breakdown
+        ? 1800 + (bar - 13) * 1400
+        : 2200 + ((bar - 2) % 6) * 400,
+      attack: breakdown ? 0.25 : 0.03,
     });
+    if (breakdown) {
+      // Sustained sub under the breakdown, no pumping bass.
+      bass(buses, start, BAR - 0.05, root, 0.07);
+      continue;
+    }
     // Bass pumps on the off-beats, house-style.
     for (let step = 0; step < 4; step++) {
       bass(buses, start + beat(step + 0.5), beat(0.42), root + 12, 0.14);
     }
     bass(buses, start, BAR - 0.05, root, 0.08);
   }
-  // Arpeggio from the product montage onwards (bars 4–7).
-  for (let bar = 3; bar <= 6; bar++) {
-    const { notes } = CHORDS[bar];
-    const pattern = [0, 2, 4, 1, 3, 2, 4, 3];
+
+  // Arpeggio through the product tour and the finale (bars 5–12, 15–18).
+  const pattern = [0, 2, 4, 1, 3, 2, 4, 3];
+  for (let bar = 5; bar <= 18; bar++) {
+    if (bar === 13 || bar === 14) continue;
+    const { notes } = CHORDS[bar - 1];
     for (let step = 0; step < 16; step++) {
-      const time = bar * BAR + beat(step / 4);
-      if (time >= beat(27)) break;
       const note = notes[pattern[step % pattern.length] % notes.length] + 12;
-      pluck(buses, time, note, {
+      pluck(buses, barStart(bar) + beat(step / 4), note, {
         gain: 0.085 + (step % 4 === 0 ? 0.02 : 0),
         pan: step % 2 ? 0.45 : -0.45,
       });
     }
   }
+  // Breakdown: a glassy bell arpeggio in eighths, rising into bar 15.
+  for (const bar of [13, 14]) {
+    const { notes } = CHORDS[bar - 1];
+    for (let step = 0; step < 8; step++) {
+      bell(
+        buses,
+        barStart(bar) + beat(step / 2),
+        midi(notes[(step * 2) % notes.length] + 24),
+        {
+          gain: 0.04 + step * 0.002,
+          decay: 0.45,
+          ratio: 2,
+          index: 0.9,
+          pan: step % 2 ? 0.4 : -0.4,
+          send: 0.7,
+        },
+      );
+    }
+  }
 
-  // Scene transitions and UI sound design.
+  // ── Bars 2–4: manifesto and privacy ─────────────────────────────────────
   sweep(buses, beat(5.4), 0.32, {
     from: 1500,
     to: 6000,
@@ -654,10 +709,9 @@ function arrange(buses) {
     index: 1.2,
     pan: 0.4,
   });
-
   [CUES.noCloud, CUES.noTrackers, CUES.noSubscriptions].forEach(
     (time, index) => {
-      sweep(buses, time + 0.06, 0.18, {
+      sweep(buses, time + 0.06, 0.2, {
         from: 6000,
         to: 900,
         gain: 0.12,
@@ -673,17 +727,15 @@ function arrange(buses) {
       });
     },
   );
-  // Packets striking the field: a scatter of tiny glassy pings.
   const scatter = random(5);
-  for (let index = 0; index < 26; index++) {
-    const time = CUES.noCloud + 0.15 + scatter() * (beat(11.6) - CUES.noCloud);
+  for (let index = 0; index < 36; index++) {
+    const time = CUES.noCloud + 0.15 + scatter() * (beat(14.8) - CUES.noCloud);
     tick(buses, time, {
       frequency: 2600 + scatter() * 3000,
-      gain: 0.025,
+      gain: 0.022,
       pan: 0.3 + scatter() * 0.6,
     });
   }
-  // Scrambled caption: digital chatter.
   for (let index = 0; index < 22; index++) {
     tick(buses, CUES.onDevice + index * 0.022, {
       frequency: 1800 + ((index * 7) % 5) * 420,
@@ -692,68 +744,123 @@ function arrange(buses) {
     });
   }
 
-  // Whip pan: the phone crosses right to left, so does the sound.
-  sweep(buses, beat(11.6), beat(12.4) - beat(11.6), {
+  // ── Bars 5–6: the desktop app and the CSV import ────────────────────────
+  // Whip pan: the phone leaves left while the window arrives from the right.
+  sweep(buses, beat(15.2), beat(16.3) - beat(15.2), {
     from: 500,
     to: 3500,
     gain: 0.3,
     shape: "whoosh",
     pan: 0.8,
-    panTo: -0.8,
+    panTo: -0.6,
     seed: 40,
   });
-  clunk(buses, beat(12.6), 0.25);
+  sweep(buses, beat(16.2), CUES.csvDrop - beat(16.2), {
+    from: 900,
+    to: 4200,
+    gain: 0.08,
+    shape: "whoosh",
+    pan: -0.5,
+    panTo: 0.3,
+    seed: 41,
+  });
+  clunk(buses, CUES.csvDrop, 0.28);
+  sweep(buses, CUES.importSettings - 0.05, 0.3, {
+    from: 2000,
+    to: 6000,
+    gain: 0.06,
+    shape: "whoosh",
+    seed: 42,
+  });
+  [0, 0.12, 0.24].forEach((offset, index) =>
+    blip(buses, CUES.importMap + 0.3 + offset, [67, 71, 74][index], {
+      gain: 0.05,
+      pan: 0.3,
+      decay: 0.08,
+    }),
+  );
   for (let index = 0; index < 6; index++) {
     blip(
       buses,
-      CUES.track + beat(0.6) + index * beat(0.25),
+      CUES.imported + 0.1 + index * beat(0.25),
       [72, 76, 79, 83, 84, 88][index],
-      { gain: 0.06, pan: -0.5, decay: 0.07 },
+      { gain: 0.05, pan: 0.3, decay: 0.07 },
     );
   }
-  bell(buses, CUES.trackPop, midi(88), {
-    gain: 0.06,
-    decay: 0.4,
-    ratio: 3,
-    index: 1.5,
-    pan: -0.3,
-  });
-  blip(buses, CUES.trackPop, 76, { gain: 0.07, pan: -0.3, decay: 0.15 });
 
-  // Zoom through the glass into Budget.
-  sweep(buses, beat(15.2), beat(16) - beat(15.2), {
-    from: 300,
-    to: 8000,
-    gain: 0.22,
+  // ── Bars 7–8: one tap, then optional AI ─────────────────────────────────
+  mouseClick(buses, CUES.categorizeClick);
+  sweep(buses, CUES.categorized, 0.6, {
+    from: 1200,
+    to: 9000,
+    gain: 0.08,
     shape: "swell",
+    q: 3,
+    pan: 0.2,
     seed: 50,
   });
-  impact(buses, CUES.budget, { gain: 0.55, crash: 0.18 });
-  for (let index = 0; index < 4; index++) {
-    blip(buses, beat(16.6) + index * 0.07, [64, 67, 71, 74][index], {
-      gain: 0.05,
-      pan: -0.6 + index * 0.4,
-      decay: 0.1,
-    });
-  }
-  // Heads-up: a gentle two-note notification.
-  bell(buses, CUES.budgetWarn, midi(88), {
-    gain: 0.09,
-    decay: 0.35,
-    ratio: 1,
-    index: 0.6,
-    pan: 0.25,
+  [0, 0.09, 0.18, 0.27, 0.36, 0.45].forEach((offset, index) => {
+    bell(
+      buses,
+      CUES.categorized + offset,
+      midi([76, 79, 83, 86, 88, 91][index]),
+      { gain: 0.035, decay: 0.5, ratio: 2, index: 0.7, pan: 0.2, send: 0.6 },
+    );
   });
-  bell(buses, CUES.budgetWarn + 0.12, midi(84), {
-    gain: 0.09,
+  bell(buses, beat(27.3), midi(88), {
+    gain: 0.07,
+    decay: 0.3,
+    ratio: 1,
+    index: 0.5,
+    pan: 0.5,
+  });
+  bell(buses, beat(27.3) + 0.11, midi(91), {
+    gain: 0.07,
     decay: 0.5,
     ratio: 1,
-    index: 0.6,
-    pan: 0.25,
+    index: 0.5,
+    pan: 0.5,
+  });
+  sweep(buses, CUES.aiProviders - 0.1, 0.35, {
+    from: 1500,
+    to: 5000,
+    gain: 0.07,
+    shape: "whoosh",
+    seed: 51,
+  });
+  blip(buses, CUES.aiKeyCard, 76, { gain: 0.07, decay: 0.15 });
+  bell(buses, CUES.aiKeyCard, midi(88), {
+    gain: 0.05,
+    decay: 0.4,
+    ratio: 3,
+    index: 1.2,
   });
 
-  // Tip into the isometric plane, cards rising.
-  sweep(buses, beat(19.4), beat(20.4) - beat(19.4), {
+  // ── Bars 9–10: budgets and their alerts ─────────────────────────────────
+  sweep(buses, CUES.budgets - 0.1, 0.35, {
+    from: 1500,
+    to: 5000,
+    gain: 0.07,
+    shape: "whoosh",
+    seed: 52,
+  });
+  [0, beat(0.5)].forEach((offset) => {
+    bell(buses, CUES.budgetAlerts + offset, midi(88), {
+      gain: 0.08,
+      decay: 0.3,
+      ratio: 1,
+      index: 0.6,
+      pan: -0.4,
+    });
+    bell(buses, CUES.budgetAlerts + offset + 0.12, midi(84), {
+      gain: 0.08,
+      decay: 0.45,
+      ratio: 1,
+      index: 0.6,
+      pan: -0.4,
+    });
+  });
+  sweep(buses, CUES.budgetsTip, beat(40.3) - CUES.budgetsTip, {
     from: 180,
     to: 1400,
     gain: 0.25,
@@ -761,30 +868,104 @@ function arrange(buses) {
     q: 0.8,
     seed: 60,
   });
-  [0, 0.08, 0.16].forEach((offset, ring) => {
-    blip(buses, CUES.insightRise + offset, [57, 64, 69][ring], {
+
+  // ── Bars 11–12: reports rise, export formats pop ────────────────────────
+  [0, 0.09, 0.18].forEach((offset, ring) =>
+    blip(buses, CUES.reportsRise + offset, [57, 64, 69][ring], {
       gain: 0.08,
       decay: 0.18,
+    }),
+  );
+  for (let index = 0; index < 4; index++) {
+    blip(buses, beat(42) + index * beat(0.5), [79, 83, 86, 91][index], {
+      gain: 0.05,
+      decay: 0.1,
+      pan: -0.5,
     });
-  });
-  sweep(buses, beat(23), 0.6, {
-    from: 800,
-    to: 7000,
-    gain: 0.16,
-    shape: "whoosh",
+  }
+  sweep(buses, CUES.reportsFocus, beat(47.9) - CUES.reportsFocus, {
+    from: 300,
+    to: 5000,
+    gain: 0.14,
+    shape: "swell",
     seed: 61,
   });
 
-  // Every device / offline / open source.
+  // ── Bars 13–14: the theme switch ────────────────────────────────────────
+  mouseClick(buses, CUES.themeToggle);
+  sweep(buses, CUES.themeToggle, 0.7, {
+    from: 2500,
+    to: 12000,
+    gain: 0.1,
+    shape: "whoosh",
+    q: 2,
+    pan: 0.6,
+    panTo: -0.4,
+    seed: 70,
+  });
+  const draws = random(49);
+  for (let index = 0; index < 28; index++) {
+    tick(buses, CUES.lightMark + index * 0.028, {
+      frequency: 2400 + draws() * 1600,
+      gain: 0.03,
+      pan: -0.5,
+    });
+  }
+  clunk(buses, CUES.lightMark + 0.8, 0.3);
+  sweep(buses, beat(52) - 0.05, 0.3, {
+    from: 2000,
+    to: 6000,
+    gain: 0.05,
+    shape: "whoosh",
+    seed: 71,
+  });
+  sweep(buses, beat(54), CUES.themeBack - beat(54), {
+    from: 300,
+    to: 7000,
+    gain: 0.22,
+    shape: "swell",
+    q: 0.9,
+    seed: 72,
+  });
+  mouseClick(buses, CUES.themeBack);
+  let suckPhase = 0;
+  place(
+    buses,
+    CUES.themeBack,
+    CUES.everywhere - CUES.themeBack,
+    (t) => {
+      const amount = t / (CUES.everywhere - CUES.themeBack);
+      suckPhase += (TAU * (300 + 1500 * amount * amount)) / SAMPLE_RATE;
+      return Math.sin(suckPhase) * amount ** 3 * 0.5;
+    },
+    { gain: 0.08, send: 0.4 },
+  );
+
+  // ── Bars 15–17: everywhere (the drums slam back) ────────────────────────
+  impact(buses, CUES.everywhere, { gain: 0.8, crash: 0.26 });
   [0, 0.1, 0.18].forEach((offset, index) =>
-    blip(buses, beat(23.8) + offset, [60, 64, 67][index], {
+    blip(buses, CUES.everywhere - beat(0.4) + offset, [60, 64, 67][index], {
       gain: 0.06,
       decay: 0.2,
       pan: index - 1,
     }),
   );
-  [0, 0.06, 0.12].forEach((offset, index) =>
-    bell(buses, CUES.offline + offset, midi(84 + index * 3), {
+  for (let index = 0; index < 4; index++) {
+    bell(
+      buses,
+      CUES.currency + 0.1 + index * beat(0.5),
+      midi([79, 83, 86, 91][index]),
+      {
+        gain: 0.05,
+        decay: 0.3,
+        ratio: 3.5,
+        index: 1.4,
+        pan: -0.6 + index * 0.4,
+      },
+    );
+  }
+  [0, 0.08, 0.16].forEach((offset, index) =>
+    bell(buses, CUES.offline + 0.1 + offset, midi(84 + index * 3), {
       gain: 0.045,
       decay: 0.3,
       ratio: 2,
@@ -793,34 +974,54 @@ function arrange(buses) {
     }),
   );
   const keys = random(8);
-  for (let index = 0; index < 18; index++) {
-    const time = beat(26.55) + (index / 18) * 0.55 + keys() * 0.01;
-    tick(buses, time, { frequency: 1200 + keys() * 900, gain: 0.05, pan: 0.1 });
+  for (let index = 0; index < 22; index++) {
+    tick(buses, CUES.openSource + 0.1 + (index / 22) * 0.8 + keys() * 0.01, {
+      frequency: 1200 + keys() * 900,
+      gain: 0.05,
+      pan: 0.1,
+    });
   }
 
-  // Bar 8 — everything is inhaled, then the logo lands.
-  let suckPhase = 0;
+  // ── Bar 18: montage — a hit on every cut and a snare roll building ──────
+  sweep(buses, beat(67.2), CUES.montage - beat(67.2), {
+    from: 400,
+    to: 6000,
+    gain: 0.16,
+    shape: "swell",
+    seed: 80,
+  });
+  for (let cut = 0; cut < 7; cut++) {
+    const time = CUES.montage + cut * beat(0.5);
+    snap(buses, time, cut);
+  }
+  for (let step = 0; step < 16; step++) {
+    const time = CUES.montage + beat(step / 4);
+    snare(buses, time, 0.08 + step * 0.012);
+  }
+  let risePhase = 0;
   place(
     buses,
-    beat(27),
-    CUES.lockup - beat(27),
+    beat(70),
+    CUES.lockup - beat(70),
     (t) => {
-      const progress = t / (CUES.lockup - beat(27));
-      suckPhase += (TAU * (200 + 1800 * progress * progress)) / SAMPLE_RATE;
-      return Math.sin(suckPhase) * Math.pow(progress, 3) * 0.5;
+      const amount = t / (CUES.lockup - beat(70));
+      risePhase += (TAU * (200 + 1800 * amount * amount)) / SAMPLE_RATE;
+      return Math.sin(risePhase) * amount ** 3 * 0.5;
     },
     { gain: 0.1, send: 0.4 },
   );
-  sweep(buses, beat(27), CUES.lockup - beat(27), {
+  sweep(buses, beat(70), CUES.lockup - beat(70), {
     from: 200,
     to: 9000,
     gain: 0.32,
     shape: "swell",
     q: 0.8,
-    seed: 70,
+    seed: 81,
   });
+
+  // ── Bars 19–20: the logo lands on Cmaj9 ─────────────────────────────────
   impact(buses, CUES.lockup, { gain: 1.1, crash: 0.34 });
-  pad(buses, CUES.lockup, DURATION - CUES.lockup - 0.3, CHORDS[7].notes, {
+  pad(buses, CUES.lockup, DURATION - CUES.lockup - 0.3, CHORD.Cmaj9.notes, {
     gain: 0.05,
     cutoff: 3200,
     attack: 0.01,
@@ -836,9 +1037,8 @@ function arrange(buses) {
     });
   }
   clunk(buses, CUES.lockup + 0.3, 0.35);
-  // Wordmark shimmer: a rising Cmaj9 arpeggio of bells.
   [72, 76, 79, 83, 86, 91].forEach((note, index) => {
-    bell(buses, beat(28.55) + index * 0.06, midi(note), {
+    bell(buses, CUES.lockup + beat(0.55) + index * 0.06, midi(note), {
       gain: 0.045,
       decay: 0.9,
       ratio: 2,
@@ -847,7 +1047,7 @@ function arrange(buses) {
       send: 0.7,
     });
   });
-  sweep(buses, beat(30.3), 1.1, {
+  sweep(buses, CUES.lockup + beat(2.3), 1.1, {
     from: 3000,
     to: 12000,
     gain: 0.05,
@@ -855,15 +1055,68 @@ function arrange(buses) {
     q: 3,
     pan: -0.6,
     panTo: 0.6,
-    seed: 80,
+    seed: 90,
   });
-  bell(buses, beat(30.9), midi(96), {
+  bell(buses, CUES.lockup + beat(2.9), midi(96), {
     gain: 0.035,
     decay: 1.4,
     ratio: 2,
     index: 0.6,
     send: 0.9,
   });
+}
+
+/** A mouse click: a tiny plastic tick with a low thump. */
+function mouseClick(buses, time) {
+  tick(buses, time, { frequency: 2200, gain: 0.08 });
+  let phase = 0;
+  place(
+    buses,
+    time,
+    0.06,
+    (t) => {
+      phase += (TAU * 180) / SAMPLE_RATE;
+      return Math.sin(phase) * envelope(t, 0.0005, 0.012);
+    },
+    { gain: 0.12 },
+  );
+}
+
+/** A tight noise snap with a pitched body, for the montage cuts. */
+function snap(buses, time, index) {
+  const noise = noiseSource(Math.floor(time * 313));
+  const band = new Biquad("bandpass", 2600 + index * 300, 1.4);
+  place(
+    buses,
+    time,
+    0.12,
+    (t) => band.process(noise()) * envelope(t, 0.001, 0.025),
+    { gain: 0.3, pan: index % 2 ? 0.3 : -0.3, send: 0.2 },
+  );
+  blip(buses, time, [72, 74, 76, 79, 81, 83, 84][index], {
+    gain: 0.05,
+    decay: 0.06,
+  });
+}
+
+/** Snare hit (noise plus a short tone), used for the roll into the logo. */
+function snare(buses, time, gain) {
+  const noise = noiseSource(Math.floor(time * 911));
+  const band = new Biquad("bandpass", 1900, 0.8);
+  let phase = 0;
+  place(
+    buses,
+    time,
+    0.18,
+    (t) => {
+      phase += (TAU * 190) / SAMPLE_RATE;
+      return (
+        band.process(noise()) * envelope(t, 0.001, 0.05) * 1.6 +
+        Math.sin(phase) * envelope(t, 0.001, 0.03) * 0.4
+      );
+    },
+    { gain, send: 0.25 },
+  );
 }
 
 // ── Mixdown ─────────────────────────────────────────────────────────────────

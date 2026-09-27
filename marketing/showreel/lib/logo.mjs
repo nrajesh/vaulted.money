@@ -125,32 +125,67 @@ export const gemPath = () =>
   `M ${INNER.map(([x, y]) => `${x} ${y}`).join(" L ")} Z`;
 
 /**
+ * The two brand variants from documentation/DESIGN.md: silver and cyan for
+ * dark backgrounds, navy and gold for light ones. Same geometry, new metal.
+ */
+export const VARIANTS = {
+  dark: {
+    struts: [COLORS.silverLight, COLORS.silver, COLORS.silverDark],
+    gem: [COLORS.gemLight, COLORS.gem, COLORS.gemDeep],
+    glow: "#d8ffff",
+    shade: "#0a3c46",
+    keyhole: [COLORS.keyhole, COLORS.keyhole],
+    facets: false,
+  },
+  light: {
+    struts: ["#46557c", "#334061", "#232c45"],
+    gem: ["#f6c3a0", "#eba477", "#d4855a"],
+    glow: "#fff1e4",
+    shade: "#7a3a1a",
+    keyhole: ["#c3a45b", "#977631"],
+    facets: true,
+  },
+};
+
+/**
  * Standalone SVG markup of the finished mark. Each strut gets a data-strut
  * index so scenes can animate them individually.
  */
-export function logoSvg(idPrefix = "logo") {
+export function logoSvg(idPrefix = "logo", variant = "dark") {
+  const palette = VARIANTS[variant];
   const struts = ALL_STRUTS.map(([from, to], index) => {
     const [x1, y1] = vertex(from);
     const [x2, y2] = vertex(to);
     return `<line data-strut="${index}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`;
   }).join("");
+  // The light mark's gem is cut into six facets that meet at its centre.
+  const facets = palette.facets
+    ? INNER.map(([x, y], index) => {
+        const [nx, ny] = INNER[(index + 1) % INNER.length];
+        return `<path d="M 0 -8 L ${x} ${y} L ${nx} ${ny} Z" fill="${index % 2 ? "#ffffff" : palette.shade}" opacity="${index % 2 ? 0.1 : 0.07}" />`;
+      }).join("")
+    : "";
   const [cx, cy] = [0, -8];
   return `
   <svg class="logo-svg" viewBox="-430 -490 860 980" aria-label="Vaulted Money">
     <defs>
       <linearGradient id="${idPrefix}-silver" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="${COLORS.silverLight}" />
-        <stop offset="0.55" stop-color="${COLORS.silver}" />
-        <stop offset="1" stop-color="${COLORS.silverDark}" />
+        <stop offset="0" stop-color="${palette.struts[0]}" />
+        <stop offset="0.55" stop-color="${palette.struts[1]}" />
+        <stop offset="1" stop-color="${palette.struts[2]}" />
       </linearGradient>
       <linearGradient id="${idPrefix}-gem" x1="0" y1="0" x2="0.35" y2="1">
-        <stop offset="0" stop-color="${COLORS.gemLight}" />
-        <stop offset="0.55" stop-color="${COLORS.gem}" />
-        <stop offset="1" stop-color="${COLORS.gemDeep}" />
+        <stop offset="0" stop-color="${palette.gem[0]}" />
+        <stop offset="0.55" stop-color="${palette.gem[1]}" />
+        <stop offset="1" stop-color="${palette.gem[2]}" />
+      </linearGradient>
+      <linearGradient id="${idPrefix}-keyhole" x1="0" y1="0" x2="0.4" y2="1">
+        <stop offset="0" stop-color="${palette.keyhole[0]}" />
+        <stop offset="1" stop-color="${palette.keyhole[1]}" />
       </linearGradient>
       <radialGradient id="${idPrefix}-gem-glow" cx="${cx}" cy="${cy}" r="230" gradientUnits="userSpaceOnUse">
-        <stop offset="0" stop-color="#d8ffff" stop-opacity="0.55" />
-        <stop offset="1" stop-color="#d8ffff" stop-opacity="0" />
+        <stop offset="0" stop-color="${palette.glow}" stop-opacity="0.55" />
+        <stop offset="1" stop-color="${palette.glow}" stop-opacity="0" />
       </radialGradient>
       <linearGradient id="${idPrefix}-shine" class="shine-gradient" gradientUnits="userSpaceOnUse"
         x1="-1400" y1="-90" x2="-1000" y2="90">
@@ -162,11 +197,12 @@ export function logoSvg(idPrefix = "logo") {
     </defs>
     <g class="logo-gem" clip-path="url(#${idPrefix}-gem-clip)">
       <path d="${gemPath()}" fill="url(#${idPrefix}-gem)" />
-      <path d="M 0 -265 L 0 248 L 193 145 L 193 -180 Z" fill="#0a3c46" opacity="0.1" />
+      ${facets}
+      <path d="M 0 -265 L 0 248 L 193 145 L 193 -180 Z" fill="${palette.shade}" opacity="0.1" />
       <path d="M -193 -180 L 0 -265 L 0 -40 Z" fill="#ffffff" opacity="0.08" />
       <circle cx="${cx}" cy="${cy}" r="230" fill="url(#${idPrefix}-gem-glow)" />
     </g>
-    <path class="logo-keyhole" d="${keyholePath()}" fill="${COLORS.keyhole}" />
+    <path class="logo-keyhole" d="${keyholePath()}" fill="url(#${idPrefix}-keyhole)" />
     <g class="logo-struts" stroke="url(#${idPrefix}-silver)" stroke-width="${STRUT_WIDTH}"
        stroke-linecap="round" stroke-linejoin="round" fill="none">${struts}</g>
     <g class="logo-shine" stroke="url(#${idPrefix}-shine)" stroke-width="${STRUT_WIDTH * 0.6}"

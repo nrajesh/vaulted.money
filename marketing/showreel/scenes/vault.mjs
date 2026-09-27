@@ -23,7 +23,6 @@ import {
   INNER,
   KEYHOLE,
   LOGO_HEIGHT,
-  OUTER,
   STRUT_WIDTH,
   vertex,
 } from "../lib/logo.mjs";

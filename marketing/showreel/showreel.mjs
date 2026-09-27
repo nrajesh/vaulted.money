@@ -7,14 +7,16 @@
  */
 import { DURATION } from "./timeline.mjs";
 import { clearFx } from "./lib/fx.mjs";
+import { decodeAllImages, loadScreens } from "./lib/screens.mjs";
 import * as backdrop from "./scenes/backdrop.mjs";
 import * as vault from "./scenes/vault.mjs";
 import * as phone from "./scenes/phone.mjs";
 import * as privacy from "./scenes/privacy.mjs";
-import * as track from "./scenes/track.mjs";
-import * as budget from "./scenes/budget.mjs";
-import * as insight from "./scenes/insight.mjs";
+import * as desktop from "./scenes/desktop.mjs";
+import * as reports from "./scenes/reports.mjs";
+import * as themes from "./scenes/themes.mjs";
 import * as everywhere from "./scenes/everywhere.mjs";
+import * as montage from "./scenes/montage.mjs";
 import * as lockup from "./scenes/lockup.mjs";
 import * as hud from "./scenes/hud.mjs";
 import * as finishing from "./scenes/finishing.mjs";
@@ -26,10 +28,11 @@ const scenes = [
   vault,
   phone,
   privacy,
-  track,
-  budget,
-  insight,
+  desktop,
+  reports,
+  themes,
   everywhere,
+  montage,
   lockup,
   hud,
   finishing,
@@ -99,9 +102,11 @@ async function loadFonts() {
 }
 
 async function boot() {
-  await loadFonts();
+  await Promise.all([loadFonts(), loadScreens()]);
   const stage = document.getElementById("stage");
   for (const scene of scenes) scene.mount?.(stage);
+  // Real app screenshots must be decoded before frame 0 is captured.
+  await decodeAllImages();
 
   window.__render = render;
   render(0);

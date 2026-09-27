@@ -19,10 +19,11 @@ export const WAVES = [
   { time: CUES.ignite, x: 960, y: 245, speed: 1500, strength: 0.9 },
   { time: CUES.diveImpact, x: 960, y: 540, speed: 2600, strength: 1 },
   { time: CUES.noCloud, x: 1400, y: 540, speed: 2200, strength: 0.7 },
-  { time: CUES.track, x: 560, y: 540, speed: 2400, strength: 0.6 },
-  { time: CUES.budget, x: 960, y: 540, speed: 2600, strength: 0.6 },
-  { time: CUES.insight, x: 960, y: 620, speed: 2600, strength: 0.6 },
-  { time: CUES.everywhere, x: 960, y: 560, speed: 2600, strength: 0.6 },
+  { time: CUES.desktopIn, x: 1290, y: 560, speed: 2400, strength: 0.6 },
+  { time: CUES.categorizeClick, x: 1100, y: 420, speed: 2200, strength: 0.5 },
+  { time: CUES.budgets, x: 1290, y: 560, speed: 2600, strength: 0.5 },
+  { time: CUES.reports, x: 1050, y: 640, speed: 2600, strength: 0.6 },
+  { time: CUES.everywhere, x: 960, y: 560, speed: 2600, strength: 0.7 },
   { time: CUES.lockup, x: 960, y: 430, speed: 2000, strength: 1.2 },
 ];
 

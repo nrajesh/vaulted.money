@@ -28,6 +28,7 @@
     "ios:build:simulator": "pnpm run build && cap sync ios && xcodebuild -workspace ios/App/App.xcodeproj/project.xcworkspace -scheme App -configuration Release -sdk iphonesimulator -derivedDataPath ios/build/DerivedData CODE_SIGNING_ALLOWED=NO build",
     "showreel": "node marketing/showreel/render.mjs",
     "showreel:draft": "node marketing/showreel/render.mjs --draft",
+    "showreel:capture": "node marketing/showreel/capture.mjs",
     "release:local": "cross-env ELECTRON_BUILDER_CACHE=.cache/electron-builder pnpm run electron:build && pnpm run android:build:apk && pnpm run ios:build:simulator"
   },
   "dependencies": {

@@ -198,7 +198,9 @@ export function render(t) {
   });
 
   // One pass of light across the metal.
-  const sweep = ease.inOutSine(progress(t, beat(30.4), beat(31.4)));
+  const sweep = ease.inOutSine(
+    progress(t, CUES.lockup + beat(2.4), CUES.lockup + beat(3.4)),
+  );
   const shineX = lerp(-900, 900, sweep);
   shineGradient.setAttribute("x1", String(shineX - 220));
   shineGradient.setAttribute("x2", String(shineX + 220));
@@ -208,10 +210,12 @@ export function render(t) {
   const wordSweep = lerp(
     -width * 0.6,
     width * 1.6,
-    ease.inOutSine(progress(t, beat(30.6), beat(31.6))),
+    ease.inOutSine(
+      progress(t, CUES.lockup + beat(2.6), CUES.lockup + beat(3.6)),
+    ),
   );
   wordGlyphs.forEach((glyph, index) => {
-    const start = beat(28.55) + index * 0.028;
+    const start = CUES.lockup + beat(0.55) + index * 0.028;
     const amount = ease.outExpo(progress(t, start, start + 0.6));
     const offset = Number(glyph.dataset.offset);
     style(glyph, {
@@ -224,7 +228,9 @@ export function render(t) {
     opacity: taglineIn,
     transform: `translateY(${(1 - taglineIn) * 22}px)`,
   });
-  const footerIn = ease.outExpo(progress(t, beat(30.1), beat(30.1) + 0.8));
+  const footerIn = ease.outExpo(
+    progress(t, CUES.lockup + beat(2.1), CUES.lockup + beat(2.1) + 0.8),
+  );
   style(footer, { opacity: footerIn });
   footer
     .querySelectorAll("i")

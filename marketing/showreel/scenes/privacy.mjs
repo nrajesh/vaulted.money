@@ -24,8 +24,8 @@ const SHIELD_RADIUS = 500;
 const SHIELD_INRADIUS = SHIELD_RADIUS * Math.cos(Math.PI / 6);
 const CELL = 30;
 const START = CUES.noCloud - 0.15;
-const EXIT = beat(11.7);
-const END = beat(12.4);
+const EXIT = beat(15.1);
+const END = beat(16.2);
 
 const LINES = [
   { time: CUES.noCloud, icon: "cloud-off", noun: "cloud." },
@@ -76,10 +76,10 @@ export function mount() {
 
   // Data packets: launched from the phone, caught by the field.
   const rand = random(42);
-  for (let index = 0; index < 90; index++) {
+  for (let index = 0; index < 150; index++) {
     const angle = rand() * Math.PI * 2;
     packets.push({
-      launch: lerp(CUES.noCloud - 0.05, beat(11.5), rand()),
+      launch: lerp(CUES.noCloud - 0.05, beat(14.8), rand()),
       angle,
       speed: lerp(700, 1300, rand()),
       originX: SHIELD_X + lerp(-120, 120, rand()),
