@@ -10,7 +10,7 @@
  * Nothing runs on the wall clock, so the output is identical on every run.
  *
  * Motion blur is real temporal supersampling: each output frame is the
- * average of `--blur` sub-frames spread across a 180° shutter.
+ * average of `--blur` sub-frames (8 by default) spread across a 180° shutter.
  *
  * Usage:
  *   node marketing/showreel/render.mjs                 # full 1080p60 render
@@ -46,7 +46,7 @@ const option = (name, fallback) => {
 
 const draft = flag("draft");
 const fps = Number(option("fps", draft ? 30 : 60));
-const blurSamples = Math.max(1, Number(option("blur", draft ? 1 : 4)));
+const blurSamples = Math.max(1, Number(option("blur", draft ? 1 : 8)));
 const scale = Number(option("scale", draft ? 0.5 : 1));
 const workers = Math.max(1, Number(option("workers", 3)));
 const fromSeconds = Number(option("from", 0));
@@ -458,6 +458,52 @@ async function renderVideo(pages) {
   ffmpeg.stdin.end();
   await ffmpegDone;
   console.log(`\n✓ Wrote ${outputFile.replace(ROOT + "/", "")}`);
+  if (!draft) await encodeWebCopy(outputFile);
+}
+
+/**
+ * The master is encoded near-losslessly (grain is expensive), so also write
+ * a lighter copy for websites, chat and social uploads.
+ */
+function encodeWebCopy(masterFile) {
+  const webFile = masterFile.replace(/\.mp4$/, "-web.mp4");
+  const ffmpegArgs = [
+    "-y",
+    "-loglevel",
+    "error",
+    "-i",
+    masterFile,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "slow",
+    "-crf",
+    "22",
+    "-maxrate",
+    "14M",
+    "-bufsize",
+    "28M",
+    "-profile:v",
+    "high",
+    "-pix_fmt",
+    "yuv420p",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-movflags",
+    "+faststart",
+    webFile,
+  ];
+  return new Promise((resolve, reject) => {
+    const ffmpeg = spawn(ffmpegPath, ffmpegArgs, { stdio: "inherit" });
+    ffmpeg.on("error", reject);
+    ffmpeg.on("close", (code) => {
+      if (code !== 0) return reject(new Error(`ffmpeg exited with ${code}`));
+      console.log(`✓ Wrote ${webFile.replace(ROOT + "/", "")}`);
+      resolve();
+    });
+  });
 }
 
 async function main() {

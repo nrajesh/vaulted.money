@@ -11,7 +11,7 @@ source and re-rendering.
 ## Render it
 
 ```bash
-pnpm showreel          # 1920×1080, 60 fps, 4× motion blur → out/vaulted-money-showreel.mp4
+pnpm showreel          # 1920×1080, 60 fps, 8× motion blur → out/vaulted-money-showreel.mp4 (+ -web.mp4)
 pnpm showreel:draft    # 960×540, 30 fps, no blur — about 45 s, for checking timing
 ```
 
@@ -45,7 +45,7 @@ npx serve marketing/showreel   # then open http://localhost:3000
 - **Deterministic frames.** `showreel.mjs` exposes `window.__render(seconds)`.
   Every scene is a pure function of time, so any frame can be rendered in
   isolation, in any order, on any number of browsers.
-- **Real motion blur.** Each output frame averages four sub-frames across a 180°
+- **Real motion blur.** Each output frame averages eight sub-frames across a 180°
   shutter (`tmix` in ffmpeg), so whip pans, zooms and flying struts smear like
   they would through a real camera.
 - **One clock.** `timeline.mjs` defines the tempo (128 BPM, which makes 15 s
