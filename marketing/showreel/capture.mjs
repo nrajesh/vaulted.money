@@ -28,6 +28,8 @@ const OUT = join(ROOT, "out", "screens");
 const DESKTOP = { width: 1440, height: 900, deviceScaleFactor: 2 };
 const TABLET = { width: 1180, height: 820, deviceScaleFactor: 2, mobile: true };
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 3, mobile: true };
+/** Tall enough for the analytics chart card and the breakdown below it. */
+const TALL_DESKTOP = { ...DESKTOP, height: 1320 };
 
 /**
  * A bank export as a user might download it. Payees are taken from the
@@ -174,6 +176,30 @@ async function main() {
     })()`);
     if (!clicked) throw new Error(`Nothing to click for "${text}"`);
     await wait(700);
+  }
+
+  /** Move the real pointer, so hover states (chart tooltips) appear. */
+  async function hover(x, y) {
+    await session.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x,
+      y,
+    });
+    await wait(900);
+  }
+
+  /** A real click at a point (CSS px), as a user's pointer would make. */
+  async function pointerClick({ x, y }) {
+    for (const type of ["mouseMoved", "mousePressed", "mouseReleased"]) {
+      await session.send("Input.dispatchMouseEvent", {
+        type,
+        x,
+        y,
+        button: "left",
+        clickCount: 1,
+      });
+    }
+    await wait(300);
   }
 
   async function typeInto(selector, text) {
@@ -406,7 +432,10 @@ async function main() {
       "[role=dialog] label, [role=dialog] button",
     );
     await shot("desktop-ai-provider-dark", {
-      queries: { dialog: ["[role=dialog]"] },
+      queries: {
+        dialog: ["[role=dialog]"],
+        endpoint: ['[role=dialog] input[placeholder^="https"]'],
+      },
     });
     await click("Save Provider", "[role=dialog] button");
     await settle(1500);
@@ -451,15 +480,28 @@ async function main() {
       },
     });
 
+    // Which budgets the demo creates, and their order, varies from run to
+    // run (it depends on async timing); the film frames whichever on-track
+    // and over-budget cards land on the first page.
     await goto("/budgets", 2400);
     await shot("desktop-budgets-dark", {
       queries: {
         summary: ["div", "Avg. Monthly Budget", 90],
         overBudget: ["div", "over budget", 160],
-        onTrack: ["div", "remaining", 160, "-€"],
+        onTrack: ["div", "On track", 160],
+        remaining: ["div", "remaining", 160, "-€"],
         activeBudgets: ["h2, h3, div", "Active Budgets", 20],
       },
     });
+    // Prefer a card the app itself labels "On track", else one with money
+    // remaining.
+    const budgetRects = manifest.screens["desktop-budgets-dark"].rects;
+    budgetRects.onTrack ??= budgetRects.remaining;
+    if (!budgetRects.onTrack || !budgetRects.overBudget) {
+      throw new Error(
+        "This run's demo budgets show no on-track and over-budget pair on page 1. Run the capture again.",
+      );
+    }
     await goto("/insights", 2400);
     await shot("desktop-insights-dark", {
       queries: {
@@ -469,6 +511,93 @@ async function main() {
     });
     await goto("/analytics", 2800);
     await shot("desktop-analytics-dark", { fullHeight: 1500 });
+
+    // The same chart as line, bar and pie, each with what hovering (or, for
+    // the pie, clicking a slice) reveals. A taller viewport keeps the whole
+    // chart card and the breakdown under it on screen without scrolling, so
+    // every state lines up pixel for pixel. The pointer rests on the page
+    // title between states so no hover leaks into the plain shots.
+    await viewport(TALL_DESKTOP);
+    await goto("/analytics", 2800);
+    const chartQueries = {
+      card: ["div", "1M", 420],
+      total: ["div", "Total spent", 60],
+      line: ["button[aria-label='Line chart']"],
+      bar: ["button[aria-label='Bar chart']"],
+      pie: ["button[aria-label='Pie chart']"],
+      plot: [".recharts-wrapper"],
+      tooltip: [".recharts-tooltip-wrapper", null, 20],
+      breakdown: ["div", "By Category", 200],
+    };
+    const restPointer = () => hover(720, 150);
+    /** Also records where the pointer was, so the film's cursor lands there. */
+    async function analyticsShot(name, pointer) {
+      await shot(name, { queries: chartQueries });
+      if (pointer) {
+        manifest.screens[name].rects.pointer = {
+          ...pointer,
+          width: 0,
+          height: 0,
+        };
+      }
+    }
+    const centreOf = (selector) =>
+      evaluate(`(() => {
+        const box = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();
+        return { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) };
+      })()`);
+    const chartMode = async (label) => {
+      await pointerClick(await centreOf(`button[aria-label='${label}']`));
+      await restPointer();
+      await wait(1400);
+    };
+    const tooltipShown = () =>
+      waitFor(
+        `document.querySelector(".recharts-tooltip-wrapper")?.innerText.trim().length > 0`,
+      );
+
+    await restPointer();
+    await analyticsShot("desktop-analytics-line-dark");
+    const linePoint = await evaluate(`(() => {
+      const plot = document.querySelector(".recharts-cartesian-grid").getBoundingClientRect();
+      return { x: Math.round(plot.x + plot.width * 0.66), y: Math.round(plot.y + plot.height * 0.5) };
+    })()`);
+    await hover(linePoint.x, linePoint.y);
+    await tooltipShown();
+    await analyticsShot("desktop-analytics-line-hover-dark", linePoint);
+
+    await chartMode("Bar chart");
+    await analyticsShot("desktop-analytics-bar-dark");
+    // Hover the tallest bar.
+    const barPoint = await evaluate(`(() => {
+      const bars = [...document.querySelectorAll(".recharts-bar-rectangle path, .recharts-bar-rectangle rect")]
+        .map((element) => element.getBoundingClientRect())
+        .filter((box) => box.height > 2);
+      const tallest = bars.sort((a, b) => b.height - a.height)[0];
+      return { x: Math.round(tallest.x + tallest.width / 2), y: Math.round(tallest.y + tallest.height * 0.4) };
+    })()`);
+    await hover(barPoint.x, barPoint.y);
+    await tooltipShown();
+    await analyticsShot("desktop-analytics-bar-hover-dark", barPoint);
+
+    await chartMode("Pie chart");
+    await analyticsShot("desktop-analytics-pie-dark");
+    // Click the largest slice: the centre label shows its name and total.
+    const piePoint = await evaluate(`(() => {
+      const sectors = [...document.querySelectorAll(".recharts-pie-sector")];
+      const svg = sectors[0].closest("svg").getBoundingClientRect();
+      const centre = { x: svg.x + svg.width / 2, y: svg.y + svg.height / 2 };
+      const box = sectors[0].getBoundingClientRect();
+      const dx = box.x + box.width / 2 - centre.x;
+      const dy = box.y + box.height / 2 - centre.y;
+      const length = Math.hypot(dx, dy) || 1;
+      return { x: Math.round(centre.x + (dx / length) * 90), y: Math.round(centre.y + (dy / length) * 90) };
+    })()`);
+    await pointerClick(piePoint);
+    await wait(1400);
+    await analyticsShot("desktop-analytics-pie-active-dark", piePoint);
+    await viewport(DESKTOP);
+
     await goto("/calendar", 2400);
     await shot("desktop-calendar-dark");
     await goto("/reports/essential", 2800);
@@ -493,6 +622,19 @@ async function main() {
     await wait(1200);
     await shot("desktop-reports-sankey-dark", { clip: sankey });
 
+    // Screens the earlier chapters never show, for the devices and montage.
+    for (const [path, name, milliseconds = 2400] of [
+      ["/accounts", "accounts"],
+      ["/currencies", "currencies"],
+      ["/scheduled", "scheduled"],
+      ["/categories", "categories"],
+      ["/vendors", "vendors"],
+      ["/backup", "backup"],
+    ]) {
+      await goto(path, milliseconds);
+      await shot(`desktop-${name}-dark`);
+    }
+
     // ── Desktop, light (the gold and navy mark) ────────────────────────────
     console.log("• Desktop screens (light)");
     await setTheme("light");
@@ -516,6 +658,11 @@ async function main() {
     await setTheme("dark");
     await goto("/calendar", 2600);
     await shot("tablet-calendar-dark");
+    await setTheme("light");
+    for (const name of ["insights", "scheduled", "accounts"]) {
+      await goto(`/${name}`, 2600);
+      await shot(`tablet-${name}-light`);
+    }
 
     // ── Mobile ─────────────────────────────────────────────────────────────
     console.log("• Mobile screens");
@@ -530,6 +677,11 @@ async function main() {
       await shot(`mobile-analytics-${theme}`, { fullHeight: 2400 });
       await goto("/ledgers", 2000);
       await shot(`mobile-ledgers-${theme}`);
+    }
+    await setTheme("dark");
+    for (const name of ["calendar", "insights", "accounts"]) {
+      await goto(`/${name}`, 2800);
+      await shot(`mobile-${name}-dark`, { fullHeight: 2400 });
     }
 
     writeFileSync(

@@ -1,14 +1,20 @@
 # Vaulted Money — showreel
 
-A 37.5-second motion-graphics film for the app, built entirely in code:
+A 50-second motion-graphics film for the app, built entirely in code:
 HTML/CSS/SVG/Canvas for the picture, a from-scratch JavaScript synthesiser for
 the music and sound design, and headless Chromium + ffmpeg to render it frame by
 frame.
 
 **Every app screen in the film is the real app.** `capture.mjs` runs the app,
 generates its built-in demo data, performs the real flows (CSV import, AI
-provider setup, "Categorize Missing") and screenshots each screen. Nothing on
-screen is a mock-up, so when the UI changes, re-capture and the film follows.
+provider setup, "Categorize Missing", switching the Analytics chart between
+line, bar and pie and hovering it) and screenshots each screen in each state.
+Nothing on screen is a mock-up, so when the UI changes, re-capture and the
+film follows.
+
+**Pacing rule:** every new graphic holds for at least a second before the next
+one arrives, and each chapter keeps one headline while the screen shows two or
+three things. Only the highlights montage cuts faster, on purpose.
 
 Nothing here is a binary asset. The video, the soundtrack, the screen captures
 and the font cache are all generated into `out/` (git-ignored).
@@ -25,8 +31,8 @@ pnpm showreel:capture     # re-capture the app's screens (runs automatically on 
 Or call the scripts directly for more control:
 
 ```bash
-node marketing/showreel/render.mjs --stills 12,24.5,35   # PNG stills to out/stills/
-node marketing/showreel/render.mjs --from 7.5 --to 15    # render a section
+node marketing/showreel/render.mjs --stills 12,26.5,46   # PNG stills to out/stills/
+node marketing/showreel/render.mjs --from 24 --to 30     # render a section
 node marketing/showreel/render.mjs --blur 4 --workers 4  # lighter blur, more browsers
 node marketing/showreel/soundtrack.mjs                   # just the audio → out/soundtrack.wav
 ```
@@ -53,35 +59,42 @@ npx serve marketing/showreel   # then open http://localhost:3000
   a fresh headless profile with `Math.random` seeded (so the demo numbers are
   stable), clicks through it like a user and saves screenshots at 2× (3× on
   mobile) plus a `manifest.json` of element boxes. Callouts, zooms and the
-  cursor are aimed at those boxes, so they land on the real buttons.
+  cursor are aimed at those boxes, so they land on the real buttons. Which
+  budgets the demo creates varies from run to run, so the film frames
+  whichever on-track and over-budget cards it finds; if a run has no such
+  pair on the first page, the capture stops and asks to be run again.
 - **Deterministic frames.** `showreel.mjs` exposes `window.__render(seconds)`.
   Every scene is a pure function of time, so any frame can be rendered in
   isolation, in any order, on any number of browsers.
 - **Real motion blur.** Each output frame averages eight sub-frames across a
   180° shutter (`tmix` in ffmpeg), so whip pans, zooms and flying struts smear
   like they would through a real camera.
-- **One clock.** `timeline.mjs` defines the tempo (128 BPM, so 37.5 s is exactly
-  20 bars), the chapters and every named cue. The picture and `soundtrack.mjs`
-  both read it, and the forge ticks in the audio use the vault scene's own
-  spark arrival times, so every flash on screen has its sound.
+- **One clock.** `timeline.mjs` defines the tempo (128 BPM, so 50.6 s is
+  exactly 27 bars), the chapters and every named cue. The picture and
+  `soundtrack.mjs` both read it: the music takes its structure (groove,
+  breakdown, finale, logo) from the chapters, the forge ticks use the vault
+  scene's own spark arrival times, and the keystrokes follow the terminal's
+  typing, so every flash on screen has its sound.
 - **Finishing.** The ffmpeg pass adds a soft bloom and fine film grain; the
   final beat fades to black so the film loops seamlessly into its first spark.
 
 ## Storyboard
 
-| Bars  | Time   | Chapter                                                             | What happens                                                                                                                                                                                                                          |
-| ----- | ------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | 0.0 s  | **Vault**                                                           | Two sparks race around the hexagon; struts fire inward wherever they pass. The 3D wireframe flattens into the exact brand mark and cools from light into silver; the camera dives through the keyhole.                                |
-| 2     | 1.9 s  | **Your money. Your device.**                                        | Kinetic type; the phone's bezel draws itself around the words as the camera pulls out.                                                                                                                                                |
-| 3–4   | 3.8 s  | **No cloud. No trackers. No subscriptions.**                        | One line every two beats while the real mobile Transactions screen scrolls inside a hexagonal force field that stops data leaving.                                                                                                    |
-| 5–6   | 7.5 s  | **Import any bank's CSV**                                           | Whip to the desktop app. A bank export drops onto "Import CSV": the real import dialog, its automatic column mapping, and six new uncategorised rows.                                                                                 |
-| 7–8   | 11.3 s | **Sorted in one tap / AI, only if you want it**                     | The cursor clicks "Categorize Missing" and a scan line sweeps the table as categories appear (matched from the ledger's own history). Then the AI Providers page with a local model, and the "keys are stored locally" settings card. |
-| 9–10  | 15.0 s | **Budget with intent**                                              | Real budget cards (on track / over budget) and the real overspend alerts from Insights, before the window tips back into an isometric plane.                                                                                          |
-| 11–12 | 18.8 s | **See where it goes**                                               | An isometric wall of real reports (Sankey cash flow, Essential Reports, Analytics, Calendar, Insights) rises on springs; export formats pop.                                                                                          |
-| 13–14 | 22.5 s | **Day or night**                                                    | The cursor clicks the theme toggle and a circular wipe turns the world light: the navy-and-gold mark builds itself beside real light-mode screens. The music breaks down.                                                             |
-| 15–17 | 26.3 s | **Every device, every currency, fully offline, free & open source** | Real screens on desktop, tablet and phone; the demo ledgers' currencies; offline badges; a real `git clone` typing itself.                                                                                                            |
-| 18    | 31.9 s | **Highlights**                                                      | Seven hard cuts on the eighth notes through the screens above.                                                                                                                                                                        |
-| 19–20 | 33.8 s | **Vaulted Money**                                                   | The shield assembles from struts flung in from every direction; wordmark, tagline and a fade to black.                                                                                                                                |
+| Bars  | Time   | Chapter                                                       | What happens                                                                                                                                                                                                                                                   |
+| ----- | ------ | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | 0.0 s  | **Vault**                                                     | Two sparks race around the hexagon; struts fire inward wherever they pass. The 3D wireframe flattens into the exact brand mark and cools from light into silver; the camera dives through the keyhole.                                                         |
+| 2     | 1.9 s  | **Your money. Your device.**                                  | Kinetic type; the phone's bezel draws itself around the words as the camera pulls out.                                                                                                                                                                         |
+| 3–4   | 3.8 s  | **No cloud. No trackers. No subscriptions.**                  | One line every two beats while the real mobile Transactions screen scrolls inside a hexagonal force field that stops data leaving.                                                                                                                             |
+| 5–7   | 7.5 s  | **Import any bank's CSV**                                     | Whip to the desktop app. A bank export drops onto "Import CSV"; the real import dialog and its preview; six new, uncategorised rows.                                                                                                                           |
+| 8–9   | 13.1 s | **Sorted in one tap**                                         | The cursor clicks "Categorize Missing" and a scan line sweeps the table as categories appear, matched from the ledger's own history; the confirmation toast.                                                                                                   |
+| 10–11 | 16.9 s | **AI, only if you want it**                                   | Adding a provider that points at a model on localhost, then the providers list and the "keys are stored locally" settings card.                                                                                                                                |
+| 12–13 | 20.6 s | **Budget with intent**                                        | An on-track and an over-budget card, then the real overspend alerts from Insights, before the window tips back into an isometric plane.                                                                                                                        |
+| 14–16 | 24.4 s | **See where it goes**                                         | An isometric wall of real reports rises (Sankey cash flow, Analytics, Essential Reports, Calendar, Insights); export formats pop. The camera leans into Analytics and a cursor hovers the line, switches to bars and hovers, then to a pie and clicks a slice. |
+| 17–18 | 30.0 s | **Day or night**                                              | The cursor clicks the theme toggle and a circular wipe turns the world light: the navy-and-gold mark builds itself beside real light-mode screens. The music breaks down.                                                                                      |
+| 19–21 | 33.8 s | **Every device, every currency, fully offline**               | Real screens on desktop (Accounts, then Currencies), tablet (Scheduled) and phone (Calendar); the demo ledgers' currencies; offline badges. One bar per claim.                                                                                                 |
+| 22–23 | 39.4 s | **Free & open source. Install it today.**                     | A terminal types the clone and install commands from vaulted.money, then one command per platform: web, desktop, Android, iOS.                                                                                                                                 |
+| 24    | 43.1 s | **Highlights**                                                | Seven hard cuts on the eighth notes through the busiest screens, each named.                                                                                                                                                                                   |
+| 25–27 | 45.0 s | **Vaulted Money · Privacy-first · Data-local · Open-sourced** | The shield assembles from struts flung in from every direction; the wordmark, the three badges from the vaulted.money hero, the address, and a fade to black.                                                                                                  |
 
 ## Design system
 

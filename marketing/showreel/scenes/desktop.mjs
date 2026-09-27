@@ -1,15 +1,17 @@
 /**
- * Bars 5–10 — the desktop app, on real screens.
+ * Bars 5–13 — the desktop app, on real screens.
  *
  * One window stays on stage while the story moves through it, like a screen
- * recording directed by a camera:
- *   bars 5–6   a bank export drops onto "Import CSV"; the real import dialog,
- *              its column mapping, and the new (uncategorised) rows;
- *   bars 7–8   the cursor clicks "Categorize Missing" and a scan line sweeps
- *              the table as categories appear; then the AI provider page
- *              (a local model) and the "keys stay local" settings card;
- *   bars 9–10  budgets, with the real overspend alerts popping out, before
- *              the window tips back into the isometric reports wall.
+ * recording directed by a camera. Each chapter keeps one headline on the left
+ * while the window shows two or three things, each held long enough to read:
+ *   bars 5–7    a bank export drops onto "Import CSV"; the real import
+ *               dialog and its preview; the new (uncategorised) rows;
+ *   bars 8–9    the cursor clicks "Categorize Missing" and a scan line sweeps
+ *               the table as categories appear, matched from history;
+ *   bars 10–11  optional AI: a provider pointed at a model on localhost, then
+ *               the "keys stay local" settings card;
+ *   bars 12–13  budgets, with the real overspend alerts popping out, before
+ *               the window tips back into the isometric reports wall.
  * All images are captures of the running app (capture.mjs); callouts are
  * placed from the element boxes recorded at capture time.
  */
@@ -27,7 +29,7 @@ import { glyphs, html, icon, show, style } from "../lib/dom.mjs";
 import { rect, screenCrop, screenImage } from "../lib/screens.mjs";
 
 const START = beat(15.4);
-const END = beat(40.6);
+const END = beat(52.6);
 const VIEW_WIDTH = 1440;
 const VIEW_HEIGHT = 900;
 const BAR_HEIGHT = 44;
@@ -37,40 +39,42 @@ const WINDOW_HEIGHT = VIEW_HEIGHT + BAR_HEIGHT;
 const CENTER_X = 1920 - 70 - (VIEW_WIDTH * WINDOW_SCALE) / 2;
 const CENTER_Y = 178 + (WINDOW_HEIGHT * WINDOW_SCALE) / 2;
 const TIP_START = CUES.budgetsTip;
-const TIP_END = beat(40.3);
+const TIP_END = beat(52.3);
 
 const PAGES = [
   { name: "desktop-transactions-dark", at: START },
   { name: "desktop-import-settings-dark", at: CUES.importSettings },
-  { name: "desktop-import-map-dark", at: CUES.importMap },
   { name: "desktop-transactions-imported-dark", at: CUES.imported },
   {
     name: "desktop-transactions-categorized-dark",
     at: CUES.categorized,
     wipe: true,
   },
-  { name: "desktop-ai-providers-dark", at: CUES.aiProviders },
+  { name: "desktop-ai-provider-dark", at: CUES.aiProviders },
+  { name: "desktop-ai-providers-dark", at: CUES.aiProviderList },
   { name: "desktop-budgets-dark", at: CUES.budgets },
 ];
+/** How long the categories take to sweep down the table. */
+const WIPE_LENGTH = 0.9;
 
 const COPY = [
   {
     from: CUES.desktopIn,
-    to: beat(23.7),
+    to: beat(27.4),
     plain: "Import any",
     serif: "bank's CSV.",
     sub: "Columns are matched for you, and the file never leaves this device.",
   },
   {
-    from: beat(24),
-    to: beat(27.7),
+    from: beat(28),
+    to: beat(35.4),
     plain: "Sorted in",
     serif: "one tap.",
     sub: "Categories come from your own history first.",
   },
   {
     from: CUES.aiProviders,
-    to: beat(31.7),
+    to: beat(43.4),
     plain: "AI, only if",
     serif: "you want it.",
     sub: "Bring your own key, or point it at a model running on your machine.",
@@ -113,12 +117,8 @@ function measure() {
     "subCategoryHeader",
   );
   const preview = rect("desktop-import-settings-dark", "preview");
-  const mapDialog = safeRect("desktop-import-map-dark", "dialog", {
-    x: 338,
-    y: 10,
-    width: 764,
-    height: 880,
-  });
+  const endpoint = rect("desktop-ai-provider-dark", "endpoint");
+  const providerDialog = rect("desktop-ai-provider-dark", "dialog");
   const toast = safeRect("desktop-transactions-categorized-dark", "toast", {
     x: 1036,
     y: 790,
@@ -127,8 +127,8 @@ function measure() {
   });
   const providerRow = rect("desktop-ai-providers-dark", "row");
   // Whichever real budgets the demo produced: one on track, one over.
-  const dining = rect("desktop-budgets-dark", "onTrack");
-  const entertainment = rect("desktop-budgets-dark", "overBudget");
+  const onTrack = rect("desktop-budgets-dark", "onTrack");
+  const overBudget = rect("desktop-budgets-dark", "overBudget");
   const rows = {
     x: categoryHeader.x - 8,
     y: firstRow.y - 4,
@@ -140,11 +140,12 @@ function measure() {
     categorize,
     firstRow,
     preview,
-    mapDialog,
+    endpoint,
+    providerDialog,
     toast,
     providerRow,
-    dining,
-    entertainment,
+    onTrack,
+    overBudget,
     rows,
   };
 }
@@ -157,51 +158,81 @@ function safeRect(name, key, fallback) {
   }
 }
 
+/** The smallest box around two boxes. */
+function union(first, second) {
+  const x = Math.min(first.x, second.x);
+  const y = Math.min(first.y, second.y);
+  return {
+    x,
+    y,
+    width: Math.max(first.x + first.width, second.x + second.width) - x,
+    height: Math.max(first.y + first.height, second.y + second.height) - y,
+  };
+}
+
 const centre = (box) => ({
   x: box.x + box.width / 2,
   y: box.y + box.height / 2,
 });
 
-/** Camera keyframes inside the window: zoom and focus in page CSS px. */
+/**
+ * Camera keyframes inside the window: zoom and focus in page CSS px. Every
+ * move settles and holds for at least a second before the next one.
+ */
 function buildCamera(g) {
   const home = { z: 1, x: 720, y: 450 };
   const rowsFocus = { x: g.rows.x + 360, y: g.rows.y + g.rows.height / 2 };
-  const budgetsFocus = {
-    x: (centre(g.dining).x + centre(g.entertainment).x) / 2,
-    y: centre(g.dining).y - 20,
-  };
+  // Frame both budget cards, wherever the demo put them.
+  const pair = union(g.onTrack, g.overBudget);
+  const budgetsFocus = centre(pair);
+  const budgetsZoom = Math.min(
+    1.34,
+    VIEW_WIDTH / (pair.width + 180),
+    VIEW_HEIGHT / (pair.height + 180),
+  );
   const toastFocus = centre(g.toast);
-  const providerFocus = centre(g.providerRow);
+  // The row's left part: name, type, model and endpoint.
+  const providerFocus = {
+    x: g.providerRow.x + 600,
+    y: centre(g.providerRow).y,
+  };
   const previewFocus = centre(g.preview);
+  const endpointFocus = {
+    x: centre(g.providerDialog).x,
+    y: centre(g.endpoint).y,
+  };
+  const tableView = { z: 1.1, x: 720, y: 400 };
   return [
     { t: START, ...home },
-    { t: beat(16.4), ...home },
-    { t: beat(16.9), z: 1.18, x: centre(g.importCsv).x - 120, y: 330 },
-    { t: beat(17.45), ...home },
-    { t: beat(18.4), z: 1.55, ...previewFocus },
-    { t: beat(19.4), z: 1.58, x: previewFocus.x + 24, y: previewFocus.y },
-    { t: beat(19.8), z: 1.22, x: 720, y: g.mapDialog.y + 300 },
+    { t: beat(16.8), ...home },
+    { t: beat(17.6), z: 1.18, x: centre(g.importCsv).x - 120, y: 330 },
+    { t: beat(18.8), z: 1.18, x: centre(g.importCsv).x - 120, y: 330 },
+    { t: beat(19.3), ...home },
+    { t: beat(20.3), z: 1.55, ...previewFocus },
+    { t: beat(23), z: 1.6, x: previewFocus.x + 24, y: previewFocus.y },
+    { t: beat(23.6), ...home },
+    { t: beat(24.6), z: 1.42, ...rowsFocus },
+    { t: beat(27.6), z: 1.44, ...rowsFocus },
+    { t: beat(28.4), ...tableView },
+    { t: beat(30.6), ...tableView },
+    { t: beat(31.4), z: 1.42, ...rowsFocus },
+    { t: beat(33.6), z: 1.44, ...rowsFocus },
+    { t: beat(34.2), z: 1.32, ...toastFocus },
+    { t: beat(35.7), z: 1.32, ...toastFocus },
+    { t: beat(36.2), ...home },
+    { t: beat(37), z: 1.45, ...endpointFocus },
+    { t: beat(39.2), z: 1.48, ...endpointFocus },
+    { t: beat(39.7), ...home },
+    { t: beat(40.5), z: 1.2, ...providerFocus },
+    { t: beat(43.5), z: 1.24, ...providerFocus },
+    { t: beat(44.2), ...home },
+    { t: beat(45), z: budgetsZoom, ...budgetsFocus },
     {
-      t: beat(21.3),
-      z: 1.22,
-      x: 720,
-      y: g.mapDialog.y + g.mapDialog.height - 300,
+      t: beat(50.6),
+      z: budgetsZoom * 1.03,
+      x: budgetsFocus.x + 20,
+      y: budgetsFocus.y,
     },
-    { t: beat(21.65), ...home },
-    { t: beat(22.5), z: 1.42, ...rowsFocus },
-    { t: beat(23.9), z: 1.44, ...rowsFocus },
-    { t: beat(24.35), z: 1.1, x: 720, y: 400 },
-    { t: beat(25.3), z: 1.1, x: 720, y: 400 },
-    { t: beat(25.9), z: 1.42, ...rowsFocus },
-    { t: beat(26.9), z: 1.44, ...rowsFocus },
-    { t: beat(27.5), z: 1.32, ...toastFocus },
-    { t: beat(27.95), z: 1.32, ...toastFocus },
-    { t: beat(28.15), ...home },
-    { t: beat(28.8), z: 1.36, ...providerFocus },
-    { t: beat(31.7), z: 1.4, ...providerFocus },
-    { t: beat(32.15), ...home },
-    { t: beat(33.1), z: 1.3, ...budgetsFocus },
-    { t: beat(37.6), z: 1.34, x: budgetsFocus.x + 20, y: budgetsFocus.y },
     { t: TIP_START + 0.2, ...home },
   ];
 }
@@ -243,13 +274,14 @@ function windowMarkup(g) {
         ${PAGES.map((page) => `<div class="desk-page" data-page="${page.name}">${screenImage(page.name)}</div>`).join("")}
         <div class="desk-scanline"><i></i></div>
         ${callout("import", pad(g.importCsv, 6))}
+        ${callout("preview", pad(g.preview, 8), "Preview first, then import", "cyan")}
         ${callout("rows", g.rows, "6 new · uncategorised", "gold")}
         ${callout("categorize", pad(g.categorize, 6))}
         ${callout("sorted", g.rows, "Matched from your history", "mint")}
         ${callout("toast", pad(g.toast, 4))}
-        ${callout("provider", pad(g.providerRow, 4), "A local model on this machine", "cyan", 0.42)}
-        ${callout("dining", pad(g.dining, 6), "On track", "mint")}
-        ${callout("entertainment", pad(g.entertainment, 6), "Over budget", "rose")}
+        ${callout("endpoint", pad(g.endpoint, 6), "A model on your own machine", "cyan")}
+        ${callout("onTrack", pad(g.onTrack, 6), "On track", "mint")}
+        ${callout("overBudget", pad(g.overBudget, 6), "Over budget", "rose")}
         <div class="desk-ripple"></div>
         <div class="desk-cursor">
           <svg viewBox="0 0 24 24"><path d="M4 2 L4 19 L8.6 14.9 L11.6 21.6 L14.6 20.3 L11.6 13.7 L17.8 13.7 Z" /></svg>
@@ -309,7 +341,7 @@ export function mount() {
   );
   alertCards = ["alertA", "alertB"].map((key) =>
     html(
-      `<div class="pop-shot">${screenCrop("desktop-insights-dark", rect("desktop-insights-dark", key), 400)}</div>`,
+      `<div class="pop-shot">${screenCrop("desktop-insights-dark", rect("desktop-insights-dark", key), 380)}</div>`,
     ),
   );
   typeLayer.append(csvCard, keyCard, ...alertCards);
@@ -395,7 +427,7 @@ export function render(t) {
   const tip = ease.inOutCubic(progress(t, TIP_START, TIP_END));
   const float = (1 - tip) * noise(t * 0.4, 12) * 3;
   style(windowElement, {
-    opacity: 1 - ease.inCubic(progress(t, beat(39.4), END)),
+    opacity: 1 - ease.inCubic(progress(t, beat(51.4), END)),
     transform:
       `translate(${CENTER_X - VIEW_WIDTH / 2 + (1 - enter) * 1500 - tip * 330}px, ` +
       `${CENTER_Y - WINDOW_HEIGHT / 2 + tip * 70}px) ` +
@@ -419,7 +451,7 @@ export function render(t) {
     show(element, visiblePage);
     if (!visiblePage) return;
     if (page.wipe) {
-      const wipe = ease.inOutCubic(progress(t, page.at, page.at + 0.55));
+      const wipe = ease.inOutCubic(progress(t, page.at, page.at + WIPE_LENGTH));
       style(element, {
         opacity: 1,
         clipPath: `inset(0 0 ${(1 - wipe) * 100}% 0)`,
@@ -434,33 +466,34 @@ export function render(t) {
   });
 
   // Scan line riding the wipe edge as categories land.
-  const wipe = progress(t, CUES.categorized, CUES.categorized + 0.55);
+  const wipe = progress(t, CUES.categorized, CUES.categorized + WIPE_LENGTH);
   show(scanline, wipe > 0 && wipe < 1);
   style(scanline, {
     transform: `translateY(${ease.inOutCubic(wipe) * VIEW_HEIGHT}px)`,
   });
 
   // ── Callouts ────────────────────────────────────────────────────────────
-  renderCallout("import", t, beat(16.6), beat(17.5), CUES.csvDrop);
-  renderCallout("rows", t, beat(22.5), beat(24.4));
-  renderCallout("categorize", t, beat(24.5), beat(26), CUES.categorizeClick);
-  renderCallout("sorted", t, beat(25.9), beat(27.3));
-  renderCallout("toast", t, beat(27.3), beat(28.05));
-  renderCallout("provider", t, beat(28.8), beat(31.8));
-  renderCallout("dining", t, beat(33.2), beat(38.3));
-  renderCallout("entertainment", t, beat(33.6), beat(38.3));
+  renderCallout("import", t, beat(17.8), beat(19.1), CUES.csvDrop);
+  renderCallout("preview", t, beat(20.4), beat(23.3));
+  renderCallout("rows", t, beat(24.8), beat(27.7));
+  renderCallout("categorize", t, beat(29), beat(31), CUES.categorizeClick);
+  renderCallout("sorted", t, beat(31.4), beat(33.9));
+  renderCallout("toast", t, beat(34.2), beat(35.8));
+  renderCallout("endpoint", t, beat(37.1), beat(39.4));
+  renderCallout("onTrack", t, beat(45.2), beat(50.8));
+  renderCallout("overBudget", t, beat(46), beat(50.8));
 
-  // ── Cursor clicks "Categorize Missing" on beat 25 ───────────────────────
+  // ── Cursor clicks "Categorize Missing" on beat 30 ───────────────────────
   const target = centre(geometry.categorize);
-  const travel = ease.inOutCubic(progress(t, beat(24.1), beat(24.85)));
-  const cursorVisible = t >= beat(24.05) && t < beat(26.2);
+  const travel = ease.inOutCubic(progress(t, beat(28.9), beat(29.85)));
+  const cursorVisible = t >= beat(28.85) && t < beat(31.2);
   show(cursor, cursorVisible);
   if (cursorVisible) {
     const press =
       impulse(t, CUES.categorizeClick, 14) *
       (t >= CUES.categorizeClick ? 1 : 0);
     style(cursor, {
-      opacity: 1 - progress(t, beat(25.8), beat(26.2)),
+      opacity: 1 - progress(t, beat(30.8), beat(31.2)),
       transform: `translate(${lerp(target.x + 380, target.x, travel)}px, ${
         lerp(target.y + 330, target.y, travel) +
         Math.sin(travel * Math.PI) * -40
@@ -485,7 +518,7 @@ export function render(t) {
   }
 
   // ── A bank export flies onto "Import CSV" ───────────────────────────────
-  const flight = progress(t, beat(16.2), CUES.csvDrop);
+  const flight = progress(t, beat(17.2), CUES.csvDrop);
   show(csvCard, flight > 0 && flight < 1);
   if (flight > 0 && flight < 1) {
     const eased = ease.inOutCubic(flight);
@@ -502,8 +535,8 @@ export function render(t) {
 
   // ── "Keys are stored locally": the real settings card pops out ──────────
   const keyIn = spring(t - CUES.aiKeyCard, { stiffness: 170, damping: 16 });
-  const keyOut = ease.inCubic(progress(t, beat(31.55), beat(31.95)));
-  show(keyCard, t >= CUES.aiKeyCard && t < beat(32));
+  const keyOut = ease.inCubic(progress(t, beat(43.3), beat(43.75)));
+  show(keyCard, t >= CUES.aiKeyCard && t < beat(43.8));
   style(keyCard, {
     opacity: clamp(keyIn * 2) * (1 - keyOut),
     transform:
@@ -513,7 +546,7 @@ export function render(t) {
 
   // ── Overspend alerts from Insights pop out as notifications ─────────────
   alertCards.forEach((card, index) => {
-    const at = CUES.budgetAlerts + index * beat(0.5);
+    const at = CUES.budgetAlerts + index * beat(0.75);
     const pop = spring(t - at, { stiffness: 190, damping: 15 });
     const out = ease.inCubic(
       progress(
@@ -526,7 +559,7 @@ export function render(t) {
     style(card, {
       opacity: clamp(pop * 2) * (1 - out),
       transform:
-        `translate(${lerp(900, 112 + index * 70, pop) - out * 300}px, ${lerp(600, 600 + index * 160, pop)}px) ` +
+        `translate(${lerp(900, 112 + index * 60, pop) - out * 300}px, ${lerp(660, 660 + index * 150, pop)}px) ` +
         `rotate(${(index ? 2 : -2) * clamp(pop)}deg) scale(${lerp(0.5, 1, pop)})`,
     });
   });

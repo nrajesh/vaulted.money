@@ -1,12 +1,14 @@
 /**
- * Scene 8 — the lockup (bar 8).
+ * Bars 25–27 — the lockup.
  *
  * Everything that came before collapses into one point; on the downbeat the
  * shield assembles from its own struts, flung in from all directions and
  * caught by springs (the opening drew it; the ending builds it). The gem and
- * keyhole snap in, the wordmark rises, the tagline and platform line follow,
- * and a single pass of light crosses the metal. The last beat fades to black
- * so the film loops cleanly back into its first spark.
+ * keyhole snap in, the wordmark rises and a single pass of light crosses the
+ * metal. Then the tagline: the three badges from the vaulted.money hero
+ * (Privacy-first, Data-local, Open-sourced) pop in one by one and hold, with
+ * the address beneath. The last beat fades to black so the film loops
+ * cleanly back into its first spark.
  */
 import { CUES, DURATION, beat } from "../timeline.mjs";
 import {
@@ -35,7 +37,7 @@ let keyhole;
 let shineGradient;
 let wordmark;
 let wordGlyphs;
-let tagline;
+let badges;
 let footer;
 let fade;
 const flights = [];
@@ -46,8 +48,12 @@ export function mount() {
     <section class="lockup">
       <div class="lockup-logo">${logoSvg("lockup")}</div>
       <div class="wordmark">${glyphs("Vaulted Money")}</div>
-      <p class="tagline">Private, local-first money tracking.</p>
-      <div class="lockup-footer"><i></i><span>FREE &amp; OPEN SOURCE · WEB · DESKTOP · MOBILE</span><i></i></div>
+      <div class="lockup-badges">
+        <span class="badge-private">Privacy-first</span>
+        <span class="badge-local">Data-local</span>
+        <span class="badge-open">Open-sourced</span>
+      </div>
+      <div class="lockup-footer"><i></i><span>VAULTED.MONEY · WEB · DESKTOP · MOBILE</span><i></i></div>
     </section>`);
   fade = html(`<div class="fade-to-black"></div>`);
   document.getElementById("lockup-layer").append(root, fade);
@@ -58,7 +64,7 @@ export function mount() {
   shineGradient = root.querySelector(".shine-gradient");
   wordmark = root.querySelector(".wordmark");
   wordGlyphs = [...wordmark.querySelectorAll(".glyph")];
-  tagline = root.querySelector(".tagline");
+  badges = [...root.querySelectorAll(".lockup-badges span")];
   footer = root.querySelector(".lockup-footer");
 
   // Each strut starts somewhere out in the dark, flung outward from its own
@@ -205,7 +211,7 @@ export function render(t) {
   shineGradient.setAttribute("x1", String(shineX - 220));
   shineGradient.setAttribute("x2", String(shineX + 220));
 
-  // ── Wordmark, tagline, footer ──────────────────────────────────────────
+  // ── Wordmark, badges, footer ───────────────────────────────────────────
   const width = Number(wordmark.dataset.width);
   const wordSweep = lerp(
     -width * 0.6,
@@ -223,14 +229,16 @@ export function render(t) {
       backgroundPosition: `${wordSweep - offset - width / 2}px 0, ${-offset}px 0`,
     });
   });
-  const taglineIn = ease.outExpo(progress(t, CUES.tagline, CUES.tagline + 0.7));
-  style(tagline, {
-    opacity: taglineIn,
-    transform: `translateY(${(1 - taglineIn) * 22}px)`,
+  badges.forEach((badge, index) => {
+    const at = CUES.tagline + index * beat(0.5);
+    const pop = spring(t - at, { stiffness: 230, damping: 15 });
+    style(badge, {
+      opacity: clamp(pop * 2.5),
+      transform: `translateY(${(1 - clamp(pop)) * 26}px) scale(${lerp(0.6, 1, pop)})`,
+    });
   });
-  const footerIn = ease.outExpo(
-    progress(t, CUES.lockup + beat(2.1), CUES.lockup + beat(2.1) + 0.8),
-  );
+  const footerAt = CUES.tagline + beat(2.5);
+  const footerIn = ease.outExpo(progress(t, footerAt, footerAt + 0.8));
   style(footer, { opacity: footerIn });
   footer
     .querySelectorAll("i")

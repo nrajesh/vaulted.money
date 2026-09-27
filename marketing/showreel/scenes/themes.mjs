@@ -1,11 +1,11 @@
 /**
- * Bars 13–14 — "Day or night." (the musical breakdown).
+ * Bars 17–18 — "Day or night." (the musical breakdown).
  *
  * A cursor clicks the app's theme toggle and the whole world flips to the
  * light theme through a circular wipe from the button. The light brand
  * mark (navy struts, peach gem, gold keyhole) builds itself strut by strut
- * beside real light-mode screens. On beat 55.25 the toggle is clicked again
- * and the light world collapses back into the button, revealing bar 15.
+ * beside real light-mode screens. On beat 71.25 the toggle is clicked again
+ * and the light world collapses back into the button, revealing bar 19.
  */
 import { CUES, beat } from "../timeline.mjs";
 import {
@@ -21,8 +21,8 @@ import { glyphs, html, icon, show, style } from "../lib/dom.mjs";
 import { screenImage } from "../lib/screens.mjs";
 import { logoSvg } from "../lib/logo.mjs";
 
-const START = beat(47);
-const END = beat(56.2);
+const START = CUES.themeToggle - beat(1);
+const END = CUES.themeBack + beat(0.95);
 const TOGGLE_X = 1620;
 const TOGGLE_Y = 150;
 const WIPE_IN_END = CUES.themeToggle + 0.6;
@@ -93,10 +93,19 @@ export function mount() {
 }
 
 function renderCursor(t) {
-  // Two visits: click to go light (beat 48), click to go dark (beat 55.25).
+  // Two visits: click to go light, then click to go dark again.
   const visits = [
-    { from: beat(46.9), click: CUES.themeToggle, start: { x: 1260, y: 520 } },
-    { from: beat(54.2), click: CUES.themeBack, start: { x: 1350, y: 560 } },
+    {
+      from: CUES.themeToggle - beat(1.1),
+      click: CUES.themeToggle,
+      // Where the reports cursor left off, on the pie chart.
+      start: { x: 1290, y: 410 },
+    },
+    {
+      from: CUES.themeBack - beat(1.05),
+      click: CUES.themeBack,
+      start: { x: 1350, y: 560 },
+    },
   ];
   const visit = visits.find(
     (entry) => t >= entry.from && t < entry.click + 0.55,
@@ -231,7 +240,10 @@ export function render(t) {
       `translate(${lerp(1300, 0, windowIn)}px, 0px) rotateY(${-8 + noise(t * 0.4, 5) * 2}deg) ` +
       `rotateX(${3 + noise(t * 0.35, 6)}deg) scale(0.62)`,
   });
-  const secondPage = ease.outCubic(progress(t, beat(52), beat(52) + 0.3));
+  const secondPageAt = CUES.themeToggle + beat(4);
+  const secondPage = ease.outCubic(
+    progress(t, secondPageAt, secondPageAt + 0.3),
+  );
   style(windowPages[1], { opacity: secondPage });
   const phoneIn = spring(t - (CUES.themeToggle + 0.6), {
     stiffness: 140,

@@ -2,12 +2,13 @@
 /**
  * The soundtrack, synthesised from scratch: no samples, no dependencies.
  *
- * Music: 20 bars at 128 BPM. Bar 1 is a riser while the vault is forged;
- * bars 2–12 are a four-on-the-floor groove cycling Am9 – Fmaj9 – Cadd9 – G6
- * with a sidechained pad and bass; bars 13–14 drop the drums for the light
+ * Music: 27 bars at 128 BPM. Bar 1 is a riser while the vault is forged;
+ * bars 2–16 are a four-on-the-floor groove cycling Am9 – Fmaj9 – Cadd9 – G6
+ * with a sidechained pad and bass; bars 17–18 drop the drums for the light
  * theme (a breakdown with a bell arpeggio and a riser); the drums slam back
- * on bar 15, bar 18 builds with a snare roll under the montage, and bars
- * 19–20 resolve to Cmaj9 on the logo and ring out as the picture fades.
+ * on bar 19, bar 24 builds with a snare roll under the montage, and bars
+ * 25–27 resolve to Cmaj9 on the logo and ring out as the picture fades.
+ * The bar layout comes from the chapters in timeline.mjs.
  *
  * Sound design hangs off the same cue sheet as the animation (timeline.mjs),
  * and the forge ticks use the vault scene's own spark arrival times, so every
@@ -18,8 +19,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BAR, CUES, DURATION, beat } from "./timeline.mjs";
+import { BAR, CUES, DURATION, beat, chapter } from "./timeline.mjs";
 import { forgeArrivals } from "./scenes/vault.mjs";
+import { TYPING, platformAt } from "./scenes/everywhere.mjs";
 import { random } from "./lib/motion.mjs";
 
 const SAMPLE_RATE = 48000;
@@ -146,8 +148,16 @@ const envelope = (time, attack, decay) =>
   time < attack ? time / attack : Math.exp(-(time - attack) / decay);
 
 // ── Groove ──────────────────────────────────────────────────────────────────
-/** Bars (1-based) where the full groove plays; 13–14 are the breakdown. */
-const GROOVE_BARS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18];
+/** The light theme is the breakdown; the lockup rings out without drums. */
+const BREAKDOWN = chapter("themes").bars;
+const TOUR_START_BAR = chapter("import").bars[0];
+const LAST_GROOVE_BAR = chapter("lockup").bars[0] - 1;
+const isBreakdown = (bar) => bar >= BREAKDOWN[0] && bar <= BREAKDOWN[1];
+/** Bars (1-based) where the full groove plays. */
+const GROOVE_BARS = Array.from(
+  { length: LAST_GROOVE_BAR - 1 },
+  (_, index) => index + 2,
+).filter((bar) => !isBreakdown(bar));
 const barStart = (bar) => (bar - 1) * BAR;
 const kicks = [];
 for (const bar of GROOVE_BARS) {
@@ -232,29 +242,23 @@ const CHORD = {
   G6: { root: 31, notes: [55, 59, 62, 64, 71] },
   Cmaj9: { root: 36, notes: [52, 55, 59, 62, 64, 67, 72] },
 };
-/** The chord for each bar (index 0 = bar 1, which is the drone). */
-const CHORDS = [
-  null,
-  "Am9",
-  "Fmaj9",
-  "Cadd9",
-  "G6", // bars 2–5
-  "Am9",
-  "Fmaj9",
-  "Cadd9",
-  "G6", // bars 6–9
-  "Am9",
-  "Fmaj9",
-  "Cadd9", // bars 10–12
-  "Fmaj9",
-  "G6", // bars 13–14, the breakdown
-  "Am9",
-  "Fmaj9",
-  "Cadd9",
-  "G6", // bars 15–18
-  "Cmaj9",
-  "Cmaj9", // bars 19–20, the logo
-].map((name) => (name ? CHORD[name] : null));
+/**
+ * The chord for a bar: the loop through the tour, Fmaj9 – G6 under the
+ * breakdown, a finale that lifts through Fmaj9 – G6 into the logo's Cmaj9.
+ * Bar 1 is the drone.
+ */
+function chordName(bar) {
+  if (bar === 1) return null;
+  if (bar > LAST_GROOVE_BAR) return "Cmaj9";
+  if (isBreakdown(bar)) return ["Fmaj9", "G6"][(bar - BREAKDOWN[0]) % 2];
+  if (bar > BREAKDOWN[1]) {
+    const finale = ["Am9", "Fmaj9", "Cadd9", "G6", "Fmaj9", "G6"];
+    const fromEnd = LAST_GROOVE_BAR - bar;
+    return finale[Math.max(0, finale.length - 1 - fromEnd)];
+  }
+  return ["Am9", "Fmaj9", "Cadd9", "G6"][(bar - 2) % 4];
+}
+const chordFor = (bar) => CHORD[chordName(bar)];
 
 function pad(
   buses,
@@ -623,21 +627,25 @@ function arrange(buses) {
     clap(buses, start + beat(3));
     for (let step = 0; step < 4; step++) {
       hat(buses, start + beat(step + 0.5), { gain: 0.12, pan: 0.3 });
-      // Busier sixteenths once the product tour starts (bar 5 onwards).
-      if (bar >= 5) {
+      // Busier sixteenths once the product tour starts.
+      if (bar >= TOUR_START_BAR) {
         hat(buses, start + beat(step + 0.25), { gain: 0.05, pan: -0.35 });
         hat(buses, start + beat(step + 0.75), { gain: 0.05, pan: -0.35 });
       }
     }
+    // An open hat into every other bar lifts the longer tour a little.
+    if (bar >= TOUR_START_BAR && bar % 2 === 0) {
+      hat(buses, start + beat(3.5), { gain: 0.07, open: true, pan: 0.15 });
+    }
   }
-  for (let bar = 2; bar <= 18; bar++) {
-    const { root, notes } = CHORDS[bar - 1];
+  for (let bar = 2; bar <= LAST_GROOVE_BAR; bar++) {
+    const { root, notes } = chordFor(bar);
     const start = barStart(bar);
-    const breakdown = bar === 13 || bar === 14;
+    const breakdown = isBreakdown(bar);
     pad(buses, start, BAR - 0.02, notes, {
       gain: breakdown ? 0.075 : 0.065,
       cutoff: breakdown
-        ? 1800 + (bar - 13) * 1400
+        ? 1800 + (bar - BREAKDOWN[0]) * 1400
         : 2200 + ((bar - 2) % 6) * 400,
       attack: breakdown ? 0.25 : 0.03,
     });
@@ -653,11 +661,11 @@ function arrange(buses) {
     bass(buses, start, BAR - 0.05, root, 0.08);
   }
 
-  // Arpeggio through the product tour and the finale (bars 5–12, 15–18).
+  // Arpeggio through the product tour and the finale.
   const pattern = [0, 2, 4, 1, 3, 2, 4, 3];
-  for (let bar = 5; bar <= 18; bar++) {
-    if (bar === 13 || bar === 14) continue;
-    const { notes } = CHORDS[bar - 1];
+  for (let bar = TOUR_START_BAR; bar <= LAST_GROOVE_BAR; bar++) {
+    if (isBreakdown(bar)) continue;
+    const { notes } = chordFor(bar);
     for (let step = 0; step < 16; step++) {
       const note = notes[pattern[step % pattern.length] % notes.length] + 12;
       pluck(buses, barStart(bar) + beat(step / 4), note, {
@@ -666,9 +674,9 @@ function arrange(buses) {
       });
     }
   }
-  // Breakdown: a glassy bell arpeggio in eighths, rising into bar 15.
-  for (const bar of [13, 14]) {
-    const { notes } = CHORDS[bar - 1];
+  // Breakdown: a glassy bell arpeggio in eighths, rising into the drums.
+  for (let bar = BREAKDOWN[0]; bar <= BREAKDOWN[1]; bar++) {
+    const { notes } = chordFor(bar);
     for (let step = 0; step < 8; step++) {
       bell(
         buses,
@@ -744,7 +752,7 @@ function arrange(buses) {
     });
   }
 
-  // ── Bars 5–6: the desktop app and the CSV import ────────────────────────
+  // ── Bars 5–7: the desktop app and the CSV import ────────────────────────
   // Whip pan: the phone leaves left while the window arrives from the right.
   sweep(buses, beat(15.2), beat(16.3) - beat(15.2), {
     from: 500,
@@ -755,7 +763,7 @@ function arrange(buses) {
     panTo: -0.6,
     seed: 40,
   });
-  sweep(buses, beat(16.2), CUES.csvDrop - beat(16.2), {
+  sweep(buses, beat(17.2), CUES.csvDrop - beat(17.2), {
     from: 900,
     to: 4200,
     gain: 0.08,
@@ -772,8 +780,9 @@ function arrange(buses) {
     shape: "whoosh",
     seed: 42,
   });
+  // The preview callout draws on.
   [0, 0.12, 0.24].forEach((offset, index) =>
-    blip(buses, CUES.importMap + 0.3 + offset, [67, 71, 74][index], {
+    blip(buses, beat(20.4) + offset, [67, 71, 74][index], {
       gain: 0.05,
       pan: 0.3,
       decay: 0.08,
@@ -788,9 +797,9 @@ function arrange(buses) {
     );
   }
 
-  // ── Bars 7–8: one tap, then optional AI ─────────────────────────────────
+  // ── Bars 8–9: one tap ───────────────────────────────────────────────────
   mouseClick(buses, CUES.categorizeClick);
-  sweep(buses, CUES.categorized, 0.6, {
+  sweep(buses, CUES.categorized, 0.9, {
     from: 1200,
     to: 9000,
     gain: 0.08,
@@ -799,7 +808,7 @@ function arrange(buses) {
     pan: 0.2,
     seed: 50,
   });
-  [0, 0.09, 0.18, 0.27, 0.36, 0.45].forEach((offset, index) => {
+  [0, 0.15, 0.3, 0.45, 0.6, 0.75].forEach((offset, index) => {
     bell(
       buses,
       CUES.categorized + offset,
@@ -807,26 +816,42 @@ function arrange(buses) {
       { gain: 0.035, decay: 0.5, ratio: 2, index: 0.7, pan: 0.2, send: 0.6 },
     );
   });
-  bell(buses, beat(27.3), midi(88), {
+  // The "categorised" toast.
+  bell(buses, beat(34.2), midi(88), {
     gain: 0.07,
     decay: 0.3,
     ratio: 1,
     index: 0.5,
     pan: 0.5,
   });
-  bell(buses, beat(27.3) + 0.11, midi(91), {
+  bell(buses, beat(34.2) + 0.11, midi(91), {
     gain: 0.07,
     decay: 0.5,
     ratio: 1,
     index: 0.5,
     pan: 0.5,
   });
+  // ── Bars 10–11: optional AI ─────────────────────────────────────────────
   sweep(buses, CUES.aiProviders - 0.1, 0.35, {
     from: 1500,
     to: 5000,
     gain: 0.07,
     shape: "whoosh",
     seed: 51,
+  });
+  [0, 0.12].forEach((offset, index) =>
+    blip(buses, beat(37.1) + offset, [72, 79][index], {
+      gain: 0.05,
+      pan: 0.3,
+      decay: 0.1,
+    }),
+  );
+  sweep(buses, CUES.aiProviderList - 0.1, 0.3, {
+    from: 2000,
+    to: 6000,
+    gain: 0.05,
+    shape: "whoosh",
+    seed: 53,
   });
   blip(buses, CUES.aiKeyCard, 76, { gain: 0.07, decay: 0.15 });
   bell(buses, CUES.aiKeyCard, midi(88), {
@@ -836,7 +861,7 @@ function arrange(buses) {
     index: 1.2,
   });
 
-  // ── Bars 9–10: budgets and their alerts ─────────────────────────────────
+  // ── Bars 12–13: budgets and their alerts ────────────────────────────────
   sweep(buses, CUES.budgets - 0.1, 0.35, {
     from: 1500,
     to: 5000,
@@ -844,7 +869,7 @@ function arrange(buses) {
     shape: "whoosh",
     seed: 52,
   });
-  [0, beat(0.5)].forEach((offset) => {
+  [0, beat(0.75)].forEach((offset) => {
     bell(buses, CUES.budgetAlerts + offset, midi(88), {
       gain: 0.08,
       decay: 0.3,
@@ -860,7 +885,7 @@ function arrange(buses) {
       pan: -0.4,
     });
   });
-  sweep(buses, CUES.budgetsTip, beat(40.3) - CUES.budgetsTip, {
+  sweep(buses, CUES.budgetsTip, beat(52.3) - CUES.budgetsTip, {
     from: 180,
     to: 1400,
     gain: 0.25,
@@ -869,7 +894,7 @@ function arrange(buses) {
     seed: 60,
   });
 
-  // ── Bars 11–12: reports rise, export formats pop ────────────────────────
+  // ── Bars 14–16: reports rise, then the chart is put through its paces ───
   [0, 0.09, 0.18].forEach((offset, ring) =>
     blip(buses, CUES.reportsRise + offset, [57, 64, 69][ring], {
       gain: 0.08,
@@ -877,21 +902,46 @@ function arrange(buses) {
     }),
   );
   for (let index = 0; index < 4; index++) {
-    blip(buses, beat(42) + index * beat(0.5), [79, 83, 86, 91][index], {
+    blip(buses, beat(53) + index * beat(0.5), [79, 83, 86, 91][index], {
       gain: 0.05,
       decay: 0.1,
       pan: -0.5,
     });
   }
-  sweep(buses, CUES.reportsFocus, beat(47.9) - CUES.reportsFocus, {
+  // The camera leans into Analytics.
+  sweep(buses, CUES.reportsFocus, beat(2.2), {
     from: 300,
-    to: 5000,
-    gain: 0.14,
+    to: 3000,
+    gain: 0.09,
     shape: "swell",
     seed: 61,
   });
+  // Tooltips appear with a soft blip; each toggle and the slice is a click.
+  for (const time of [CUES.chartHover, CUES.chartBarHover]) {
+    blip(buses, time, 84, { gain: 0.05, decay: 0.12, pan: 0.35 });
+    blip(buses, time + 0.07, 88, { gain: 0.04, decay: 0.16, pan: 0.35 });
+  }
+  for (const time of [CUES.chartBar, CUES.chartPie, CUES.chartPieSlice]) {
+    mouseClick(buses, time);
+  }
+  bell(buses, CUES.chartPieSlice + 0.05, midi(86), {
+    gain: 0.05,
+    decay: 0.5,
+    ratio: 2,
+    index: 0.8,
+    pan: 0.3,
+    send: 0.5,
+  });
+  // The wall pushes past the camera into the theme switch.
+  sweep(buses, beat(63.3), CUES.themeToggle - beat(63.3), {
+    from: 300,
+    to: 5000,
+    gain: 0.12,
+    shape: "swell",
+    seed: 62,
+  });
 
-  // ── Bars 13–14: the theme switch ────────────────────────────────────────
+  // ── Bars 17–18: the theme switch ────────────────────────────────────────
   mouseClick(buses, CUES.themeToggle);
   sweep(buses, CUES.themeToggle, 0.7, {
     from: 2500,
@@ -912,14 +962,15 @@ function arrange(buses) {
     });
   }
   clunk(buses, CUES.lightMark + 0.8, 0.3);
-  sweep(buses, beat(52) - 0.05, 0.3, {
+  sweep(buses, CUES.themeToggle + beat(4) - 0.05, 0.3, {
     from: 2000,
     to: 6000,
     gain: 0.05,
     shape: "whoosh",
     seed: 71,
   });
-  sweep(buses, beat(54), CUES.themeBack - beat(54), {
+  const riseFrom = CUES.themeToggle + beat(6);
+  sweep(buses, riseFrom, CUES.themeBack - riseFrom, {
     from: 300,
     to: 7000,
     gain: 0.22,
@@ -941,7 +992,7 @@ function arrange(buses) {
     { gain: 0.08, send: 0.4 },
   );
 
-  // ── Bars 15–17: everywhere (the drums slam back) ────────────────────────
+  // ── Bars 19–21: everywhere (the drums slam back) ────────────────────────
   impact(buses, CUES.everywhere, { gain: 0.8, crash: 0.26 });
   [0, 0.1, 0.18].forEach((offset, index) =>
     blip(buses, CUES.everywhere - beat(0.4) + offset, [60, 64, 67][index], {
@@ -953,7 +1004,7 @@ function arrange(buses) {
   for (let index = 0; index < 4; index++) {
     bell(
       buses,
-      CUES.currency + 0.1 + index * beat(0.5),
+      CUES.currency + beat(0.25 + index * 0.5),
       midi([79, 83, 86, 91][index]),
       {
         gain: 0.05,
@@ -964,7 +1015,7 @@ function arrange(buses) {
       },
     );
   }
-  [0, 0.08, 0.16].forEach((offset, index) =>
+  [0, 0.12, 0.24].forEach((offset, index) =>
     bell(buses, CUES.offline + 0.1 + offset, midi(84 + index * 3), {
       gain: 0.045,
       decay: 0.3,
@@ -973,17 +1024,38 @@ function arrange(buses) {
       pan: index - 1,
     }),
   );
+  // ── Bars 22–23: open source, and the install commands ───────────────────
+  sweep(buses, CUES.openSource - beat(0.2), beat(1.2), {
+    from: 2400,
+    to: 300,
+    gain: 0.12,
+    shape: "whoosh",
+    q: 0.9,
+    seed: 75,
+  });
+  // Keystrokes for each line the terminal types.
   const keys = random(8);
-  for (let index = 0; index < 22; index++) {
-    tick(buses, CUES.openSource + 0.1 + (index / 22) * 0.8 + keys() * 0.01, {
-      frequency: 1200 + keys() * 900,
-      gain: 0.05,
-      pan: 0.1,
+  TYPING.forEach(([from, to]) => {
+    const count = Math.round((to - from) / 0.028);
+    for (let index = 0; index < count; index++) {
+      const time = from + (index / count) * (to - from) + keys() * 0.01;
+      tick(buses, time, {
+        frequency: 1200 + keys() * 900,
+        gain: 0.045,
+        pan: 0.1,
+      });
+    }
+  });
+  for (let index = 0; index < 4; index++) {
+    blip(buses, platformAt(index), [72, 76, 79, 84][index], {
+      gain: 0.06,
+      decay: 0.14,
+      pan: -0.3 + index * 0.2,
     });
   }
 
-  // ── Bar 18: montage — a hit on every cut and a snare roll building ──────
-  sweep(buses, beat(67.2), CUES.montage - beat(67.2), {
+  // ── Bar 24: montage — a hit on every cut and a snare roll building ──────
+  sweep(buses, CUES.montage - beat(0.8), beat(0.8), {
     from: 400,
     to: 6000,
     gain: 0.16,
@@ -998,19 +1070,20 @@ function arrange(buses) {
     const time = CUES.montage + beat(step / 4);
     snare(buses, time, 0.08 + step * 0.012);
   }
+  const riseStart = CUES.montage + beat(2);
   let risePhase = 0;
   place(
     buses,
-    beat(70),
-    CUES.lockup - beat(70),
+    riseStart,
+    CUES.lockup - riseStart,
     (t) => {
-      const amount = t / (CUES.lockup - beat(70));
+      const amount = t / (CUES.lockup - riseStart);
       risePhase += (TAU * (200 + 1800 * amount * amount)) / SAMPLE_RATE;
       return Math.sin(risePhase) * amount ** 3 * 0.5;
     },
     { gain: 0.1, send: 0.4 },
   );
-  sweep(buses, beat(70), CUES.lockup - beat(70), {
+  sweep(buses, riseStart, CUES.lockup - riseStart, {
     from: 200,
     to: 9000,
     gain: 0.32,
@@ -1019,7 +1092,7 @@ function arrange(buses) {
     seed: 81,
   });
 
-  // ── Bars 19–20: the logo lands on Cmaj9 ─────────────────────────────────
+  // ── Bars 25–27: the logo lands on Cmaj9 ─────────────────────────────────
   impact(buses, CUES.lockup, { gain: 1.1, crash: 0.34 });
   pad(buses, CUES.lockup, DURATION - CUES.lockup - 0.3, CHORD.Cmaj9.notes, {
     gain: 0.05,
@@ -1062,6 +1135,24 @@ function arrange(buses) {
     decay: 1.4,
     ratio: 2,
     index: 0.6,
+    send: 0.9,
+  });
+  // The three badges, one chime each, then the address.
+  [84, 88, 91].forEach((note, index) => {
+    bell(buses, CUES.tagline + index * beat(0.5), midi(note), {
+      gain: 0.05,
+      decay: 0.8,
+      ratio: 2,
+      index: 0.7,
+      pan: -0.4 + index * 0.4,
+      send: 0.6,
+    });
+  });
+  bell(buses, CUES.tagline + beat(2.5), midi(79), {
+    gain: 0.035,
+    decay: 1.6,
+    ratio: 2,
+    index: 0.5,
     send: 0.9,
   });
 }

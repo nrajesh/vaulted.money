@@ -1,8 +1,9 @@
 /**
- * Bar 18 — highlights.
+ * Bar 24 — highlights.
  *
- * Seven hard cuts on the eighth notes, each a real screen seen before (or a
- * new angle on it), punching in slightly with a mono label. On the last
+ * Seven hard cuts on the eighth notes, each a busy, colourful real screen
+ * with a mono label naming the feature, punching in slightly: fast on
+ * purpose, to leave the impression of how much is in the app. On the last
  * half-beat the frame collapses into the point the logo is born from.
  */
 import { CUES, beat } from "../timeline.mjs";
@@ -11,17 +12,24 @@ import { html, show, style } from "../lib/dom.mjs";
 import { rect, screen, screenCrop } from "../lib/screens.mjs";
 
 const CUT_LENGTH = beat(0.5);
-const COLLAPSE_START = beat(71.5);
+const COLLAPSE_START = CUES.montage + beat(3.5);
 
-/** 16:9 regions (CSS px) of real captures. */
-/** A 16:9 region around two boxes, padded. */
+/** A 16:9 region around two boxes, padded, centred on them. */
 function around(first, second, padding = 60) {
   const left = Math.min(first.x, second.x) - padding;
+  const top = Math.min(first.y, second.y) - padding;
   const right =
     Math.max(first.x + first.width, second.x + second.width) + padding;
-  const top = Math.min(first.y, second.y) - padding;
-  const width = right - left;
-  return { x: left, y: top, width, height: (width * 9) / 16 };
+  const bottom =
+    Math.max(first.y + first.height, second.y + second.height) + padding;
+  const width = Math.max(right - left, ((bottom - top) * 16) / 9);
+  const height = (width * 9) / 16;
+  return {
+    x: (left + right - width) / 2,
+    y: (top + bottom - height) / 2,
+    width,
+    height,
+  };
 }
 
 function cuts() {
@@ -30,26 +38,27 @@ function cuts() {
     rect("desktop-budgets-dark", "overBudget"),
     rect("desktop-budgets-dark", "onTrack"),
   );
+  const providerDialog = rect("desktop-ai-provider-dark", "dialog");
   return [
-    {
-      shot: "desktop-import-map-dark",
-      region: { x: 300, y: 20, width: 840, height: 472.5 },
-      label: "Import CSV",
-    },
     {
       shot: "desktop-transactions-categorized-dark",
       region: { x: 60, y: 400, width: 880, height: 495 },
-      label: "Categorise",
+      label: "Auto-categorise",
     },
     {
-      shot: "desktop-ai-providers-dark",
-      region: { x: 80, y: 380, width: 920, height: 517.5 },
+      shot: "desktop-ai-provider-dark",
+      region: {
+        x: providerDialog.x - 170,
+        y: providerDialog.y - 20,
+        width: providerDialog.width + 340,
+        height: ((providerDialog.width + 340) * 9) / 16,
+      },
       label: "Local AI",
     },
     {
       shot: "desktop-budgets-dark",
       region: budgets,
-      label: "Budgets",
+      label: "Budgets & goals",
     },
     {
       shot: "desktop-reports-sankey-dark",
@@ -67,9 +76,14 @@ function cuts() {
       label: "Calendar",
     },
     {
+      shot: "desktop-scheduled-dark",
+      region: { x: 60, y: 60, width: 1380, height: 776.25 },
+      label: "Recurring",
+    },
+    {
       shot: "desktop-ledgers-light",
       region: { x: 360, y: 40, width: 720, height: 405 },
-      label: "Light & dark",
+      label: "Multi-ledger",
     },
   ];
 }

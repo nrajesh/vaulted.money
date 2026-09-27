@@ -149,7 +149,7 @@ body {
   stroke-linejoin: round;
 }
 
-/* ── Preview player (only visible when opened in a browser) ──────────────── */
+/* ── Preview player (only visible when opened in a browser) ───────────── */
 #player {
   position: fixed;
   left: 0;
@@ -294,7 +294,7 @@ body {
   padding-right: 0.04em;
 }
 
-/* ── Bars 3–4: privacy ───────────────────────────────────────────────────── */
+/* ── Bars 3–4: privacy ────────────────────────────────────────────────── */
 .privacy {
   position: absolute;
   left: 128px;
@@ -359,7 +359,7 @@ body {
   white-space: pre;
 }
 
-/* ── Bars 19–20: lockup ────────────────────────────────────────────────────── */
+/* ── Bars 25–27: lockup ───────────────────────────────────────────────── */
 .lockup {
   position: absolute;
   inset: 0;
@@ -425,24 +425,50 @@ body {
   color: transparent;
 }
 
-.tagline {
+/* The three badges from the vaulted.money hero, in its dark-theme colours
+   (emerald, sky and amber), sized for the screen. */
+.lockup-badges {
   position: absolute;
   left: 0;
   right: 0;
-  top: 800px;
-  margin: 0;
-  text-align: center;
-  font-size: 38px;
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  color: var(--ink-soft);
+  top: 806px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.lockup-badges span {
+  padding: 10px 24px 12px;
+  border-radius: 12px;
+  border: 2px solid;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.lockup-badges .badge-private {
+  border-color: rgba(16, 185, 129, 0.6);
+  background: rgba(6, 78, 59, 0.55);
+  color: #a7f3d0;
+}
+
+.lockup-badges .badge-local {
+  border-color: rgba(14, 165, 233, 0.6);
+  background: rgba(12, 74, 110, 0.55);
+  color: #bae6fd;
+}
+
+.lockup-badges .badge-open {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(120, 53, 15, 0.55);
+  color: #fde68a;
 }
 
 .lockup-footer {
   position: absolute;
   left: 0;
   right: 0;
-  top: 896px;
+  top: 920px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -471,7 +497,7 @@ body {
   opacity: 0;
 }
 
-/* ── HUD ────────────────────────────────────────────────────────────────── */
+/* ── HUD ──────────────────────────────────────────────────────────────── */
 .hud-frame {
   position: absolute;
   inset: 0;
@@ -561,7 +587,7 @@ body {
   transform-origin: 0 50%;
 }
 
-/* ── Shared pieces kept from earlier scenes ────────────────────────────── */
+/* ── Shared pieces kept from earlier scenes ───────────────────────────── */
 .status-icons {
   display: flex;
   gap: 4px;
@@ -684,39 +710,55 @@ body {
   transform-origin: 80% 50%;
 }
 
-.terminal {
+.install-panel {
   position: absolute;
   left: 960px;
-  top: 918px;
+  top: 372px;
+  width: 1180px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(6, 11, 17, 0.96);
+  border: 1px solid rgba(111, 211, 222, 0.35);
+  box-shadow:
+    0 40px 90px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(111, 211, 222, 0.08);
+  font-family: var(--mono);
+  color: var(--ink);
+  transform-origin: 50% 0;
+}
+
+.install-bar {
   display: flex;
   align-items: center;
-  gap: 14px;
-  width: 940px;
-  height: 76px;
-  padding: 0 26px;
-  white-space: nowrap;
-  border-radius: 20px;
-  background: rgba(4, 8, 12, 0.94);
-  border: 1px solid rgba(111, 211, 222, 0.35);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
-  font-family: var(--mono);
-  font-size: 22px;
-  color: var(--ink);
-  transform-origin: 50% 50%;
+  gap: 9px;
+  height: 54px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--line);
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
 }
 
-.terminal .prompt {
-  color: var(--brand-accent);
-}
-
-.terminal .caret {
+.install-bar i {
   width: 12px;
-  height: 28px;
-  background: var(--brand-accent);
-  margin-left: -8px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f37e7e;
 }
 
-.terminal .mit {
+.install-bar i:nth-child(2) {
+  background: #f3c77e;
+}
+
+.install-bar i:nth-child(3) {
+  background: #7fe0a0;
+}
+
+.install-bar span {
+  margin-left: 14px;
+}
+
+.install-bar em {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -726,7 +768,61 @@ body {
   background: rgba(127, 224, 184, 0.14);
   color: var(--mint);
   font-size: 16px;
+  font-style: normal;
   font-weight: 600;
+}
+
+.install-body {
+  padding: 22px 34px 10px;
+}
+
+.install-line {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  font-size: 28px;
+  white-space: nowrap;
+}
+
+.install-line .prompt,
+.install-row .prompt {
+  color: var(--brand-accent);
+}
+
+.install-caret {
+  width: 14px;
+  height: 32px;
+  margin-left: -10px;
+  background: var(--brand-accent);
+}
+
+.install-platforms {
+  height: 0;
+  overflow: hidden;
+  padding-top: 14px;
+  background: linear-gradient(90deg, rgba(160, 225, 235, 0.22), transparent)
+    top / 100% 1px no-repeat;
+}
+
+.install-row {
+  display: grid;
+  grid-template-columns: 210px 34px 1fr;
+  align-items: center;
+  height: 58px;
+  font-size: 28px;
+  white-space: nowrap;
+}
+
+.install-row b {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-soft);
 }
 
 .everywhere-headline {
@@ -777,14 +873,12 @@ body {
 .devices {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
 }
 
 .device {
   position: absolute;
   left: 0;
   top: 0;
-  transform-style: preserve-3d;
   border-radius: 26px;
   background: linear-gradient(160deg, #26313b, #0c1117 50%, #18212a);
   box-shadow:
@@ -820,7 +914,7 @@ body {
   border-radius: 36px;
 }
 
-/* ── Bars 2–4: real app on the phone ───────────────────────────────────── */
+/* ── Bars 2–4: real app on the phone ──────────────────────────────────── */
 .phone-status {
   position: absolute;
   left: 0;
@@ -859,7 +953,7 @@ body {
   background-repeat: no-repeat;
 }
 
-/* ── Bars 5–10: the desktop app window ─────────────────────────────────── */
+/* ── Bars 5–13: the desktop app window ────────────────────────────────── */
 .desk {
   position: absolute;
   inset: 0;
@@ -1098,7 +1192,7 @@ body {
     0 0 50px rgba(111, 211, 222, 0.18);
 }
 
-/* ── Bars 11–12: reports wall ──────────────────────────────────────────── */
+/* ── Bars 14–16: reports wall ─────────────────────────────────────────── */
 .reports {
   position: absolute;
   inset: 0;
@@ -1133,6 +1227,46 @@ body {
   box-shadow: 0 0 0 1.5px rgba(160, 225, 235, 0.3);
 }
 
+.chart-state {
+  position: absolute;
+  inset: 0;
+}
+
+.chart-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  margin: -1.8px 0 0 -3.7px;
+  transform-origin: 3.7px 1.8px;
+}
+
+.chart-cursor svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
+}
+
+.chart-cursor path {
+  fill: #ffffff;
+  stroke: #0b0f14;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.chart-ripple {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid #bff6fa;
+  box-shadow: 0 0 18px rgba(111, 211, 222, 0.6);
+}
+
 .reports-chips {
   display: flex;
   align-items: center;
@@ -1161,7 +1295,7 @@ body {
   color: var(--brand-soft);
 }
 
-/* ── Bars 13–14: light and dark ────────────────────────────────────────── */
+/* ── Bars 17–18: light and dark ───────────────────────────────────────── */
 .theme-toggle {
   position: absolute;
   left: 0;
@@ -1348,7 +1482,7 @@ body {
   background: #0b0f14;
 }
 
-/* ── Bars 15–17: real screens on every device ──────────────────────────── */
+/* ── Bars 19–23: every device, and the install terminal ───────────────── */
 .device-bar {
   display: flex;
   align-items: center;
@@ -1373,7 +1507,15 @@ body {
 }
 
 .device-shot {
+  position: relative;
   transform-origin: 0 0;
+}
+
+.device-alt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
 }
 
 .currency-chips {
@@ -1415,7 +1557,7 @@ body {
   font-weight: 800;
 }
 
-/* ── Bar 18: montage ───────────────────────────────────────────────────── */
+/* ── Bar 24: montage ──────────────────────────────────────────────────── */
 .montage {
   position: absolute;
   inset: 0;
