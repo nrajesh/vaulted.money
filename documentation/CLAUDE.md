@@ -21,6 +21,7 @@ Generated outputs that must stay out of git:
 | `ios/App/App/public/` | `cap sync ios` |
 | `android/capacitor-cordova-android-plugins/` | `cap sync` |
 | `ios/capacitor-cordova-ios-plugins/` | `cap sync` |
+| `marketing/showreel/out/` | `pnpm showreel` |
 
 Before committing, ask: *"Can this be reproduced by running a command?"* If yes, gitignore it.
 
@@ -174,5 +175,6 @@ assets/         — Source brand images (icons, splash screens)
 documentation/  — Project and developer docs
 specs/          — Feature specifications
 scripts/        — Build helper scripts
+marketing/      — Code-generated marketing assets (showreel video)
 patches/        — pnpm dependency patches
 ```
