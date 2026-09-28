@@ -141,7 +141,10 @@ CircleCI runs lint, typecheck, format check, `pnpm test:coverage`, `pnpm build` 
 When a grouped bump breaks something, check out `pre-prod`, bump the suspect packages one at a time (`pnpm add -D <pkg>@<version>`), and rerun the failing check to find the culprit. Fix the root cause rather than pinning the old version. Pin only when upstream is incompatible, and then add a Dependabot `ignore` entry with a tracking link, as `.github/dependabot.yml` does for TypeScript.
 
 **Tests must not depend on focus left behind by earlier tests**
-Since jsdom 30.1, removing a focused element (which Testing Library's cleanup does) hands focus to the Document, and the next `focus()` fires a `blur` on `window`. Radix menus and selects close on window blur, so a dropdown test that ran after another focus-moving test never saw its menu open. `src/tests/setup.ts` resets focus before every test; keep that reset when editing the setup file. `src/tests/test-environment-focus.test.tsx` guards it.
+In jsdom 30.1.0, removing a focused element (which Testing Library's cleanup does) handed focus to the Document, and the next `focus()` fired a `blur` on `window`. Radix menus and selects close on window blur, so a dropdown test that ran after another focus-moving test never saw its menu open. `src/tests/setup.ts` resets focus before every test; keep that reset when editing the setup file. `src/tests/test-environment-focus.test.tsx` guards it.
+
+**Assert behaviour, not jsdom internals**
+jsdom's focus bookkeeping changes between patch releases. `document.hasFocus()` returned `false` after `blur()` in 30.1.0 but `true` in 30.1.1, which broke a test that asserted on it. Assert what a user would observe (`document.activeElement`, whether a menu opened) rather than jsdom-specific state.
 
 **Commit the regenerated acknowledgments**
 `pnpm build` and the test suite regenerate `src/data/acknowledgments.generated.ts` from installed versions. Commit the regenerated file along with the dependency bump so the Acknowledgments page lists the versions that actually ship.

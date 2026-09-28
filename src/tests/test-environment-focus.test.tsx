@@ -11,8 +11,12 @@ import {
 /*
  * Guards the focus reset in `setup.ts`. These tests run in order: the first
  * leaves jsdom's focus on a removed element, and the second checks that a
- * Radix dropdown still opens in the following test. Without the reset, jsdom
- * 30.1+ fires a window blur on the next focus move and Radix closes the menu.
+ * Radix dropdown still opens in the following test. jsdom 30.1.0 fired a
+ * window blur on the next focus move, which made Radix close the menu.
+ *
+ * Assert only observable behaviour here, never jsdom's internal focus
+ * bookkeeping: `document.hasFocus()` returned false after a blur in 30.1.0
+ * but true in 30.1.1, and asserting on it broke this test on a patch bump.
  */
 describe("Test environment focus reset", () => {
   it("leaves focus on an element that is then removed", () => {
@@ -25,7 +29,7 @@ describe("Test environment focus reset", () => {
   });
 
   it("starts the next test with nothing focused so Radix menus can open", async () => {
-    expect(document.hasFocus()).toBe(false);
+    expect(document.activeElement).toBe(document.body);
 
     const user = userEvent.setup();
     render(
