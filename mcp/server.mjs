@@ -25,8 +25,31 @@ const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => 
 const text = (value) => ({ content: [{ type: "text", text: typeof value === "string" ? value : JSON.stringify(value) }] });
 const fail = (message) => ({ isError: true, content: [{ type: "text", text: message }] });
 const round = (n) => Math.round(n * 100) / 100;
-const today = () => new Date().toISOString().slice(0, 10);
-const monthStart = () => today().slice(0, 8) + "01";
+const pad2 = (n) => String(n).padStart(2, "0");
+/** YYYY-MM-DD in the computer's local time zone. */
+const ymd = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+export const PERIODS = ["this_month", "last_month", "last_7_days", "last_30_days", "last_90_days", "this_year", "last_year"];
+/**
+ * Turn a named period (or explicit from/to) into dates. Models do not know
+ * today's date and are unreliable at date arithmetic, so the server does it
+ * and reports exactly which dates it used.
+ */
+export function resolvePeriod({ period, from, to } = {}, now = new Date()) {
+  if (from || to) return { label: "custom", from: from ?? "0000-01-01", to: to ?? ymd(now) };
+  const y = now.getFullYear(), m = now.getMonth();
+  const daysAgo = (n) => ymd(new Date(y, m, now.getDate() - n));
+  switch (period ?? "last_30_days") {
+    case "this_month": return { label: "this_month", from: ymd(new Date(y, m, 1)), to: ymd(now) };
+    case "last_month": return { label: "last_month", from: ymd(new Date(y, m - 1, 1)), to: ymd(new Date(y, m, 0)) };
+    case "last_7_days": return { label: "last_7_days", from: daysAgo(6), to: ymd(now) };
+    case "last_90_days": return { label: "last_90_days", from: daysAgo(89), to: ymd(now) };
+    case "this_year": return { label: "this_year", from: `${y}-01-01`, to: ymd(now) };
+    case "last_year": return { label: "last_year", from: `${y - 1}-01-01`, to: `${y - 1}-12-31` };
+    case "last_30_days": return { label: "last_30_days", from: daysAgo(29), to: ymd(now) };
+    default: throw new Error(`Unknown period "${period}". Use one of: ${PERIODS.join(", ")}, or pass from/to (YYYY-MM-DD).`);
+  }
+}
 
 // ── CSV helpers (quote-aware) ───────────────────────────────────────────────
 export function parseCsv(input, delimiter) {
@@ -109,12 +132,12 @@ function describeBody(schema) {
   return Object.fromEntries(Object.entries(props).map(([k, v]) => [k + (required.has(k) ? "*" : ""), v.enum ? v.enum.join("|") : Array.isArray(v.type) ? v.type.join("|") : (v.type ?? "any")]));
 }
 
-export function createServer({ baseUrl, token, fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
+export function createServer({ baseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
   let ledgers, spec;
   const api = async (method, path, { query, body } = {}) => {
     const url = new URL(baseUrl.replace(/\/$/, "") + path);
     for (const [k, v] of Object.entries(clean(query ?? {}))) url.searchParams.set(k, String(v));
-    const res = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    const res = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${getToken ? getToken() : token}`, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
     const raw = await res.text();
     let json;
     try { json = raw ? JSON.parse(raw) : null; } catch { json = undefined; }
@@ -122,9 +145,14 @@ export function createServer({ baseUrl, token, fetchImpl = fetch, readFile = (p)
   };
   const apiError = (r) => fail(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 300)}${r.json?.error?.details ? " " + JSON.stringify(r.json.error.details) : ""}`);
 
+  async function fetchLedgers() {
+    const r = await api("GET", "/ledgers");
+    if (!r.ok) throw new Error(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 200)}${r.status === 401 ? " (check the token in ~/.vaulted-token matches Settings -> Local API)" : ""}`);
+    if (!r.json.data.length) throw new Error("There are no ledgers yet.");
+    return r.json.data;
+  }
   async function resolveLedger(ref) {
-    ledgers ??= (await api("GET", "/ledgers")).json?.data ?? [];
-    if (!ledgers.length) throw new Error("There are no ledgers yet.");
+    if (!ledgers?.length) ledgers = await fetchLedgers(); // never cache a failure or an empty list
     if (!ref) {
       if (ledgers.length === 1) return ledgers[0];
       throw new Error(`Several ledgers exist: ${ledgers.map((l) => `${l.name} (${l.id})`).join(", ")}. Pass \`ledger\` (name or id).`);
@@ -142,6 +170,7 @@ export function createServer({ baseUrl, token, fetchImpl = fetch, readFile = (p)
   }
 
   const ledgerProp = { ledger: { type: "string", description: "Ledger name or id. Optional when there is only one ledger." } };
+  const PERIOD_PROP = { type: "string", enum: PERIODS, description: "Named period; the server works out the dates" };
   const read = { readOnlyHint: true, openWorldHint: false };
 
   const tools = [
@@ -151,7 +180,7 @@ export function createServer({ baseUrl, token, fetchImpl = fetch, readFile = (p)
       inputSchema: { type: "object", properties: {} },
       annotations: read,
       async run() {
-        ledgers = (await api("GET", "/ledgers")).json?.data ?? [];
+        ledgers = await fetchLedgers();
         const out = [];
         for (const l of ledgers) {
           const accounts = (await api("GET", `/ledgers/${l.id}/accounts`)).json?.data ?? [];
@@ -162,32 +191,35 @@ export function createServer({ baseUrl, token, fetchImpl = fetch, readFile = (p)
     },
     {
       name: "spending_summary",
-      description: "Where the money goes: totals plus top categories, vendors and accounts, and a time series. Defaults to this month. Use for 'where is my money going', 'how much did I spend', 'compare months'.",
-      inputSchema: { type: "object", properties: { ...ledgerProp, from: { type: "string", description: "YYYY-MM-DD (default: first of this month)" }, to: { type: "string", description: "YYYY-MM-DD (default: today)" }, group_by: { type: "string", enum: ["day", "week", "month"] }, top: { type: "number", description: "Rows per breakdown (default 8)" } } },
+      description: "Where the money goes: totals plus top categories, vendors and accounts, and a time series. Prefer `period` over dates. Default: last_30_days. The result states the exact dates used and today's date. Use for 'where is my money going', 'how much did I spend', 'compare months'.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, period: PERIOD_PROP, from: { type: "string", description: "YYYY-MM-DD; only if no named period fits" }, to: { type: "string", description: "YYYY-MM-DD" }, group_by: { type: "string", enum: ["day", "week", "month"] }, top: { type: "number", description: "Rows per breakdown (default 8)" } } },
       annotations: read,
       async run(a) {
         const l = await resolveLedger(a.ledger);
-        const r = await api("GET", `/ledgers/${l.id}/analytics`, { query: { from: a.from ?? monthStart(), to: a.to ?? today(), group_by: a.group_by ?? "month" } });
+        const range = resolvePeriod(a, now());
+        const r = await api("GET", `/ledgers/${l.id}/analytics`, { query: { from: range.from, to: range.to, group_by: a.group_by ?? "month" } });
         if (!r.ok) return apiError(r);
         const top = a.top ?? 8;
         const j = r.json;
         const pick = (rows, key) => rows.filter((x) => x.expenses > 0).slice(0, top).map((x) => ({ [key]: x[key], spent: round(x.expenses), share_pct: x.share, count: x.count }));
-        return text({ ledger: l.name, currency: j.currency, period: j.period, totals: j.totals, by_category: pick(j.byCategory, "category"), by_vendor: pick(j.byVendor, "vendor"), by_account: pick(j.byAccount ?? [], "account"), series: j.series });
+        return text({ ledger: l.name, today: ymd(now()), period: range, currency: j.currency, totals: j.totals, by_category: pick(j.byCategory, "category"), by_vendor: pick(j.byVendor, "vendor"), by_account: pick(j.byAccount ?? [], "account"), series: j.series });
       },
     },
     {
       name: "find_transactions",
       description: "Look up transactions. Negative amounts are expenses. Use for 'what did I spend at X', 'biggest expenses', 'show uncategorised'. Returns total matches and up to `limit` rows (default 20).",
-      inputSchema: { type: "object", properties: { ...ledgerProp, search: { type: "string", description: "Free text" }, vendor: { type: "string" }, category: { type: "string" }, sub_category: { type: "string" }, account: { type: "string" }, type: { type: "string", enum: ["income", "expense"] }, min_amount: { type: "number" }, max_amount: { type: "number" }, from: { type: "string" }, to: { type: "string" }, exclude_transfers: { type: "boolean" }, limit: { type: "number" }, offset: { type: "number" } } },
+      inputSchema: { type: "object", properties: { ...ledgerProp, period: { ...PERIOD_PROP, description: "Optional: limit to a named period. Omit for all dates." }, search: { type: "string", description: "Free text" }, vendor: { type: "string" }, category: { type: "string" }, sub_category: { type: "string" }, account: { type: "string" }, type: { type: "string", enum: ["income", "expense"] }, min_amount: { type: "number" }, max_amount: { type: "number" }, from: { type: "string" }, to: { type: "string" }, exclude_transfers: { type: "boolean" }, limit: { type: "number" }, offset: { type: "number" } } },
       annotations: read,
       async run(a) {
         const l = await resolveLedger(a.ledger);
-        const { ledger: _ledger, ...query } = a;
+        const { ledger: _ledger, period, ...query } = a;
+        const range = period ? resolvePeriod({ period }, now()) : undefined;
+        if (range) Object.assign(query, { from: range.from, to: range.to });
         query.limit = Math.min(query.limit ?? 20, 100);
         const r = await api("GET", `/ledgers/${l.id}/transactions`, { query });
         if (!r.ok) return apiError(r);
         const sum = round(r.json.data.reduce((s, t) => s + t.amount, 0));
-        return text({ ledger: l.name, total_matches: r.json.total, shown: r.json.data.length, sum_of_shown: sum, transactions: r.json.data.map((t) => clean({ id: t.id, date: t.date?.slice(0, 10), amount: t.amount, currency: t.currency, account: t.account, vendor: t.vendor, category: t.category, sub_category: t.sub_category, remarks: t.remarks })) });
+        return text({ ledger: l.name, today: ymd(now()), period: range ?? "all dates unless from/to given", total_matches: r.json.total, shown: r.json.data.length, sum_of_shown: sum, transactions: r.json.data.map((t) => clean({ id: t.id, date: t.date?.slice(0, 10), amount: t.amount, currency: t.currency, account: t.account, vendor: t.vendor, category: t.category, sub_category: t.sub_category, remarks: t.remarks })) });
       },
     },
     {
@@ -328,7 +360,9 @@ export function loadToken(env = process.env) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const server = createServer({ baseUrl: process.env.VM_BASE_URL ?? "http://127.0.0.1:47821/api/v1", token: loadToken() });
+  // The token is re-read on every request, so regenerating it in Settings only
+  // needs the new value saved to the token file (no restart).
+  const server = createServer({ baseUrl: process.env.VM_BASE_URL ?? "http://127.0.0.1:47821/api/v1", getToken: () => loadToken() });
   let buffer = "";
   process.stdin.setEncoding("utf8");
   process.stdin.on("data", (chunk) => {

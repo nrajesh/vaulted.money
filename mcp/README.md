@@ -13,8 +13,8 @@ A model re-reads every tool definition on every turn. The API has ~99 operations
 | Tool | Use it for | Changes data? |
 |---|---|---|
 | `list_ledgers` | What exists: ledgers, accounts, balances | no |
-| `spending_summary` | "Where is my money going?", totals, top categories/vendors/accounts, trend. Defaults to this month | no |
-| `find_transactions` | Look-ups: by text, vendor, category, account, amount range, dates | no |
+| `spending_summary` | "Where is my money going?", totals, top categories/vendors/accounts, trend. Takes a named `period` (`last_30_days` by default, `this_month`, `last_month`, `last_7_days`, `last_90_days`, `this_year`, `last_year`) and reports the exact dates it used | no |
+| `find_transactions` | Look-ups: by text, vendor, category, account, amount range, `period` or dates | no |
 | `budgets_and_insights` | "Am I over budget?", biggest changes vs the previous 30 days | no |
 | `search_api` | Find any other endpoint by keyword (reports, recurring, vendors, backups, maintenance…) with its parameters | no |
 | `call_api` | Call what `search_api` found. **GET runs; anything else previews until `confirm: true`** | yes, gated |
@@ -28,6 +28,10 @@ A model re-reads every tool definition on every turn. The API has ~99 operations
 - **Delete an account (or anything else):** `call_api` with `DELETE /ledgers/{ledgerId}/accounts/{id}` returns a preview ("would call…"). The model should show you that and only then repeat the call with `confirm: true`. Endpoints that support `dry_run` are previewed by the API itself. Deleting an account keeps its transactions; deleting a ledger deletes all its data.
 - **Real enforcement is your client's approval prompt.** A model can set `confirm: true` itself, so keep tool-call approval switched on for `call_api`, `add_transaction` and `import_csv` (LM Studio and Claude Code both ask by default). The read tools are marked read-only.
 - Take a backup first (`POST /backups/export`) when you let an agent loose on real data.
+
+## Dates
+
+Models don't know today's date and are unreliable at date arithmetic, so asking the same question twice could silently cover different date ranges. The server works the dates out itself from a named `period`, and every answer states `today` and the exact `from`/`to` it used. If two answers disagree, compare those fields first.
 
 ## Setup
 
@@ -56,6 +60,8 @@ Use a model with tool-calling support (the tool icon in LM Studio's model list).
 ```bash
 claude mcp add vaulted-money -- node /absolute/path/to/vaulted.money/mcp/server.mjs
 ```
+
+The server is started by the client when needed (nothing to run yourself). It re-reads the token file on every request, so after regenerating the token in Settings just save the new value to `~/.vaulted-token`; no restart is needed. Only the desktop app has to be running.
 
 GUI apps launched from the Dock may not inherit your shell environment, which is why the token is read from `~/.vaulted-token` rather than an environment variable.
 
