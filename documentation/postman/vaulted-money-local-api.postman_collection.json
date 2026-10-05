@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f25aa25f-2e1a-4403-8c0d-6473d2e3105a",
     "name": "Vaulted Money Local API",
-    "description": "# Vaulted Money Local API\n\nRegression suite and worked examples for the desktop app's Local API (v1).\n\n**Setup:** enable *Settings \u2192 Local API*, copy the token, import the environment file and set `token`. See `documentation/postman/README.md`.\n\n**Run:** open the Collection Runner and run folders `00`\u2013`15` and `98` in order (untick `99`). The suite creates a throwaway *Postman Test Ledger*, works only inside it, and deletes it in `98 Cleanup`; settings it changes are restored.\n\n**Using it as documentation:** every request has a description with the matching UI button, a body example and notes; folders `13`\u2013`15` cover the clean-up tools, CSV import/export and settings.\n\n**Building your own client?** `GET {{baseUrl}}/openapi.json` is a complete OpenAPI 3.1 description of every endpoint.",
+    "description": "# Vaulted Money Local API\n\nRegression suite and worked examples for the desktop app's Local API (v1).\n\n**Setup:** enable *Settings → Local API*, copy the token, import the environment file and set `token`. See `documentation/postman/README.md`.\n\n**Run:** open the Collection Runner and run folders `00`–`15` and `98` in order (untick `99`). The suite creates a throwaway *Postman Test Ledger*, works only inside it, and deletes it in `98 Cleanup`; settings it changes are restored.\n\n**Using it as documentation:** every request has a description with the matching UI button, a body example and notes; folders `13`–`15` cover the clean-up tools, CSV import/export and settings.\n\n**Building your own client?** `GET {{baseUrl}}/openapi.json` is a complete OpenAPI 3.1 description of every endpoint.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "7088242"
   },
@@ -11063,7 +11063,7 @@
                 }
               }
             },
-            "description": "**UI button:** Transactions \u2192 *Detect Transfers*.\n\nFinds pairs of transactions on different accounts, at most 1 day apart, that cancel out (or look like a transfer) and lists them. `dry_run: true` changes nothing.\n\n```json\n{ \"dry_run\": true }\n```"
+            "description": "**UI button:** Transactions → *Detect Transfers*.\n\nFinds pairs of transactions on different accounts, at most 1 day apart, that cancel out (or look like a transfer) and lists them. `dry_run: true` changes nothing.\n\n```json\n{ \"dry_run\": true }\n```"
           },
           "response": [
             {
@@ -11097,7 +11097,7 @@
                     }
                   }
                 },
-                "description": "**UI button:** Transactions \u2192 *Detect Transfers*.\n\nFinds pairs of transactions on different accounts, at most 1 day apart, that cancel out (or look like a transfer) and lists them. `dry_run: true` changes nothing.\n\n```json\n{ \"dry_run\": true }\n```"
+                "description": "**UI button:** Transactions → *Detect Transfers*.\n\nFinds pairs of transactions on different accounts, at most 1 day apart, that cancel out (or look like a transfer) and lists them. `dry_run: true` changes nothing.\n\n```json\n{ \"dry_run\": true }\n```"
               },
               "status": "OK",
               "code": 200,
@@ -11365,7 +11365,7 @@
                 }
               }
             },
-            "description": "**UI button:** Transactions \u2192 *Cleanup Duplicates*.\n\nA duplicate is a second (or later) transaction created from the same recurring schedule on the same day; the oldest is kept. Deleting needs `confirm_delete: true`.\n\n```json\n{ \"dry_run\": true }\n```\n```json\n{ \"confirm_delete\": true }\n```"
+            "description": "**UI button:** Transactions → *Cleanup Duplicates*.\n\nA duplicate is a second (or later) transaction created from the same recurring schedule on the same day; the oldest is kept. Deleting needs `confirm_delete: true`.\n\n```json\n{ \"dry_run\": true }\n```\n```json\n{ \"confirm_delete\": true }\n```"
           },
           "response": [
             {
@@ -11399,7 +11399,7 @@
                     }
                   }
                 },
-                "description": "**UI button:** Transactions \u2192 *Cleanup Duplicates*.\n\nA duplicate is a second (or later) transaction created from the same recurring schedule on the same day; the oldest is kept. Deleting needs `confirm_delete: true`.\n\n```json\n{ \"dry_run\": true }\n```\n```json\n{ \"confirm_delete\": true }\n```"
+                "description": "**UI button:** Transactions → *Cleanup Duplicates*.\n\nA duplicate is a second (or later) transaction created from the same recurring schedule on the same day; the oldest is kept. Deleting needs `confirm_delete: true`.\n\n```json\n{ \"dry_run\": true }\n```\n```json\n{ \"confirm_delete\": true }\n```"
               },
               "status": "OK",
               "code": 200,
@@ -11753,7 +11753,7 @@
                 }
               }
             },
-            "description": "**UI button:** Transactions \u2192 *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if no default provider has a key. This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
+            "description": "**UI button:** Transactions → *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if no default provider has a key. This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
           },
           "response": [
             {
@@ -11787,7 +11787,7 @@
                     }
                   }
                 },
-                "description": "**UI button:** Transactions \u2192 *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if no default provider has a key. This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
+                "description": "**UI button:** Transactions → *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if no default provider has a key. This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
               },
               "status": "OK",
               "code": 200,
@@ -12102,7 +12102,7 @@
                 }
               }
             },
-            "description": "**UI button:** Accounts \u2192 *Reconcile Balance*.\n\nYou tell the API what the real balance is (for example from your bank statement). It compares that with the app's balance and, unless `dry_run`, creates one adjustment transaction (vendor `Balance Adjustment`, category `Adjustment`) for the difference.\n\n```json\n{\n  \"dry_run\": true,\n  \"adjustments\": [ { \"account\": \"Savings\", \"actual_balance\": 1234.56 } ],\n  \"date\": \"2026-01-31\"\n}\n```\n`account` is a name or id. `date` is the as-of date (default today). Accounts that already match are left alone."
+            "description": "**UI button:** Accounts → *Reconcile Balance*.\n\nYou tell the API what the real balance is (for example from your bank statement). It compares that with the app's balance and, unless `dry_run`, creates one adjustment transaction (vendor `Balance Adjustment`, category `Adjustment`) for the difference.\n\n```json\n{\n  \"dry_run\": true,\n  \"adjustments\": [ { \"account\": \"Savings\", \"actual_balance\": 1234.56 } ],\n  \"date\": \"2026-01-31\"\n}\n```\n`account` is a name or id. `date` is the as-of date (default today). Accounts that already match are left alone."
           },
           "response": [
             {
@@ -12136,7 +12136,7 @@
                     }
                   }
                 },
-                "description": "**UI button:** Accounts \u2192 *Reconcile Balance*.\n\nYou tell the API what the real balance is (for example from your bank statement). It compares that with the app's balance and, unless `dry_run`, creates one adjustment transaction (vendor `Balance Adjustment`, category `Adjustment`) for the difference.\n\n```json\n{\n  \"dry_run\": true,\n  \"adjustments\": [ { \"account\": \"Savings\", \"actual_balance\": 1234.56 } ],\n  \"date\": \"2026-01-31\"\n}\n```\n`account` is a name or id. `date` is the as-of date (default today). Accounts that already match are left alone."
+                "description": "**UI button:** Accounts → *Reconcile Balance*.\n\nYou tell the API what the real balance is (for example from your bank statement). It compares that with the app's balance and, unless `dry_run`, creates one adjustment transaction (vendor `Balance Adjustment`, category `Adjustment`) for the difference.\n\n```json\n{\n  \"dry_run\": true,\n  \"adjustments\": [ { \"account\": \"Savings\", \"actual_balance\": 1234.56 } ],\n  \"date\": \"2026-01-31\"\n}\n```\n`account` is a name or id. `date` is the as-of date (default today). Accounts that already match are left alone."
               },
               "status": "OK",
               "code": 200,
@@ -12642,7 +12642,7 @@
                 "duplicates"
               ]
             },
-            "description": "**UI button:** Accounts \u2192 *De-duplicate* (the app makes you pick the accounts by hand; this endpoint finds likely candidates for you).\n\nEach group has the `suggested_target` to keep and the other names to merge into it."
+            "description": "**UI button:** Accounts → *De-duplicate* (the app makes you pick the accounts by hand; this endpoint finds likely candidates for you).\n\nEach group has the `suggested_target` to keep and the other names to merge into it."
           },
           "response": [
             {
@@ -12662,7 +12662,7 @@
                     "duplicates"
                   ]
                 },
-                "description": "**UI button:** Accounts \u2192 *De-duplicate* (the app makes you pick the accounts by hand; this endpoint finds likely candidates for you).\n\nEach group has the `suggested_target` to keep and the other names to merge into it."
+                "description": "**UI button:** Accounts → *De-duplicate* (the app makes you pick the accounts by hand; this endpoint finds likely candidates for you).\n\nEach group has the `suggested_target` to keep and the other names to merge into it."
               },
               "status": "OK",
               "code": 200,
@@ -13084,7 +13084,7 @@
                 "duplicates"
               ]
             },
-            "description": "Merge them with `POST \u2026/vendors/merge` (folder 03)."
+            "description": "Merge them with `POST …/vendors/merge` (folder 03)."
           },
           "response": [
             {
@@ -13104,7 +13104,7 @@
                     "duplicates"
                   ]
                 },
-                "description": "Merge them with `POST \u2026/vendors/merge` (folder 03)."
+                "description": "Merge them with `POST …/vendors/merge` (folder 03)."
               },
               "status": "OK",
               "code": 200,
@@ -13160,7 +13160,7 @@
                 "unused"
               ]
             },
-            "description": "**UI button:** Vendors \u2192 *Cleanup Unused*.\n\n**Safer than the UI:** a vendor is unused only if no transaction, no recurring transaction and no budget refers to it (the UI checks transactions only and would delete schedules and budgets along with the vendor)."
+            "description": "**UI button:** Vendors → *Cleanup Unused*.\n\n**Safer than the UI:** a vendor is unused only if no transaction, no recurring transaction and no budget refers to it (the UI checks transactions only and would delete schedules and budgets along with the vendor)."
           },
           "response": [
             {
@@ -13180,7 +13180,7 @@
                     "unused"
                   ]
                 },
-                "description": "**UI button:** Vendors \u2192 *Cleanup Unused*.\n\n**Safer than the UI:** a vendor is unused only if no transaction, no recurring transaction and no budget refers to it (the UI checks transactions only and would delete schedules and budgets along with the vendor)."
+                "description": "**UI button:** Vendors → *Cleanup Unused*.\n\n**Safer than the UI:** a vendor is unused only if no transaction, no recurring transaction and no budget refers to it (the UI checks transactions only and would delete schedules and budgets along with the vendor)."
               },
               "status": "OK",
               "code": 200,
@@ -13768,7 +13768,7 @@
                 "duplicates"
               ]
             },
-            "description": "**UI button:** Categories \u2192 *De-duplicate*. Merge with `POST \u2026/categories/merge` (folder 04)."
+            "description": "**UI button:** Categories → *De-duplicate*. Merge with `POST …/categories/merge` (folder 04)."
           },
           "response": [
             {
@@ -13788,7 +13788,7 @@
                     "duplicates"
                   ]
                 },
-                "description": "**UI button:** Categories \u2192 *De-duplicate*. Merge with `POST \u2026/categories/merge` (folder 04)."
+                "description": "**UI button:** Categories → *De-duplicate*. Merge with `POST …/categories/merge` (folder 04)."
               },
               "status": "OK",
               "code": 200,
@@ -13839,7 +13839,7 @@
                 "unused"
               ]
             },
-            "description": "**UI button:** Categories \u2192 *Cleanup Unused*. A category is unused when no transaction, recurring transaction or budget refers to it. `Others` and `Transfer` are never listed."
+            "description": "**UI button:** Categories → *Cleanup Unused*. A category is unused when no transaction, recurring transaction or budget refers to it. `Others` and `Transfer` are never listed."
           },
           "response": [
             {
@@ -13859,7 +13859,7 @@
                     "unused"
                   ]
                 },
-                "description": "**UI button:** Categories \u2192 *Cleanup Unused*. A category is unused when no transaction, recurring transaction or budget refers to it. `Others` and `Transfer` are never listed."
+                "description": "**UI button:** Categories → *Cleanup Unused*. A category is unused when no transaction, recurring transaction or budget refers to it. `Others` and `Transfer` are never listed."
               },
               "status": "OK",
               "code": 200,
@@ -14315,7 +14315,7 @@
                 "export"
               ]
             },
-            "description": "**UI button:** Transactions \u2192 *Export CSV*. Same columns, `;` delimiter and `DD/MM/YYYY` dates as the app, so the file can be imported in the app too.\n\nAccepts the same filters as the list endpoint (`from`, `to`, `account`, `category`, `search`, \u2026) and `?delimiter=,` for comma-separated output. Cells starting with `=`, `+`, `-` or `@` are escaped so spreadsheets do not run them as formulas."
+            "description": "**UI button:** Transactions → *Export CSV*. Same columns, `;` delimiter and `DD/MM/YYYY` dates as the app, so the file can be imported in the app too.\n\nAccepts the same filters as the list endpoint (`from`, `to`, `account`, `category`, `search`, …) and `?delimiter=,` for comma-separated output. Cells starting with `=`, `+`, `-` or `@` are escaped so spreadsheets do not run them as formulas."
           },
           "response": [
             {
@@ -14335,7 +14335,7 @@
                     "export"
                   ]
                 },
-                "description": "**UI button:** Transactions \u2192 *Export CSV*. Same columns, `;` delimiter and `DD/MM/YYYY` dates as the app, so the file can be imported in the app too.\n\nAccepts the same filters as the list endpoint (`from`, `to`, `account`, `category`, `search`, \u2026) and `?delimiter=,` for comma-separated output. Cells starting with `=`, `+`, `-` or `@` are escaped so spreadsheets do not run them as formulas."
+                "description": "**UI button:** Transactions → *Export CSV*. Same columns, `;` delimiter and `DD/MM/YYYY` dates as the app, so the file can be imported in the app too.\n\nAccepts the same filters as the list endpoint (`from`, `to`, `account`, `category`, `search`, …) and `?delimiter=,` for comma-separated output. Cells starting with `=`, `+`, `-` or `@` are escaped so spreadsheets do not run them as formulas."
               },
               "status": "OK",
               "code": 200,
@@ -14581,14 +14581,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"csv\": \"<filled in by the pre-request script from the 'Export transactions (CSV)' response>\",\n  \"dry_run\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "**UI button:** Transactions \u2192 *Import CSV*.\n\n```json\n{\n  \"csv\": \"Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\\n01/02/2026;Checking;Cafe;Food;-4.50;;USD;;false;None;\",\n  \"delimiter\": \";\",\n  \"detect_transfers\": true,\n  \"dry_run\": false\n}\n```\nThe CSV goes in the `csv` string. Required headers: Date, Account, Vendor, Category, Amount, Remarks, Currency, Frequency, End Date. Missing accounts, vendors and categories are created. Afterwards matching transfer legs are linked (turn off with `detect_transfers: false`). Unreadable rows are skipped and reported by row number."
+            "description": "**UI button:** Transactions → *Import CSV*.\n\n```json\n{\n  \"csv\": \"Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\\n01/02/2026;Checking;Cafe;Food;-4.50;;USD;;false;None;\",\n  \"delimiter\": \";\",\n  \"detect_transfers\": true,\n  \"dry_run\": false\n}\n```\nThe CSV goes in the `csv` string. Required headers: Date, Account, Vendor, Category, Amount, Remarks, Currency, Frequency, End Date. Missing accounts, vendors and categories are created. Afterwards matching transfer legs are linked (turn off with `detect_transfers: false`). Unreadable rows are skipped and reported by row number.\n\nWhere does the CSV come from? The Body tab shows a placeholder. Before this request runs, its Pre-request script (see the Scripts tab) replaces the body with the CSV text saved by 'Export transactions (CSV)' earlier in this folder (collection variable `csvTransactions`). To import your own file, delete the script line and paste your CSV text into the \"csv\" field (escape line breaks as \\n), or send the file contents from your own code (see documentation/API_COOKBOOK.md)."
           },
           "response": [
             {
@@ -14622,7 +14622,7 @@
                     }
                   }
                 },
-                "description": "**UI button:** Transactions \u2192 *Import CSV*.\n\n```json\n{\n  \"csv\": \"Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\\n01/02/2026;Checking;Cafe;Food;-4.50;;USD;;false;None;\",\n  \"delimiter\": \";\",\n  \"detect_transfers\": true,\n  \"dry_run\": false\n}\n```\nThe CSV goes in the `csv` string. Required headers: Date, Account, Vendor, Category, Amount, Remarks, Currency, Frequency, End Date. Missing accounts, vendors and categories are created. Afterwards matching transfer legs are linked (turn off with `detect_transfers: false`). Unreadable rows are skipped and reported by row number."
+                "description": "**UI button:** Transactions → *Import CSV*.\n\n```json\n{\n  \"csv\": \"Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\\n01/02/2026;Checking;Cafe;Food;-4.50;;USD;;false;None;\",\n  \"delimiter\": \";\",\n  \"detect_transfers\": true,\n  \"dry_run\": false\n}\n```\nThe CSV goes in the `csv` string. Required headers: Date, Account, Vendor, Category, Amount, Remarks, Currency, Frequency, End Date. Missing accounts, vendors and categories are created. Afterwards matching transfer legs are linked (turn off with `detect_transfers: false`). Unreadable rows are skipped and reported by row number."
               },
               "status": "OK",
               "code": 200,
@@ -14695,13 +14695,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"csv\": \"<filled in by the pre-request script from the 'Export transactions (CSV)' response>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "description": "\n\nWhere does the CSV come from? The Body tab shows a placeholder. Before this request runs, its Pre-request script (see the Scripts tab) replaces the body with the CSV text saved by 'Export transactions (CSV)' earlier in this folder (collection variable `csvTransactions`). To import your own file, delete the script line and paste your CSV text into the \"csv\" field (escape line breaks as \\n), or send the file contents from your own code (see documentation/API_COOKBOOK.md)."
           },
           "response": [
             {
@@ -15028,7 +15029,7 @@
                 "export"
               ]
             },
-            "description": "**UI button:** Accounts \u2192 Export CSV / Import CSV. Comma-separated, same columns as the app."
+            "description": "**UI button:** Accounts → Export CSV / Import CSV. Comma-separated, same columns as the app."
           },
           "response": [
             {
@@ -15048,7 +15049,7 @@
                     "export"
                   ]
                 },
-                "description": "**UI button:** Accounts \u2192 Export CSV / Import CSV. Comma-separated, same columns as the app."
+                "description": "**UI button:** Accounts → Export CSV / Import CSV. Comma-separated, same columns as the app."
               },
               "status": "OK",
               "code": 200,
@@ -15421,7 +15422,7 @@
                 "export"
               ]
             },
-            "description": "**UI button:** Vendors \u2192 Export CSV / Import CSV. Comma-separated, same columns as the app."
+            "description": "**UI button:** Vendors → Export CSV / Import CSV. Comma-separated, same columns as the app."
           },
           "response": [
             {
@@ -15441,7 +15442,7 @@
                     "export"
                   ]
                 },
-                "description": "**UI button:** Vendors \u2192 Export CSV / Import CSV. Comma-separated, same columns as the app."
+                "description": "**UI button:** Vendors → Export CSV / Import CSV. Comma-separated, same columns as the app."
               },
               "status": "OK",
               "code": 200,
@@ -15814,7 +15815,7 @@
                 "export"
               ]
             },
-            "description": "**UI button:** Categories \u2192 Export CSV / Import CSV. Comma-separated, same columns as the app."
+            "description": "**UI button:** Categories → Export CSV / Import CSV. Comma-separated, same columns as the app."
           },
           "response": [
             {
@@ -15834,7 +15835,7 @@
                     "export"
                   ]
                 },
-                "description": "**UI button:** Categories \u2192 Export CSV / Import CSV. Comma-separated, same columns as the app."
+                "description": "**UI button:** Categories → Export CSV / Import CSV. Comma-separated, same columns as the app."
               },
               "status": "OK",
               "code": 200,
