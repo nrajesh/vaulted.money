@@ -256,9 +256,9 @@ function add(id, nodes, update, opts = {}) {
   el.append(demo);
   let cards = [];
   if (opts.take) {
-    const { cards: spec, y = 380 } = opts.take;
+    const { cards: spec, y = 410 } = opts.take;
     cards = spec.map((c, i) => {
-      const node = h(`<div class="take" style="left:${96 + i * 908}px;top:${y}px"><div class="tk-ico">${c.icon}</div><div><div class="tk-title">${c.code ? flip(c.code, c.title) : `<span class="fb">${c.title}</span>`}</div><p class="tk-text">${c.text}</p></div></div>`);
+      const node = h(`<div class="take" style="left:${96 + i * 908}px;top:${y}px"><div class="tk-ico">${c.icon}</div><div class="tk-body"><div class="tk-title"><span class="tx">${c.code ? flip(c.code, c.title) : c.title}</span></div><ul class="tk-list">${c.bullets.map((b) => `<li><span class="tx">${b}</span></li>`).join("")}</ul></div></div>`);
       el.append(node);
       return { node, c };
     });
@@ -276,10 +276,9 @@ function add(id, nodes, update, opts = {}) {
       cards.forEach(({ node, c }, i) => {
         const start = at + 0.3 + i * 0.9;
         appear(node, lt, start, { dy: 28, dur: 0.8 });
-        if (c.code) {
-          const f = setFlip(node, lt, start + 0.2);
-          node.querySelector(".tk-text").style.opacity = f;
-        }
+        // The code word shows with the rest of the card for a moment, then
+        // flips to its plain meaning, which then holds for the rest of the slide.
+        if (c.code) setFlip(node, lt, start + 0.2, 1.8);
       });
     },
   };
@@ -327,8 +326,8 @@ const RATIO = 980 / 1100;
     appear(term.el, t, 2.4);
     term.update(t);
   }, { take: { at: 6.0, cards: [
-    { icon: ICON.power, title: "Off until you switch it on", text: "One switch in Settings. Nothing runs before that." },
-    { icon: ICON.shield, title: "Reachable only from your device", text: `${glow("Never on the network")}, and every request needs your private token.` },
+    { icon: ICON.power, title: "Off by default", bullets: ["One switch in Settings", "Nothing runs before that"] },
+    { icon: ICON.shield, title: "Locked to your device", bullets: [`${glow("Never on the network")}`, "Every request needs a token"] },
   ] } });
 }
 
@@ -353,8 +352,8 @@ const RATIO = 980 / 1100;
     appear(led, t, 2.4, { dx: 50, dy: 0 });
     appear(acc, t, 5.4, { dx: 0, dy: 0 });
   }, { take: { at: 7.4, cards: [
-    { icon: ICON.chat, title: "Plain requests, no sign-up", text: "Create ledgers and accounts with a simple web request." },
-    { icon: ICON.eye, title: "It shows up in the app", text: "The open app refreshes after every change you make." },
+    { icon: ICON.chat, title: "Plain web requests", bullets: ["No SDK, no sign-up", "Just send a simple request"] },
+    { icon: ICON.eye, title: "Shows up in the app", bullets: ["The app refreshes instantly", "No reload needed"] },
   ] } });
 }
 
@@ -385,8 +384,8 @@ const RATIO = 980 / 1100;
     appear(tx, t, 6.2, { dx: 50, dy: 0 });
     ring(rg, t, 7.0, 9.0);
   }, { take: { at: 8.6, cards: [
-    { icon: ICON.plus, title: "One transaction or thousands", text: "Add them singly, in bulk, or from a bank CSV file." },
-    { icon: ICON.eye, code: "dry_run", title: "Preview before anything changes", text: "A trial run shows exactly what would happen first." },
+    { icon: ICON.plus, title: "Add one or thousands", bullets: ["One by one or in bulk", "Or straight from a bank CSV"] },
+    { icon: ICON.eye, code: "dry_run", title: "Preview first", bullets: ["A trial run shows the changes", "Nothing is touched yet"] },
   ] } });
 }
 
@@ -409,8 +408,8 @@ const RATIO = 980 / 1100;
     appear(tx, t, 3.0, { dx: 50, dy: 0 });
     ring(rg, t, 4.0, 5.4);
   }, { take: { at: 5.0, cards: [
-    { icon: ICON.history, title: "It learns from your habits", text: "Shops you've categorised before are matched automatically." },
-    { icon: ICON.shield, title: "No AI involved", text: `This step runs ${glow("on your device")}, using your own history.` },
+    { icon: ICON.history, title: "Learns your habits", bullets: ["Reuses your past categories", "Matches shops automatically"] },
+    { icon: ICON.shield, title: "No AI involved", bullets: [`Runs ${glow("on your device")}`, "Uses only your own history"] },
   ] } });
 }
 
@@ -452,8 +451,8 @@ const RATIO = 980 / 1100;
     appear(left, t, 7.0, { dx: -30, dy: 0, out: 13.0 });
     appear(right, t, 8.2, { dx: 30, dy: 0, out: 13.0 });
   }, { take: { at: 13.4, cards: [
-    { icon: ICON.sparkles, code: "use_ai", title: "AI only when you ask", text: `Off by default. It can be ${glow("a model on your own device")}.` },
-    { icon: ICON.shield, title: "Only shop names are shared", text: "Never amounts, dates or accounts. You review the result." },
+    { icon: ICON.sparkles, code: "use_ai", title: "Only when you ask", bullets: ["Off by default", "Can be a model on your device"] },
+    { icon: ICON.shield, title: "Only shop names shared", bullets: ["Never amounts or dates", "You review every result"] },
   ] } });
 }
 
@@ -598,14 +597,14 @@ function makeChat({ x, y, w, hgt, title, items }) {
   const specKb = o.bytes / 1000, toolsKb = (run.extra.mcpToolListBytes ?? 5600) / 1000;
   const fmt = (n) => (n >= 10 ? Math.round(n) : n.toFixed(1));
   const hd = head(`Chat with your money. <em>On your own device.</em>`, `A local model and a small helper: ${glow("no cloud, no per-token bill")}, and your data stays on your device.`);
-  const box = (x, title, sub, cls = "") => h(`<div class="card" style="left:${x}px;top:290px;width:384px;padding:20px 22px;${cls}"><h3 style="font-size:25px">${title}</h3><div class="sub" style="font-size:18px">${sub}</div></div>`);
+  const box = (x, title, sub, cls = "") => h(`<div class="card" style="left:${x}px;top:290px;width:384px;height:112px;padding:20px 22px;${cls}"><h3 style="font-size:25px;white-space:nowrap">${title}</h3><div class="sub" style="font-size:19px;white-space:nowrap">${sub}</div></div>`);
   const flow = [
-    box(96, "Local model", "LM Studio, Claude Code, or any compatible app"),
-    box(544, "Helper (MCP server)", `${nTools} small tools in one file`, "border-color:hsl(188 57% 59%);box-shadow:0 0 40px hsl(188 57% 59% / .22)"),
-    box(992, "Local API", "Only reachable from this device"),
-    box(1440, "Vaulted Money", "Your data, on your device"),
+    box(96, "Local model", "LM Studio, Claude Code"),
+    box(544, "Helper (MCP server)", `${nTools} small tools`, "border-color:hsl(188 57% 59%);box-shadow:0 0 40px hsl(188 57% 59% / .22)"),
+    box(992, "Local API", "Only on this device"),
+    box(1440, "Vaulted Money", "Your data, your device"),
   ];
-  const arrows = [0, 1, 2].map((i) => h(`<svg class="abs" style="left:${484 + i * 448}px;top:338px" width="56" height="30" viewBox="0 0 72 30" fill="none"><path d="M2 15h60m-12-11 12 11-12 11" stroke="hsl(188 57% 59%)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`));
+  const arrows = [0, 1, 2].map((i) => h(`<svg class="abs" style="left:${484 + i * 448}px;top:331px" width="56" height="30" viewBox="0 0 72 30" fill="none"><path d="M2 15h60m-12-11 12 11-12 11" stroke="hsl(188 57% 59%)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`));
   const readChips = [["list_ledgers", "See your ledgers"], ["spending_summary", "Spending summary"], ["find_transactions", "Find transactions"], ["budgets_and_insights", "Budgets and insights"], ["search_api", "Search the API"]];
   const writeChips = [["call_api", "Use any endpoint"], ["add_transaction", "Add a transaction"], ["import_csv", "Import a CSV"]];
   const chip = (c, kind) => `<span class="vchip" style="${kind === "r" ? "color:hsl(152 60% 72%);background:hsl(152 60% 40% / .10);border-color:hsl(152 60% 40% / .5)" : "color:hsl(35 92% 74%);background:hsl(35 92% 62% / .10);border-color:hsl(35 92% 62% / .5)"};font-family:var(--sans);font-size:24px">${flip(c[0], c[1])}</span>`;
@@ -631,8 +630,8 @@ function makeChat({ x, y, w, hgt, title, items }) {
     cmp.querySelector("#b1").style.width = 900 * tw(t, 5.8, 6.8) + "px";
     cmp.querySelector("#b2").style.width = Math.max(2, 900 * (toolsKb / specKb) * tw(t, 7.0, 7.8)) + "px";
   }, { take: { at: 8.6, cards: [
-    { icon: ICON.chat, title: "Chat with your own money", text: `Ask a local model in plain words. ${glow("Nothing leaves your device.")}` },
-    { icon: ICON.layers, title: "Small by design", text: `${nTools} simple tools, so even local models answer quickly.` },
+    { icon: ICON.chat, title: "Chat with your money", bullets: ["Ask in plain words", `${glow("Nothing leaves your device")}`] },
+    { icon: ICON.layers, title: "Small by design", bullets: [`${nTools} simple tools`, "Quick even for local models"] },
   ] } });
 }
 
@@ -672,8 +671,8 @@ function makeChat({ x, y, w, hgt, title, items }) {
     appear(dash, t, 7.2, { dy: 20 });
     ring(rg, t, 8.0);
   }, { take: { at: 9.0, cards: [
-    { icon: ICON.chat, title: "Ask in plain words", text: "No dates, no formulas. The tools read your real ledger." },
-    { icon: ICON.calendar, title: "Exact dates, every time", text: "The model picks “last 30 days”. The server does the date maths." },
+    { icon: ICON.chat, title: "Plain-word questions", bullets: ["No dates or formulas", "Reads your real ledger"] },
+    { icon: ICON.calendar, title: "Exact dates, every time", bullets: ["Model picks “last 30 days”", "Server works out the dates"] },
   ] } });
 }
 
@@ -700,8 +699,8 @@ function makeChat({ x, y, w, hgt, title, items }) {
     appear(tx, t, 4.4, { dx: 40, dy: 0 });
     ring(rg, t, 5.2, 6.6);
   }, { take: { at: 6.4, cards: [
-    { icon: ICON.chat, title: "Say it, and it's added", text: "Describe the purchase in your own words." },
-    { icon: ICON.undo, title: "Nothing changes without your OK", text: "Your chat app asks first, and every change can be undone." },
+    { icon: ICON.chat, title: "Say it, it's added", bullets: ["Describe it in your words", "Lands in the right account"] },
+    { icon: ICON.undo, title: "Always your call", bullets: ["Your app asks first", "Every change can be undone"] },
   ] } });
 }
 
@@ -737,8 +736,8 @@ function makeChat({ x, y, w, hgt, title, items }) {
     csv.style.opacity = Math.min(csv.style.opacity, 1 - 0.5 * tw(t, 7.4, 8.0));
     ring(rg, t, 8.6, 10.2);
   }, { take: { at: 10.4, cards: [
-    { icon: ICON.file, title: "Bank files, as they come", text: "Different column names, dates and number styles are handled for you." },
-    { icon: ICON.eye, title: "Preview, then import", text: `Nothing is imported until you say yes. ${glow("The file stays on your device.")}` },
+    { icon: ICON.file, title: "Bank files, as they come", bullets: ["Any column names or dates", "Odd number formats handled"] },
+    { icon: ICON.eye, title: "Preview, then import", bullets: ["Nothing imports until you agree", `${glow("File stays on your device")}`] },
   ] } });
 }
 
@@ -762,9 +761,9 @@ function makeChat({ x, y, w, hgt, title, items }) {
     ],
   });
   const steps = [
-    ["1", "The model previews", "Nothing is deleted yet. It only says what it would do."],
-    ["2", "You approve", "Your chat app asks before any tool that can change data."],
-    ["3", "Then it happens", "Past transactions stay in your ledger, still labelled with the old account's name."],
+    ["1", "The model previews", "Nothing is deleted yet"],
+    ["2", "You approve", "Your app asks before any change"],
+    ["3", "Then it happens", "Past transactions stay, with the old account's name"],
   ].map(([n, t1, t2], i) => h(`<div class="stepcard" style="left:1010px;top:${290 + i * 200}px;width:814px;padding:24px 28px"><div class="n">${n}</div><div><b style="font-size:30px">${t1}</b><small style="font-size:22px">${t2}</small></div></div>`));
   add("safe", [hd, chat.el, ...steps], (t) => {
     appear(hd, t, 0.2);
@@ -779,7 +778,7 @@ function makeChat({ x, y, w, hgt, title, items }) {
   const sp = rj("q-spending"), vend = rj("q-vendor");
   const csvRows = rec("q-report").text.trim().split("\n").slice(0, 6).join("\n");
   const chainHtml = (items) => items.map((c) => `<span class="t">${flip(c[0], c[1])}</span>`).join("<span>→</span>");
-  const card = (x, q, chain, ans, extra = "") => h(`<div class="mini" style="left:${x}px;top:310px;width:556px;height:520px"><span class="q" style="font-size:25px">${q}</span><div class="chain" style="font-size:19px">${chainHtml(chain)}</div><div class="ans" style="font-size:27px">${ans}</div>${extra}</div>`);
+  const card = (x, q, chain, ans, extra = "") => h(`<div class="mini" style="left:${x}px;top:310px;width:556px;height:520px"><div class="qwrap"><span class="q" style="font-size:25px">${q}</span></div><div class="chain" style="font-size:19px">${chainHtml(chain)}</div><div class="ans" style="font-size:27px">${ans}</div>${extra}</div>`);
   const hd = head("Anything else <em>is one question away.</em>", "A small tool set that still reaches the whole API.");
   const c1 = card(96, "Which vendors cost me the most?", [["spending_summary", "Spending summary"]], sp.by_vendor.filter((v) => v.spent > 0).slice(0, 3).map((v) => `<b>${v.vendor}</b> ${eur(v.spent)}`).join("<br>") + `<br><span style="color:var(--muted);font-size:20px">…out of ${eur(sp.totals.expenses)} in 30 days</span>`);
   const c2 = card(682, "How much did I spend at Corner Market?", [["find_transactions", "Find transactions"]], `<b>${vend.total_matches} purchases</b>, ${eur(Math.abs(vend.sum_of_shown))} in total.<br><span style="color:var(--muted);font-size:20px">${vend.transactions.map((t) => eur(Math.abs(t.amount))).join(" · ")}</span>`);
@@ -824,29 +823,40 @@ function makeChat({ x, y, w, hgt, title, items }) {
 
 // ── 9 · light or dark ───────────────────────────────────────────────────────
 {
-  const hd = head("Day or night, <em>your choice</em>", "The app follows your system theme, or the toggle you pick.");
-  const W = 1000, H = Math.round(W * RATIO * 0.72);
-  const frame = (src, label) => `<div class="shotwrap" style="left:0;top:0;width:${W}px;height:${H}px"><div class="shot"><img src="${src}" style="position:absolute;left:0;top:-${Math.round(W * 0.12)}px;width:100%;height:auto"></div></div>`;
+  const hd = head("Day or night, <em>your choice</em>", "Click the sun or moon in the app's top bar. It also follows your system setting.");
+  const W = 1000, SC = W / 1100, H = Math.round(W * RATIO * 0.72);
+  // The app's theme button (in the 1100x980 viewport): centre about (944, 32).
+  const TX = 944 * SC, TY = 32 * SC;
+  const frame = (src) => `<div class="shot" style="position:absolute;inset:0"><img src="${src}" style="position:absolute;left:0;top:0;width:100%;height:auto"></div>`;
   const stageEl = h(`<div class="abs" style="left:96px;top:300px;width:${W}px;height:${H}px">
-    <div class="shotlabel" style="position:absolute;left:2px;top:-36px;font:600 17px var(--sans);color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:9px"></span>In the app · Dashboard</div>
+    <div style="position:absolute;left:2px;top:-36px;font:600 17px var(--sans);color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:9px"></span>In the app · Dashboard</div>
     ${frame(S("dashboard"))}
-    <div id="lightlayer" style="position:absolute;inset:0;clip-path:circle(0px at 94% 6%)">${frame(S("dashboard-light"))}</div>
-    <div id="toggle" style="position:absolute;right:${Math.round(W * 0.052)}px;top:${Math.round(W * 0.012)}px;width:46px;height:46px;border-radius:50%"></div>
+    <div id="lightlayer" style="position:absolute;inset:0;clip-path:circle(0px at ${TX}px ${TY}px)">${frame(S("dashboard-light"))}</div>
+    <div id="ring" class="ring" style="left:${TX - 30}px;top:${TY - 30}px;width:60px;height:60px;border-radius:50%"></div>
+    <svg id="cursor" style="position:absolute;left:0;top:0;width:34px;height:34px;filter:drop-shadow(0 4px 8px #000a)" viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-3 6z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>
+    <div id="click" style="position:absolute;left:${TX - 24}px;top:${TY - 24}px;width:48px;height:48px;border-radius:50%;border:3px solid var(--accent);opacity:0"></div>
   </div>`);
-  const ringT = ringAt(96 + W - 90, 300 + 6, 70, 70);
   // Brand marks: silver/cyan on dark, navy/gold on light, as in the brand manual.
   const marks = h(`<div class="abs" style="left:1180px;top:300px;width:644px;height:${H}px;border-radius:20px;overflow:hidden;border:1px solid var(--border)">
     <div style="position:absolute;inset:0;background:hsl(222 84% 5%);display:grid;place-items:center"><img src="/repo/assets/brand/dark-icon.png" style="width:260px;height:260px;object-fit:contain"></div>
     <div id="marklight" style="position:absolute;inset:0;background:#f7f9fc;display:grid;place-items:center;clip-path:circle(0px at 90% 8%)"><img src="/repo/assets/brand/light-icon.png" style="width:260px;height:260px;object-fit:contain"></div></div>`);
   const cap = h(`<div class="abs" style="left:1180px;top:${300 + H + 24}px;width:644px;font:600 24px/1.4 var(--sans);color:var(--muted)">Silver and cyan by night. Navy and gold by day.</div>`);
-  add("themes", [hd, stageEl, ringT, marks, cap], (t) => {
+  add("themes", [hd, stageEl, marks, cap], (t) => {
     appear(hd, t, 0.2);
     appear(stageEl, t, 0.4, { dy: 24 });
     appear(marks, t, 0.7, { dy: 24 });
     appear(cap, t, 1.2);
-    ring(ringT, t, 2.4, 3.8);
-    const r = 1500 * tw(t, 3.2, 4.8, ease.inOut);
-    stageEl.querySelector("#lightlayer").style.clipPath = `circle(${r}px at 94% 6%)`;
+    // The cursor glides to the theme button, clicks, and the light theme spreads from there.
+    const m = tw(t, 1.6, 3.0, ease.inOut);
+    const cur = stageEl.querySelector("#cursor");
+    cur.style.transform = `translate(${(1 - m) * (W * 0.5) + m * (TX - 6)}px, ${(1 - m) * (H * 0.55) + m * (TY - 4)}px) scale(${1 - 0.15 * Math.sin(Math.PI * tw(t, 3.0, 3.35, (x) => x))})`;
+    ring(stageEl.querySelector("#ring"), t, 2.4, 4.2);
+    const pulse = tw(t, 3.0, 3.7, (x) => x);
+    const click = stageEl.querySelector("#click");
+    click.style.opacity = pulse > 0 && pulse < 1 ? 1 - pulse : 0;
+    click.style.transform = `scale(${1 + pulse * 1.6})`;
+    const r = 1700 * tw(t, 3.3, 5.0, ease.inOut);
+    stageEl.querySelector("#lightlayer").style.clipPath = `circle(${r}px at ${TX}px ${TY}px)`;
     marks.querySelector("#marklight").style.clipPath = `circle(${r * 0.9}px at 90% 8%)`;
   });
 }
@@ -863,12 +873,12 @@ function makeChat({ x, y, w, hgt, title, items }) {
   const lines = h(`<svg class="abs" style="left:0;top:0" width="1920" height="1080" fill="none"><g stroke="hsl(217 32% 30%)" stroke-width="3" stroke-linecap="round"><path d="M960 368V430M960 502V556"/><path d="M${nodeX(0) + NW / 2} 600V556H${nodeX(4) + NW / 2}V600M${nodeX(1) + NW / 2} 556V600M${nodeX(2) + NW / 2} 556V600M${nodeX(3) + NW / 2} 556V600"/></g></svg>`);
   const spokes = nodes.map((label, i) => h(`<div class="abs" style="left:${nodeX(i)}px;top:600px;width:${NW}px;height:96px;display:grid;place-items:center;text-align:center;border-radius:16px;background:var(--card);border:1px solid var(--border);font:700 24px/1.2 var(--sans);padding:0 14px">${label}</div>`));
   const pts = [
-    ["Local-first", `${glow("No cloud account.")} It works offline.`],
-    ["One open API", "Documented in an open standard, so you can build anything on it."],
-    ["Your choice of interface", "Use ours, build your own, or script it."],
+    ["Local-first", [glow("No cloud account"), "Works offline"]],
+    ["One open API", ["Documented open standard", "Build anything on it"]],
+    ["Your choice", ["Use ours or build your own", "Or just script it"]],
   ];
   const CW = 560, CG = 24;
-  const cards = pts.map(([t1, t2], i) => h(`<div class="card" style="left:${X0 + i * (CW + CG)}px;top:760px;width:${CW}px;height:190px;padding:24px 28px"><h3 style="font-size:30px;color:var(--accent-soft)">${t1}</h3><div class="sub" style="font-size:23px;margin-top:10px">${t2}</div></div>`));
+  const cards = pts.map(([t1, t2], i) => h(`<div class="card" style="left:${X0 + i * (CW + CG)}px;top:760px;width:${CW}px;height:190px;padding:24px 28px"><h3 style="font-size:32px;color:var(--accent-soft);white-space:nowrap">${t1}</h3><ul style="list-style:none;margin:12px 0 0;padding:0">${t2.map((b) => `<li style="position:relative;padding-left:26px;font:500 25px/1.5 var(--sans);color:hsl(210 30% 86%);white-space:nowrap"><i style="position:absolute;left:2px;top:.62em;width:9px;height:9px;border-radius:50%;background:var(--accent)"></i>${b}</li>`).join("")}</ul></div>`));
   add("unique", [hd, lines, hub, api, ...spokes, ...cards], (t) => {
     appear(hd, t, 0.2);
     appear(hub, t, 0.5);
@@ -940,6 +950,18 @@ window.__render = (t) => {
   bar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.label === active?.label));
 };
 
+// QA helper (used by qa-cards.mjs): list any one-line text that does not fit its container.
+window.__checkFit = () => {
+  const bad = [];
+  document.querySelectorAll(".take, .stepcard, .card li, .mini, .card h3").forEach((el) => {
+    el.querySelectorAll(".tx, li, h3").forEach((n) => {
+      const box = (n.closest(".tk-body, .card, .stepcard > div") ?? el).getBoundingClientRect();
+      const r = n.getBoundingClientRect();
+      if (r.width > 0 && (n.scrollWidth > n.clientWidth + 1 || r.right > box.right + 1)) bad.push(n.textContent.trim().slice(0, 50));
+    });
+  });
+  return [...new Set(bad)];
+};
 await document.fonts.ready;
 await Promise.all([...document.images].map((i) => (i.complete ? 0 : i.decode().catch(() => {}))));
 window.__render(0);

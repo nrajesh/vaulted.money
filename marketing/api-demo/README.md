@@ -48,7 +48,7 @@ one idea for 9–14 s, cross-fades rather than cuts, and nothing new appears
 within ~1.2 s of the previous element.
 
 Each scene is a short, quick demo followed by a **takeaway slide** of at most two
-cards that stays up for 6-8 seconds: the animation earns attention, the cards are what
+cards (a one-line title and two short bullets) that stays up for 6-8 seconds: the animation earns attention, the cards are what
 people read. Code words (`dry_run`, tool names) appear for a moment and then flip into
 their plain meaning. The privacy wording glows softly.
 
@@ -76,10 +76,16 @@ Figures on screen are computed, not typed: operations, tools and sizes come from
 run (99 operations, 8 tools, ≈105 kB spec vs ≈5.6 kB tool list); the Postman collection has
 202 requests and a standard run makes 200 requests with 545 passing checks.
 
-**Chapters.** `render.mjs` embeds them in the MP4 (QuickTime, VLC and most players show a
-chapter menu) and writes `out/chapters.vtt`, `out/chapters.txt` (YouTube-style timestamps) and
-`out/player.html`, a page with a clickable chapter list. Open it next to the MP4. Clickable
-areas inside the picture are not possible in a video file.
+**Chapters.** `render.mjs` writes `out/chapters.srt`, `out/chapters.vtt`, `out/chapters.txt`
+(YouTube-style timestamps) and `out/player.html`, a page with a clickable chapter list (keep it
+next to the MP4). In the MP4 itself the chapters are a real QuickTime-style chapter track
+(a hidden text track that the video refers to as `chap`), built with `MP4Box`
+(`apt install gpac`), so QuickTime, VLC and most players list them. Without MP4Box the
+render falls back to ffmpeg's own chapters, which not every player shows. Clickable areas
+inside the picture are not possible in a video file.
+
+**Checks.** `node marketing/api-demo/qa-cards.mjs` renders each scene late in its run and
+fails if any card title or bullet no longer fits on one line.
 
 **QR codes.** `python3 marketing/api-demo/make-qr.py` (needs `pip install segno`) writes
 `out/qr-*.svg`; the render reads them.

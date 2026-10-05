@@ -10,7 +10,7 @@
  *
  * Env: PLAYWRIGHT_MODULE (path to playwright/index.mjs), FFMPEG_PATH.
  */
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createServer } from "node:http";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, normalize } from "node:path";
@@ -104,6 +104,8 @@ const chapterList = chapters();
 const metaFile = join(OUT, "chapters.ffmetadata");
 writeFileSync(metaFile, ";FFMETADATA1\n" + chapterList.map((c) => `[CHAPTER]\nTIMEBASE=1/1000\nSTART=${Math.round(c.start * 1000)}\nEND=${Math.round(c.end * 1000)}\ntitle=${c.title}\n`).join("\n"));
 writeFileSync(join(OUT, "chapters.vtt"), "WEBVTT\n\n" + chapterList.map((c) => `${vttTime(c.start)} --> ${vttTime(c.end)}\n${c.title}\n`).join("\n"));
+const srtTime = (t) => vttTime(t).replace(".", ",");
+writeFileSync(join(OUT, "chapters.srt"), chapterList.map((c, i) => `${i + 1}\n${srtTime(c.start)} --> ${srtTime(c.end)}\n${c.title}\n`).join("\n"));
 writeFileSync(join(OUT, "chapters.txt"), chapterList.map((c) => `${mmss(c.start)} ${c.title}`).join("\n") + "\n");
 const videoName = outFile.split("/").pop();
 writeFileSync(join(OUT, "player.html"), `<!doctype html>
@@ -131,14 +133,28 @@ v.ontimeupdate=()=>{let a=-1;btns.forEach((b,i)=>{if(v.currentTime>=+b.dataset.t
 </script></body></html>`);
 const ff = ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", join(frames, "f%05d.jpg")];
 if (!silent) ff.push("-ss", String(from), "-t", String(to - from), "-i", audio);
-ff.push("-i", metaFile, "-map_metadata", String(silent ? 1 : 2), "-map_chapters", String(silent ? 1 : 2));
+// QuickTime needs a real chapter track (a text track the video refers to as "chap").
+// MP4Box builds exactly that; without it, fall back to ffmpeg's own chapters.
+const hasMp4Box = spawnSync("which", ["MP4Box"]).status === 0;
+if (!hasMp4Box) ff.push("-i", metaFile, "-map_metadata", String(silent ? 1 : 2), "-map_chapters", String(silent ? 1 : 2));
 ff.push("-map", "0:v"); if (!silent) ff.push("-map", "1:a");
 ff.push("-c:v", "libx264", "-preset", draft ? "veryfast" : "slow", "-crf", draft ? "26" : "17", "-pix_fmt", "yuv420p", "-vf", "format=yuv420p");
 if (!silent) ff.push("-c:a", "aac", "-b:a", "192k", "-shortest");
-ff.push("-movflags", "+faststart", outFile);
+const encoded = hasMp4Box ? outFile.replace(/\.mp4$/, ".encoded.mp4") : outFile;
+ff.push("-movflags", "+faststart", encoded);
 await new Promise((resolve, reject) => {
   const p = spawn(ffmpeg, ff, { stdio: "inherit" });
   p.on("close", (c) => (c === 0 ? resolve() : reject(new Error("ffmpeg failed"))));
 });
+if (hasMp4Box) {
+  // Video is track 1, audio track 2 (if any), the chapter track is added last.
+  const chapterTrack = silent ? 2 : 3;
+  const mp4box = ["-add", encoded, "-add", join(OUT, "chapters.srt") + ":name=Chapters:lang=eng:disable", "-ref", `1:chap:${chapterTrack}`];
+  if (!silent) mp4box.push("-ref", `2:chap:${chapterTrack}`);
+  mp4box.push("-new", outFile); // (adding the older Nero chapter list too makes MP4Box drop the track)
+  const result = spawnSync("MP4Box", mp4box, { stdio: ["ignore", "ignore", "inherit"] });
+  if (result.status !== 0) throw new Error("MP4Box failed");
+  rmSync(encoded, { force: true });
+}
 rmSync(frames, { recursive: true, force: true });
 console.log("✓", outFile);
