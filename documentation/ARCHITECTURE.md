@@ -102,6 +102,39 @@ graph TB
     style Dialog fill:#5c6bc0,stroke:#3949ab,color:#fff
 ```
 
+### Local API Architecture (Electron only)
+
+The desktop app can expose an opt-in REST API on `127.0.0.1`. The data lives in the renderer's IndexedDB, so the main process owns only the socket and relays each request to the renderer, which runs it against the same data layer the UI uses. See [API.md](API.md) for the endpoint reference.
+
+```mermaid
+sequenceDiagram
+    participant C as Client (curl / Postman / script)
+    participant M as Main process (electron/apiServer.ts)
+    participant R as Renderer (src/api/ApiBridge.tsx)
+    participant H as Route table (src/api/routes/*)
+    participant D as LocalDataProvider (Dexie / IndexedDB)
+
+    C->>M: HTTP request + Bearer token
+    Note over M: Checks loopback Host, no Origin header,<br/>token (constant-time), 64 MiB body cap
+    M->>R: IPC api:request
+    R->>H: handleApiRequest (zod validation)
+    H->>D: Same data layer as the UI
+    D-->>H: Result
+    H-->>R: ApiResponse
+    R-->>M: IPC api:response
+    M-->>C: JSON, CSV or file download
+    Note over R: After a write: invalidate React Query,<br/>refresh ledgers, reload UI if data was replaced
+```
+
+Key points:
+
+- **Off by default.** The user turns it on in Settings, which stores the port and a generated token in `api-config.json` (mode `0600`) under the app data folder.
+- **Loopback only, no browser access.** Requests carrying an `Origin` header are refused, so web pages cannot call it.
+- **One route table.** `src/api/routes/index.ts` is the source of truth for the router, the generated `/openapi.json`, and the Postman coverage test.
+- **Shared logic with the UI.** Renames, transfer detection, duplicate detection and AI categorization live in shared code (`src/api/entityOps.ts`, `src/utils/transactionMaintenance.ts`, `useAutoCategorize`) so the UI and the API behave the same.
+- **Safe by default.** Secrets (AI keys, backup password hashes) are never returned. Deletions need `confirm_delete`, restores need `confirm_replace`, bulk operations support `dry_run`, and AI use is opt-in per request.
+- **Not available on web or mobile**, which cannot host a local server.
+
 ### Native Mobile Architecture
 
 ```mermaid
@@ -257,6 +290,12 @@ sequenceDiagram
 ```
 
 ## Architectural Decisions
+- [2026-10] [Opt-in local REST API served by the Electron main process]
+    - **Context**: Users want to script the app, import and export data without the GUI, and build their own interfaces. All data lives in the renderer's IndexedDB, which the main process cannot read.
+    - **Decision**: The main process hosts a loopback-only HTTP server and relays requests over IPC to the renderer, which executes them against the same data layer as the UI. It is off by default and protected by a bearer token.
+    - **Consequences**:
+        - **Pros**: No second data store to keep in sync. UI and API behave identically. Data never leaves the machine.
+        - **Cons**: The app window must be running (the API answers `503 ui_not_ready` otherwise). Desktop only. The API is a public contract, so changes must update tests, docs and the Postman collection (see `documentation/CLAUDE.md`).
 - [2024-03-XX] [Direct Browser-to-AI Provider Communication]
     - **Context**: We want users to be able to use AI features without creating a centralized backend that could store their API keys or financial data, maintaining the "local-first" privacy ethos.
     - **Decision**: Implemented BYOK (Bring Your Own Key) where the React app communicates directly with AI provider APIs (Gemini, Anthropic, Mistral, etc.).

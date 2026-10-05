@@ -48,6 +48,8 @@ This command:
 3. Compiles the Electron main and preload files.
 4. Launches the Electron window.
 
+To use the optional Local API, turn it on in Settings inside the desktop app. After pulling changes that touch `electron/`, fully quit the app (closing the window only hides it) and run `electron:dev` again so the main process is recompiled. See [API.md](API.md).
+
 Do not run `pnpm dev` separately before `electron:dev`; that can create a port conflict.
 
 The first Electron run may take longer because the Electron binary is downloaded.
