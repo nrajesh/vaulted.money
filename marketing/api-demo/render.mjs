@@ -138,6 +138,8 @@ if (!silent) ff.push("-ss", String(from), "-t", String(to - from), "-i", audio);
 const hasMp4Box = spawnSync("which", ["MP4Box"]).status === 0;
 if (!hasMp4Box) ff.push("-i", metaFile, "-map_metadata", String(silent ? 1 : 2), "-map_chapters", String(silent ? 1 : 2));
 ff.push("-map", "0:v"); if (!silent) ff.push("-map", "1:a");
+// A keyframe on every chapter marker, so players can show its thumbnail and jump there instantly.
+ff.push("-force_key_frames", chapterList.map((c) => c.start.toFixed(3)).join(","));
 ff.push("-c:v", "libx264", "-preset", draft ? "veryfast" : "slow", "-crf", draft ? "26" : "17", "-pix_fmt", "yuv420p", "-vf", "format=yuv420p");
 if (!silent) ff.push("-c:a", "aac", "-b:a", "192k", "-shortest");
 const encoded = hasMp4Box ? outFile.replace(/\.mp4$/, ".encoded.mp4") : outFile;

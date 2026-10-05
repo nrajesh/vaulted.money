@@ -7,7 +7,6 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 os.makedirs(OUT, exist_ok=True)
 CODES = {
     "qr-site": "https://vaulted.money",
-    "qr-github": "https://github.com/nrajesh/vaulted.money",
 }
 for name, url in CODES.items():
     # Dark modules on a light background scan best, even on a dark slide.

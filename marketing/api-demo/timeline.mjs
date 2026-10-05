@@ -10,46 +10,49 @@ export const HEIGHT = 1080;
 export const FPS = 30;
 
 /**
- * id, label (chapter pill), start, end (seconds). `chapter` names scenes that
- * have no pill (title, end card) in the video's chapter list.
+ * id, label (top-bar pill), chapter (name in the chapter list), icon (shown in
+ * front of the chapter name), start, end (seconds).
  *
- * Reading rule: each scene is a short, quick demo followed by a "takeaway"
- * slide of at most two cards that stays up for 6-8 seconds, because the cards
- * are what people read and remember; the animation only earns attention.
+ * Reading rules, kept by construction and checked by qa-cards.mjs:
+ *  - each scene is a short, quick demo followed by a "takeaway" of at most two
+ *    cards with a one-line title and two short bullets;
+ *  - once the last card is fully up it stays in focus for at least 3 seconds
+ *    before the scene starts to dissolve (the dissolve begins DISSOLVE seconds
+ *    before `end`, as the sea wave swells);
+ *  - the wave crests on the cut; the next scene's title resolves as it recedes.
  */
 export const SCENES = [
-  { id: "title", label: "", chapter: "Introduction", start: 0, end: 7 },
-  { id: "enable", label: "Switch it on", chapter: "Switch it on", start: 7, end: 20 },
-  { id: "create", label: "Ledger & account", chapter: "Create a ledger and an account", start: 20, end: 33 },
-  { id: "import", label: "Transactions", chapter: "Add and import transactions", start: 33, end: 47 },
-  { id: "history", label: "Categorise", chapter: "Categorise from your history", start: 47, end: 59 },
-  { id: "ai", label: "Optional AI", chapter: "Optional AI", start: 59, end: 79 },
-  { id: "privacy", label: "Privacy", chapter: "Privacy", start: 79, end: 93 },
+  { id: "title", label: "", chapter: "Introduction", icon: "🎬", start: 0, end: 10 },
+  { id: "enable", label: "Switch it on", chapter: "Switch it on", icon: "🔌", start: 10, end: 24 },
+  { id: "create", label: "Ledger & account", chapter: "Create a ledger and an account", icon: "🧾", start: 24, end: 39 },
+  { id: "import", label: "Transactions", chapter: "Add and import transactions", icon: "📥", start: 39, end: 57 },
+  { id: "history", label: "Categorise", chapter: "Categorise from your history", icon: "🏷️", start: 57, end: 70 },
+  { id: "ai", label: "Optional AI", chapter: "Optional AI", icon: "✨", start: 70, end: 92 },
+  { id: "privacy", label: "Privacy", chapter: "Privacy", icon: "🔒", start: 92, end: 105 },
   // The "chat with your data" chapter: six scenes under one pill.
-  { id: "mcp", label: "Chat with it", chapter: "Chat: how it works", start: 93, end: 109 },
-  { id: "ask", label: "Chat with it", chapter: "Chat: ask about your money", start: 109, end: 125 },
-  { id: "add", label: "Chat with it", chapter: "Chat: add a transaction", start: 125, end: 139 },
-  { id: "csv", label: "Chat with it", chapter: "Chat: import a bank CSV", start: 139, end: 156 },
-  { id: "safe", label: "Chat with it", chapter: "Chat: safe deletes", start: 156, end: 171 },
-  { id: "more", label: "Chat with it", chapter: "Chat: more questions", start: 171, end: 183 },
-  { id: "ways", label: "Your interface", chapter: "Three ways to use it", start: 183, end: 196 },
-  { id: "themes", label: "Your interface", chapter: "Light and dark", start: 196, end: 206 },
-  { id: "unique", label: "Why it's different", chapter: "Why it's different", start: 206, end: 220 },
-  { id: "outro", label: "", chapter: "Get it", start: 220, end: 233 },
+  { id: "mcp", label: "Chat with it", chapter: "Chat: how it works", icon: "💬", start: 105, end: 121 },
+  { id: "ask", label: "Chat with it", chapter: "Chat: ask about your money", icon: "❓", start: 121, end: 138 },
+  { id: "add", label: "Chat with it", chapter: "Chat: add a transaction", icon: "➕", start: 138, end: 152 },
+  { id: "csv", label: "Chat with it", chapter: "Chat: import a bank CSV", icon: "📄", start: 152, end: 170 },
+  { id: "safe", label: "Chat with it", chapter: "Chat: safe deletes", icon: "🛡️", start: 170, end: 184 },
+  { id: "more", label: "Chat with it", chapter: "Chat: more questions", icon: "🔎", start: 184, end: 196 },
+  { id: "ways", label: "Your interface", chapter: "Three ways to use it", icon: "🧩", start: 196, end: 209 },
+  { id: "unique", label: "Why it's different", chapter: "Why it's different", icon: "🌍", start: 209, end: 223 },
+  { id: "outro", label: "", chapter: "Get it", icon: "📲", start: 223, end: 236 },
 ];
 export const DURATION = SCENES[SCENES.length - 1].end;
-/** Cross-fade length between scenes. */
-export const FADE = 0.6;
+/** A scene starts to dissolve this long before its end; the next one resolves just after the cut. */
+export const DISSOLVE = 2.4;
+/** Chapter markers sit this far into a scene, so a thumbnail shows the new slide with its title. */
+export const CHAPTER_OFFSET = 1.0;
 
 export const scene = (id) => SCENES.find((s) => s.id === id);
 
-/** Chapters for the video file and the player page: one per pill (plus title and end card). */
+/** Chapters for the video file and the player page, each with its icon. */
 export function chapters() {
-  const out = [];
-  for (const s of SCENES) {
-    const title = s.chapter ?? s.label;
-    if (out.length && out[out.length - 1].title === title) out[out.length - 1].end = s.end;
-    else out.push({ title, start: s.start, end: s.end });
-  }
-  return out;
+  return SCENES.map((s, i) => ({
+    title: `${s.icon} ${s.chapter}`,
+    start: i === 0 ? 0 : s.start + CHAPTER_OFFSET,
+    end: i === SCENES.length - 1 ? s.end : SCENES[i + 1].start + CHAPTER_OFFSET,
+  }));
 }

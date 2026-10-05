@@ -3,7 +3,7 @@
  * poses the whole frame, so any frame renders identically in any order.
  * All API text on screen comes from out/api-run.json, a real recorded run.
  */
-import { SCENES, FADE, scene } from "./timeline.mjs";
+import { SCENES, DISSOLVE, scene } from "./timeline.mjs";
 
 // ── motion helpers ──────────────────────────────────────────────────────────
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -274,11 +274,11 @@ function add(id, nodes, update, opts = {}) {
       demo.style.opacity = 1 - 0.88 * k;
       demo.style.filter = k > 0 ? `blur(${3 * k}px)` : "none";
       cards.forEach(({ node, c }, i) => {
-        const start = at + 0.3 + i * 0.9;
+        const start = at + 0.3 + i * 0.6;
         appear(node, lt, start, { dy: 28, dur: 0.8 });
         // The code word shows with the rest of the card for a moment, then
         // flips to its plain meaning, which then holds for the rest of the slide.
-        if (c.code) setFlip(node, lt, start + 0.2, 1.8);
+        if (c.code) setFlip(node, lt, start + 0.2, 1.5);
       });
     },
   };
@@ -297,9 +297,9 @@ const RATIO = 980 / 1100;
     appear(logo, t, 0.2, { dur: 1.2, scale: 0.15, dy: 0 });
     logo.style.filter = `drop-shadow(0 0 ${30 + 20 * Math.sin(t * 2)}px hsl(188 57% 59% / .45))`;
     appear(word, t, 1.0);
-    appear(sub, t, 2.4);
-    appear(line, t, 3.6);
-    appear(pills, t, 4.8);
+    appear(sub, t, 2.0);
+    appear(line, t, 3.0);
+    appear(pills, t, 4.0);
   });
 }
 
@@ -457,52 +457,33 @@ const RATIO = 980 / 1100;
 }
 
 // ── 6 · privacy ─────────────────────────────────────────────────────────────
+// The real refusals from the recorded run, as plain-language proof.
 {
-  const hd = head(`${glow("Private")} by design, <em>and provably so</em>`, "Real responses from the same run:");
-  const probe = (id, title, y) => {
-    const s = step(id);
-    return h(`<div class="card" style="left:1010px;top:${y}px;width:814px;padding:18px 24px">
-      <div style="display:flex;align-items:center;gap:14px"><span class="m GET">GET</span><b style="font:700 24px var(--sans)">${title}</b><span class="status bad" style="margin-left:auto">${s.status}</span></div>
-      <div style="font:500 17px var(--mono);color:hsl(210 30% 80%);margin-top:10px">${esc(JSON.stringify(s.response.error))}</div></div>`);
+  const hd = head(`${glow("Private")} by design, <em>and provably so</em>`, "What the API does when someone tries the door. Real responses from the same run.");
+  const proof = (id, i, title, plain, mono, good = false) => {
+    const st = step(id);
+    const col = i % 2, row = Math.floor(i / 2);
+    return h(`<div class="card" style="left:${96 + col * 876}px;top:${290 + row * 220}px;width:852px;height:196px;padding:24px 30px">
+      <div style="display:flex;align-items:center;gap:16px"><span class="status ${good ? "good" : "bad"}" style="font-size:22px;padding:2px 14px">${st.status}</span><b style="font:800 34px var(--sans);letter-spacing:-.02em;white-space:nowrap">${title}</b></div>
+      <div style="font:500 26px var(--sans);color:hsl(210 30% 86%);margin-top:14px;white-space:nowrap">${plain}</div>
+      <div style="font:500 17px var(--mono);color:var(--muted);margin-top:12px;white-space:nowrap">${esc(mono)}</div></div>`);
   };
-  const p1 = probe("sec-nobearer", "No token", 270);
-  const p2 = probe("sec-wrong", "Wrong token", 400);
-  const p3 = probe("sec-origin", "A web page tries it", 530);
-  const keyed = h(`<div class="card" style="left:1010px;top:660px;width:814px;padding:18px 24px">
-      <div style="display:flex;align-items:center;gap:14px"><span class="m GET">GET</span><b style="font:700 24px var(--sans)">Is an AI key stored?</b><span class="status good" style="margin-left:auto">200</span></div>
-      <div style="font:500 17px var(--mono);color:hsl(210 30% 80%);margin-top:10px"><span class="k">"has_api_key"</span>: <span class="v">true</span> <span class="d">  // the key itself is never returned</span></div></div>`);
-  const diagram = h(`<svg class="abs" style="left:96px;top:250px" width="860" height="640" viewBox="0 0 860 640" fill="none">
-    <rect x="10" y="60" width="560" height="540" rx="28" stroke="hsl(188 57% 59%)" stroke-width="2.5" stroke-dasharray="10 8" />
-    <text x="40" y="104" fill="hsl(188 57% 70%)" font-family="Inter" font-weight="800" font-size="22" letter-spacing="2">YOUR DEVICE</text>
-    <g font-family="Inter" font-weight="700" font-size="26" fill="#e8f1f8">
-      <rect x="50" y="150" width="480" height="92" rx="16" fill="hsl(222 84% 5%)" stroke="hsl(217 32% 26%)"/><text x="80" y="206">Vaulted Money app</text>
-      <rect x="50" y="285" width="480" height="92" rx="16" fill="hsl(222 84% 5%)" stroke="hsl(188 57% 59%)" stroke-width="2"/><text x="80" y="340">Local API</text><text x="450" y="340" font-family="JetBrains Mono" font-size="19" font-weight="500" fill="hsl(215 20% 65%)" text-anchor="end">127.0.0.1</text>
-      <rect x="50" y="420" width="480" height="92" rx="16" fill="hsl(222 84% 5%)" stroke="hsl(217 32% 26%)"/><text x="80" y="475">Your data</text><text x="450" y="475" font-size="19" font-weight="500" fill="hsl(215 20% 65%)" text-anchor="end">stored on this device</text>
-    </g>
-    <path d="M290 242v43M290 377v43" stroke="hsl(188 57% 59%)" stroke-width="3" stroke-linecap="round"/>
-    <g id="d-cloud" opacity="0">
-      <path d="M720 190h-60a40 40 0 1 1 8-79 48 48 0 0 1 92 20 34 34 0 0 1-40 59Z" stroke="hsl(215 20% 55%)" stroke-width="3" transform="translate(-20 10)"/>
-      <path d="M600 120l150 150M750 120L600 270" stroke="hsl(0 84% 66%)" stroke-width="7" stroke-linecap="round" transform="translate(-10 -4)"/>
-      <path d="M570 330H640" stroke="hsl(0 84% 66%)" stroke-width="3" stroke-dasharray="6 8"/>
-      <text x="580" y="300" fill="hsl(0 70% 76%)" font-family="Inter" font-weight="700" font-size="22" transform="translate(30 60)">No cloud account</text>
-      <text x="580" y="330" fill="hsl(215 20% 65%)" font-family="Inter" font-weight="500" font-size="19" transform="translate(30 60)">Nothing leaves the device</text>
-    </g>
-  </svg>`);
+  const cards = [
+    proof("sec-nobearer", 0, "No token, no access", "Requests without your token are refused.", `"code": "${step("sec-nobearer").response.error.code}"`),
+    proof("sec-wrong", 1, "Wrong token, no access", "A guessed or old token is refused too.", `"code": "${step("sec-wrong").response.error.code}"`),
+    proof("sec-origin", 2, "Websites are blocked", "A web page cannot reach your data.", `"code": "${step("sec-origin").response.error.code}"`),
+    proof("ai-list", 3, "AI keys stay hidden", "It says a key exists, never what it is.", `"has_api_key": true`, true),
+  ];
   const check = ICON.check;
-  const feats = h(`<div class="abs" style="left:96px;top:930px;display:flex;gap:16px">
+  const feats = h(`<div class="abs" style="left:96px;top:770px;display:flex;gap:16px">
     <span class="ftag">${check}${flip("dry_run", "Preview before any change")}</span>
     <span class="ftag">${check}${flip("confirm_delete", "Deletes need your OK")}</span>
     <span class="ftag">${check}${flip(".lock", "Encrypted backups")}</span></div>`);
-  add("privacy", [hd, diagram, p1, p2, p3, keyed, feats], (t) => {
+  add("privacy", [hd, ...cards, feats], (t) => {
     appear(hd, t, 0.2);
-    appear(diagram, t, 0.5, { dy: 20 });
-    diagram.querySelector("#d-cloud").style.opacity = tw(t, 1.4, 2.0);
-    appear(p1, t, 2.2, { dx: 50, dy: 0 });
-    appear(p2, t, 3.2, { dx: 50, dy: 0 });
-    appear(p3, t, 4.2, { dx: 50, dy: 0 });
-    appear(keyed, t, 5.2, { dx: 50, dy: 0 });
-    appear(feats, t, 6.4);
-    setFlip(feats, t, 6.6, 1.6);
+    cards.forEach((c, i) => appear(c, t, 1.0 + i * 1.0, { dy: 24 }));
+    appear(feats, t, 5.2);
+    setFlip(feats, t, 5.4, 1.5);
   });
 }
 
@@ -524,7 +505,7 @@ const dim = (s) => `<span class="d">${s}</span>`;
  */
 function makeChat({ x, y, w, hgt, title, items }) {
   const el = h(`<div class="chat" style="left:${x}px;top:${y}px;width:${w}px;height:${hgt}px">
-    <div class="chat-bar"><span class="dot"></span><b>${title}</b><span class="chat-tag">vaulted-money · ${run.extra.mcpTools?.length ?? 8} tools</span></div>
+    <div class="chat-bar"><span class="dot"></span><b>${title}</b><span class="chat-tag">Vaulted Money · ${run.extra.mcpTools?.length ?? 8} tools</span></div>
     <div class="chat-body"><div class="chat-col"></div></div></div>`);
   const col = el.querySelector(".chat-col");
   const bodyH = hgt - 56 - 30;
@@ -545,7 +526,7 @@ function makeChat({ x, y, w, hgt, title, items }) {
       }
       if (word) it.words.push(word);
     } else {
-      node = h(`<div class="tool"><div class="tool-head"><span>${ICON.wrench}</span><b>${it.tool}</b><span class="state"></span><span class="mcp">mcp/vaulted-money</span></div>
+      node = h(`<div class="tool"><div class="tool-head"><span>${ICON.wrench}</span><b>${it.tool}</b><span class="state"></span><span class="mcp">MCP · Vaulted Money</span></div>
         <div class="tool-args">${argsText(it.args)}</div>
         ${it.approve ? `<div class="tool-approve"><span>Allow this tool call?</span><span class="sp"></span><span class="btn">Deny</span><span class="btn allow">Allow</span></div>` : ""}
         <div class="tool-res"></div></div>`);
@@ -631,7 +612,7 @@ function makeChat({ x, y, w, hgt, title, items }) {
     cmp.querySelector("#b2").style.width = Math.max(2, 900 * (toolsKb / specKb) * tw(t, 7.0, 7.8)) + "px";
   }, { take: { at: 8.6, cards: [
     { icon: ICON.chat, title: "Chat with your money", bullets: ["Ask in plain words", `${glow("Nothing leaves your device")}`] },
-    { icon: ICON.layers, title: "Small by design", bullets: [`${nTools} simple tools`, "Quick even for local models"] },
+    { icon: ICON.layers, title: "Small by design", bullets: [`${["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"][nTools] ?? nTools} simple tools`, "Quick even for local models"] },
   ] } });
 }
 
@@ -821,57 +802,17 @@ function makeChat({ x, y, w, hgt, title, items }) {
   });
 }
 
-// ── 9 · light or dark ───────────────────────────────────────────────────────
-{
-  const hd = head("Day or night, <em>your choice</em>", "Click the sun or moon in the app's top bar. It also follows your system setting.");
-  const W = 1000, SC = W / 1100, H = Math.round(W * RATIO * 0.72);
-  // The app's theme button (in the 1100x980 viewport): centre about (944, 32).
-  const TX = 944 * SC, TY = 32 * SC;
-  const frame = (src) => `<div class="shot" style="position:absolute;inset:0"><img src="${src}" style="position:absolute;left:0;top:0;width:100%;height:auto"></div>`;
-  const stageEl = h(`<div class="abs" style="left:96px;top:300px;width:${W}px;height:${H}px">
-    <div style="position:absolute;left:2px;top:-36px;font:600 17px var(--sans);color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:9px"></span>In the app · Dashboard</div>
-    ${frame(S("dashboard"))}
-    <div id="lightlayer" style="position:absolute;inset:0;clip-path:circle(0px at ${TX}px ${TY}px)">${frame(S("dashboard-light"))}</div>
-    <div id="ring" class="ring" style="left:${TX - 30}px;top:${TY - 30}px;width:60px;height:60px;border-radius:50%"></div>
-    <svg id="cursor" style="position:absolute;left:0;top:0;width:34px;height:34px;filter:drop-shadow(0 4px 8px #000a)" viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-3 6z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>
-    <div id="click" style="position:absolute;left:${TX - 24}px;top:${TY - 24}px;width:48px;height:48px;border-radius:50%;border:3px solid var(--accent);opacity:0"></div>
-  </div>`);
-  // Brand marks: silver/cyan on dark, navy/gold on light, as in the brand manual.
-  const marks = h(`<div class="abs" style="left:1180px;top:300px;width:644px;height:${H}px;border-radius:20px;overflow:hidden;border:1px solid var(--border)">
-    <div style="position:absolute;inset:0;background:hsl(222 84% 5%);display:grid;place-items:center"><img src="/repo/assets/brand/dark-icon.png" style="width:260px;height:260px;object-fit:contain"></div>
-    <div id="marklight" style="position:absolute;inset:0;background:#f7f9fc;display:grid;place-items:center;clip-path:circle(0px at 90% 8%)"><img src="/repo/assets/brand/light-icon.png" style="width:260px;height:260px;object-fit:contain"></div></div>`);
-  const cap = h(`<div class="abs" style="left:1180px;top:${300 + H + 24}px;width:644px;font:600 24px/1.4 var(--sans);color:var(--muted)">Silver and cyan by night. Navy and gold by day.</div>`);
-  add("themes", [hd, stageEl, marks, cap], (t) => {
-    appear(hd, t, 0.2);
-    appear(stageEl, t, 0.4, { dy: 24 });
-    appear(marks, t, 0.7, { dy: 24 });
-    appear(cap, t, 1.2);
-    // The cursor glides to the theme button, clicks, and the light theme spreads from there.
-    const m = tw(t, 1.6, 3.0, ease.inOut);
-    const cur = stageEl.querySelector("#cursor");
-    cur.style.transform = `translate(${(1 - m) * (W * 0.5) + m * (TX - 6)}px, ${(1 - m) * (H * 0.55) + m * (TY - 4)}px) scale(${1 - 0.15 * Math.sin(Math.PI * tw(t, 3.0, 3.35, (x) => x))})`;
-    ring(stageEl.querySelector("#ring"), t, 2.4, 4.2);
-    const pulse = tw(t, 3.0, 3.7, (x) => x);
-    const click = stageEl.querySelector("#click");
-    click.style.opacity = pulse > 0 && pulse < 1 ? 1 - pulse : 0;
-    click.style.transform = `scale(${1 + pulse * 1.6})`;
-    const r = 1700 * tw(t, 3.3, 5.0, ease.inOut);
-    stageEl.querySelector("#lightlayer").style.clipPath = `circle(${r}px at ${TX}px ${TY}px)`;
-    marks.querySelector("#marklight").style.clipPath = `circle(${r * 0.9}px at 90% 8%)`;
-  });
-}
-
 // ── 10 · why it's different ─────────────────────────────────────────────────
 {
   const hd = head(`One vault. <em>Every interface.</em>`, "A money app that is also a platform you can build on.");
   const NW = 300, GAP = 57, X0 = 96;
   const nodeX = (i) => X0 + i * (NW + GAP);
-  const nodes = ["Vaulted Money app", "Your own interface", "Postman", "Scripts and automations", "Local AI chat"];
+  const nodes = ["Vaulted Money app", "Your own interface", "Postman", "Scripts or automations", "Local AI chat"];
   const hub = h(`<div class="abs" style="left:560px;top:250px;width:800px;height:118px;display:flex;align-items:center;justify-content:center;gap:22px;border-radius:22px;background:var(--card);border:1px solid var(--accent);box-shadow:0 0 60px hsl(188 57% 59% / .25)">
     <img src="/repo/assets/brand/dark-icon.png" style="width:84px;height:84px;object-fit:contain"><div style="font:800 32px var(--sans);letter-spacing:-.02em">${glow("Your data")}, on your device</div></div>`);
   const api = h(`<div class="abs" style="left:610px;top:430px;width:700px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:16px;background:hsl(246 90% 66% / .16);border:1px solid hsl(246 90% 66% / .5);font:700 28px var(--sans)">${flip("REST API · OpenAPI 3.1", "One open API for everything")}</div>`);
   const lines = h(`<svg class="abs" style="left:0;top:0" width="1920" height="1080" fill="none"><g stroke="hsl(217 32% 30%)" stroke-width="3" stroke-linecap="round"><path d="M960 368V430M960 502V556"/><path d="M${nodeX(0) + NW / 2} 600V556H${nodeX(4) + NW / 2}V600M${nodeX(1) + NW / 2} 556V600M${nodeX(2) + NW / 2} 556V600M${nodeX(3) + NW / 2} 556V600"/></g></svg>`);
-  const spokes = nodes.map((label, i) => h(`<div class="abs" style="left:${nodeX(i)}px;top:600px;width:${NW}px;height:96px;display:grid;place-items:center;text-align:center;border-radius:16px;background:var(--card);border:1px solid var(--border);font:700 24px/1.2 var(--sans);padding:0 14px">${label}</div>`));
+  const spokes = nodes.map((label, i) => h(`<div class="abs node" style="left:${nodeX(i)}px;top:600px;width:${NW}px;height:96px;display:grid;place-items:center;text-align:center;border-radius:16px;background:var(--card);border:1px solid var(--border);font:700 22px/1.2 var(--sans);padding:0 10px;white-space:nowrap"><span class="tx">${label}</span></div>`));
   const pts = [
     ["Local-first", [glow("No cloud account"), "Works offline"]],
     ["One open API", ["Documented open standard", "Build anything on it"]],
@@ -892,15 +833,14 @@ function makeChat({ x, y, w, hgt, title, items }) {
 
 // ── 11 · end card ───────────────────────────────────────────────────────────
 const qrSite = await (await fetch("out/qr-site.svg")).text();
-const qrGit = await (await fetch("out/qr-github.svg")).text();
 {
   const logo = h(`<img src="/repo/assets/brand/dark-icon.png" class="abs" style="left:810px;top:60px;width:300px;height:300px;object-fit:contain">`);
   const word = h(`<div class="abs" style="left:0;right:0;top:350px;text-align:center;font:800 112px/1 var(--sans);letter-spacing:-.045em;background:linear-gradient(90deg,hsl(183 51% 74%),hsl(199 54% 46%));-webkit-background-clip:text;background-clip:text;color:transparent">Vaulted Money</div>`);
   const tagline = h(`<div class="abs" style="left:0;right:0;top:490px;text-align:center;font:600 40px var(--sans);letter-spacing:-.02em">Your money, your device, <span class="glow">your API.</span></div>`);
   const pills = h(`<div class="abs" style="left:0;right:0;top:570px;display:flex;gap:18px;justify-content:center"><span class="pill g glowbox">Privacy-first</span><span class="pill b glowbox">Data-local</span><span class="pill o">Open-sourced</span></div>`);
-  const links = h(`<div class="abs" style="left:0;right:0;top:700px;text-align:center"><div style="font:500 30px var(--mono);color:var(--fg)">vaulted.money</div><div style="font:500 30px var(--mono);color:var(--muted);margin-top:14px">github.com/nrajesh/vaulted.money</div></div>`);
-  const qr = (svg, label, sub) => `<div style="width:330px;text-align:center"><div style="width:300px;height:300px;margin:0 auto;border-radius:18px;overflow:hidden;background:#fff;padding:8px;box-shadow:0 0 50px hsl(188 57% 59% / .25)"><div style="width:100%;height:100%" class="qr">${svg}</div></div><div style="font:700 26px var(--sans);margin-top:16px">${label}</div><div style="font:500 20px var(--sans);color:var(--muted)">${sub}</div></div>`;
-  const qrs = h(`<div class="abs" style="left:0;right:0;top:590px;display:flex;gap:90px;justify-content:center">${qr(qrSite, "Website", "vaulted.money")}${qr(qrGit, "Source code", "github.com/nrajesh/vaulted.money")}</div>`);
+  const links = h(`<div class="abs" style="left:0;right:0;top:720px;text-align:center;font:500 44px var(--mono);color:var(--fg)">vaulted.money</div>`);
+  const qr = (svg, label, sub) => `<div style="width:420px;text-align:center"><div style="width:340px;height:340px;margin:0 auto;border-radius:20px;overflow:hidden;background:#fff;padding:10px;box-shadow:0 0 60px hsl(188 57% 59% / .28)"><div style="width:100%;height:100%" class="qr">${svg}</div></div><div style="font:700 30px var(--sans);margin-top:18px">${label}</div><div style="font:500 22px var(--mono);color:var(--muted)">${sub}</div></div>`;
+  const qrs = h(`<div class="abs" style="left:0;right:0;top:560px;display:flex;justify-content:center">${qr(qrSite, "Get it free", "vaulted.money")}</div>`);
   qrs.querySelectorAll(".qr svg").forEach((svg) => {
     const n = svg.getAttribute("width"); // modules per side
     svg.setAttribute("viewBox", `0 0 ${n} ${n}`);
@@ -908,7 +848,7 @@ const qrGit = await (await fetch("out/qr-github.svg")).text();
     svg.setAttribute("height", "100%");
     svg.style.shapeRendering = "crispEdges";
   });
-  const scan = h(`<div class="abs" style="left:0;right:0;top:1032px;text-align:center;font:500 22px var(--sans);color:var(--muted)">Scan with your phone's camera</div>`);
+  const scan = h(`<div class="abs" style="left:0;right:0;top:1010px;text-align:center;font:500 22px var(--sans);color:var(--muted)">Scan with your phone's camera</div>`);
   const black = h(`<div class="abs" style="inset:0;background:#000;opacity:0"></div>`);
   add("outro", [logo, word, tagline, pills, links, qrs, scan, black], (t) => {
     appear(logo, t, 0.1, { dur: 1.0, scale: 0.12, dy: 0 });
@@ -938,30 +878,63 @@ window.__render = (t) => {
     const lt = t - sc.start;
     const first = sc.id === "title";
     const last = sc.id === "outro";
-    const inK = first ? 1 : tw(t, sc.start, sc.start + FADE, ease.inOut);
-    const outK = last ? 1 : 1 - tw(t, sc.end - FADE, sc.end, ease.inOut);
-    const k = lt < 0 || t >= sc.end ? 0 : Math.min(inK, outK);
+    // The sea wave starts to swell about 3.4 s before each cut and crests on it.
+    // The outgoing scene softens and blurs from DISSOLVE s before its end; the
+    // next scene's title resolves out of the haze just after the crest.
+    const inK = first ? 1 : tw(t, sc.start - 0.1, sc.start + 1.1, ease.inOut);
+    const outK = last ? 1 : 1 - tw(t, sc.end - DISSOLVE, sc.end - 0.2, ease.inOut);
+    const k = t < sc.start - 0.1 || (!last && t >= sc.end - 0.2) || t >= sc.end ? 0 : Math.min(inK, outK);
     b.el.style.opacity = k;
     b.el.style.visibility = k > 0.001 ? "visible" : "hidden";
+    const softness = Math.max(1 - inK, 1 - outK);
+    b.el.style.filter = softness > 0.001 ? `blur(${(softness * 9).toFixed(2)}px)` : "none";
+    b.el.style.transform = softness > 0.001 ? `scale(${(1 + (1 - outK) * 0.018 - (1 - inK) * 0.014).toFixed(4)})` : "none";
     if (k > 0.001) b.update(lt);
   }
   const active = SCENES.find((c) => t >= c.start && t < c.end);
-  bar.style.opacity = t < scene("enable").start || t >= scene("outro").start ? 0 : 1;
+  bar.style.opacity = t < scene("enable").start + 0.6 || t >= scene("outro").start ? 0 : 1;
   bar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.label === active?.label));
 };
 
-// QA helper (used by qa-cards.mjs): list any one-line text that does not fit its container.
+// QA helpers (used by qa-cards.mjs).
+// 1. one-line text that does not fit its container
 window.__checkFit = () => {
   const bad = [];
-  document.querySelectorAll(".take, .stepcard, .card li, .mini, .card h3").forEach((el) => {
+  document.querySelectorAll(".take, .stepcard, .card, .mini, .node").forEach((el) => {
     el.querySelectorAll(".tx, li, h3").forEach((n) => {
-      const box = (n.closest(".tk-body, .card, .stepcard > div") ?? el).getBoundingClientRect();
+      const box = (n.closest(".tk-body, .card, .stepcard > div, .node") ?? el).getBoundingClientRect();
       const r = n.getBoundingClientRect();
       if (r.width > 0 && (n.scrollWidth > n.clientWidth + 1 || r.right > box.right + 1)) bad.push(n.textContent.trim().slice(0, 50));
     });
   });
   return [...new Set(bad)];
 };
+// 2. labels, titles and bullets whose first letter is lower case (code words and URLs excepted)
+window.__checkCaps = () => {
+  const bad = [];
+  const sel = ".chip, .pill, .ftag, .tag, .card h3, .tk-title, .tk-list li, .stepcard b, .stepcard small, .chat-bar b, .chat-tag, .mini .q, .shotlabel, .node, .head h2, .head p, .msg";
+  document.querySelectorAll(sel).forEach((el) => {
+    let hidden = false;
+    for (let n = el; n && n.id !== "stage"; n = n.parentElement) if (getComputedStyle(n).visibility === "hidden") hidden = true;
+    if (hidden) return;
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".fa, code, .d").forEach((x) => x.remove()); // code words flip later
+    const text = clone.textContent.trim();
+    const first = text.match(/[A-Za-z]/)?.[0];
+    if (first && first === first.toLowerCase() && !/^(https?:|vaulted\.money)/.test(text) && !getComputedStyle(el).fontFamily.includes("JetBrains")) bad.push(text.slice(0, 40));
+  });
+  return [...new Set(bad)];
+};
+// 3. effective opacity of every card-like element, to prove nothing new appears in the last 3 s before a dissolve
+window.__snapshot = () => [...document.querySelectorAll(".take, .stepcard, .mini, .shotwrap, .pmf, .ftag, .card, .node")].map((el) => {
+  let o = 1;
+  for (let n = el; n && n.id !== "stage"; n = n.parentElement) {
+    // Only the element's own fade counts, not the scene-level dissolve.
+    if (n.tagName === "SECTION") break;
+    o *= parseFloat(getComputedStyle(n).opacity || "1");
+  }
+  return { o, label: (el.className + " | " + el.textContent.replace(/\s+/g, " ").trim().slice(0, 36)) };
+});
 await document.fonts.ready;
 await Promise.all([...document.images].map((i) => (i.complete ? 0 : i.decode().catch(() => {}))));
 window.__render(0);
