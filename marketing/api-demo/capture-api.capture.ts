@@ -275,8 +275,13 @@ it("records the explainer-video API run", async () => {
     // August: a month of history so comparisons ("this month vs last month") and
     // budget advice are real. All dated in August, so September's numbers are unchanged.
     const aug = (date: string, amount: number, vendor: string, category: string, sub: string) => ({ date, amount, account: "Checking", vendor, category, sub_category: sub });
+    // A holiday in August: the "indirect" question ("I travelled last month, what should I watch next month?").
+    await raw("POST", `/api/v1${L}/categories`, { name: "Travel", sub_categories: ["Flights", "Hotels"] });
     await raw("POST", `/api/v1${L}/transactions/bulk`, {
       transactions: [
+        aug("2026-08-14", -340, "SkyJet Airlines", "Travel", "Flights"),
+        aug("2026-08-15", -420, "Seaside Hotel", "Travel", "Hotels"),
+        aug("2026-08-16", -86.4, "Harbour Cafe", "Food", "Dining out"),
         aug("2026-08-01", 3200, "Acme Payroll", "Income", "Salary"),
         aug("2026-08-02", -1150, "Landlord", "Housing", "Rent"),
         aug("2026-08-04", -62, "City Transit", "Transport", "Public transit"),
@@ -328,6 +333,7 @@ it("records the explainer-video API run", async () => {
     // "what should my next budget be?"), answered from this month and last month.
     await tool("q-cs-this", "find_transactions", { vendor: "Corner Market", period: "this_month" });
     await tool("q-cs-last", "find_transactions", { vendor: "Corner Market", period: "last_month" });
+    await tool("q-travel-last", "find_transactions", { category: "Travel", period: "last_month" });
     await tool("q-sum-last", "spending_summary", { period: "last_month" });
     await tool("q-sum-this", "spending_summary", { period: "this_month" });
 

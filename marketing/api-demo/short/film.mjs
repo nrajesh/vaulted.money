@@ -233,28 +233,30 @@ const note = (txt, x, y) => h(`<div class="abs pop" style="left:${x}px;top:${y}p
 {
   const a = rj("q-sum-last"), b = rj("q-sum-this"), bud = rj("q-budget").budgets[0];
   const val = (r, n) => r.by_category.find((c) => c.category === n)?.spent ?? 0;
-  const rowsData = ["Housing", "Food", "Transport", "Utilities"].map((n) => ({
-    n, aug: val(a, n), sep: val(b, n), next: Math.ceil((val(a, n) + val(b, n)) / 2 / 10) * 10, // two-month average, rounded up to the next 10
-  }));
-  const food = rowsData.find((r) => r.n === "Food");
+  // Next month: Travel is planned at last month's trip cost; Food at its budget; Housing as it was.
+  const rowsData = [
+    { n: "Travel", aug: val(a, "Travel"), sep: val(b, "Travel"), next: Math.ceil(val(a, "Travel") / 10) * 10, hot: true },
+    { n: "Food", aug: val(a, "Food"), sep: val(b, "Food"), next: bud.target },
+    { n: "Housing", aug: val(a, "Housing"), sep: val(b, "Housing"), next: val(a, "Housing") },
+  ];
+  const travel = rowsData[0], food = rowsData[1];
   const hd = h(`<div class="bigq" style="left:96px;top:100px;font-size:96px">Ask things <em>a menu can't.</em></div>`);
-  const sub = h(`<div class="abs" style="left:100px;top:245px;font:500 36px var(--sans);color:var(--muted)"><span class="tx">Advice, comparisons and what-ifs, from your own numbers.</span></div>`);
+  const sub = h(`<div class="abs" style="left:100px;top:245px;font:500 36px var(--sans);color:var(--muted)"><span class="tx">Even when you don't name a category.</span></div>`);
   const chat = makeChat({
     x: 96, y: 330, w: 860, hgt: 660, title: "Your finances", tag: "Runs on your device",
     items: [
-      { at: 0.5, user: "What should my next budget be?" },
-      { at: 1.7, step: "Checked last month", icon: ICON.chart },
-      { at: 2.2, step: "Checked this month", icon: ICON.chart },
-      { at: 2.7, step: "Checked your budgets", icon: ICON.chart },
-      { at: 3.4, bot: `<b class="bad">Food</b> ran over in both months: ${eur(food.aug, 0)} in August and ${eur(food.sep, 0)} in September, against your ${eur(bud.target, 0)} budget. Based on your average, I'd set it to <b>${eur(food.next, 0)}</b>. The rest was steady.` },
+      { at: 0.5, user: "I travelled last month and I'm off again next month. What should I watch?" },
+      { at: 2.0, step: "Checked last month", icon: ICON.chart },
+      { at: 2.5, step: "Checked your budgets", icon: ICON.chart },
+      { at: 3.2, bot: `Last month's trip put <b class="bad">Travel</b> at ${eur(travel.aug, 0)}, and Food ran to ${eur(food.aug, 0)} against your ${eur(bud.target, 0)} budget. Plan about <b>${eur(travel.next, 0)}</b> for Travel and keep Food near ${eur(bud.target, 0)}.` },
     ],
   });
   const head = (txt, i) => `<span style="grid-column:${i}" class="hd"><span class="tx">${txt}</span></span>`;
   const table = h(`<div class="pcard pop" style="left:1000px;top:330px;width:824px;height:660px;padding:30px 36px">
-    <div style="font:800 38px var(--sans);letter-spacing:-.02em"><span class="tx">Your next budget, suggested</span></div>
-    <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;row-gap:12px;margin-top:26px;font:600 22px var(--sans);color:var(--muted);letter-spacing:.04em">${["Category", "Aug", "Sep", "Next"].map((c, i) => `<span style="text-align:${i ? "right" : "left"}"><span class="tx">${c}</span></span>`).join("")}</div>
-    ${rowsData.map((r) => `<div class="pop trow" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;align-items:center;margin-top:14px;padding:16px 14px;border-radius:14px;${r.n === "Food" ? `background:hsl(${GOLD} / .12);border:1px solid hsl(${GOLD} / .5)` : "background:hsl(217 32% 11%);border:1px solid var(--border)"};font:700 32px var(--sans)"><span class="tx">${r.n}</span><span style="text-align:right;color:var(--muted)"><span class="tx">${eur(r.aug, 0)}</span></span><span style="text-align:right;color:var(--muted)"><span class="tx">${eur(r.sep, 0)}</span></span><span style="text-align:right" class="${r.n === "Food" ? "gold" : ""}"><span class="tx">${eur(r.next, 0)}</span></span></div>`).join("")}
-    <div style="font:500 21px var(--sans);color:var(--muted);margin-top:26px"><span class="tx">Based on your two-month average, rounded up.</span></div></div>`);
+    <div style="font:800 38px var(--sans);letter-spacing:-.02em"><span class="tx">Next month, watch these</span></div>
+    <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;row-gap:12px;margin-top:26px;font:600 22px var(--sans);color:var(--muted);letter-spacing:.04em">${["Category", "Aug", "Sep", "Plan"].map((c, i) => `<span style="text-align:${i ? "right" : "left"}"><span class="tx">${c}</span></span>`).join("")}</div>
+    ${rowsData.map((r) => `<div class="pop trow" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;align-items:center;margin-top:14px;padding:16px 14px;border-radius:14px;${r.hot ? `background:hsl(${GOLD} / .12);border:1px solid hsl(${GOLD} / .5)` : "background:hsl(217 32% 11%);border:1px solid var(--border)"};font:700 32px var(--sans)"><span class="tx">${r.n}</span><span style="text-align:right;color:var(--muted)"><span class="tx">${eur(r.aug, 0)}</span></span><span style="text-align:right;color:var(--muted)"><span class="tx">${eur(r.sep, 0)}</span></span><span style="text-align:right" class="${r.hot ? "gold" : ""}"><span class="tx">${eur(r.next, 0)}</span></span></div>`).join("")}
+    <div style="font:500 21px var(--sans);color:var(--muted);margin-top:26px"><span class="tx">Based on last month's trip and your budgets.</span></div></div>`);
   const trows = table.querySelectorAll(".trow");
   const foot = note("Assistant wording is illustrative. The numbers are your own.", 100, 1020);
   add("chat2", [hd, sub, chat.el, table, foot], (t) => {

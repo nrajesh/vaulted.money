@@ -31,7 +31,7 @@ but tells the story from the viewer's side rather than the feature list:
 | 0:00 | "Another budget / app?" Monthly fees, your bank login, your data in their cloud |
 | 0:08 | "Vaulted Money does it differently": **Free · Private · Open · Yours** (icon stickers) |
 | 0:16 | "Have a chat with your finances." Corner Market, this month vs last (-35%), with the real transactions screen |
-| 0:28 | "Ask things a menu can't." "What should my next budget be?" (Food €345 / €261 vs €250, suggests €310) |
+| 0:28 | "Ask things a menu can't." "I travelled last month and I'm off again next month. What should I watch?" (Travel €760, Food over its €250 budget) |
 | 0:39 | "Got a messy bank file?" (the bank CSV, then the real Transactions screen) |
 | 0:48 | "Not stuck with our layout." The app's dashboard next to a custom screen built on the API |
 | 0:58 | "Not like the others": side by side (fee, servers, closed code, lock-in) |
