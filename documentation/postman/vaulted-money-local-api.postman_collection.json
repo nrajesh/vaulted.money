@@ -1,0 +1,4603 @@
+{
+  "info": {
+    "name": "Vaulted Money Local API",
+    "description": "Test suite for the Vaulted Money desktop Local API (v1).\n\nSee documentation/postman/README.md for setup. Run the folders in order with the Collection Runner; the suite creates and then deletes its own throwaway ledger.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Dates used by request bodies and filters.",
+          "const now = new Date();",
+          "const iso = (d) => d.toISOString().slice(0, 10);",
+          "pm.collectionVariables.set(\"today\", iso(now));",
+          "pm.collectionVariables.set(\"monthStart\", iso(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))));",
+          "pm.collectionVariables.set(\"nextMonth\", iso(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:47821/api/v1"
+    },
+    {
+      "key": "ledgerId",
+      "value": ""
+    },
+    {
+      "key": "accountId",
+      "value": ""
+    },
+    {
+      "key": "accountId2",
+      "value": ""
+    },
+    {
+      "key": "accountVendorId",
+      "value": ""
+    },
+    {
+      "key": "vendorId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "subCategoryId",
+      "value": ""
+    },
+    {
+      "key": "categoryName",
+      "value": ""
+    },
+    {
+      "key": "transactionId",
+      "value": ""
+    },
+    {
+      "key": "transferId",
+      "value": ""
+    },
+    {
+      "key": "scheduledId",
+      "value": ""
+    },
+    {
+      "key": "budgetId",
+      "value": ""
+    },
+    {
+      "key": "budgetId2",
+      "value": ""
+    },
+    {
+      "key": "providerId",
+      "value": ""
+    },
+    {
+      "key": "baseCurrency",
+      "value": ""
+    },
+    {
+      "key": "currentLanguage",
+      "value": ""
+    },
+    {
+      "key": "backupContent",
+      "value": ""
+    },
+    {
+      "key": "encryptedBackup",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Smoke and security",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"status is ok\", () => { const json = pm.response.json(); pm.expect(json.status === \"ok\").to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Endpoint index",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": []
+            },
+            "description": "Self-describing list of every endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"lists more than 40 routes\", () => { const json = pm.response.json(); pm.expect(json.version === 'v1' && json.routes.length > 40).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Missing token -> 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"WWW-Authenticate header present\", () => pm.response.to.have.header(\"WWW-Authenticate\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wrong token -> 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "not-the-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Overrides the collection auth with an invalid bearer token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Browser Origin header -> 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "https://example.com"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            },
+            "description": "Requests with an Origin header are refused so web pages cannot drive the API."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown endpoint -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nope",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "nope"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wrong method -> 405",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 405\", () => pm.response.to.have.status(405));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Connectivity, authentication and the browser-origin guard."
+    },
+    {
+      "name": "01 Ledgers",
+      "item": [
+        {
+          "name": "Create ledger",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test Ledger\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Creates a throwaway ledger. Every later request is scoped to it, so your real ledgers are never touched."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"ledgerId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List ledgers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"contains the test ledger\", () => { const json = pm.response.json(); pm.expect(json.data.some(l => l.id === pm.collectionVariables.get('ledgerId'))).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get ledger",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update ledger",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test Ledger (renamed)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"renamed\", () => { const json = pm.response.json(); pm.expect(json.name === 'Postman Test Ledger (renamed)').to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validation error -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"error code\", () => { const json = pm.response.json(); pm.expect(json.error.code === 'validation_error').to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown ledger -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "does-not-exist"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Accounts",
+      "item": [
+        {
+          "name": "Create account (checking)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Checking\",\n  \"currency\": \"USD\",\n  \"starting_balance\": 1000,\n  \"type\": \"Checking\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"accountId\", pm.response.json().id);",
+                  "pm.collectionVariables.set(\"accountVendorId\", pm.response.json().vendor_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create account (savings)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Savings\",\n  \"currency\": \"USD\",\n  \"starting_balance\": 0,\n  \"type\": \"Savings\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"accountId2\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate name -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Checking\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"two accounts\", () => { const json = pm.response.json(); pm.expect(json.data.length === 2).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get account (balance)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts/{{accountId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts",
+                "{{accountId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"balance equals starting balance\", () => { const json = pm.response.json(); pm.expect(json.balance === 1000).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update account",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts/{{accountId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts",
+                "{{accountId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"starting_balance\": 1500,\n  \"remarks\": \"Updated from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"balance reflects new starting balance\", () => { const json = pm.response.json(); pm.expect(json.balance === 1500).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Vendors",
+      "item": [
+        {
+          "name": "Create vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Grocer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"vendorId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create second vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Grocer Duplicate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List vendors (accounts excluded)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"no accounts in list\", () => { const json = pm.response.json(); pm.expect(json.data.every(v => !v.is_account)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List vendors incl. accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors?include_accounts=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors"
+              ],
+              "query": [
+                {
+                  "key": "include_accounts",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"accounts included\", () => { const json = pm.response.json(); pm.expect(json.data.some(v => v.is_account)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get vendor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors/{{vendorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors",
+                "{{vendorId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rename vendor",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors/{{vendorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors",
+                "{{vendorId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Supermarket\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Merge vendors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors/merge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors",
+                "merge"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": \"PM Supermarket\",\n  \"sources\": [\n    \"PM Grocer Duplicate\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Merge unknown vendor -> 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors/merge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors",
+                "merge"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": \"PM Supermarket\",\n  \"sources\": [\n    \"Nobody\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete an account via vendors -> 409",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors/{{accountVendorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors",
+                "{{accountVendorId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Categories and sub-categories",
+      "item": [
+        {
+          "name": "Create category with sub-category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Groceries\",\n  \"sub_categories\": [\n    \"PM Organic\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"categoryId\", pm.response.json().id);",
+                  "pm.collectionVariables.set(\"subCategoryId\", pm.response.json().sub_categories[0].id);",
+                  "pm.collectionVariables.set(\"categoryName\", pm.response.json().name);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create sub-category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}/sub-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "{{categoryId}}",
+                "sub-categories"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Bulk\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate sub-category -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}/sub-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "{{categoryId}}",
+                "sub-categories"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Bulk\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"nested sub-categories\", () => { const json = pm.response.json(); pm.expect(json.data[0].sub_categories.length === 2).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "{{categoryId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rename category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Food\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"categoryName\", pm.response.json().name);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rename sub-category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}/sub-categories/{{subCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "{{categoryId}}",
+                "sub-categories",
+                "{{subCategoryId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Bio\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create category to merge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Misc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Merge categories",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/merge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "merge"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": \"PM Food\",\n  \"sources\": [\n    \"PM Misc\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Merge unknown category -> 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/merge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "merge"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": \"PM Food\",\n  \"sources\": [\n    \"Nope\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Transactions",
+      "item": [
+        {
+          "name": "Create expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{today}}\",\n  \"amount\": -42.5,\n  \"account\": \"PM Checking\",\n  \"vendor\": \"PM Supermarket\",\n  \"category\": \"{{categoryName}}\",\n  \"sub_category\": \"PM Bio\",\n  \"remarks\": \"Created from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"transactionId\", pm.response.json().id);",
+                  "pm.test(\"currency inherited from account\", () => { const json = pm.response.json(); pm.expect(json.currency === 'USD').to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create income",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{today}}\",\n  \"amount\": 3000,\n  \"account\": \"PM Checking\",\n  \"vendor\": \"PM Employer\",\n  \"category\": \"PM Salary\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bulk create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/bulk",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "bulk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactions\": [\n    {\n      \"date\": \"{{today}}\",\n      \"amount\": -12,\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Cafe\",\n      \"category\": \"PM Dining\"\n    },\n    {\n      \"date\": \"{{today}}\",\n      \"amount\": -30,\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Cafe\",\n      \"category\": \"PM Dining\"\n    },\n    {\n      \"date\": \"{{today}}\",\n      \"amount\": -80,\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Power Co\",\n      \"category\": \"PM Utilities\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"three created\", () => { const json = pm.response.json(); pm.expect(json.count === 3).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "transfer"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from_account\": \"PM Checking\",\n  \"to_account\": \"PM Savings\",\n  \"amount\": 200,\n  \"date\": \"{{today}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"transferId\", pm.response.json().transfer_id);",
+                  "pm.test(\"legs have opposite signs\", () => { const json = pm.response.json(); pm.expect(json.outgoing.amount === -200 && json.incoming.amount === 200).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Transfer to same account -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "transfer"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from_account\": \"PM Checking\",\n  \"to_account\": \"PM Checking\",\n  \"amount\": 1,\n  \"date\": \"{{today}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid date -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"nope\",\n  \"amount\": 1,\n  \"account\": \"PM Checking\",\n  \"vendor\": \"x\",\n  \"category\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has total and page\", () => { const json = pm.response.json(); pm.expect(json.total >= 7 && json.data.length <= 10 && json.limit === 10).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List: filter expenses by category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions?type=expense&category={{categoryName}}&from={{monthStart}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "expense"
+                },
+                {
+                  "key": "category",
+                  "value": "{{categoryName}}"
+                },
+                {
+                  "key": "from",
+                  "value": "{{monthStart}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"only that category\", () => { const json = pm.response.json(); pm.expect(json.data.length >= 1 && json.data.every(t => t.category === pm.collectionVariables.get('categoryName') && t.amount < 0)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List: search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions?search=cafe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "cafe"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"two cafe transactions\", () => { const json = pm.response.json(); pm.expect(json.total === 2).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List: exclude transfers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions?exclude_transfers=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "exclude_transfers",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"no transfers\", () => { const json = pm.response.json(); pm.expect(json.data.every(t => t.category !== 'Transfer')).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List: bad number -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions?min_amount=abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "min_amount",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get transaction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/{{transactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "{{transactionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update transaction",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/{{transactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "{{transactionId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": -45,\n  \"remarks\": \"Edited\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"amount updated\", () => { const json = pm.response.json(); pm.expect(json.amount === -45).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account balance after activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts/{{accountId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts",
+                "{{accountId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"1500 + 3000 - 45 - 12 - 30 - 80 - 200 = 4133\", () => { const json = pm.response.json(); pm.expect(json.balance === 4133).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete transfer (both legs)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/transfer/{{transferId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "transfer",
+                "{{transferId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/{{transactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "{{transactionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deleted transaction -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions/{{transactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions",
+                "{{transactionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Recurring (scheduled) transactions",
+      "item": [
+        {
+          "name": "Create recurring transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/scheduled-transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "scheduled-transactions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{nextMonth}}\",\n  \"amount\": -900,\n  \"account\": \"PM Checking\",\n  \"vendor\": \"PM Landlord\",\n  \"category\": \"PM Rent\",\n  \"frequency\": \"1m\",\n  \"remarks\": \"Rent\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"scheduledId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid frequency -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/scheduled-transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "scheduled-transactions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{nextMonth}}\",\n  \"amount\": -1,\n  \"account\": \"PM Checking\",\n  \"vendor\": \"x\",\n  \"category\": \"x\",\n  \"frequency\": \"often\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List recurring transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/scheduled-transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "scheduled-transactions"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"one schedule\", () => { const json = pm.response.json(); pm.expect(json.data.length === 1).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get recurring transaction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/scheduled-transactions/{{scheduledId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "scheduled-transactions",
+                "{{scheduledId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update recurring transaction",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/scheduled-transactions/{{scheduledId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "scheduled-transactions",
+                "{{scheduledId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": -950,\n  \"frequency\": \"Monthly\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"amount updated\", () => { const json = pm.response.json(); pm.expect(json.amount === -950).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Skip an occurrence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/scheduled-transactions/{{scheduledId}}/skip",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "scheduled-transactions",
+                "{{scheduledId}}",
+                "skip"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{nextMonth}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"date ignored\", () => { const json = pm.response.json(); pm.expect(json.ignored_dates.includes(pm.collectionVariables.get('nextMonth'))).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete recurring transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/scheduled-transactions/{{scheduledId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "scheduled-transactions",
+                "{{scheduledId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Budgets",
+      "item": [
+        {
+          "name": "Create category budget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"{{categoryName}}\",\n  \"target_amount\": 100,\n  \"frequency\": \"Monthly\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"budgetId\", pm.response.json().id);",
+                  "pm.test(\"spent amount computed\", () => { const json = pm.response.json(); pm.expect(typeof json.spent_amount === 'number').to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create account-scoped budget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"budget_scope\": \"account\",\n  \"scope_name\": \"PM Checking\",\n  \"target_amount\": 500,\n  \"frequency\": \"Monthly\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"budgetId2\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown category -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Does Not Exist\",\n  \"target_amount\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List budgets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"two budgets\", () => { const json = pm.response.json(); pm.expect(json.data.length === 2).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get budget",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets/{{budgetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets",
+                "{{budgetId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update budget",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets/{{budgetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets",
+                "{{budgetId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_amount\": 150\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"target updated\", () => { const json = pm.response.json(); pm.expect(json.target_amount === 150).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete account-scoped budget",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets/{{budgetId2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets",
+                "{{budgetId2}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 Currencies",
+      "item": [
+        {
+          "name": "List currencies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/currencies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"baseCurrency\", pm.response.json().base);",
+                  "pm.test(\"has base and rates\", () => { const json = pm.response.json(); pm.expect(json.currencies.length > 0 && json.currencies.every(c => c.rate !== undefined)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add currency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/currencies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"zzz\",\n  \"name\": \"Postman Test Currency\",\n  \"symbol\": \"Z$\",\n  \"rate\": 2.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate currency -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/currencies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"ZZZ\",\n  \"name\": \"x\",\n  \"symbol\": \"x\",\n  \"rate\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get currency",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/ZZZ",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies",
+                "ZZZ"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"code normalised\", () => { const json = pm.response.json(); pm.expect(json.code === 'ZZZ').to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update rate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/ZZZ",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies",
+                "ZZZ"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rate\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"rate updated\", () => { const json = pm.response.json(); pm.expect(json.rate === 3).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete base currency -> 409",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/{{baseCurrency}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies",
+                "{{baseCurrency}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete test currency",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/ZZZ",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies",
+                "ZZZ"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Only adds and removes a throwaway currency (ZZZ); your base currency and rates are untouched."
+    },
+    {
+      "name": "09 Languages",
+      "item": [
+        {
+          "name": "List languages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/languages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "languages"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"currentLanguage\", pm.response.json().current);",
+                  "pm.test(\"built-ins listed\", () => { const json = pm.response.json(); pm.expect(json.available.some(l => l.code === 'es' && l.builtIn)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Set current language (to itself)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/languages/current",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "languages",
+                "current"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{currentLanguage}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sets the language to the one already active, so your preference is unchanged."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown language -> 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/languages/current",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "languages",
+                "current"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"xx\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace built-in -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/languages/custom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "languages",
+                "custom"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"en\",\n  \"name\": \"x\",\n  \"translations\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add custom language",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/languages/custom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "languages",
+                "custom"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"pmx\",\n  \"name\": \"Postman Test Language\",\n  \"translations\": {\n    \"hello\": \"hi\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"listed as custom\", () => { const json = pm.response.json(); pm.expect(json.available.some(l => l.code === 'pmx' && !l.builtIn)).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove custom language",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/languages/custom/pmx",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "languages",
+                "custom",
+                "pmx"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove built-in -> 400",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/languages/custom/es",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "languages",
+                "custom",
+                "es"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 AI providers",
+      "item": [
+        {
+          "name": "Create provider with API key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Provider\",\n  \"type\": \"CUSTOM\",\n  \"baseUrl\": \"http://localhost:11434/v1\",\n  \"model\": \"llama3\",\n  \"api_key\": \"pm-secret-key\",\n  \"isDefault\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"providerId\", pm.response.json().id);",
+                  "pm.test(\"key reported but not returned\", () => { const json = pm.response.json(); pm.expect(json.has_api_key === true).to.be.true; });",
+                  "pm.test(\"Secret is never echoed\", () => pm.expect(pm.response.text()).to.not.include(\"pm-secret-key\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid base URL -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"x\",\n  \"type\": \"CUSTOM\",\n  \"baseUrl\": \"not a url\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List providers (no secrets)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Secret is never echoed\", () => pm.expect(pm.response.text()).to.not.include(\"pm-secret-key\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get provider",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers/{{providerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers",
+                "{{providerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update provider",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers/{{providerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers",
+                "{{providerId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"llama3.1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"model updated\", () => { const json = pm.response.json(); pm.expect(json.model === 'llama3.1').to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace API key",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers/{{providerId}}/api-key",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers",
+                "{{providerId}}",
+                "api-key"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"api_key\": \"pm-secret-key-2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove API key",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers/{{providerId}}/api-key",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers",
+                "{{providerId}}",
+                "api-key"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Key is gone",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers/{{providerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers",
+                "{{providerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has_api_key false\", () => { const json = pm.response.json(); pm.expect(json.has_api_key === false).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete provider",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai-providers/{{providerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-providers",
+                "{{providerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Creates and removes a throwaway provider. Your default provider is not changed."
+    },
+    {
+      "name": "11 Analytics, insights and reports",
+      "item": [
+        {
+          "name": "Analytics (monthly)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/analytics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "analytics"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"totals add up\", () => { const json = pm.response.json(); pm.expect(json.totals.income === 3000 && json.totals.expenses > 0 && json.byCategory.length > 0).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analytics (daily, this month)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/analytics?group_by=day&from={{monthStart}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "analytics"
+              ],
+              "query": [
+                {
+                  "key": "group_by",
+                  "value": "day"
+                },
+                {
+                  "key": "from",
+                  "value": "{{monthStart}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analytics in another currency",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/analytics?currency=EUR",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "analytics"
+              ],
+              "query": [
+                {
+                  "key": "currency",
+                  "value": "EUR"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"converted\", () => { const json = pm.response.json(); pm.expect(json.currency === 'EUR').to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analytics as CSV download",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/analytics?format=csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "analytics"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"CSV download\", () => { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\"); pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"attachment\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analytics as JSON file",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/analytics?download=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "analytics"
+              ],
+              "query": [
+                {
+                  "key": "download",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"JSON attachment\", () => pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\".json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analytics bad format -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/analytics?format=xml",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "analytics"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "xml"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Insights",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/insights",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "insights"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"budgets and trends\", () => { const json = pm.response.json(); pm.expect(Array.isArray(json.budgets) && json.trends !== undefined).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Insights as CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/insights?format=csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "insights"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"CSV download\", () => { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\"); pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"attachment\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List report types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Report: income-expense",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/reports/income-expense",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "reports",
+                "income-expense"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"totals\", () => { const json = pm.response.json(); pm.expect(json.report === 'income-expense' && json.totalIncome === 3000).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Report: net-worth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/reports/net-worth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "reports",
+                "net-worth"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"assets reported\", () => { const json = pm.response.json(); pm.expect(json.report === 'net-worth' && json.accounts.length === 2).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Report: trends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/reports/trends",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "reports",
+                "trends"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Report: income-expense as CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/reports/income-expense?format=csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "reports",
+                "income-expense"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"CSV download\", () => { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\"); pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"attachment\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown report -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/reports/bogus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "reports",
+                "bogus"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 Backups",
+      "item": [
+        {
+          "name": "Export everything (unencrypted)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/backups/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "export"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Backup file\", () => { pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"vaultedmoney-backup-all\"); pm.expect(pm.response.json().data).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Export test ledger (unencrypted)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/backups/export?ledger_id={{ledgerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "ledger_id",
+                  "value": "{{ledgerId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"backupContent\", pm.response.text());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Password in URL -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/backups/export?password=x",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "password",
+                  "value": "x"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Export test ledger (encrypted)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "export"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ledger_id\": \"{{ledgerId}}\",\n  \"password\": \"postman-passphrase\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"encryptedBackup\", pm.response.text());",
+                  "pm.test(\"Encrypted .lock file\", () => pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\".lock\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List backup schedules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/backups/schedules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "schedules"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No secrets exposed\", () => pm.expect(pm.response.text()).to.not.include(\"passwordHash\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restore without confirmation -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "import"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"backup\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"asks for confirm_replace\", () => { const json = pm.response.json(); pm.expect(json.error.message.includes('confirm_replace')).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restore encrypted with wrong password -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "import"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = { content: pm.collectionVariables.get(\"encryptedBackup\"), password: \"wrong\", ledger_id: pm.collectionVariables.get(\"ledgerId\"), confirm_replace: true };",
+                  "pm.request.body.update({ mode: \"raw\", raw: JSON.stringify(body), options: { raw: { language: \"json\" } } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restore test ledger from plain backup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "import"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Replaces ONLY the test ledger's data (ledger_id is set). Omitting ledger_id would replace everything."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = { content: pm.collectionVariables.get(\"backupContent\"), ledger_id: pm.collectionVariables.get(\"ledgerId\"), confirm_replace: true, force: true };",
+                  "pm.request.body.update({ mode: \"raw\", raw: JSON.stringify(body), options: { raw: { language: \"json\" } } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restore test ledger from encrypted backup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "import"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = { content: pm.collectionVariables.get(\"encryptedBackup\"), password: \"postman-passphrase\", ledger_id: pm.collectionVariables.get(\"ledgerId\"), confirm_replace: true };",
+                  "pm.request.body.update({ mode: \"raw\", raw: JSON.stringify(body), options: { raw: { language: \"json\" } } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Data is intact after restore",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"transactions restored\", () => { const json = pm.response.json(); pm.expect(json.total >= 4).to.be.true; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "98 Cleanup",
+      "item": [
+        {
+          "name": "Delete test ledger",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}"
+              ]
+            },
+            "description": "Removes the throwaway ledger and everything in it. The app reloads its UI afterwards."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test ledger is gone",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "99 Optional (changes your settings)",
+      "item": [
+        {
+          "name": "Refresh exchange rates (internet)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/refresh-rates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies",
+                "refresh-rates"
+              ]
+            },
+            "description": "Contacts frankfurter.dev and OVERWRITES your stored exchange rates. Skipped in a normal run: deselect this folder in the Runner."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Set base currency (to current)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/base",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "currencies",
+                "base"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{baseCurrency}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Not part of the safe flow. In the Collection Runner, untick this folder unless you want these side effects."
+    }
+  ]
+}

@@ -22,6 +22,8 @@ curl -H "Authorization: Bearer $VM_TOKEN" $VM            # list every endpoint
 
 `GET /api/v1` returns the full, current route table, so it is always the authoritative reference.
 
+Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every endpoint.
+
 ## Conventions
 
 | | |

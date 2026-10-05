@@ -108,7 +108,7 @@ curl -H "$AUTH" -H "Content-Type: application/json" -X POST -OJ $VM/backups/expo
 
 `GET $VM` lists every endpoint. The app must be running (closing the window only hides it). Restoring a backup replaces data and needs `"confirm_replace": true`.
 
-The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md).
+The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md). To try it from Postman, import the [ready-made collection](documentation/postman/README.md).
 
 ## Support the Project
 
