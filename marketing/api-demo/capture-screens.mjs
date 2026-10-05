@@ -30,7 +30,7 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 // "Today" is late September so the month views show the ledger's data.
-await page.clock.install({ time: new Date("2026-09-29T10:00:00") });
+await page.clock.install({ time: new Date("2026-09-30T10:00:00") });
 
 /** Replace the app's data with a snapshot the API produced, then open it. */
 async function load(name) {
@@ -69,6 +69,13 @@ await shot("/transactions", "tx-imported", { clearDate: true });
 
 await load("history");
 await shot("/transactions", "tx-history", { clearDate: true });
+
+await load("mcp-added");
+await shot("/transactions", "tx-mcp-added", { clearDate: true });
+
+await load("mcp-imported");
+await shot("/transactions", "tx-mcp-imported", { clearDate: true });
+await shot("/dashboard", "dashboard-mcp");
 
 await load("final");
 await shot("/transactions", "tx-final", { clearDate: true });

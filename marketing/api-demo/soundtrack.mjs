@@ -49,7 +49,9 @@ const CHORDS = [
   [48, 55, 59, 64, 67], // Cmaj7 (open)
   [55, 59, 62, 64, 69], // Gsus2/6-ish
 ];
-const section = (t) => (t < 7 ? 0.7 : t < 68 ? 1 : t < 79 ? 0.6 : t < 105 ? 1 : 0.8);
+const T = { enable: scene("enable").start, create: scene("create").start, privacy: scene("privacy"), unique: scene("unique").start };
+// Quieter for the title and the privacy scene; fullest through the chat chapter.
+const section = (t) => (t < T.enable ? 0.7 : t >= T.privacy.start && t < T.privacy.end ? 0.6 : t < T.unique ? 1 : 0.8);
 
 // Pad + bass, one chord per bar
 for (let bar = 0; bar * BAR < DURATION; bar++) {
@@ -76,9 +78,9 @@ for (let bar = 0; bar * BAR < DURATION; bar++) {
   const chord = CHORDS[bar % 4];
   for (let step = 0; step < 8; step++) {
     const t0 = bar * BAR + step * (BEAT / 2);
-    if (t0 < 7 || t0 > DURATION - 6) continue;
+    if (t0 < T.enable || t0 > DURATION - 6) continue;
     if ((step + bar) % 3 === 2) continue; // leave room to breathe
-    const lvl = section(t0) * (t0 > 68 && t0 < 79 ? 0.5 : 1);
+    const lvl = section(t0) * (t0 >= T.privacy.start && t0 < T.privacy.end ? 0.5 : 1);
     const f = midi(chord[PATTERN[step]] + 24);
     voice(t0, 1.4, (t) => (Math.sin(TAU * f * t) + 0.35 * Math.sin(TAU * f * 3 * t) * Math.exp(-t * 9)) * Math.exp(-t * 4.5) * 0.045 * lvl, { pan: Math.sin(step) * 0.5, send: 0.55 });
   }
@@ -87,7 +89,7 @@ for (let bar = 0; bar * BAR < DURATION; bar++) {
 // Soft heartbeat pulse that lifts the middle of the film
 for (let b = 0; b * BEAT < DURATION; b++) {
   const t0 = b * BEAT;
-  if (t0 < 17 || t0 > 105 || (t0 > 68 && t0 < 79)) continue;
+  if (t0 < T.create || t0 > T.unique || (t0 >= T.privacy.start && t0 < T.privacy.end)) continue;
   voice(t0, 0.35, (t) => Math.sin(TAU * (48 + 60 * Math.exp(-t * 28)) * t) * Math.exp(-t * 11) * 0.16, { send: 0.04 });
 }
 

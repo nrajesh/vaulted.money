@@ -18,10 +18,16 @@ export const SCENES = [
   { id: "history", label: "Categorise", start: 43, end: 54 },
   { id: "ai", label: "Optional AI", start: 54, end: 68 },
   { id: "privacy", label: "Privacy", start: 68, end: 79 },
-  { id: "agent", label: "OpenAPI + agents", start: 79, end: 93 },
-  { id: "ways", label: "Your interface", start: 93, end: 105 },
-  { id: "unique", label: "Why it's different", start: 105, end: 115 },
-  { id: "outro", label: "", start: 115, end: 121 },
+  // The "chat with your money" chapter: six scenes under one pill.
+  { id: "mcp", label: "Chat with it", start: 79, end: 90 },
+  { id: "ask", label: "Chat with it", start: 90, end: 106 },
+  { id: "add", label: "Chat with it", start: 106, end: 119 },
+  { id: "csv", label: "Chat with it", start: 119, end: 136 },
+  { id: "safe", label: "Chat with it", start: 136, end: 151 },
+  { id: "more", label: "Chat with it", start: 151, end: 161 },
+  { id: "ways", label: "Your interface", start: 161, end: 173 },
+  { id: "unique", label: "Why it's different", start: 173, end: 183 },
+  { id: "outro", label: "", start: 183, end: 189 },
 ];
 export const DURATION = SCENES[SCENES.length - 1].end;
 /** Cross-fade length between scenes. */

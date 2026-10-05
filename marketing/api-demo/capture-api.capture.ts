@@ -16,12 +16,14 @@
 import * as http from "http";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { ApiServer } from "../../electron/apiServer";
 import { db } from "@/lib/dexieDB";
 import { LocalDataProvider } from "@/providers/LocalDataProvider";
 import { handleApiRequest } from "@/api/handleRequest";
 import type { ApiRequest } from "@/api/http";
+// @ts-expect-error plain ESM module without types
+import { createServer as createMcpServer } from "../../mcp/server.mjs";
 
 const OUT = join(__dirname, "out");
 const TOKEN = "vm_live_9fKq2xT7LbZ0aPwR4dYcN8sHuE3jVmG6oXtQ1iBzA5k";
@@ -41,6 +43,9 @@ type Step = {
   response: unknown;
 };
 const steps: Step[] = [];
+/** The "chat with it" section: real MCP tool calls against the real API. */
+type McpCall = { id: string; tool: string; args: unknown; isError: boolean; text: string };
+const mcpCalls: McpCall[] = [];
 const extra: Record<string, unknown> = {};
 
 function raw(
@@ -260,10 +265,70 @@ it("records the explainer-video API run", async () => {
     const plain = await raw("GET", "/api/v1/backups/export");
     writeFileSync(join(OUT, "backup-final.json"), plain.text);
 
+
+    // ── 10. Chat with it: the MCP tools, run for real ────────────────────
+    // "Today" is 30 Sep so named periods and budget periods line up with the
+    // September data. Only Date is faked; sockets and promises are real.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 8, 30, 10, 0, 0));
+    const statement = [
+      "Booking Date,Description,Amount,Currency",
+      "2026-09-28,Spotify,\"-9,99\",EUR",
+      "2026-09-28,Corner Market,\"-23,40\",EUR",
+      "2026-09-29,Cafe Central,\"-4,80\",EUR",
+      "2026-09-29,City Transit,\"-62,00\",EUR",
+      "2026-09-29,Gym Club,\"-35,00\",EUR",
+      "2026-09-30,Freelance invoice,\"2.450,00\",EUR",
+    ].join("\n") + "\n";
+    const STATEMENT_PATH = "~/Downloads/bank-statement.csv";
+    extra.statement = statement;
+    extra.statementPath = STATEMENT_PATH;
+    const mcp = createMcpServer({
+      baseUrl: `http://127.0.0.1:${PORT}/api/v1`,
+      token: TOKEN,
+      now: () => new Date(),
+      readFile: (p: string) => {
+        if (p !== STATEMENT_PATH) throw new Error("ENOENT");
+        return statement;
+      },
+    });
+    const tool = async (id: string, name: string, args: Record<string, unknown>) => {
+      const r = await mcp.call(name, args);
+      const text = r.content[0].text as string;
+      mcpCalls.push({ id, tool: name, args, isError: !!r.isError, text: text.length > 9000 ? text.slice(0, 9000) : text });
+      if (r.isError) return undefined;
+      try { return JSON.parse(text); } catch { return text; } // CSV reports are plain text
+    };
+    const snap = async (name: string) => writeFileSync(join(OUT, `backup-${name}.json`), (await raw("GET", "/api/v1/backups/export")).text);
+
+    await tool("q-spending", "spending_summary", { period: "last_30_days" });
+    await tool("q-budget", "budgets_and_insights", {});
+    await tool("q-vendor", "find_transactions", { vendor: "Corner Market", period: "last_30_days" });
+    await tool("q-add", "add_transaction", { date: "2026-09-30", amount: -12.5, account: "Checking", vendor: "Cafe Central", category: "Food", sub_category: "Dining out" });
+    await snap("mcp-added");
+    await tool("q-import-preview", "import_csv", { path: STATEMENT_PATH, account: "Checking" });
+    await tool("q-import", "import_csv", { path: STATEMENT_PATH, account: "Checking", dry_run: false });
+    await snap("mcp-imported");
+    await tool("q-search", "search_api", { query: "income expense report csv" });
+    await tool("q-report", "call_api", { method: "GET", path: "/ledgers/{ledgerId}/reports/income-expense", query: { from: "2026-09-01", to: "2026-09-30", format: "csv" } });
+    // Safe-delete demo on a throwaway account.
+    const ledgerList = (await raw("GET", "/api/v1/ledgers")).text;
+    const ledgerId = JSON.parse(ledgerList).data.find((l: { name: string }) => l.name === "Home").id;
+    await raw("POST", `/api/v1/ledgers/${ledgerId}/accounts`, { name: "Old Card", currency: "EUR", starting_balance: 0, type: "Credit Card" });
+    const accounts = await tool("q-accounts", "call_api", { method: "GET", path: "/ledgers/{ledgerId}/accounts" });
+    const oldCard = accounts.data.find((a: { name: string }) => a.name === "Old Card");
+    await tool("q-delete-preview", "call_api", { method: "DELETE", path: `/ledgers/{ledgerId}/accounts/${oldCard.id}` });
+    await tool("q-delete", "call_api", { method: "DELETE", path: `/ledgers/{ledgerId}/accounts/${oldCard.id}`, confirm: true });
+    extra.mcpTools = mcp.tools.map((t: { name: string; description: string; annotations?: { readOnlyHint?: boolean } }) => ({ name: t.name, readOnly: !!t.annotations?.readOnlyHint }));
+    extra.mcpToolListBytes = JSON.stringify(mcp.tools).length;
+    vi.useRealTimers();
+
     expect(steps.find((s) => s.id === "ai")?.status).toBe(200);
+    expect(mcpCalls.every((c) => !c.isError)).toBe(true);
   } finally {
     await server.stop();
     await new Promise((r) => aiServer.close(r));
   }
+  writeFileSync(join(OUT, "mcp-run.json"), JSON.stringify({ calls: mcpCalls }, null, 2));
   writeFileSync(join(OUT, "api-run.json"), JSON.stringify({ token: TOKEN, steps, extra }, null, 2));
 });

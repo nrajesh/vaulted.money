@@ -1,6 +1,6 @@
 # Vaulted Money: Local API explainer film
 
-A ~2-minute film showing the desktop app's [Local API](../../documentation/API.md):
+A ~3-minute film showing the desktop app's [Local API](../../documentation/API.md):
 create a ledger, add an account, add and import transactions, categorise from
 history, opt-in AI, the privacy model, handing the OpenAPI spec to an AI agent,
 and the three ways to drive it (the app's UI, your own GUI, the Postman
@@ -56,7 +56,17 @@ within ~1.2 s of the previous element.
 | 0:43 | Categorise from history |
 | 0:54 | Optional AI (what the model receives) |
 | 1:08 | Privacy: loopback, token, no browser access, write-only keys |
-| 1:19 | OpenAPI + an AI agent |
-| 1:33 | Three ways to use it: app UI, custom GUI, Postman |
-| 1:45 | Why it is different |
-| 1:55 | End card |
+| 1:19 | **Chat with it** (6 scenes): local model + MCP server, 8 small tools vs the 105 KB spec |
+| 1:30 | …"Where is my money going?" and "Am I over budget?", with dates the server resolved |
+| 1:46 | …add a transaction by chat, with the approval prompt; the app shows it |
+| 1:59 | …import a bank CSV (preview, then import) |
+| 2:16 | …delete an account: preview, approval, confirm |
+| 2:31 | …other questions: top vendors, a vendor lookup, a CSV report via `search_api` + `call_api` |
+| 2:41 | Three ways to use it: app UI, custom GUI, Postman |
+| 2:53 | Why it is different |
+| 3:03 | End card |
+
+The chat scenes use `mcp-run.json`, recorded by the same capture step: it runs the real
+[MCP server](../../mcp/README.md) against the real API with "today" fixed to 30 Sep, so
+named periods and budgets line up with the September data. The assistant's wording is
+illustrative; every tool call, argument and number is a real recorded result.

@@ -464,51 +464,275 @@ const RATIO = 980 / 1100;
   });
 }
 
-// 7 · OpenAPI + agent
+// ── chat with your money (MCP) ──────────────────────────────────────────────
+// Every tool call, argument and number below is a recorded call of the real
+// MCP server against the real API (out/mcp-run.json). Only the assistant's
+// wording is illustrative, and the film says so.
+const mcpRun = await (await fetch("out/mcp-run.json")).json();
+const rec = (id) => mcpRun.calls.find((c) => c.id === id);
+const rj = (id) => JSON.parse(rec(id).text);
+const eur = (n, d = 2) => "€" + Number(n).toLocaleString("en", { minimumFractionDigits: d, maximumFractionDigits: d });
+ICON.wrench = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg>';
+
+const argsText = (a) => jsonLines(a).join("\n");
+/**
+ * A chat window. items: {at, user} typed by the user; {at, tool, args, lines,
+ * approve?} a tool call (optionally behind an approval prompt); {at, bot} an
+ * answer streamed word by word.
+ */
+function makeChat({ x, y, w, hgt, title, items }) {
+  const el = h(`<div class="chat" style="left:${x}px;top:${y}px;width:${w}px;height:${hgt}px">
+    <div class="chat-bar"><span class="dot"></span><b>${title}</b><span class="chat-tag">vaulted-money · 8 tools</span></div>
+    <div class="chat-body"><div class="chat-col"></div></div></div>`);
+  const col = el.querySelector(".chat-col");
+  const bodyH = hgt - 56 - 30;
+  const nodes = items.map((it) => {
+    let node;
+    if (it.user !== undefined) node = h(`<div class="msg user"></div>`);
+    else if (it.bot !== undefined) {
+      node = h(`<div class="msg bot"></div>`);
+      // Split into words, never inside a tag, so the answer can stream. A
+      // half-streamed <b> is closed by the HTML parser, so partial text is fine.
+      it.words = [];
+      let word = "", inTag = false;
+      for (const ch of it.bot) {
+        word += ch;
+        if (ch === "<") inTag = true;
+        else if (ch === ">") inTag = false;
+        else if (!inTag && /\s/.test(ch)) { it.words.push(word); word = ""; }
+      }
+      if (word) it.words.push(word);
+    } else {
+      node = h(`<div class="tool"><div class="tool-head"><span>${ICON.wrench}</span><b>${it.tool}</b><span class="state"></span><span class="mcp">mcp/vaulted-money</span></div>
+        <div class="tool-args">${argsText(it.args)}</div>
+        ${it.approve ? `<div class="tool-approve"><span>Allow this tool call?</span><span class="sp"></span><span class="btn">Deny</span><span class="btn allow">Allow</span></div>` : ""}
+        <div class="tool-res"></div></div>`);
+    }
+    col.append(node);
+    return { it, node };
+  });
+  return {
+    el,
+    update(t) {
+      for (const { it, node } of nodes) {
+        const k = t >= it.at ? tw(t, it.at, it.at + 0.4) : 0;
+        node.style.display = t >= it.at ? "" : "none";
+        node.style.opacity = k;
+        if (t < it.at) continue;
+        const dt = t - it.at;
+        if (it.user !== undefined) node.textContent = it.user.slice(0, Math.floor(dt * 48) + 1);
+        else if (it.bot !== undefined) node.innerHTML = it.words.slice(0, Math.floor(dt * 11) + 1).join("");
+        else {
+          const approveEnd = it.approve ? 2.3 : 0;
+          const runEnd = approveEnd + 1.1;
+          const state = node.querySelector(".state");
+          const approve = node.querySelector(".tool-approve");
+          if (approve) {
+            approve.style.display = dt < approveEnd - 0.2 ? "" : "none";
+            approve.style.opacity = tw(dt, 0.5, 0.9);
+            node.querySelector(".btn.allow").classList.toggle("on", dt > 1.7);
+          }
+          const res = node.querySelector(".tool-res");
+          if (dt < approveEnd) { state.textContent = it.approve ? "waiting for approval" : ""; state.className = "state run"; res.style.display = "none"; }
+          else if (dt < runEnd) { state.textContent = "running…"; state.className = "state run"; res.style.display = "none"; }
+          else {
+            state.textContent = "✓ done"; state.className = "state done";
+            res.style.display = "";
+            res.innerHTML = it.lines.slice(0, Math.floor((dt - runEnd) * 7) + 1).join("\n");
+          }
+        }
+      }
+      const overflow = col.offsetHeight - bodyH;
+      col.style.transform = `translateY(${-Math.max(0, overflow)}px)`;
+    },
+  };
+}
+const dim = (s) => `<span class="d">${s}</span>`;
+
+// 7a · intro: local model + small tool set
 {
   const o = run.extra.openapi;
-  const hd = head("Hand the spec to <em>any AI agent</em>", "<span style='font-family:var(--mono);font-size:22px'>GET /api/v1/openapi.json</span> is generated from the code, so it can't drift.");
-  const spec = h(`<div class="card" style="left:96px;top:270px;width:640px;padding:26px 30px">
-    <div style="display:flex;align-items:center;gap:12px"><span class="m GET">GET</span><b style="font:600 20px var(--mono)">/openapi.json</b></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 20px;margin-top:22px">
-      ${[["OpenAPI", o.version], ["Paths", o.paths], ["Operations", o.operations], ["Tags", o.tags.length]].map(([k, v]) => `<div><div style="font:600 15px var(--sans);color:var(--muted);letter-spacing:.08em">${k.toUpperCase()}</div><div class="num" data-v="${v}" style="font:800 46px var(--sans);letter-spacing:-.03em;color:var(--accent-soft)">${v}</div></div>`).join("")}
-    </div></div>`);
-  const dash = shot(S("dashboard"), 96, 590, 640, RATIO, "Vaulted Money · Dashboard", { hgt: 400, off: 190 });
-  const rg = shotRing(dash, 560, 340, 520, 230, "warn");
-  const msgs = [];
-  const chatBox = h(`<div class="card" style="left:790px;top:270px;width:1034px;height:700px;padding:0;overflow:hidden">
-    <div style="height:62px;display:flex;align-items:center;gap:12px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--card-2)"><span style="color:var(--accent);width:24px;height:24px;display:inline-block">${ICON.bot}</span><b style="font:700 20px var(--sans)">An AI agent with the spec and the token</b></div>
-    <div id="chat" style="position:absolute;top:62px;left:0;right:0;padding:24px 28px"></div></div>`);
-  const cat = (n) => step("analytics").response.byCategory.find((c) => c.category === n);
-  const food = cat("Food");
-  const lines = [
-    { at: 1.6, who: "you", html: `Check my September spending and keep <b>Food</b> under €250 a month.` },
-    { at: 3.6, who: "call", m: "GET", html: `/openapi.json <span class="d">→ learned ${o.operations} operations</span>` },
-    { at: 5.2, who: "call", m: "GET", html: `/ledgers/…/analytics?from=2026-09-01 <span class="d">→ Food €${food.expenses.toFixed(2)} (${food.share}%)</span>` },
-    { at: 6.8, who: "call", m: "POST", html: `/ledgers/…/budgets <span class="d">→ Food · €${step("budget").response.target_amount} · Monthly</span>` },
-    { at: 8.4, who: "agent", html: `Food is <b style="color:var(--bad)">€${(food.expenses - 250).toFixed(2)} over</b> the €250 limit this month. I created a monthly Food budget, so it now shows on your dashboard.` },
+  const kb = (n) => Math.round(n / 1024);
+  const specKb = kb(o.bytes), toolsKb = Math.round((run.extra.mcpToolListBytes ?? 5200) / 1024);
+  const hd = head("Chat with your money. <em>On your own machine.</em>", "A local model plus a small MCP server: no cloud, no per-token bill, and your data never leaves the Mac.");
+  const box = (x, title, sub, cls = "") => h(`<div class="card" style="left:${x}px;top:290px;width:384px;padding:20px 22px;${cls}"><h3 style="font-size:23px">${title}</h3><div class="sub" style="font-size:17px">${sub}</div></div>`);
+  const flow = [
+    box(96, "Local model", "LM Studio, Claude Code, any MCP client"),
+    box(552, "MCP server", "8 small tools · one file, no dependencies", "border-color:hsl(188 57% 59%);box-shadow:0 0 40px hsl(188 57% 59% / .22)"),
+    box(1008, "Local API", "127.0.0.1 · bearer token · OpenAPI 3.1"),
+    box(1464, "Vaulted Money", "Your data, on your device"),
   ];
-  const chat = chatBox.querySelector("#chat");
-  lines.forEach((l) => {
-    l.el = h(
-      l.who === "call"
-        ? `<div style="margin:0 0 14px;display:flex;align-items:center;gap:12px;font:500 19px var(--mono);padding:12px 16px;border-radius:12px;background:hsl(217 32% 11%);border:1px solid var(--border)"><span class="m ${l.m}">${l.m}</span><span>${l.html}</span><span class="ok" style="margin-left:auto;width:22px;height:22px;flex:none">${ICON.check}</span></div>`
-        : `<div style="margin:0 0 18px;${l.who === "you" ? "margin-left:140px;background:hsl(246 90% 66% / .22);border:1px solid hsl(246 90% 66% / .4)" : "margin-right:60px;background:hsl(188 57% 59% / .10);border:1px solid hsl(188 57% 59% / .3)"};padding:16px 20px;border-radius:16px;font:500 23px/1.4 var(--sans)">${l.html}</div>`,
-    );
-    chat.append(l.el);
-  });
-  const note = h(`<div class="abs" style="left:790px;top:990px;font:500 15px var(--sans);color:hsl(215 16% 50%)">Agent wording is illustrative. Every API call and number shown is a real response from the recorded run.</div>`);
-  add("agent", [hd, spec, dash, rg, chatBox, note], (t) => {
+  const arrows = [0, 1, 2].map((i) => h(`<svg class="abs" style="left:${480 + i * 456}px;top:338px" width="72" height="30" viewBox="0 0 72 30" fill="none"><path d="M2 15h60m-12-11 12 11-12 11" stroke="hsl(188 57% 59%)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`));
+  const read = ["list_ledgers", "spending_summary", "find_transactions", "budgets_and_insights", "search_api"];
+  const write = ["call_api", "add_transaction", "import_csv"];
+  const chips = h(`<div class="abs" style="left:96px;top:500px;width:1730px">
+    <div style="font:700 16px var(--sans);letter-spacing:.08em;color:var(--good);margin-bottom:10px">READ-ONLY</div>
+    <div>${read.map((n) => `<span class="vchip" style="color:hsl(152 60% 70%);background:hsl(152 60% 40% / .10);border-color:hsl(152 60% 40% / .5)">${n}</span>`).join("")}</div>
+    <div style="font:700 16px var(--sans);letter-spacing:.08em;color:var(--warn);margin:12px 0 10px">CAN CHANGE DATA · ASKS FIRST</div>
+    <div>${write.map((n) => `<span class="vchip" style="color:hsl(35 92% 72%);background:hsl(35 92% 62% / .10);border-color:hsl(35 92% 62% / .5)">${n}</span>`).join("")}</div></div>`);
+  const cmp = h(`<div class="card" style="left:96px;top:760px;width:1728px;padding:24px 30px">
+    <div style="display:grid;grid-template-columns:330px 1fr;row-gap:16px;align-items:center">
+      <div style="font:600 20px var(--sans)">Full OpenAPI spec<div style="font:500 16px var(--sans);color:var(--muted)">${o.operations} operations</div></div>
+      <div style="display:flex;align-items:center;gap:16px"><div id="b1" style="height:30px;border-radius:8px;background:linear-gradient(90deg,hsl(0 70% 55%),hsl(20 85% 60%));width:0"></div><b style="font:700 24px var(--mono)">${specKb} KB</b></div>
+      <div style="font:600 20px var(--sans)">These 8 tools<div style="font:500 16px var(--sans);color:var(--muted)">re-read on every turn</div></div>
+      <div style="display:flex;align-items:center;gap:16px"><div id="b2" style="height:30px;border-radius:8px;background:linear-gradient(90deg,hsl(183 51% 74%),hsl(199 54% 46%));width:0"></div><b style="font:700 24px var(--mono)">${toolsKb} KB</b><span style="font:600 20px var(--sans);color:var(--accent-soft)">≈${Math.round(specKb / toolsKb)}× less for a local model to read</span></div>
+    </div></div>`);
+  add("mcp", [hd, ...flow, ...arrows, chips, cmp], (t) => {
     appear(hd, t, 0.2);
-    appear(spec, t, 0.6);
-    appear(chatBox, t, 0.9, { dx: 40, dy: 0 });
-    spec.querySelectorAll(".num").forEach((n) => {
-      const v = Number(n.dataset.v);
-      if (Number.isFinite(v)) n.textContent = Math.round(v * tw(t, 1.0, 2.6));
-    });
-    lines.forEach((l) => appear(l.el, t, l.at, { dy: 14 }));
-    appear(dash, t, 9.0, { dy: 30 });
-    ring(rg, t, 10.2);
+    flow.forEach((f, i) => appear(f, t, 1.0 + i * 0.7, { dy: 20 }));
+    arrows.forEach((a, i) => appear(a, t, 1.6 + i * 0.7, { dx: -20, dy: 0 }));
+    appear(chips, t, 4.6);
+    appear(cmp, t, 6.6);
+    cmp.querySelector("#b1").style.width = 900 * tw(t, 7.0, 8.2) + "px";
+    cmp.querySelector("#b2").style.width = Math.max(2, 900 * (toolsKb / specKb) * tw(t, 8.4, 9.2)) + "px";
+  });
+}
+
+// 7b · ask: where is my money going / am I over budget
+{
+  const sp = rj("q-spending"), bu = rj("q-budget");
+  const cat = (n) => sp.by_category.find((c) => c.category === n);
+  const food = bu.budgets[0];
+  const hd = head("Ask in plain words. <em>Get answers from your own data.</em>", "The server works out the dates, so the same question gives the same answer.");
+  const chat = makeChat({
+    x: 96, y: 250, w: 880, hgt: 770, title: "Local model · chat",
+    items: [
+      { at: 0.8, user: "Where is my money going?" },
+      { at: 2.2, tool: "spending_summary", args: rec("q-spending").args, lines: [
+        `${dim("period")}  ${sp.period.label}  ${dim(`${sp.period.from} → ${sp.period.to}`)}`,
+        `${dim("spent")}   ${eur(sp.totals.expenses)}   ${dim("income")} ${eur(sp.totals.income)}`,
+        sp.by_category.slice(0, 3).map((c) => `${c.category} ${c.share_pct}%`).join(" · ") ] },
+      { at: 5.4, bot: `Mostly <b>${cat("Housing").category}</b>: ${eur(cat("Housing").spent, 0)} (${Math.round(cat("Housing").share_pct)}%). Then <b>Food</b> at ${eur(cat("Food").spent, 0)} and <b>Transport</b> at ${eur(cat("Transport").spent, 0)}. You spent <b>${eur(sp.totals.expenses)}</b> from 1 to 30 Sep.` },
+      { at: 9.0, user: "Am I over budget anywhere?" },
+      { at: 10.2, tool: "budgets_and_insights", args: {}, lines: [
+        `${dim("Food")}  target ${eur(food.target, 0)}  spent ${eur(food.spent)}`,
+        `${dim("status")}  <span style="color:var(--bad)">${bu.budget_health[0].status}</span>  ${dim(bu.budget_health[0].message)}` ] },
+      { at: 12.6, bot: `Yes: <b class="bad">Food</b> is at ${eur(food.spent)} of ${eur(food.target, 0)} (${Math.round(bu.budget_health[0].percentUsed)}%), <b>${eur(food.spent - food.target)}</b> over.` },
+    ],
+  });
+  const echo = h(`<div class="card" style="left:1010px;top:270px;width:814px;padding:22px 26px">
+    <div style="font:700 15px var(--sans);letter-spacing:.08em;color:var(--muted)">WHAT THE SERVER ADDED TO THE ANSWER</div>
+    <div style="font:500 20px/1.7 var(--mono);margin-top:10px"><span class="d">today</span>  <span style="color:var(--accent-soft)">${sp.today}</span><br><span class="d">period</span> <span style="color:var(--accent-soft)">${sp.period.from} → ${sp.period.to}</span></div>
+    <div class="sub" style="font-size:17px;margin-top:8px">Models don't know today's date, so the server resolves "last 30 days" itself and states the exact range.</div></div>`);
+  const dash = shot(S("dashboard"), 1010, 510, 814, RATIO, "Vaulted Money · Dashboard", { hgt: 480, off: 235 });
+  const rg = shotRing(dash, 560, 345, 520, 235, "warn");
+  const note = h(`<div class="abs" style="left:96px;top:1030px;font:500 15px var(--sans);color:hsl(215 16% 50%)">Assistant wording is illustrative. Every tool call, argument and number is a real recorded result.</div>`);
+  add("ask", [hd, chat.el, echo, dash, rg, note], (t) => {
+    appear(hd, t, 0.2);
+    appear(chat.el, t, 0.4, { dy: 20 });
+    chat.update(t);
+    appear(echo, t, 5.0, { dx: 40, dy: 0 });
+    appear(dash, t, 11.6, { dy: 20 });
+    ring(rg, t, 13.0);
+  });
+}
+
+// 7c · add a transaction by chat
+{
+  const ad = rj("q-add");
+  const hd = head("Add a transaction. <em>Just say it.</em>", "Changes ask first, and the result shows up in the app straight away.");
+  const chat = makeChat({
+    x: 96, y: 250, w: 880, hgt: 770, title: "Local model · chat",
+    items: [
+      { at: 0.8, user: "Add a €12.50 coffee at Cafe Central today, Food › Dining out." },
+      { at: 3.0, tool: "add_transaction", args: rec("q-add").args, approve: true, lines: [
+        `${dim("created")} true   ${dim("id")} ${short(ad.id)}`,
+        `${eur(ad.amount)}  ${ad.vendor}  ${dim("·")} ${ad.category}  ${dim(ad.date)}` ] },
+      { at: 8.0, bot: `Done. Added <b>${eur(Math.abs(ad.amount))}</b> at <b>${ad.vendor}</b> (Food › Dining out) on 30 Sep. Say "undo" and I'll delete it.` },
+    ],
+  });
+  const tx = shot(S("tx-mcp-added"), 1010, 290, 814, RATIO, "Vaulted Money app · Transactions, live", { hgt: 430, off: 287 });
+  const rg = shotRing(tx, 60, 575, 1010, 55, "");
+  const chip = tag("good", ICON.check, "Undo is one call", "The id comes back, so any change can be reversed", 1010, 760);
+  add("add", [hd, chat.el, tx, rg, chip], (t) => {
+    appear(hd, t, 0.2);
+    appear(chat.el, t, 0.4, { dy: 20 });
+    chat.update(t);
+    appear(tx, t, 8.6, { dx: 40, dy: 0 });
+    ring(rg, t, 9.4);
+    appear(chip, t, 9.8, { dy: 14 });
+  });
+}
+
+// 7d · import a messy bank CSV by chat
+{
+  const pre = rj("q-import-preview"), imp = rj("q-import");
+  const map = Object.entries(pre.column_mapping).map(([to, from]) => `${from}→${to}`).join(", ");
+  const csvLines = run.extra.statement.split("\n").slice(0, 5);
+  const hd = head("Import a bank CSV. <em>No reformatting.</em>", "The file is read on your computer, so its contents never pass through the chat.");
+  const chat = makeChat({
+    x: 96, y: 250, w: 880, hgt: 770, title: "Local model · chat",
+    items: [
+      { at: 0.8, user: "Import ~/Downloads/bank-statement.csv into Checking. Preview first." },
+      { at: 2.4, tool: "import_csv", args: rec("q-import-preview").args, lines: [
+        `${dim("dry_run")} true   ${dim("rows")} ${pre.rows_in_file}   ${dim("imported")} 0`,
+        `${dim("mapped")}  ${map}` ] },
+      { at: 4.6, bot: `I mapped <b>Booking Date→Date</b> and <b>Description→Vendor</b>, and read amounts like 2.450,00 correctly. ${pre.rows_in_file} rows, <b>nothing imported yet</b>. Import them?` },
+      { at: 8.3, user: "Yes, import." },
+      { at: 9.0, tool: "import_csv", args: rec("q-import").args, approve: true, lines: [
+        `${dim("imported")} <span class="ok">${imp.result.imported}</span>   ${dim("skipped")} ${imp.result.skipped}` ] },
+      { at: 13.2, bot: `Imported <b>${imp.result.imported}</b> transactions. They have no category yet. Want me to categorise them from your history?` },
+    ],
+  });
+  const csv = h(`<div class="card" style="left:1010px;top:270px;width:814px;padding:18px 22px"><div style="display:flex;align-items:center;gap:10px;color:var(--muted);font:600 17px var(--sans);margin-bottom:10px"><span style="color:var(--accent);width:22px;height:22px;display:inline-block">${ICON.file}</span><b style="color:var(--fg)">${run.extra.statementPath}</b></div><div style="font:500 16px var(--sans);color:var(--muted);margin:-4px 0 10px">comma-separated, ISO dates, amounts like "2.450,00"</div><div style="font:500 16px/24px var(--mono);color:hsl(210 30% 85%);white-space:pre;overflow:hidden">${esc(csvLines.join("\n"))}</div></div>`);
+  const tx = shot(S("tx-mcp-imported"), 1010, 480, 814, RATIO, "Vaulted Money app · Transactions", { hgt: 460, off: 287 });
+  const rg = shotRing(tx, 60, 575, 1010, 300, "");
+  add("csv", [hd, chat.el, csv, tx, rg], (t) => {
+    appear(hd, t, 0.2);
+    appear(chat.el, t, 0.4, { dy: 20 });
+    chat.update(t);
+    appear(csv, t, 1.2, { dx: 40, dy: 0 });
+    appear(tx, t, 12.8, { dx: 40, dy: 0 });
+    csv.style.opacity = Math.min(csv.style.opacity, 1 - 0.5 * tw(t, 12.6, 13.2));
+    ring(rg, t, 13.8);
+  });
+}
+
+// 7e · safe deletion: preview, approve, confirm
+{
+  const accounts = rj("q-accounts").data;
+  const hd = head("Deleting? <em>It asks twice.</em>", "A preview first, then your approval. Nothing changes until you say so.");
+  const chat = makeChat({
+    x: 96, y: 250, w: 880, hgt: 770, title: "Local model · chat",
+    items: [
+      { at: 0.8, user: "Delete the Old Card account." },
+      { at: 1.8, tool: "call_api", args: rec("q-accounts").args, lines: [`${dim("accounts")}  ${accounts.map((a) => a.name).join(", ")}`] },
+      { at: 3.6, tool: "call_api", args: { method: "DELETE", path: "/ledgers/{ledgerId}/accounts/" + short(rec("q-delete").args.path.split("/").pop()) }, lines: [
+        `<span style="color:var(--warn)">preview: true   executed: false</span>`,
+        `${dim("Nothing changed. Show this to the user; if they approve, repeat with confirm:true.")}` ] },
+      { at: 5.5, bot: `<b>Old Card</b> has no transactions. This will delete the account itself. Shall I go ahead?` },
+      { at: 7.6, user: "Go ahead." },
+      { at: 8.2, tool: "call_api", args: { method: "DELETE", path: "/ledgers/{ledgerId}/accounts/" + short(rec("q-delete").args.path.split("/").pop()), confirm: true }, approve: true, lines: [`<span class="ok">deleted: true</span>`] },
+      { at: 12.4, bot: `Done. <b>Old Card</b> is deleted and your other accounts are untouched.` },
+    ],
+  });
+  const steps = [
+    ["1", "The model previews", "Nothing is deleted yet. The tool just says what it would do."],
+    ["2", "You approve", "Your client asks before running any tool that can change data."],
+    ["3", "Then it happens", "Deleting an account keeps its transactions. Deleting a ledger does not."],
+  ].map(([n, t1, t2], i) => h(`<div class="stepcard" style="left:1010px;top:${290 + i * 150}px;width:814px"><div class="n">${n}</div><div><b>${t1}</b><small>${t2}</small></div></div>`));
+  const lock = tag("warn", ICON.lock, "Safety lives in the approval prompt", "Keep tool approval on for call_api, add_transaction and import_csv", 1010, 780);
+  add("safe", [hd, chat.el, ...steps, lock], (t) => {
+    appear(hd, t, 0.2);
+    appear(chat.el, t, 0.4, { dy: 20 });
+    chat.update(t);
+    steps.forEach((s, i) => appear(s, t, [3.0, 7.4, 11.4][i], { dx: 40, dy: 0 }));
+    appear(lock, t, 12.6, { dy: 14 });
+  });
+}
+
+// 7f · more questions, one card each
+{
+  const sp = rj("q-spending"), vend = rj("q-vendor");
+  const csvRows = rec("q-report").text.trim().split("\n").slice(0, 6).join("\n");
+  const card = (x, q, chain, ans, extra = "") => h(`<div class="mini" style="left:${x}px;top:320px;width:556px;height:440px"><span class="q">${q}</span><div class="chain">${chain.map((c) => `<span class="t">${c}</span>`).join('<span>→</span>')}</div><div class="ans">${ans}</div>${extra}</div>`);
+  const hd = head("Anything else <em>is one question away.</em>", "Small tool set, whole API: search_api finds the endpoint, call_api uses it.");
+  const c1 = card(96, "Which vendors cost me the most?", ["spending_summary"], sp.by_vendor.filter((v) => v.spent > 0).slice(0, 3).map((v) => `<b>${v.vendor}</b> ${eur(v.spent)}`).join("<br>") + `<br><span style="color:var(--muted);font-size:18px">…out of ${eur(sp.totals.expenses)} in 30 days</span>`);
+  const c2 = card(682, "How much did I spend at Corner Market?", ["find_transactions"], `<b>${vend.total_matches} purchases</b>, ${eur(Math.abs(vend.sum_of_shown))} in total.<br><span style="color:var(--muted);font-size:18px">${vend.transactions.map((t) => eur(Math.abs(t.amount))).join(" · ")}</span>`);
+  const c3 = card(1268, "Give me September's income and expenses as a CSV.", ["search_api", "call_api"], `Found <b>GET …/reports/income-expense</b> and fetched it:`, `<div class="csv">${esc(csvRows)}</div>`);
+  add("more", [hd, c1, c2, c3], (t) => {
+    appear(hd, t, 0.2);
+    appear(c1, t, 0.8, { dy: 30 }); appear(c2, t, 3.0, { dy: 30 }); appear(c3, t, 5.2, { dy: 30 });
   });
 }
 
@@ -548,7 +772,7 @@ const RATIO = 980 / 1100;
 {
   const hd = head("One vault. <em>Every interface.</em>", "A local-first money app that is also a local-first platform.");
   const nodes = [
-    ["Vaulted Money UI", 300, 0], ["Your own GUI", 620, 1], ["Postman", 940, 2], ["Scripts & cron", 1260, 3], ["AI agents", 1580, 4],
+    ["Vaulted Money UI", 300, 0], ["Your own GUI", 620, 1], ["Postman", 940, 2], ["Scripts & cron", 1260, 3], ["Local AI agents", 1580, 4],
   ];
   const hub = h(`<div class="abs" style="left:560px;top:250px;width:800px;display:flex;flex-direction:column;align-items:center">
     <div style="display:flex;align-items:center;gap:22px;padding:22px 34px;border-radius:22px;background:var(--card);border:1px solid var(--accent);box-shadow:0 0 60px hsl(188 57% 59% / .25)">
@@ -592,8 +816,8 @@ const RATIO = 980 / 1100;
 }
 
 // ── chapter pills ───────────────────────────────────────────────────────────
-const chapters = SCENES.filter((s) => s.label);
-const bar = h(`<div id="chapters">${chapters.map((c) => `<span class="chip" data-id="${c.id}">${c.label}</span>`).join("")}</div>`);
+const labels = [...new Set(SCENES.filter((s) => s.label).map((s) => s.label))];
+const bar = h(`<div id="chapters">${labels.map((l) => `<span class="chip" data-label="${l}">${l}</span>`).join("")}</div>`);
 stage.append(bar);
 
 // ── the frame function ──────────────────────────────────────────────────────
@@ -610,9 +834,9 @@ window.__render = (t) => {
     b.el.style.visibility = k > 0.001 ? "visible" : "hidden";
     if (k > 0.001) b.update(lt);
   }
-  const active = chapters.find((c) => t >= c.start && t < c.end);
-  bar.style.opacity = t < 7 || t >= 115 ? 0 : 1;
-  bar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.id === active?.id));
+  const active = SCENES.find((c) => t >= c.start && t < c.end);
+  bar.style.opacity = t < scene("enable").start || t >= scene("outro").start ? 0 : 1;
+  bar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.label === active?.label));
 };
 
 await document.fonts.ready;
