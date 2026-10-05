@@ -597,6 +597,44 @@ describe("backups", () => {
     ).toBe(1);
   });
 
+  it("manages scheduled backup configs without exposing secrets", async () => {
+    await db.backup_configs.add({
+      id: "sched-1",
+      frequency: 3_600_000,
+      isActive: true,
+      nextBackup: new Date().toISOString(),
+      path: "/tmp/backups",
+      encrypted: true,
+      passwordHash: "super-secret-hash",
+    });
+    const list = await call("GET", "/backups/schedules");
+    expect(JSON.stringify(list.body)).not.toContain("super-secret-hash");
+    expect(list.body).toMatchObject({
+      data: [{ id: "sched-1", is_active: true, encrypted: true }],
+    });
+
+    const patched = await ok<Entity>(
+      call("PATCH", "/backups/schedules/sched-1", {
+        is_active: false,
+        frequency_ms: 7_200_000,
+      }),
+    );
+    expect(patched).toMatchObject({
+      is_active: false,
+      frequency_ms: 7_200_000,
+    });
+    expect(
+      (await call("PATCH", "/backups/schedules/sched-1", { frequency_ms: 5 }))
+        .status,
+    ).toBe(400);
+    expect((await call("DELETE", "/backups/schedules/sched-1")).status).toBe(
+      204,
+    );
+    expect((await call("DELETE", "/backups/schedules/sched-1")).status).toBe(
+      404,
+    );
+  });
+
   it("refuses passwords in the URL", async () => {
     expect(
       (await call("GET", "/backups/export", undefined, { password: "x" }))

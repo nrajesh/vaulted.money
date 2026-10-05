@@ -4,7 +4,7 @@ This folder contains a ready-made Postman collection that exercises every endpoi
 
 | File | Purpose |
 |---|---|
-| `vaulted-money-local-api.postman_collection.json` | 120 requests in 15 folders, with tests |
+| `vaulted-money-local-api.postman_collection.json` | 133 requests in 15 folders, with tests |
 | `vaulted-money-local-api.postman_environment.json` | `baseUrl` and `token` variables |
 
 You do not need a Postman account or any special permissions. The API only listens on your own computer.
@@ -28,7 +28,7 @@ Open the collection → **Run** (Collection Runner), keep the order, and run.
 
 - Folders `00`–`12` are the safe flow, then `98 Cleanup`. Requests depend on earlier ones (for example, the ledger created in `01` is used everywhere), so run them in order. Individual requests can be re-sent, but if a folder fails midway, re-run from `01`.
 - **Untick `99 Optional (changes your settings)`** unless you want those side effects (it overwrites your stored exchange rates from the internet).
-- A passing run is 118 requests with no failed tests.
+- A passing run is 131 requests (everything except the two in `99`) with no failed tests.
 
 ### What it touches in your real app
 
@@ -92,3 +92,19 @@ npx newman run vaulted-money-local-api.postman_collection.json \
 | `503 ui_not_ready` | The app window is still loading; retry in a moment. |
 | Variable shows as `{{ledgerId}}` in a URL | `01 Ledgers → Create ledger` did not run or failed; run it first. |
 | Many failures in `05` after a partial earlier run | Leftover data from an interrupted run. Delete the **Postman Test Ledger** in the app and start from `01`. |
+
+## Keeping the collection up to date
+
+The collection is part of the API contract. Whenever anything an API entity exposes changes, update the matching requests **and their test assertions** in the same change, then update [API.md](../API.md). The full checklist is in [`documentation/CLAUDE.md`](../CLAUDE.md#local-api-changes).
+
+This is enforced: `src/api/postmanCoverage.test.ts` (part of `pnpm test`) fails when
+
+- a route in the API has no request in the collection, or
+- a request in the collection calls a route that no longer exists.
+
+It checks coverage, not behaviour, so after changing behaviour also re-run the collection. The collection file is edited directly (it is the source of truth; there is no generator). Conventions to keep:
+
+- Work inside the throwaway ledger and clean up after yourself; restore any global setting a request changes.
+- Save created ids with `pm.collectionVariables.set(...)` and reuse them as `{{variables}}`.
+- Give every request a `Status is N` test and assert the important fields.
+- Negative tests that deliberately hit a non-existent route (405/404 checks) go in the `NEGATIVE_TESTS` allowlist in `postmanCoverage.test.ts`.

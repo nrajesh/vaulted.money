@@ -201,4 +201,6 @@ curl ──HTTP──▶ electron/apiServer.ts ──IPC──▶ src/api/ApiBri
  (auth, framing, limits)            (renderer owns the data)      (router, validation, calculations)
 ```
 
+Any change to what the API exposes must also update the tests, this document and the [Postman collection](postman/README.md); `src/api/postmanCoverage.test.ts` enforces the collection part.
+
 IndexedDB lives in the renderer, so the main process only owns the socket and security, and relays each authorised request to the renderer. `src/api` is transport-agnostic and fully unit-tested against the real Dexie provider; add an endpoint by adding a `RouteDef` to the relevant file in `src/api/routes/`.

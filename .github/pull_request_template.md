@@ -24,4 +24,5 @@
 - [ ] My code follows the code style of this project (`pnpm format:check` and `pnpm lint` pass).
 - [ ] My build passes successfully (`pnpm build`).
 - [ ] My change requires a change to the documentation.
+- [ ] If I changed anything the Local API exposes, I updated `src/api` tests, `documentation/API.md` and the Postman collection (see "Local API changes" in `documentation/CLAUDE.md`).
 - [ ] I have read the **CONTRIBUTING** document.

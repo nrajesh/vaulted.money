@@ -151,6 +151,28 @@ jsdom's focus bookkeeping changes between patch releases. `document.hasFocus()` 
 
 ---
 
+## Local API changes
+
+The desktop Local API (`src/api/`, `electron/apiServer.ts`) is a public contract that scripts depend on. **Any change that touches an API entity must update the API, its tests, its docs and the Postman collection in the same change.** "Entity" means anything the API exposes: ledgers, accounts, vendors, categories/sub-categories, transactions, recurring transactions, budgets, currencies, AI providers, languages, backups, and the analytics/insights/reports outputs.
+
+This applies when you:
+
+- add, remove, rename or change an endpoint, parameter, request field, response field, status code or error;
+- change an entity's type or storage in `src/types/dataProvider.ts`, `src/lib/dexieDB.ts` or `LocalDataProvider`, or the logic the API shares with the UI (`src/api/entityOps.ts`, `src/api/compute/*`, `src/utils/budgetUtils.ts`, `backupUtils.ts`);
+- change a validation rule, default or side effect (renames that propagate, cascading deletes, auto-created records).
+
+Checklist:
+
+1. **Code** – update the route in `src/api/routes/` (schemas are zod; the route table is the source of truth).
+2. **Unit tests** – update `src/api/api.test.ts`. Cover the success path and the error paths (400/404/409).
+3. **Postman collection** – update `documentation/postman/vaulted-money-local-api.postman_collection.json`: add or change the request **and its test assertions**, keep it inside the throwaway-ledger flow, and make sure any setting it changes is restored (see `documentation/postman/README.md`). Update the request counts there if they change.
+4. **Docs** – update `documentation/API.md` (and the README "Using the Local API" section if the quick start changes).
+5. **Verify** – run `pnpm test:coverage`. `src/api/postmanCoverage.test.ts` fails if a route has no Postman request or a request points at a route that no longer exists. For behaviour changes, also run the collection with Newman against a running app (or the in-process harness described in the Postman README) and fix any failing assertion.
+
+Never expose secrets (AI API keys, backup password hashes) through the API, and keep destructive operations behind an explicit confirmation flag.
+
+---
+
 ## Quality checks
 
 ```bash
