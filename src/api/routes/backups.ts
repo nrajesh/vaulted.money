@@ -119,6 +119,9 @@ export const backupRoutes: RouteDef[] = [
     path: "/backups/export",
     summary:
       "Download an unencrypted backup of everything, or one ledger with ?ledger_id=",
+    query: {
+      ledger_id: "Limit the backup to one ledger",
+    },
     handler: (ctx) => {
       if (ctx.query.password !== undefined) {
         throw badRequest(
@@ -133,6 +136,7 @@ export const backupRoutes: RouteDef[] = [
     path: "/backups/export",
     summary:
       "Generate a backup download, optionally for one ledger and/or password-encrypted",
+    body: exportSchema,
     handler: (ctx) => {
       const { ledger_id, password } = parse(exportSchema, ctx.body);
       return buildBackup(ctx, ledger_id, password);
@@ -143,6 +147,7 @@ export const backupRoutes: RouteDef[] = [
     path: "/backups/import",
     summary:
       "Restore a backup. DESTRUCTIVE: replaces existing data and requires confirm_replace=true",
+    body: importSchema,
     handler: async (ctx) => {
       const input = parse(importSchema, ctx.body);
       const dp = ctx.services.dataProvider;
@@ -202,6 +207,7 @@ export const backupRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/backups/schedules/:scheduleId",
     summary: "Enable/disable a scheduled backup or change its frequency",
+    body: schedulePatchSchema,
     handler: async ({ params, body }) => {
       const patch = parse(schedulePatchSchema, body);
       const existing = await db.backup_configs.get(params.scheduleId);

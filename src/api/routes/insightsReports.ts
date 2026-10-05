@@ -49,6 +49,15 @@ export const insightsReportRoutes: RouteDef[] = [
     path: "/ledgers/:ledgerId/analytics",
     summary:
       "Generate spending analytics (from, to, group_by=day|week|month, currency, include_transfers; format=csv or download=true to download)",
+    query: {
+      from: "Earliest date",
+      to: "Latest date",
+      group_by: "day, week or month (default month)",
+      currency: "Report currency (default: ledger currency)",
+      include_transfers: "true to include transfers",
+      format: "json (default) or csv",
+      download: "true to receive JSON as a file",
+    },
     handler: async (ctx) => {
       const { ledger, transactions } = await loadLedgerData(ctx);
       const q = parse(analyticsSchema, ctx.query);
@@ -69,6 +78,10 @@ export const insightsReportRoutes: RouteDef[] = [
     path: "/ledgers/:ledgerId/insights",
     summary:
       "Generate insights: budget health and 30-day spending/activity trends (format=csv or download=true to download)",
+    query: {
+      format: "json (default) or csv",
+      download: "true to receive JSON as a file",
+    },
     handler: async (ctx) => {
       const { ledger, transactions, accounts, vendors, budgets } =
         await loadLedgerData(ctx);
@@ -96,6 +109,13 @@ export const insightsReportRoutes: RouteDef[] = [
     path: "/ledgers/:ledgerId/reports/:reportType",
     summary:
       "Generate a report: income-expense, net-worth or trends (from, to, currency; format=csv or download=true to download)",
+    query: {
+      from: "Earliest date",
+      to: "Latest date (as-of date for net-worth)",
+      currency: "Report currency",
+      format: "json (default) or csv",
+      download: "true to receive JSON as a file",
+    },
     handler: async (ctx) => {
       const type = ctx.params.reportType as ReportType;
       if (!REPORT_TYPES.includes(type)) {

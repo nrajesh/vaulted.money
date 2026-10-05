@@ -65,6 +65,7 @@ export const currencyRoutes: RouteDef[] = [
     method: "POST",
     path: "/currencies",
     summary: "Add a currency with an initial rate (relative to USD)",
+    body: createSchema,
     handler: ({ body }) => {
       const input = parse(createSchema, body);
       const state = readCurrencyState();
@@ -150,6 +151,7 @@ export const currencyRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/currencies/:code",
     summary: "Update a currency's name, symbol or exchange rate",
+    body: patchSchema,
     handler: ({ params, body }) => {
       const patch = parse(patchSchema, body);
       const state = readCurrencyState();

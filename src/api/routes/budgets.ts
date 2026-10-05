@@ -109,6 +109,7 @@ export const budgetRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/budgets",
     summary: "Create a budget or savings goal",
+    body: createSchema,
     handler: async (ctx) => {
       const ledger = await requireLedger(ctx.services, ctx.params.ledgerId);
       const input = parse(createSchema, ctx.body);
@@ -194,6 +195,7 @@ export const budgetRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ledgers/:ledgerId/budgets/:budgetId",
     summary: "Update a budget",
+    body: patchSchema,
     handler: async (ctx) => {
       const existing = await findBudget(ctx);
       const patch = parse(patchSchema, ctx.body);

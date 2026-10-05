@@ -63,6 +63,7 @@ export const categoryRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/categories",
     summary: "Create a category (optionally with sub-categories)",
+    body: createCategorySchema,
     handler: async (ctx) => {
       const { categories } = await load(ctx);
       const input = parse(createCategorySchema, ctx.body);
@@ -85,6 +86,7 @@ export const categoryRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/categories/merge",
     summary: "Merge categories into a target category",
+    body: mergeSchema,
     handler: async (ctx) => {
       const { categories } = await load(ctx);
       const { target, sources } = parse(mergeSchema, ctx.body);
@@ -119,6 +121,7 @@ export const categoryRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ledgers/:ledgerId/categories/:categoryId",
     summary: "Rename a category (propagates to transactions and budgets)",
+    body: nameSchema,
     handler: async (ctx) => {
       const { category, subs } = await findCategory(ctx);
       const { name } = parse(nameSchema, ctx.body);
@@ -146,6 +149,7 @@ export const categoryRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/categories/:categoryId/sub-categories",
     summary: "Create a sub-category",
+    body: nameSchema,
     handler: async (ctx) => {
       const { category, subs } = await findCategory(ctx);
       const { name } = parse(nameSchema, ctx.body);
@@ -167,6 +171,7 @@ export const categoryRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ledgers/:ledgerId/categories/:categoryId/sub-categories/:subCategoryId",
     summary: "Rename a sub-category",
+    body: nameSchema,
     handler: async (ctx) => {
       const { category, subs } = await findCategory(ctx);
       const sub = subs.find((s) => s.id === ctx.params.subCategoryId);

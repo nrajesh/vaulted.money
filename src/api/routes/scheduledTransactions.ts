@@ -75,6 +75,7 @@ export const scheduledTransactionRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/scheduled-transactions",
     summary: "Create a recurring transaction",
+    body: baseSchema,
     handler: async (ctx) => {
       const ledger = await requireLedger(ctx.services, ctx.params.ledgerId);
       const input = parse(baseSchema, ctx.body);
@@ -111,6 +112,7 @@ export const scheduledTransactionRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ledgers/:ledgerId/scheduled-transactions/:scheduledId",
     summary: "Update a recurring transaction",
+    body: patchSchema,
     handler: async (ctx) => {
       const existing = await find(ctx);
       const patch = parse(patchSchema, ctx.body);

@@ -167,7 +167,10 @@ Checklist:
 2. **Unit tests** – update `src/api/api.test.ts`. Cover the success path and the error paths (400/404/409).
 3. **Postman collection** – update `documentation/postman/vaulted-money-local-api.postman_collection.json`: add or change the request **and its test assertions**, keep it inside the throwaway-ledger flow, and make sure any setting it changes is restored (see `documentation/postman/README.md`). Update the request counts there if they change.
 4. **Docs** – update `documentation/API.md` (and the README "Using the Local API" section if the quick start changes).
-5. **Verify** – run `pnpm test:coverage`. `src/api/postmanCoverage.test.ts` fails if a route has no Postman request or a request points at a route that no longer exists. For behaviour changes, also run the collection with Newman against a running app (or the in-process harness described in the Postman README) and fix any failing assertion.
+5. **Verify** – run `pnpm test:coverage`. `src/api/postmanCoverage.test.ts` fails if a route has no Postman request or a request points at a route that no longer exists, and `src/api/postmanRun.test.ts` runs the whole collection with Newman against the real server code and fails on any failed assertion. If response shapes changed, refresh the saved examples (see `documentation/postman/README.md`).
+6. **OpenAPI** – `GET /openapi.json` is generated from the route table. Give new routes a `body` (their zod schema) and `query` descriptions so the spec stays complete.
+
+Conventions for new endpoints: operations that change many records take `dry_run` and report what they would do; deletions require `confirm_delete: true`; AI or network calls are opt-in per request. Where the app has a button for something, reuse its logic (extract it to a shared util, as `src/utils/transactionMaintenance.ts` does) instead of re-implementing it, and say which button it mirrors in the route summary.
 
 Never expose secrets (AI API keys, backup password hashes) through the API, and keep destructive operations behind an explicit confirmation flag.
 

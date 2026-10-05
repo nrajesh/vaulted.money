@@ -4,7 +4,7 @@ This folder contains a ready-made Postman collection that exercises every endpoi
 
 | File | Purpose |
 |---|---|
-| `vaulted-money-local-api.postman_collection.json` | 133 requests in 15 folders, with tests |
+| `vaulted-money-local-api.postman_collection.json` | 202 requests in 18 folders, with tests |
 | `vaulted-money-local-api.postman_environment.json` | `baseUrl` and `token` variables |
 
 You do not need a Postman account or any special permissions. The API only listens on your own computer.
@@ -26,9 +26,9 @@ Use *Current value* for the token so it stays on your machine and is not synced 
 
 Open the collection → **Run** (Collection Runner), keep the order, and run.
 
-- Folders `00`–`12` are the safe flow, then `98 Cleanup`. Requests depend on earlier ones (for example, the ledger created in `01` is used everywhere), so run them in order. Individual requests can be re-sent, but if a folder fails midway, re-run from `01`.
+- Folders `00`–`15` are the safe flow, then `98 Cleanup`. Requests depend on earlier ones (for example, the ledger created in `01` is used everywhere), so run them in order. Individual requests can be re-sent, but if a folder fails midway, re-run from `01`.
 - **Untick `99 Optional (changes your settings)`** unless you want those side effects (it overwrites your stored exchange rates from the internet).
-- A passing run is 131 requests (everything except the two in `99`) with no failed tests.
+- A passing run is 200 requests (everything except the two in `99`) with 545 assertions and no failures.
 
 ### What it touches in your real app
 
@@ -41,6 +41,8 @@ The suite is built so it can run against an app with real data:
 | Languages | Sets the language to the one already active; adds and removes a custom `pmx` language. |
 | AI providers | Creates and deletes a throwaway provider. The default provider is unchanged. |
 | Backups | Exports are read-only. Restores use `ledger_id`, so they replace **only the test ledger**. |
+| Settings | Folder 15 changes future months and restores whatever it found. |
+| AI categorization | `use_ai` is never sent, so nothing is sent to an AI provider. |
 
 Even so, run it against a **backup-protected** install the first time: use *Backups → Export everything* (or the in-app backup) first. If a run is interrupted, delete any leftover **Postman Test Ledger** from the app, and remove the `ZZZ` currency if it appears.
 
@@ -50,13 +52,16 @@ The app UI refreshes during the run and reloads once at the end (deleting a ledg
 
 | Folder | Covers |
 |---|---|
-| 00 Smoke and security | health, endpoint index, missing/wrong token (401), browser `Origin` (403), 404/405 |
+| 00 Smoke and security | health, endpoint index, OpenAPI document, missing/wrong token (401), browser `Origin` (403), 404/405 |
 | 01 Ledgers · 02 Accounts · 03 Vendors · 04 Categories | CRUD, renames, merges, conflict (409) and validation (400) cases |
 | 05 Transactions | create, bulk, linked transfers, every filter, pagination, balance arithmetic |
 | 06 Recurring transactions | CRUD, skip an occurrence, invalid frequency |
 | 07 Budgets · 08 Currencies · 09 Languages · 10 AI providers | CRUD plus checks that API keys are never echoed |
 | 11 Analytics, insights and reports | JSON, CSV and file downloads, currency conversion, error cases |
 | 12 Backups | plain and encrypted export, restore round-trips, wrong password, missing confirmation |
+| 13 Maintenance | Detect Transfers, Cleanup Duplicates, Categorize Missing, Reconcile Balance, de-duplicate and cleanup-unused for accounts, vendors and categories, each as dry run → confirm |
+| 14 CSV import and export | all four CSV exports, imports into a second throwaway ledger, dry runs, malformed files |
+| 15 Settings | read, change and restore the global settings; atomic failure |
 | 98 Cleanup | deletes the test ledger |
 | 99 Optional | refresh exchange rates, set base currency |
 
@@ -95,16 +100,24 @@ npx newman run vaulted-money-local-api.postman_collection.json \
 
 ## Keeping the collection up to date
 
-The collection is part of the API contract. Whenever anything an API entity exposes changes, update the matching requests **and their test assertions** in the same change, then update [API.md](../API.md). The full checklist is in [`documentation/CLAUDE.md`](../CLAUDE.md#local-api-changes).
+Every request has a description (the matching button in the app, a body example, notes) and, where small, a saved example response captured from a real run, so the collection doubles as documentation. The collection is part of the API contract. Whenever anything an API entity exposes changes, update the matching requests **and their test assertions** in the same change, then update [API.md](../API.md). The full checklist is in [`documentation/CLAUDE.md`](../CLAUDE.md#local-api-changes).
 
 This is enforced: `src/api/postmanCoverage.test.ts` (part of `pnpm test`) fails when
 
 - a route in the API has no request in the collection, or
 - a request in the collection calls a route that no longer exists.
 
-It checks coverage, not behaviour, so after changing behaviour also re-run the collection. The collection file is edited directly (it is the source of truth; there is no generator). Conventions to keep:
+Coverage is only half of it: `src/api/postmanRun.test.ts` (also part of `pnpm test`) **runs the whole collection with Newman** against the real server, router and database code and fails on any failed assertion, so a behaviour change that breaks an assertion cannot be merged. The collection file is edited directly (it is the source of truth; there is no generator).
+
+To refresh the saved example responses after changing response shapes:
+
+```bash
+POSTMAN_REPORT=/tmp/run.json pnpm vitest run src/api/postmanRun
+node scripts/postman-add-examples.mjs /tmp/run.json
+``` Conventions to keep:
 
 - Work inside the throwaway ledger and clean up after yourself; restore any global setting a request changes.
 - Save created ids with `pm.collectionVariables.set(...)` and reuse them as `{{variables}}`.
-- Give every request a `Status is N` test and assert the important fields.
+- Give every request a `Status code is N` test, check `Content-Type` for JSON, and assert the important fields with `pm.expect(...)`.
+- Never assert on data the suite did not create (the collection must pass on an empty install).
 - Negative tests that deliberately hit a non-existent route (405/404 checks) go in the `NEGATIVE_TESTS` allowlist in `postmanCoverage.test.ts`.

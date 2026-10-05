@@ -70,6 +70,7 @@ export const languageRoutes: RouteDef[] = [
     method: "POST",
     path: "/languages/custom",
     summary: "Add or replace a custom language with its translations",
+    body: customSchema,
     handler: ({ body }) => {
       const input = parse(customSchema, body);
       if (isBuiltIn(input.code)) {

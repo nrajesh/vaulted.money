@@ -79,6 +79,7 @@ The README is intentionally short. Use these pages for the details:
 | [User Guide](documentation/USER_GUIDE.md) | What the app does and how to use the main workflows. |
 | [Developer Guide](documentation/DEVELOPER_GUIDE.md) | Project structure, quality checks, AI provider notes, and contribution workflow. |
 | [Local API](documentation/API.md) | Desktop REST API for scripts: manage data and generate reports and backups. |
+| [API cookbook](documentation/API_COOKBOOK.md) | Recipes for using the app without the GUI, and for building your own interface. |
 | [Architecture](documentation/ARCHITECTURE.md) | Technical diagrams and system design. |
 | [Why Vaulted Money Exists](documentation/WHY_VAULTED_MONEY.md) | Motivation, privacy stance, and project philosophy. |
 | [Support](documentation/SUPPORT.md) | How to get help. |
@@ -108,7 +109,7 @@ curl -H "$AUTH" -H "Content-Type: application/json" -X POST -OJ $VM/backups/expo
 
 `GET $VM` lists every endpoint. The app must be running (closing the window only hides it). Restoring a backup replaces data and needs `"confirm_replace": true`.
 
-The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md). To try it from Postman, import the [ready-made collection](documentation/postman/README.md).
+Beyond basic data entry the API covers the app's clean-up tools (detect transfers, remove duplicates, categorize, reconcile balances, merge and clean up accounts/vendors/categories), CSV import and export, settings, and an OpenAPI description at `GET $VM/openapi.json` for generating your own client. The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md); [recipes for scripts, month-end routines and building your own interface](documentation/API_COOKBOOK.md) are in the cookbook. To try it from Postman, import the [ready-made collection](documentation/postman/README.md).
 
 ## Support the Project
 

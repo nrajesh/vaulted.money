@@ -138,6 +138,135 @@ const parseAIResponse = <T>(text: string): T => {
   }
 };
 
+/**
+ * Asks an AI provider to categorize vendors. Plain function (no React) so the
+ * Transactions page and the Local API share one implementation.
+ */
+export const categorizeVendorsBulk = async (
+  provider: AIProvider,
+  apiKey: string,
+  vendorNames: string[],
+  categories: Category[],
+  subCategories: SubCategory[],
+): Promise<BulkCategorizeResult> => {
+  if (!apiKey || !provider) {
+    throw new Error("AI Provider or API Key is not configured.");
+  }
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    throw new Error("You must be online to use Auto-Categorize.");
+  }
+
+  const prompt = buildBulkPrompt(vendorNames, categories, subCategories);
+  let resultJson = "";
+
+  try {
+    if (provider.type === "OPENAI" || provider.type === "CUSTOM") {
+      const response = await fetch(
+        provider.baseUrl.replace(/\/$/, "") + "/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model:
+              provider.model ||
+              (provider.type === "OPENAI" ? "gpt-4o" : undefined),
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1,
+            response_format:
+              provider.type === "OPENAI" || provider.baseUrl.includes("openai")
+                ? { type: "json_object" }
+                : undefined,
+          }),
+        },
+      );
+
+      if (!response.ok)
+        throw new Error(`${provider.name} Error: ${response.statusText}`);
+      const data = await response.json();
+      resultJson = data.choices[0].message.content;
+    } else if (provider.type === "GEMINI") {
+      const url = buildGeminiUrl(provider, apiKey);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: "application/json",
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `Gemini Error: ${response.status} ${response.statusText}${errorData.error?.message ? ` - ${errorData.error.message}` : ""}`,
+        );
+      }
+      const data = await response.json();
+      resultJson = data.candidates[0].content.parts[0].text;
+    } else if (provider.type === "PERPLEXITY") {
+      const response = await fetch(
+        provider.baseUrl.replace(/\/$/, "") + "/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: provider.model || "llama-3.1-8b-instruct",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1,
+          }),
+        },
+      );
+
+      if (!response.ok)
+        throw new Error(`Perplexity Error: ${response.statusText}`);
+      const data = await response.json();
+      resultJson = data.choices[0].message.content;
+    } else if (provider.type === "MISTRAL") {
+      const response = await fetch(
+        provider.baseUrl.replace(/\/$/, "") + "/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: provider.model || "mistral-tiny",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1,
+            response_format: { type: "json_object" },
+          }),
+        },
+      );
+
+      if (!response.ok)
+        throw new Error(`Mistral Error: ${response.statusText}`);
+      const data = await response.json();
+      resultJson = data.choices[0].message.content;
+    }
+
+    return parseAIResponse<BulkCategorizeResult>(resultJson);
+  } catch (error: unknown) {
+    console.error("AutoCategorize Bulk Error:", error);
+    throw new Error(
+      (error as Error).message || "Failed to parse AI response.",
+      { cause: error },
+    );
+  }
+};
+
 export const useAutoCategorize = () => {
   const { config } = useAIConfig();
 
@@ -324,121 +453,13 @@ export const useAutoCategorize = () => {
     if (!config.apiKey || !config.provider) {
       throw new Error("AI Provider or API Key is not configured.");
     }
-    if (!navigator.onLine) {
-      throw new Error("You must be online to use Auto-Categorize.");
-    }
-
-    const { provider, apiKey } = config;
-    const prompt = buildBulkPrompt(vendorNames, categories, subCategories);
-    let resultJson = "";
-
-    try {
-      if (provider.type === "OPENAI" || provider.type === "CUSTOM") {
-        const response = await fetch(
-          provider.baseUrl.replace(/\/$/, "") + "/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model:
-                provider.model ||
-                (provider.type === "OPENAI" ? "gpt-4o" : undefined),
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.1,
-              response_format:
-                provider.type === "OPENAI" ||
-                provider.baseUrl.includes("openai")
-                  ? { type: "json_object" }
-                  : undefined,
-            }),
-          },
-        );
-
-        if (!response.ok)
-          throw new Error(`${provider.name} Error: ${response.statusText}`);
-        const data = await response.json();
-        resultJson = data.choices[0].message.content;
-      } else if (provider.type === "GEMINI") {
-        const url = buildGeminiUrl(provider, apiKey);
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.1,
-              responseMimeType: "application/json",
-            },
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            `Gemini Error: ${response.status} ${response.statusText}${errorData.error?.message ? ` - ${errorData.error.message}` : ""}`,
-          );
-        }
-        const data = await response.json();
-        resultJson = data.candidates[0].content.parts[0].text;
-      } else if (provider.type === "PERPLEXITY") {
-        const response = await fetch(
-          provider.baseUrl.replace(/\/$/, "") + "/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: provider.model || "llama-3.1-8b-instruct",
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.1,
-            }),
-          },
-        );
-
-        if (!response.ok)
-          throw new Error(`Perplexity Error: ${response.statusText}`);
-        const data = await response.json();
-        resultJson = data.choices[0].message.content;
-      } else if (provider.type === "MISTRAL") {
-        const response = await fetch(
-          provider.baseUrl.replace(/\/$/, "") + "/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: provider.model || "mistral-tiny",
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.1,
-              response_format: { type: "json_object" },
-            }),
-          },
-        );
-
-        if (!response.ok)
-          throw new Error(`Mistral Error: ${response.statusText}`);
-        const data = await response.json();
-        resultJson = data.choices[0].message.content;
-      }
-
-      return parseAIResponse<BulkCategorizeResult>(resultJson);
-    } catch (error: unknown) {
-      console.error("AutoCategorize Bulk Error:", error);
-      throw new Error(
-        (error as Error).message || "Failed to parse AI response.",
-        { cause: error },
-      );
-    }
+    return categorizeVendorsBulk(
+      config.provider,
+      config.apiKey,
+      vendorNames,
+      categories,
+      subCategories,
+    );
   };
 
   return { autoCategorize, autoCategorizeBulk, getHistoricalMapping };

@@ -57,6 +57,7 @@ export const aiProviderRoutes: RouteDef[] = [
     method: "POST",
     path: "/ai-providers",
     summary: "Add an AI provider, optionally with its API key",
+    body: createSchema,
     handler: async ({ body, services }) => {
       const { api_key, isDefault, ...fields } = parse(createSchema, body);
       const created = await services.dataProvider.addAIProvider({
@@ -82,6 +83,7 @@ export const aiProviderRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ai-providers/:providerId",
     summary: "Update an AI provider",
+    body: patchSchema,
     handler: async (ctx) => {
       const existing = await find(ctx);
       const { api_key, isDefault, ...fields } = parse(patchSchema, ctx.body);

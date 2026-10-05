@@ -67,6 +67,7 @@ export const accountRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/accounts",
     summary: "Create an account",
+    body: createSchema,
     handler: async (ctx) => {
       const { params, body, services } = ctx;
       await requireLedger(services, params.ledgerId);
@@ -108,6 +109,7 @@ export const accountRoutes: RouteDef[] = [
     path: "/ledgers/:ledgerId/accounts/:accountId",
     summary:
       "Update an account (renames and currency changes propagate to its transactions)",
+    body: patchSchema,
     handler: async (ctx) => {
       const account = await findAccount(ctx);
       const patch = parse(patchSchema, ctx.body);

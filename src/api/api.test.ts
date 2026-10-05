@@ -786,3 +786,637 @@ describe("analytics, insights and reports", () => {
     expect(insights.trends).toBeDefined();
   });
 });
+
+describe("maintenance: transfers, duplicates, categorize, reconcile", () => {
+  beforeEach(clearAll);
+
+  const addTx = (ledgerId: string, tx: Record<string, unknown>) =>
+    ok<Entity>(call("POST", `/ledgers/${ledgerId}/transactions`, tx), 201);
+
+  it("detects and links transfer pairs, with a dry run first", async () => {
+    const ledger = await createLedger();
+    // Two legs of one transfer, entered by hand without being linked.
+    await addTx(ledger.id, {
+      date: "2020-01-10",
+      amount: -150,
+      account: "Checking",
+      vendor: "Savings",
+      category: "Misc",
+    });
+    await addTx(ledger.id, {
+      date: "2020-01-10",
+      amount: 150,
+      account: "Savings",
+      vendor: "Checking",
+      category: "Misc",
+    });
+    await addTx(ledger.id, {
+      date: "2020-01-12",
+      amount: -9,
+      account: "Checking",
+      vendor: "Cafe",
+      category: "Food",
+    });
+    const base = `/ledgers/${ledger.id}/transactions/detect-transfers`;
+
+    const preview = await ok<{
+      pairs_found: number;
+      linked: number;
+      pairs: unknown[];
+    }>(call("POST", base, { dry_run: true }));
+    expect(preview).toMatchObject({ pairs_found: 1, linked: 0 });
+    const untouched = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/transactions`),
+    );
+    expect(untouched.data.every((t) => !t.transfer_id)).toBe(true);
+
+    const result = await ok<{ linked: number }>(call("POST", base, {}));
+    expect(result.linked).toBe(1);
+    const after = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/transactions`, undefined, {
+        category: "Transfer",
+      }),
+    );
+    expect(after.data).toHaveLength(2);
+    // Running it again finds nothing new.
+    expect(
+      (await ok<{ pairs_found: number }>(call("POST", base, {}))).pairs_found,
+    ).toBe(0);
+  });
+
+  it("cleans duplicate recurring instances only after confirmation", async () => {
+    const ledger = await createLedger();
+    const base = {
+      user_id: ledger.id,
+      date: "2020-02-01",
+      amount: -50,
+      currency: "USD",
+      account: "Bank",
+      vendor: "Gym",
+      category: "Health",
+      recurrence_id: "r1",
+    };
+    await db.transactions.bulkAdd([
+      { ...base, id: "t1", created_at: "2020-02-01T00:00:00Z" },
+      { ...base, id: "t2", created_at: "2020-02-01T00:00:01Z" },
+      { ...base, id: "t3", created_at: "2020-02-01T00:00:02Z" },
+      {
+        ...base,
+        id: "t4",
+        date: "2020-03-01",
+        created_at: "2020-03-01T00:00:00Z",
+      },
+    ]);
+    const url = `/ledgers/${ledger.id}/transactions/cleanup-duplicates`;
+
+    const preview = await ok<{
+      duplicates_found: number;
+      transaction_ids: string[];
+    }>(call("POST", url, { dry_run: true }));
+    expect(preview.transaction_ids.sort()).toEqual(["t2", "t3"]);
+    expect((await call("POST", url, {})).status).toBe(400); // needs confirm_delete
+    const done = await ok<{ deleted: number }>(
+      call("POST", url, { confirm_delete: true }),
+    );
+    expect(done.deleted).toBe(2);
+    expect(
+      (
+        await ok<{ total: number }>(
+          call("GET", `/ledgers/${ledger.id}/transactions`),
+        )
+      ).total,
+    ).toBe(2);
+  });
+
+  it("categorizes uncategorized transactions from vendor history", async () => {
+    const ledger = await createLedger();
+    await addTx(ledger.id, {
+      date: "2020-04-01",
+      amount: -4,
+      account: "Bank",
+      vendor: "Starbucks",
+      category: "Coffee",
+      sub_category: "Latte",
+    });
+    await addTx(ledger.id, {
+      date: "2020-04-05",
+      amount: -5,
+      account: "Bank",
+      vendor: "starbucks",
+      category: "Uncategorized",
+    });
+    await addTx(ledger.id, {
+      date: "2020-04-06",
+      amount: -7,
+      account: "Bank",
+      vendor: "Mystery Shop",
+      category: "Uncategorized",
+    });
+    const url = `/ledgers/${ledger.id}/transactions/categorize-missing`;
+
+    const preview = await ok<{
+      matched: number;
+      categorized: number;
+      still_uncategorized: number;
+    }>(call("POST", url, { dry_run: true }));
+    expect(preview).toMatchObject({
+      matched: 1,
+      categorized: 0,
+      still_uncategorized: 1,
+    });
+
+    const result = await ok<{
+      categorized: number;
+      sources: { history: number; ai: number };
+    }>(call("POST", url, {}));
+    expect(result).toMatchObject({
+      categorized: 1,
+      sources: { history: 1, ai: 0 },
+    });
+    const coffee = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/transactions`, undefined, {
+        category: "Coffee",
+      }),
+    );
+    expect(coffee.data).toHaveLength(2);
+    expect(
+      coffee.data.some(
+        (t) => t.sub_category === "Latte" && t.vendor === "starbucks",
+      ),
+    ).toBe(true);
+
+    // AI is opt-in and refuses to run without a configured provider.
+    const noAi = await call("POST", url, { use_ai: true });
+    expect(noAi.status).toBe(400);
+    expect(noAi.body).toMatchObject({ error: { code: "ai_not_configured" } });
+  });
+
+  it("reconciles account balances", async () => {
+    const ledger = await createLedger();
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/accounts`, {
+        name: "Bank",
+        currency: "USD",
+        starting_balance: 100,
+      }),
+      201,
+    );
+    await addTx(ledger.id, {
+      date: "2020-05-01",
+      amount: -30,
+      account: "Bank",
+      vendor: "Shop",
+      category: "Misc",
+    });
+    const url = `/ledgers/${ledger.id}/accounts/reconcile`;
+
+    const preview = await ok<{
+      results: { system_balance: number; difference: number }[];
+    }>(
+      call("POST", url, {
+        dry_run: true,
+        adjustments: [{ account: "Bank", actual_balance: 80 }],
+      }),
+    );
+    expect(preview.results[0]).toMatchObject({
+      system_balance: 70,
+      difference: 10,
+    });
+
+    const done = await ok<{
+      adjusted: number;
+      results: { transaction_id: string }[];
+    }>(
+      call("POST", url, {
+        adjustments: [{ account: "Bank", actual_balance: 80 }],
+      }),
+    );
+    expect(done.adjusted).toBe(1);
+    const tx = await ok<Entity>(
+      call(
+        "GET",
+        `/ledgers/${ledger.id}/transactions/${done.results[0].transaction_id}`,
+      ),
+    );
+    expect(tx).toMatchObject({
+      vendor: "Balance Adjustment",
+      category: "Adjustment",
+      amount: 10,
+    });
+    const accounts = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/accounts`),
+    );
+    expect(accounts.data[0].balance).toBe(80);
+
+    // Already matching: nothing to adjust. Unknown account: 404.
+    const again = await ok<{ adjusted: number }>(
+      call("POST", url, {
+        adjustments: [{ account: "Bank", actual_balance: 80 }],
+      }),
+    );
+    expect(again.adjusted).toBe(0);
+    expect(
+      (
+        await call("POST", url, {
+          adjustments: [{ account: "Nope", actual_balance: 1 }],
+        })
+      ).status,
+    ).toBe(404);
+  });
+});
+
+describe("maintenance: duplicates and unused entities", () => {
+  beforeEach(clearAll);
+
+  it("suggests duplicates and merges accounts", async () => {
+    const ledger = await createLedger();
+    for (const name of ["Joint Checking", "joint  checking.", "Savings"]) {
+      await ok(
+        call("POST", `/ledgers/${ledger.id}/accounts`, {
+          name,
+          currency: "USD",
+        }),
+        201,
+      );
+    }
+    const groups = await ok<{
+      groups_found: number;
+      data: { suggested_target: string; names: string[] }[];
+    }>(call("GET", `/ledgers/${ledger.id}/accounts/duplicates`));
+    expect(groups.groups_found).toBe(1);
+    expect(groups.data[0].names).toHaveLength(2);
+
+    const target = groups.data[0].suggested_target;
+    const source = groups.data[0].names.find((n) => n !== target)!;
+    await addTx(ledger.id, {
+      date: "2020-06-01",
+      amount: -5,
+      account: source,
+      vendor: "Shop",
+      category: "Misc",
+    });
+    expect(
+      (
+        await call("POST", `/ledgers/${ledger.id}/accounts/merge`, {
+          target,
+          sources: [source],
+        })
+      ).status,
+    ).toBe(204);
+    const txs = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/transactions`),
+    );
+    expect(txs.data[0].account).toBe(target);
+    expect(
+      (
+        await call("POST", `/ledgers/${ledger.id}/accounts/merge`, {
+          target,
+          sources: ["Ghost"],
+        })
+      ).status,
+    ).toBe(404);
+  });
+
+  const addTx = (ledgerId: string, tx: Record<string, unknown>) =>
+    ok<Entity>(call("POST", `/ledgers/${ledgerId}/transactions`, tx), 201);
+
+  it("lists and removes unused vendors and categories safely", async () => {
+    const ledger = await createLedger();
+    await addTx(ledger.id, {
+      date: "2020-07-01",
+      amount: -1,
+      account: "Bank",
+      vendor: "Used Vendor",
+      category: "Used Cat",
+    });
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/vendors`, { name: "Orphan Vendor" }),
+      201,
+    );
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/vendors`, { name: "orphan vendor " }),
+      201,
+    );
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/categories`, { name: "Orphan Cat" }),
+      201,
+    );
+    // A recurring schedule keeps its vendor and category alive.
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/scheduled-transactions`, {
+        date: "2030-01-01",
+        amount: -1,
+        account: "Bank",
+        vendor: "Sched Vendor",
+        category: "Sched Cat",
+        frequency: "1m",
+      }),
+      201,
+    );
+
+    const vendors = await ok<{ data: { name: string }[] }>(
+      call("GET", `/ledgers/${ledger.id}/vendors/unused`),
+    );
+    expect(vendors.data.map((v) => v.name).sort()).toEqual([
+      "Orphan Vendor",
+      "orphan vendor",
+    ]);
+    const cats = await ok<{ data: { name: string }[] }>(
+      call("GET", `/ledgers/${ledger.id}/categories/unused`),
+    );
+    expect(cats.data.map((c) => c.name)).toEqual(["Orphan Cat"]);
+
+    const dupes = await ok<{ groups_found: number }>(
+      call("GET", `/ledgers/${ledger.id}/vendors/duplicates`),
+    );
+    expect(dupes.groups_found).toBe(1);
+
+    const url = `/ledgers/${ledger.id}/vendors/cleanup`;
+    expect(
+      (
+        await ok<{ unused_found: number; deleted: number }>(
+          call("POST", url, { dry_run: true }),
+        )
+      ).deleted,
+    ).toBe(0);
+    expect((await call("POST", url, {})).status).toBe(400);
+    const usedId = (
+      await ok<{ data: Entity[] }>(call("GET", `/ledgers/${ledger.id}/vendors`))
+    ).data.find((v) => v.name === "Used Vendor")!.id;
+    expect(
+      (await call("POST", url, { ids: [usedId], confirm_delete: true })).status,
+    ).toBe(400);
+    expect(
+      (
+        await ok<{ deleted: number }>(
+          call("POST", url, { confirm_delete: true }),
+        )
+      ).deleted,
+    ).toBe(2);
+
+    const catUrl = `/ledgers/${ledger.id}/categories/cleanup`;
+    expect(
+      (
+        await ok<{ deleted: number }>(
+          call("POST", catUrl, { confirm_delete: true }),
+        )
+      ).deleted,
+    ).toBe(1);
+    const remaining = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/categories`),
+    );
+    expect(remaining.data.map((c) => c.name).sort()).toEqual([
+      "Sched Cat",
+      "Used Cat",
+    ]);
+  });
+});
+
+describe("CSV import and export", () => {
+  beforeEach(clearAll);
+
+  it("round-trips transactions in the app's CSV format", async () => {
+    const source = await createLedger();
+    await ok(
+      call("POST", `/ledgers/${source.id}/accounts`, {
+        name: "Bank",
+        currency: "USD",
+      }),
+      201,
+    );
+    for (const tx of [
+      {
+        date: "2020-08-01",
+        amount: -12.5,
+        account: "Bank",
+        vendor: "=SUM(A1)",
+        category: "Food",
+        remarks: "a;b",
+      },
+      {
+        date: "2020-08-02",
+        amount: 100,
+        account: "Bank",
+        vendor: "Employer",
+        category: "Salary",
+      },
+    ]) {
+      await ok(call("POST", `/ledgers/${source.id}/transactions`, tx), 201);
+    }
+    const exported = await call(
+      "GET",
+      `/ledgers/${source.id}/transactions/export`,
+    );
+    expect(exported.file?.contentType).toContain("text/csv");
+    const csv = exported.file!.content;
+    expect(csv.split("\r\n")[0]).toBe(
+      "Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date",
+    );
+    expect(csv).toContain("'=SUM(A1)"); // formula injection neutralised
+    expect(csv).toContain("01/08/2020");
+
+    const target = await createLedger();
+    const dry = await ok<{ imported: number; rows: number }>(
+      call("POST", `/ledgers/${target.id}/transactions/import`, {
+        csv,
+        dry_run: true,
+      }),
+    );
+    expect(dry).toMatchObject({ rows: 2, imported: 0 });
+    const result = await ok<{ imported: number; skipped: number }>(
+      call("POST", `/ledgers/${target.id}/transactions/import`, { csv }),
+      201,
+    );
+    expect(result).toMatchObject({ imported: 2, skipped: 0 });
+    const copied = await ok<{ data: Entity[]; total: number }>(
+      call("GET", `/ledgers/${target.id}/transactions`),
+    );
+    expect(copied.total).toBe(2);
+    expect(
+      copied.data.some((t) => t.amount === -12.5 && t.account === "Bank"),
+    ).toBe(true);
+  });
+
+  it("rejects malformed transaction CSVs with useful details", async () => {
+    const ledger = await createLedger();
+    const url = `/ledgers/${ledger.id}/transactions/import`;
+    const res = await call("POST", url, { csv: "Date;Amount\n01/01/2020;5" });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain("Account");
+    expect((await call("POST", url, { csv: "" })).status).toBe(400);
+  });
+
+  it("exports and imports accounts, vendors and categories", async () => {
+    const a = await createLedger();
+    await ok(
+      call("POST", `/ledgers/${a.id}/accounts`, {
+        name: "Main, Joint",
+        currency: "EUR",
+        starting_balance: 250,
+        remarks: 'He said "hi"',
+      }),
+      201,
+    );
+    await ok(call("POST", `/ledgers/${a.id}/vendors`, { name: "Cafe" }), 201);
+    await ok(
+      call("POST", `/ledgers/${a.id}/categories`, {
+        name: "Food",
+        sub_categories: ["Takeaway", "Groceries"],
+      }),
+      201,
+    );
+    const b = await createLedger();
+
+    for (const [kind, header] of [
+      ["accounts", "Account Name,Currency,Starting Balance,Remarks"],
+      ["vendors", "Vendor Name"],
+      ["categories", "Category Name,Sub Category Name"],
+    ] as const) {
+      const exported = await call("GET", `/ledgers/${a.id}/${kind}/export`);
+      expect(exported.file!.content.split("\r\n")[0]).toBe(header);
+      const csv = exported.file!.content;
+      const dry = await ok<{ created: number }>(
+        call("POST", `/ledgers/${b.id}/${kind}/import`, { csv, dry_run: true }),
+      );
+      expect(dry.created).toBeGreaterThan(0);
+      await ok(call("POST", `/ledgers/${b.id}/${kind}/import`, { csv }), 201);
+      // Importing again creates nothing new.
+      const again = await ok<{ created: number }>(
+        call("POST", `/ledgers/${b.id}/${kind}/import`, { csv }),
+        201,
+      );
+      expect(again.created).toBe(0);
+    }
+
+    const accounts = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${b.id}/accounts`),
+    );
+    expect(accounts.data[0]).toMatchObject({
+      name: "Main, Joint",
+      currency: "EUR",
+      starting_balance: 250,
+    });
+    const cats = await ok<{ data: { sub_categories: unknown[] }[] }>(
+      call("GET", `/ledgers/${b.id}/categories`),
+    );
+    expect(cats.data[0].sub_categories).toHaveLength(2);
+    expect(
+      (
+        await call("POST", `/ledgers/${b.id}/vendors/import`, {
+          csv: "Wrong\nx",
+        })
+      ).status,
+    ).toBe(400);
+  });
+});
+
+describe("settings and ledger shape", () => {
+  beforeEach(clearAll);
+
+  it("reads and changes global settings atomically", async () => {
+    const defaults = await ok<Record<string, unknown>>(
+      call("GET", "/settings"),
+    );
+    expect(defaults).toMatchObject({
+      future_months: 2,
+      default_ai_provider_id: null,
+      ai_enabled: false,
+    });
+
+    const provider = await ok<Entity>(
+      call("POST", "/ai-providers", {
+        name: "P",
+        type: "CUSTOM",
+        baseUrl: "http://localhost:1/v1",
+      }),
+      201,
+    );
+    const changed = await ok<Record<string, unknown>>(
+      call("PATCH", "/settings", {
+        future_months: 6,
+        base_currency: "eur",
+        language: "es",
+        default_ai_provider_id: provider.id,
+      }),
+    );
+    expect(changed).toMatchObject({
+      future_months: 6,
+      base_currency: "EUR",
+      language: "es",
+      default_ai_provider_id: provider.id,
+      ai_enabled: true,
+    });
+    expect(localStorage.getItem("futureMonths")).toBe("6");
+
+    // A bad value changes nothing.
+    expect(
+      (await call("PATCH", "/settings", { future_months: 9, language: "xx" }))
+        .status,
+    ).toBe(404);
+    expect(
+      (await ok<{ future_months: number }>(call("GET", "/settings")))
+        .future_months,
+    ).toBe(6);
+    expect(
+      (await call("PATCH", "/settings", { future_months: -1 })).status,
+    ).toBe(400);
+    expect(
+      (await call("PATCH", "/settings", { default_ai_provider_id: "nope" }))
+        .status,
+    ).toBe(404);
+
+    const disabled = await ok<Record<string, unknown>>(
+      call("PATCH", "/settings", { default_ai_provider_id: null }),
+    );
+    expect(disabled).toMatchObject({
+      default_ai_provider_id: null,
+      ai_enabled: false,
+    });
+  });
+
+  it("gives every ledger the same shape", async () => {
+    const created = await createLedger();
+    expect(created).toMatchObject({ icon: "building", short_name: "" });
+    // A ledger stored without these fields (older data) is normalised on read.
+    await db.ledgers.put({
+      id: "legacy",
+      name: "Legacy",
+      currency: "USD",
+      created_at: new Date().toISOString(),
+      last_accessed: new Date().toISOString(),
+    });
+    const list = await ok<{ data: Entity[] }>(call("GET", "/ledgers"));
+    expect(
+      list.data.every(
+        (l) => typeof l.icon === "string" && typeof l.short_name === "string",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("OpenAPI document", () => {
+  it("describes every route with its request schema", async () => {
+    const spec = await ok<{
+      openapi: string;
+      paths: Record<
+        string,
+        Record<
+          string,
+          { requestBody?: unknown; parameters: { name: string }[] }
+        >
+      >;
+    }>(call("GET", "/openapi.json"));
+    expect(spec.openapi).toBe("3.1.0");
+    const create = spec.paths["/ledgers"].post;
+    expect(JSON.stringify(create.requestBody)).toContain("currency");
+    expect(
+      spec.paths["/ledgers/{ledgerId}/transactions"].get.parameters.map(
+        (p) => p.name,
+      ),
+    ).toEqual(expect.arrayContaining(["ledgerId", "from", "limit"]));
+    expect(
+      spec.paths["/ledgers/{ledgerId}/accounts/reconcile"].post.requestBody,
+    ).toBeDefined();
+    expect(Object.keys(spec.paths).length).toBeGreaterThan(50);
+  });
+});

@@ -34,6 +34,9 @@ export const vendorRoutes: RouteDef[] = [
     method: "GET",
     path: "/ledgers/:ledgerId/vendors",
     summary: "List vendors (add ?include_accounts=true to include accounts)",
+    query: {
+      include_accounts: "true to include accounts",
+    },
     handler: async ({ params, query, services }) => {
       await requireLedger(services, params.ledgerId);
       const vendors = await services.dataProvider.getAllVendors(
@@ -49,6 +52,7 @@ export const vendorRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/vendors",
     summary: "Create a vendor",
+    body: nameSchema,
     handler: async ({ params, body, services }) => {
       await requireLedger(services, params.ledgerId);
       const { name } = parse(nameSchema, body);
@@ -71,6 +75,7 @@ export const vendorRoutes: RouteDef[] = [
     path: "/ledgers/:ledgerId/vendors/merge",
     summary:
       "Merge vendors into a target vendor, re-pointing their transactions",
+    body: mergeSchema,
     handler: async ({ params, body, services }) => {
       await requireLedger(services, params.ledgerId);
       const { target, sources } = parse(mergeSchema, body);
@@ -99,6 +104,7 @@ export const vendorRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ledgers/:ledgerId/vendors/:vendorId",
     summary: "Rename a vendor (propagates to transactions and budgets)",
+    body: nameSchema,
     handler: async (ctx) => {
       const vendor = await findVendor(ctx);
       const { name } = parse(nameSchema, ctx.body);

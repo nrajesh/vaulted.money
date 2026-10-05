@@ -20,9 +20,9 @@ curl -H "Authorization: Bearer $VM_TOKEN" $VM/ledgers
 curl -H "Authorization: Bearer $VM_TOKEN" $VM            # list every endpoint
 ```
 
-`GET /api/v1` returns the full, current route table, so it is always the authoritative reference.
+`GET /api/v1` returns the full, current route table, and `GET /api/v1/openapi.json` an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) description generated from the code (request bodies included), so they are always the authoritative reference.
 
-Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every endpoint.
+Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every endpoint. Building your own app or scripts? See the [API cookbook](API_COOKBOOK.md) and the machine-readable spec at `GET /api/v1/openapi.json`.
 
 ## Conventions
 
@@ -150,6 +150,54 @@ Restoring **replaces** existing data (everything, or the target ledger with `led
 
 Passwords are never accepted in the URL; use `POST` for encrypted exports.
 
+### Maintenance (the clean-up buttons)
+API versions of the maintenance buttons in the app. **Every operation that changes data accepts `dry_run: true` to preview it, and deletions also need `confirm_delete: true`.** Do the dry run first, read the result, then repeat without it.
+
+| App button | Endpoint | Body |
+|---|---|---|
+| Transactions → **Detect Transfers** | `POST /ledgers/{id}/transactions/detect-transfers` | `{dry_run?}` |
+| Transactions → **Cleanup Duplicates** | `POST /ledgers/{id}/transactions/cleanup-duplicates` | `{dry_run?, confirm_delete?}` |
+| Transactions → **Categorize Missing** | `POST /ledgers/{id}/transactions/categorize-missing` | `{dry_run?, use_ai?}` |
+| Accounts → **Reconcile Balance** | `POST /ledgers/{id}/accounts/reconcile` | `{adjustments:[{account, actual_balance}], date?, dry_run?}` |
+| Accounts / Vendors / Categories → **De-duplicate** | `GET …/accounts\|vendors\|categories/duplicates` (suggestions), then `POST …/accounts/merge`, `…/vendors/merge`, `…/categories/merge` | `{target, sources:[…]}` |
+| Vendors / Categories → **Cleanup Unused** | `GET …/vendors\|categories/unused`, then `POST …/vendors\|categories/cleanup` | `{ids?, dry_run?, confirm_delete?}` |
+
+How each behaves:
+
+- **Detect Transfers** pairs transactions on different accounts, at most one day apart, that cancel out in the same currency or look like a transfer (swapped account/vendor, both `Transfer`, or both vendors mentioning transfer). It links them with a shared `transfer_id`. The same code runs behind the app's button.
+- **Cleanup Duplicates** removes extra copies of a recurring transaction created twice on the same day, keeping the oldest.
+- **Categorize Missing** gives uncategorized transactions the category last used with the same vendor. **AI is opt-in:** with `use_ai: true` it also asks your default AI provider about vendors with no history. That sends vendor names (never amounts) to the provider and fails with `400 ai_not_configured` if no provider and key are set. The default is `false`, so nothing leaves the device unless you ask.
+- **Reconcile Balance** compares the real balance you give with the app's balance (as of `date`, default today) and creates one `Balance Adjustment` transaction (category `Adjustment`) for the difference. Accounts that already match are left alone.
+- **Duplicate suggestions** group names that are identical after ignoring case, accents, punctuation and spacing, and suggest which to keep. (The app makes you pick duplicates by hand; the merge itself is the same.)
+- **Unused** is stricter than the app: a vendor or category counts as unused only if no transaction, recurring transaction or budget refers to it, so cleanup never silently deletes schedules or budgets. `Others` and `Transfer` are never listed. `ids` may only name currently-unused entries.
+
+### CSV import and export
+Exactly the formats of the app's **Import CSV / Export CSV** buttons, so files move freely between the app and the API.
+
+| | Export | Import (body `{csv, dry_run?}`) |
+|---|---|---|
+| Transactions | `GET /ledgers/{id}/transactions/export` (same filters as the list; `?delimiter=,`) | `POST …/transactions/import` also takes `delimiter?` and `detect_transfers?` (default true) |
+| Accounts | `GET …/accounts/export` | `POST …/accounts/import` |
+| Vendors | `GET …/vendors/export` | `POST …/vendors/import` |
+| Categories | `GET …/categories/export` | `POST …/categories/import` |
+
+- Transaction files use `;` as the delimiter and `DD/MM/YYYY` dates, with the columns `Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date`. Accounts are `Account Name,Currency,Starting Balance,Remarks`; vendors `Vendor Name`; categories `Category Name,Sub Category Name`.
+- Imports create missing accounts, vendors and categories, never overwrite existing ones, and report `imported`/`created`, `already_existed` and skipped row numbers. Use `dry_run` to validate a file first.
+- Exports escape cells starting with `=`, `+`, `-` or `@` so spreadsheets do not run them as formulas.
+- CSV is for spreadsheets and bank exports. For a complete, lossless copy (budgets, schedules, sub-category tags, settings) use [Backups](#backups).
+
+### Settings
+`GET /settings` and `PATCH /settings`: the Settings page as one resource.
+
+| Field | Settings page | Notes |
+|---|---|---|
+| `base_currency` | Default Currency | Must be an active currency with a rate |
+| `language` | Language | Built-in or custom language code |
+| `future_months` | Future Transactions | Whole number 0–120 |
+| `default_ai_provider_id` | Default AI Provider | A provider id, or `null` for **None (Disabled)** |
+
+Send any subset; all values are validated first, so a bad value changes nothing. Per-ledger settings (name, currency, icon) are on `/ledgers/{id}`. *Cross-Device Continuity* needs an operating-system folder grant, so it can only be set up in the app.
+
 ## Generating analytics, insights and reports
 
 These are computed on demand from the ledger's data. Every one accepts the same output options:
@@ -193,6 +241,8 @@ Anything running as your user on the same computer can read the token file, so t
 - Desktop only, and only while the app is running.
 - Scheduled-backup folders must be chosen in the app (they need an OS folder grant), so the API can pause, resume, retime and remove schedules but not create them.
 - Only one app instance serves the API; if the port is taken, pick another in Settings.
+- Cross-Device Continuity (shared sync folder) can only be configured in the app.
+- AI-based categorization needs a default AI provider and key in the app (the API never returns keys).
 
 ## How it works
 

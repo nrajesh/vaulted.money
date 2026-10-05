@@ -108,6 +108,7 @@
     "fake-indexeddb": "^6.2.5",
     "globals": "^17.4.0",
     "jsdom": "^30.0.1",
+    "newman": "^6.2.2",
     "postcss": "^8.4.47",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.18",

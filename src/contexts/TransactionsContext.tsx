@@ -1,6 +1,10 @@
 import * as React from "react";
+import {
+  findDuplicateRecurringInstances,
+  findTransferPairs,
+} from "@/utils/transactionMaintenance";
 import { Transaction, Category, SubCategory } from "@/data/finance-data";
-import { startOfDay, differenceInCalendarDays } from "date-fns";
+import { startOfDay } from "date-fns";
 import { db } from "@/lib/dexieDB";
 import { useCurrency } from "./CurrencyContext";
 import { Payee } from "@/components/dialogs/AddEditPayeeDialog";
@@ -1261,36 +1265,8 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const cleanUpDuplicates = React.useCallback(async () => {
-    // Group by recurrence_id + date + amount + vendor (Strict safety)
-    // Actually, the bug produced exact duplicates (same recurrence_id, same date, same details).
-    // The only difference would be ID and created_at.
-
-    const duplicatesToDelete: string[] = [];
-    const seenKeys = new Set<string>();
-
-    // Sort by created_at desc so we keep the OLDEST (original) or NEWEST?
-    // Usually keep the first created.
-    // Let's sort created_at ASC.
-    const sorted = [...transactions].sort(
-      (a, b) =>
-        new Date(a.created_at || 0).getTime() -
-        new Date(b.created_at || 0).getTime(),
-    );
-
-    for (const t of sorted) {
-      if (!t.recurrence_id) continue;
-
-      // We identify a "duplicate instance" by: Recurrence ID + Date
-      // If two transactions came from same schedule on same day, they are dupes.
-      // (Unless frequency is < 1 day, which isn't supported).
-      const key = `${t.recurrence_id}|${t.date.substring(0, 10)}`;
-
-      if (seenKeys.has(key)) {
-        duplicatesToDelete.push(t.id);
-      } else {
-        seenKeys.add(key);
-      }
-    }
+    // Shared with the Local API; see src/utils/transactionMaintenance.ts.
+    const duplicatesToDelete = findDuplicateRecurringInstances(transactions);
 
     if (duplicatesToDelete.length > 0) {
       // Log removed
@@ -1311,91 +1287,10 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
       const listToScan = batch || transactions;
       if (listToScan.length < 2) return 0;
 
-      const pairsLinked = [];
-      const processedIds = new Set<string>();
-
-      const parseDate = (dString: string): Date | null => {
-        if (!dString) return null;
-
-        // Handle DD/MM/YYYY (common import format issue)
-        const ddmmyyyy = dString.match(
-          new RegExp("^(\\d{1,2})[-./](\\d{1,2})[-./](\\d{4})$"),
-        );
-        if (ddmmyyyy) {
-          return new Date(
-            parseInt(ddmmyyyy[3], 10),
-            parseInt(ddmmyyyy[2], 10) - 1,
-            parseInt(ddmmyyyy[1], 10),
-          );
-        }
-
-        const d = new Date(dString);
-        return isNaN(d.getTime()) ? null : d;
-      };
-
-      for (let i = 0; i < listToScan.length; i++) {
-        const t1 = listToScan[i];
-
-        // Skip if linked BUT allow if it's a "split-" ID (import artifact we want to convert to real transfer)
-        if (t1.transfer_id && !t1.transfer_id.startsWith("split-")) continue;
-        if (processedIds.has(t1.id)) continue;
-
-        for (let j = i + 1; j < listToScan.length; j++) {
-          const t2 = listToScan[j];
-          if (t2.transfer_id && !t2.transfer_id.startsWith("split-")) continue;
-          if (processedIds.has(t2.id)) continue;
-
-          const d1 = parseDate(t1.date);
-          const d2 = parseDate(t2.date);
-
-          if (!d1 || !d2) continue;
-
-          // Allow 1 day difference to handle timezone offsets or bank processing delays
-          if (Math.abs(differenceInCalendarDays(d1, d2)) > 1) continue;
-          if (t1.account === t2.account) continue;
-
-          // Check 1: Strict Match (Same Currency, Same Amount)
-          const isStrictMatch =
-            t1.currency === t2.currency &&
-            Math.abs(t1.amount + t2.amount) <= 0.01;
-
-          // Check 2: Cross-Currency/Heuristic Match
-          const cat1 = (t1.category || "").toLowerCase();
-          const cat2 = (t2.category || "").toLowerCase();
-          const isTransferCat = cat1 === "transfer" && cat2 === "transfer";
-
-          const isOppositeSign = t1.amount * t2.amount < 0;
-
-          // Normalize names for comparison
-          const t1Acc = (t1.account || "").trim().toLowerCase();
-          const t1Vend = (t1.vendor || "").trim().toLowerCase();
-          const t2Acc = (t2.account || "").trim().toLowerCase();
-          const t2Vend = (t2.vendor || "").trim().toLowerCase();
-
-          const isSwapped = t1Acc === t2Vend && t2Acc === t1Vend;
-
-          let shouldLink = false;
-
-          const hasTransferKeyword =
-            (t1Vend.includes("transfer") || t1Vend.includes("xfer")) &&
-            (t2Vend.includes("transfer") || t2Vend.includes("xfer"));
-
-          if (isStrictMatch) {
-            shouldLink = true;
-          } else if (isOppositeSign) {
-            if (isSwapped || isTransferCat || hasTransferKeyword) {
-              shouldLink = true;
-            }
-          }
-
-          if (shouldLink) {
-            await dataProvider.linkTransactionsAsTransfer(t1.id, t2.id);
-            pairsLinked.push([t1.id, t2.id]);
-            processedIds.add(t1.id);
-            processedIds.add(t2.id);
-            break;
-          }
-        }
+      // Shared with the Local API; see src/utils/transactionMaintenance.ts.
+      const pairsLinked = findTransferPairs(listToScan);
+      for (const [t1, t2] of pairsLinked) {
+        await dataProvider.linkTransactionsAsTransfer(t1.id, t2.id);
       }
 
       if (pairsLinked.length > 0) {

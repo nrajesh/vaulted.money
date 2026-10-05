@@ -76,7 +76,10 @@ async function createTransaction(
   });
 }
 
-function filterTransactions(all: Transaction[], q: Record<string, string>) {
+export function filterTransactions(
+  all: Transaction[],
+  q: Record<string, string>,
+) {
   const min = numberParam("min_amount", q.min_amount);
   const max = numberParam("max_amount", q.max_amount);
   const search = q.search?.toLowerCase();
@@ -121,6 +124,21 @@ export const transactionRoutes: RouteDef[] = [
     path: "/ledgers/:ledgerId/transactions",
     summary:
       "List transactions (filters: from, to, account, vendor, category, sub_category, min_amount, max_amount, type, search, exclude_transfers, limit, offset)",
+    query: {
+      from: "Earliest date, YYYY-MM-DD",
+      to: "Latest date, YYYY-MM-DD",
+      account: "Exact account name",
+      vendor: "Exact vendor name",
+      category: "Exact category name",
+      sub_category: "Exact sub-category name",
+      min_amount: "Minimum amount (signed)",
+      max_amount: "Maximum amount (signed)",
+      type: "income or expense",
+      search: "Text to find in vendor, category, account, remarks",
+      exclude_transfers: "true to hide transfers",
+      limit: "Page size, 1-1000 (default 100)",
+      offset: "Rows to skip",
+    },
     handler: async ({ params, query, services }) => {
       await requireLedger(services, params.ledgerId);
       const limit = Math.min(
@@ -144,6 +162,7 @@ export const transactionRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/transactions",
     summary: "Create a transaction",
+    body: txSchema,
     handler: async (ctx) => {
       const ledger = await requireLedger(ctx.services, ctx.params.ledgerId);
       const input = parse(txSchema, ctx.body);
@@ -154,6 +173,7 @@ export const transactionRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/transactions/bulk",
     summary: `Create up to ${MAX_PAGE} transactions in one call`,
+    body: bulkSchema,
     handler: async (ctx) => {
       const ledger = await requireLedger(ctx.services, ctx.params.ledgerId);
       const { transactions } = parse(bulkSchema, ctx.body);
@@ -168,6 +188,7 @@ export const transactionRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/transactions/transfer",
     summary: "Create a linked transfer between two accounts",
+    body: transferSchema,
     handler: async (ctx) => {
       const ledger = await requireLedger(ctx.services, ctx.params.ledgerId);
       const input = parse(transferSchema, ctx.body);
@@ -247,6 +268,7 @@ export const transactionRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ledgers/:ledgerId/transactions/:transactionId",
     summary: "Update a transaction",
+    body: patchSchema,
     handler: async ({ params, body, services }) => {
       await requireLedger(services, params.ledgerId);
       const existing = await getTransactionInLedger(

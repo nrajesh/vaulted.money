@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { DataProvider } from "@/types/dataProvider";
 import {
   ApiError,
@@ -25,6 +26,10 @@ export interface RouteDef {
   /** Path relative to the API prefix, with `:param` placeholders. */
   path: string;
   summary: string;
+  /** Request body schema, when the route takes one. Drives /openapi.json. */
+  body?: z.ZodType;
+  /** Query parameters the route understands. Drives /openapi.json. */
+  query?: Record<string, string>;
   handler: (ctx: RouteContext) => Promise<ApiResponse> | ApiResponse;
 }
 
