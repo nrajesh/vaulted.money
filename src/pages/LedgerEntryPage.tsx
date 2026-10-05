@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useTransactions } from "@/contexts/TransactionsContext";

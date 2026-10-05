@@ -1,4 +1,4 @@
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import logoSquareDark from "@/assets/logo-square-dark.png";
 import logoSquareLight from "@/assets/logo-square-light.png";

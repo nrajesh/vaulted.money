@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from "electron";
-import * as path from "path";
 
 contextBridge.exposeInMainWorld("electron", {
   selectFolder: () => ipcRenderer.invoke("select-folder"),
@@ -11,7 +10,8 @@ contextBridge.exposeInMainWorld("electron", {
   readFile: (filePath: string) => ipcRenderer.invoke("read-file", filePath),
   writeFile: (filePath: string, content: string) =>
     ipcRenderer.invoke("write-file", filePath, content),
-  joinPath: (...paths: string[]) => Promise.resolve(path.join(...paths)),
+  // A sandboxed preload cannot load Node's path module; main joins the paths.
+  joinPath: (...paths: string[]) => ipcRenderer.invoke("path-join", ...paths),
   // Local REST API: the renderer executes requests the main process relays.
   onApiRequest: (
     handler: (id: string, request: unknown) => void,

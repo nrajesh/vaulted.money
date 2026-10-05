@@ -143,7 +143,7 @@ function renderActiveShape(props: PieSectorDataItem) {
   );
 }
 
-import { useTheme as useNextTheme } from "next-themes";
+import { useTheme as useNextTheme } from "@/components/theme-provider";
 
 export function SpendingPieChart({
   transactions,

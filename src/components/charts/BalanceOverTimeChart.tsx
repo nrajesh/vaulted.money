@@ -30,7 +30,7 @@ type BalanceChartRow = Record<string, string | number | null | undefined>;
 import { type Transaction } from "@/data/finance-data";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useTheme as useNextTheme } from "next-themes";
+import { useTheme as useNextTheme } from "@/components/theme-provider";
 import { formatDateToDDMMYYYY, slugify } from "@/lib/utils";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import {

@@ -215,6 +215,13 @@ app.whenReady().then(() => {
     return apiStatus();
   });
 
+  ipcMain.handle("path-join", (_event, ...segments: unknown[]) => {
+    if (!segments.every((segment) => typeof segment === "string")) {
+      throw new Error("path-join expects string segments");
+    }
+    return path.join(...(segments as string[]));
+  });
+
   ipcMain.handle("select-folder", async () => {
     const result = await dialog.showOpenDialog(mainWindow!, {
       properties: ["openDirectory", "createDirectory"],

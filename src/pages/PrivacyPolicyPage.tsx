@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import {
   ArrowLeft,
   ArrowRight,
