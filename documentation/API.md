@@ -9,7 +9,7 @@ Vaulted Money's desktop app can expose its data over a local HTTP API, so script
 
 ## Quick start
 
-1. Open **Settings → Local API**, switch it on, and copy the token.
+1. Open **Settings**, scroll to the **Local API** card (below Cross-Device Continuity, above About), switch it on, and copy the token. The card appears in every build, but it only has controls in the desktop app.
 2. Call it:
 
 ```bash

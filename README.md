@@ -87,7 +87,7 @@ The README is intentionally short. Use these pages for the details:
 
 The desktop app can expose a REST API on your own computer, so scripts and tools can manage your ledgers, accounts, transactions, recurring transactions, budgets, categories, vendors, currencies, languages and AI providers, and generate analytics, insights, reports and backups. It is off by default, listens on `127.0.0.1` only and needs a token. The web and mobile apps do not have it.
 
-1. Open **Settings → Local API**, switch it on, and copy the token.
+1. Open **Settings**, scroll down to the **Local API** card (desktop app only), switch it on, and copy the token.
 2. Call it with any HTTP client:
 
 ```bash

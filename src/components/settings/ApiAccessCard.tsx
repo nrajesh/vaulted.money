@@ -22,7 +22,12 @@ import { showError, showSuccess } from "@/utils/toast";
  */
 const ApiAccessCard = () => {
   const { t } = useTranslation();
-  const electron = getElectronAPI();
+  const electronApi = getElectronAPI();
+  // An older desktop build may lack the API bridge in its preload script.
+  const electron =
+    electronApi && typeof electronApi.getApiConfig === "function"
+      ? electronApi
+      : null;
   const [status, setStatus] = React.useState<ApiServerStatus | null>(null);
   const [portInput, setPortInput] = React.useState("");
   const [showToken, setShowToken] = React.useState(false);
@@ -35,7 +40,30 @@ const ApiAccessCard = () => {
     });
   }, [electron]);
 
-  if (!electron || !status) return null;
+  if (!electron) {
+    return (
+      <ThemedCard className="md:col-span-2 lg:col-span-3">
+        <ThemedCardHeader>
+          <ThemedCardTitle className="flex items-center gap-2">
+            <Plug className="h-5 w-5 text-muted-foreground" />
+            {t("settings.api.title", { defaultValue: "Local API" })}
+          </ThemedCardTitle>
+          <ThemedCardDescription>
+            {electronApi
+              ? t("settings.api.outdatedDesktop", {
+                  defaultValue:
+                    "This desktop build does not include the Local API. Update or rebuild the desktop app to use it.",
+                })
+              : t("settings.api.desktopOnly", {
+                  defaultValue:
+                    "The Local API is available in the desktop app only. The web and mobile apps cannot host a local server.",
+                })}
+          </ThemedCardDescription>
+        </ThemedCardHeader>
+      </ThemedCard>
+    );
+  }
+  if (!status) return null;
 
   const apply = async (
     update: { enabled?: boolean; port?: number },
