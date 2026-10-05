@@ -162,6 +162,9 @@
 .homepage-mobile-preview,
 .homepage-mobile-preview body {
   overflow: hidden !important;
+  /* `hidden` still lets focus/scrollIntoView scroll the document sideways,
+     shifting the whole preview left. `clip` forbids programmatic scrolling. */
+  overflow: clip !important;
   height: 100% !important;
   margin: 0 !important;
 }

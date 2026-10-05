@@ -440,7 +440,13 @@ const Layout = () => {
   React.useEffect(() => {
     if (isHomepageMobilePreview) {
       document.documentElement.classList.add("homepage-mobile-preview");
+      // Safety net: never let the embedded preview drift sideways.
+      const resetHorizontalScroll = () => {
+        if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+      };
+      window.addEventListener("scroll", resetHorizontalScroll);
       return () => {
+        window.removeEventListener("scroll", resetHorizontalScroll);
         document.documentElement.classList.remove("homepage-mobile-preview");
       };
     }
