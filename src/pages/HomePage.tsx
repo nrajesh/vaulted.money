@@ -260,19 +260,19 @@ const HomePage = () => {
 
   const roadmapMilestones = [
     {
-      window: t("home.milestones.nativeApps.window", {
-        defaultValue: "August-September 2026",
+      window: t("home.milestones.localApi.window", {
+        defaultValue: "October 2026",
       }),
-      title: t("home.milestones.nativeApps.title", {
-        defaultValue: "Native iOS and Android apps",
+      title: t("home.milestones.localApi.title", {
+        defaultValue: "Local API for the desktop app",
       }),
-      summary: t("home.milestones.nativeApps.summary", {
+      summary: t("home.milestones.localApi.summary", {
         defaultValue:
-          "Planned mobile releases will bring Vaulted Money into dedicated iPhone and Android app experiences while keeping the local-first model intact.",
+          "The Electron desktop app can now expose an opt-in REST API on your own machine, so you can script Vaulted Money, import and export data, or build your own interface while everything stays local.",
       }),
-      label: "Planned",
-      status: t("home.status.next", { defaultValue: "Next" }),
-      accent: "violet",
+      label: "Current",
+      status: t("home.status.released", { defaultValue: "Released" }),
+      accent: "emerald",
     },
     {
       window: t("home.milestones.privacyRefresh.window", {
@@ -285,7 +285,7 @@ const HomePage = () => {
         defaultValue:
           "The public-facing experience expanded with a dedicated privacy page, updated branding, and sharper trust messaging for new users.",
       }),
-      label: "Current",
+      label: "Previous",
       status: t("home.status.released", { defaultValue: "Released" }),
       accent: "emerald",
     },
@@ -682,7 +682,7 @@ const HomePage = () => {
               <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
                 {t("home.roadmap.description", {
                   defaultValue:
-                    "Based on tagged releases and major shipped milestones so far, with the next planned platform expansion penciled in for August-September 2026.",
+                    "Based on tagged releases and major shipped milestones so far.",
                 })}
               </p>
             </div>
@@ -701,7 +701,7 @@ const HomePage = () => {
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {t("home.roadmap.milestoneShipped", {
                   defaultValue:
-                    "Four major items already shipped in 2026, with native iOS and Android apps lined up next.",
+                    "Five major items shipped in 2026, led by the desktop Local API.",
                 })}
               </p>
             </div>
