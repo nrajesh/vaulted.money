@@ -72,9 +72,9 @@ await shot("/transactions", "tx-history", { clearDate: true });
 
 await load("mcp-added");
 await shot("/transactions", "tx-mcp-added", { clearDate: true });
-
 await load("mcp-imported");
 await shot("/transactions", "tx-mcp-imported", { clearDate: true });
+
 await shot("/dashboard", "dashboard-mcp");
 
 await load("final");
@@ -141,5 +141,20 @@ await page.evaluate(() => localStorage.setItem("vite-ui-theme", "dark"));
 await page.goto(`${APP}/ledgers`);
 await page.waitForTimeout(1500);
 await page.screenshot({ path: join(SCREENS, "ledgers.png") });
+
+// Captured last: the vendor filter persists in the app and would leak into later screens.
+await load("mcp-added");
+// The receipts behind "have I cut back at the corner store?": a real search in the app,
+// from the snapshot before the CSV import so it matches the chat answer (4 visits this month).
+await shot("/transactions", "tx-corner", {
+  clearDate: true,
+  prepare: async () => {
+    // The filter is a command-palette combobox: open it, type, and pick the vendor.
+    await page.getByText("Filter transactions...").first().click();
+    await page.keyboard.type("Corner Market", { delay: 30 });
+    await page.locator("[cmdk-item]").filter({ hasText: /^Corner Market$/ }).first().click();
+    await page.waitForTimeout(1200);
+  },
+});
 
 await browser.close();

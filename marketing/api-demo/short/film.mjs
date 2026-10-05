@@ -105,14 +105,14 @@ const brand = h(`<div class="brandmark"><img src="/repo/assets/brand/dark-icon.p
 
 // ── 1 · hook ────────────────────────────────────────────────────────────────
 {
-  const title = h(`<div class="bigq" style="left:96px;top:250px;font-size:150px">Another<br>budget app?</div>`);
+  const title = h(`<div class="bigq" style="left:96px;top:250px;font-size:122px">Another budget<br>app?</div>`);
   const sub = h(`<div class="abs" style="left:100px;top:600px;font:500 46px var(--sans);color:var(--muted)"><span class="tx">You've tried the rest.</span></div>`);
   const pains = [
     [ICON.cardSlash, "Monthly fees"],
     [ICON.bank, "Your bank login"],
     [ICON.cloudUp, "Your data in their cloud"],
-  ].map(([ic, label], i) => h(`<div class="pcard pop" style="left:1010px;top:${150 + i * 280}px;width:814px;height:236px;border-color:hsl(${RED} / .5);display:flex;align-items:center;gap:36px;padding:0 44px">
-      ${sticker(ic, 150, RED)}<div class="word" style="font-size:50px;white-space:nowrap"><span class="tx">${label}</span></div>
+  ].map(([ic, label], i) => h(`<div class="pcard pop" style="left:1080px;top:${150 + i * 280}px;width:744px;height:236px;border-color:hsl(${RED} / .5);display:flex;align-items:center;gap:36px;padding:0 44px">
+      ${sticker(ic, 150, RED)}<div class="word" style="font-size:44px;white-space:nowrap"><span class="tx">${label}</span></div>
       <div class="xbadge" style="position:absolute;right:26px;top:24px;width:50px;height:50px;border-radius:50%;background:hsl(${RED});color:#1b0505;display:grid;place-items:center"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round">${ICON.x}</svg></div></div>`));
   add("hook", [title, sub, ...pains], (t) => {
     appear(title, t, 0.3, { dur: 0.9 });
@@ -153,41 +153,151 @@ const brand = h(`<div class="brandmark"><img src="/repo/assets/brand/dark-icon.p
   });
 }
 
-// ── 3 · "Where did my money go?" ────────────────────────────────────────────
+// ── a small chat window (words stream in, tool steps read as plain actions) ─
+function makeChat({ x, y, w, hgt, title, tag, items }) {
+  const el = h(`<div class="chat pop" style="left:${x}px;top:${y}px;width:${w}px;height:${hgt}px"><div class="chat-bar"><span class="dot"></span><b>${title}</b><span class="chat-tag">${tag}</span></div><div class="chat-body"><div class="chat-col"></div></div></div>`);
+  const col = el.querySelector(".chat-col");
+  const bodyH = hgt - 56 - 30;
+  const nodes = items.map((it) => {
+    let node;
+    if (it.user !== undefined) node = h(`<div class="msg user" style="font-size:29px"></div>`);
+    else if (it.step !== undefined) node = h(`<div class="tool" style="margin-bottom:12px"><div class="tool-head" style="font-family:var(--sans);font-size:21px"><span>${svg(it.icon ?? ICON.chart, 20)}</span><b style="font-family:var(--sans)">${it.step}</b><span class="state"></span></div></div>`);
+    else {
+      node = h(`<div class="msg bot" style="font-size:29px"></div>`);
+      // Split into words (never inside a tag) so the answer can stream.
+      it.words = [];
+      let word = "", inTag = false;
+      for (const ch of it.bot) {
+        word += ch;
+        if (ch === "<") inTag = true;
+        else if (ch === ">") inTag = false;
+        else if (!inTag && /\s/.test(ch)) { it.words.push(word); word = ""; }
+      }
+      if (word) it.words.push(word);
+    }
+    col.append(node);
+    return { it, node };
+  });
+  return {
+    el,
+    update(t) {
+      for (const { it, node } of nodes) {
+        node.style.display = t >= it.at ? "" : "none";
+        node.style.opacity = t >= it.at ? tw(t, it.at, it.at + 0.25) : 0;
+        if (t < it.at) continue;
+        const dt = t - it.at;
+        if (it.user !== undefined) node.textContent = it.user.slice(0, Math.floor(dt * 60) + 1);
+        else if (it.step !== undefined) {
+          const st = node.querySelector(".state");
+          st.textContent = dt < 0.5 ? "Checking…" : "✓ Done";
+          st.className = "state " + (dt < 0.5 ? "run" : "done");
+        } else node.innerHTML = it.words.slice(0, Math.floor(dt * 17) + 1).join("");
+      }
+      col.style.transform = `translateY(${-Math.max(0, col.offsetHeight - bodyH)}px)`;
+    },
+  };
+}
+const note = (txt, x, y) => h(`<div class="abs pop" style="left:${x}px;top:${y}px;font:500 22px var(--sans);color:var(--muted)"><span class="tx">${txt}</span></div>`);
+
+// ── 3 · "Have a chat with your finances." (the pitch, early) ────────────────
 {
-  const sp = rj("q-spending");
-  const q = h(`<div class="bigq" style="left:96px;top:140px">Where did<br>my money<br><em>go?</em></div>`);
-  const top3 = sp.by_category.slice(0, 3);
-  const rows = top3.map((c, i) => h(`<div class="pop" style="position:absolute;left:96px;top:${560 + i * 112}px;width:700px">
-      <div style="display:flex;justify-content:space-between;font:700 32px var(--sans);margin-bottom:10px"><span class="tx">${c.category}</span><span style="color:var(--accent-soft)">${Math.round(c.share_pct)}%</span></div>
-      <div style="height:26px;border-radius:13px;background:hsl(217 32% 14%);overflow:hidden"><i class="fill" data-w="${(c.share_pct / top3[0].share_pct) * 100}" style="display:block;height:100%;width:0;border-radius:13px;background:linear-gradient(90deg,hsl(183 51% 74%),hsl(199 54% 46%))"></i></div></div>`));
-  const cap = h(`<div class="abs" style="left:96px;top:1000px;font:600 22px var(--sans);color:var(--muted)"><span class="tx">Answered from your own data, on your device.</span></div>`);
-  const screen = shot(S("analytics"), 920, 250, 904, "Real screen · Analytics", { hgt: 700, off: 110 });
-  add("where", [q, ...rows, cap, screen], (t) => {
-    appear(q, t, 0.3, { dur: 0.9 });
-    appear(screen, t, 1.0, { dx: 60, dy: 0 });
-    rows.forEach((r, i) => {
-      appear(r, t, 1.8 + i * 0.5);
-      r.querySelector(".fill").style.width = (r.querySelector(".fill").dataset.w * tw(t, 2.0 + i * 0.5, 3.0 + i * 0.5)).toFixed(1) + "%";
-    });
-    appear(cap, t, 3.8);
+  const cs = rj("q-cs-this"), cl = rj("q-cs-last");
+  const thisSum = Math.abs(cs.sum_of_shown), lastSum = Math.abs(cl.sum_of_shown);
+  const cut = Math.round((1 - thisSum / lastSum) * 100);
+  const hd = h(`<div class="bigq" style="left:96px;top:80px;font-size:92px">Have a chat with<br>your <em>finances.</em></div>`);
+  const sub = h(`<div class="abs" style="left:100px;top:300px;font:500 36px var(--sans);color:var(--muted)"><span class="tx">Ask in plain words. It answers from your own numbers.</span></div>`);
+  const chat = makeChat({
+    x: 96, y: 400, w: 900, hgt: 590, title: "Your finances", tag: "Runs on your device",
+    items: [
+      { at: 1.8, user: "Have I cut back at the corner store compared with last month?" },
+      { at: 3.2, step: "Checked this month", icon: ICON.chart },
+      { at: 3.7, step: "Checked last month", icon: ICON.chart },
+      { at: 4.5, bot: `Yes. At <b>Corner Market</b> you spent <b>${eur(thisSum)}</b> this month (${cs.total_matches} visits) against ${eur(lastSum)} last month (${cl.total_matches} visits): <b class="good">down ${cut}%</b>.` },
+    ],
+  });
+  const screen = shot(S("tx-corner"), 1040, 380, 784, "The receipts, in the app", { hgt: 480, off: 235 });
+  const badge = h(`<div class="pop" style="position:absolute;left:1360px;top:300px;padding:14px 28px;border-radius:20px;background:hsl(222 84% 5%);border:2px solid hsl(${GOLD} / .7);box-shadow:0 0 50px hsl(${GOLD} / .25)"><span class="gold" style="font:800 74px/1 var(--sans);letter-spacing:-.04em"><span class="tx">−${cut}%</span></span><span style="font:600 24px var(--sans);margin-left:14px"><span class="tx">Corner Market</span></span></div>`);
+  const foot = note("Needs the desktop app running. Everything stays on your device.", 100, 1020);
+  add("chat1", [hd, sub, chat.el, screen, badge, foot], (t) => {
+    appear(hd, t, 0.3, { dur: 0.9 });
+    appear(sub, t, 1.0);
+    appear(chat.el, t, 1.3, { dy: 30 });
+    chat.update(t);
+    appear(screen, t, 4.7, { dx: 60, dy: 0 });
+    pop(badge, t, 6.0, 0.6);
+    appear(foot, t, 6.4);
   });
 }
 
-// ── 4 · "Am I over budget?" ─────────────────────────────────────────────────
+// ── 4 · "Ask things a menu can't." (advice) ─────────────────────────────────
 {
-  const bu = rj("q-budget");
-  const food = bu.budgets[0];
-  const pct = Math.round(bu.budget_health[0].percentUsed);
-  const q = h(`<div class="bigq" style="left:96px;top:150px">Am I over<br><em>budget?</em></div>`);
-  const big = h(`<div class="pop" style="position:absolute;left:96px;top:520px"><div class="gold" style="font:800 220px/1 var(--sans);letter-spacing:-.05em"><span class="tx">${pct}%</span></div><div style="font:600 36px var(--sans);margin-top:10px"><span class="tx">Food: ${eur(food.spent, 0)} of ${eur(food.target, 0)}</span></div><div style="font:500 28px var(--sans);color:var(--muted);margin-top:8px"><span class="tx">Spot it before the month ends.</span></div></div>`);
-  const screen = shot(S("dashboard"), 920, 270, 904, "Real screen · Dashboard", { hgt: 540, off: 265 });
-  const rg = shotRing(screen, 560, 345, 520, 235, "warn");
-  add("budget", [q, big, screen, rg], (t) => {
-    appear(q, t, 0.3, { dur: 0.9 });
-    appear(screen, t, 1.0, { dx: 60, dy: 0 });
-    ring(rg, t, 2.0);
-    appear(big, t, 2.3, { dy: 30 });
+  const a = rj("q-sum-last"), b = rj("q-sum-this"), bud = rj("q-budget").budgets[0];
+  const val = (r, n) => r.by_category.find((c) => c.category === n)?.spent ?? 0;
+  const rowsData = ["Housing", "Food", "Transport", "Utilities"].map((n) => ({
+    n, aug: val(a, n), sep: val(b, n), next: Math.ceil((val(a, n) + val(b, n)) / 2 / 10) * 10, // two-month average, rounded up to the next 10
+  }));
+  const food = rowsData.find((r) => r.n === "Food");
+  const hd = h(`<div class="bigq" style="left:96px;top:100px;font-size:96px">Ask things <em>a menu can't.</em></div>`);
+  const sub = h(`<div class="abs" style="left:100px;top:245px;font:500 36px var(--sans);color:var(--muted)"><span class="tx">Advice, comparisons and what-ifs, from your own numbers.</span></div>`);
+  const chat = makeChat({
+    x: 96, y: 330, w: 860, hgt: 660, title: "Your finances", tag: "Runs on your device",
+    items: [
+      { at: 0.5, user: "What should my next budget be?" },
+      { at: 1.7, step: "Checked last month", icon: ICON.chart },
+      { at: 2.2, step: "Checked this month", icon: ICON.chart },
+      { at: 2.7, step: "Checked your budgets", icon: ICON.chart },
+      { at: 3.4, bot: `<b class="bad">Food</b> ran over in both months: ${eur(food.aug, 0)} in August and ${eur(food.sep, 0)} in September, against your ${eur(bud.target, 0)} budget. Based on your average, I'd set it to <b>${eur(food.next, 0)}</b>. The rest was steady.` },
+    ],
+  });
+  const head = (txt, i) => `<span style="grid-column:${i}" class="hd"><span class="tx">${txt}</span></span>`;
+  const table = h(`<div class="pcard pop" style="left:1000px;top:330px;width:824px;height:660px;padding:30px 36px">
+    <div style="font:800 38px var(--sans);letter-spacing:-.02em"><span class="tx">Your next budget, suggested</span></div>
+    <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;row-gap:12px;margin-top:26px;font:600 22px var(--sans);color:var(--muted);letter-spacing:.04em">${["Category", "Aug", "Sep", "Next"].map((c, i) => `<span style="text-align:${i ? "right" : "left"}"><span class="tx">${c}</span></span>`).join("")}</div>
+    ${rowsData.map((r) => `<div class="pop trow" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;align-items:center;margin-top:14px;padding:16px 14px;border-radius:14px;${r.n === "Food" ? `background:hsl(${GOLD} / .12);border:1px solid hsl(${GOLD} / .5)` : "background:hsl(217 32% 11%);border:1px solid var(--border)"};font:700 32px var(--sans)"><span class="tx">${r.n}</span><span style="text-align:right;color:var(--muted)"><span class="tx">${eur(r.aug, 0)}</span></span><span style="text-align:right;color:var(--muted)"><span class="tx">${eur(r.sep, 0)}</span></span><span style="text-align:right" class="${r.n === "Food" ? "gold" : ""}"><span class="tx">${eur(r.next, 0)}</span></span></div>`).join("")}
+    <div style="font:500 21px var(--sans);color:var(--muted);margin-top:26px"><span class="tx">Based on your two-month average, rounded up.</span></div></div>`);
+  const trows = table.querySelectorAll(".trow");
+  const foot = note("Assistant wording is illustrative. The numbers are your own.", 100, 1020);
+  add("chat2", [hd, sub, chat.el, table, foot], (t) => {
+    appear(hd, t, 0.2, { dur: 0.8 });
+    appear(sub, t, 0.6);
+    appear(chat.el, t, 0.3, { dy: 30 });
+    chat.update(t);
+    appear(table, t, 3.6, { dx: 50, dy: 0 });
+    trows.forEach((r, i) => appear(r, t, 4.4 + i * 0.5, { dy: 16, dur: 0.5 }));
+    appear(foot, t, 4.4);
+  });
+}
+
+// ── 6 · build your own screens ──────────────────────────────────────────────
+{
+  const cs = rj("q-cs-this"), cl = rj("q-cs-last");
+  const thisSum = Math.abs(cs.sum_of_shown), lastSum = Math.abs(cl.sum_of_shown);
+  const cut = Math.round((1 - thisSum / lastSum) * 100);
+  const sp = rj("q-spending"), bud = rj("q-budget").budgets[0];
+  const top3 = sp.by_category.slice(0, 3);
+  const food = sp.by_category.find((c) => c.category === "Food");
+  const hd = h(`<div class="bigq" style="left:96px;top:100px;font-size:96px">Not stuck with <em>our layout.</em></div>`);
+  const sub = h(`<div class="abs" style="left:100px;top:245px;font:500 36px var(--sans);color:var(--muted)"><span class="tx">Build the screen you wish your budget app had.</span></div>`);
+  const app = shot(S("dashboard"), 96, 420, 640, "The app's own dashboard", { hgt: 460, off: 150 });
+  const arrow = h(`<div class="abs" style="left:752px;top:610px;color:hsl(${GOLD});width:84px;height:84px">${svg(ICON.arrow, 84, 2)}</div>`);
+  const mini = (label, inner, w, h2, x, y) => `<div class="pop gcard" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h2}px;border-radius:18px;background:hsl(222 84% 5% / .8);border:1px solid hsl(${GOLD} / .35);padding:18px 22px"><div style="font:700 18px var(--sans);letter-spacing:.08em;color:var(--muted)"><span class="tx">${label}</span></div>${inner}</div>`;
+  const bar = (frac, tint) => `<div style="height:20px;border-radius:10px;background:hsl(217 32% 14%);overflow:hidden"><i style="display:block;height:100%;width:${Math.min(100, frac * 100).toFixed(1)}%;border-radius:10px;background:linear-gradient(90deg,hsl(${tint}),hsl(${tint} / .6))"></i></div>`;
+  const windowEl = h(`<div class="pop" style="position:absolute;left:880px;top:380px;width:944px;height:600px;border-radius:26px;background:linear-gradient(160deg,hsl(222 45% 11%),hsl(236 40% 8%));border:2px solid hsl(${GOLD} / .55);box-shadow:0 0 90px hsl(${GOLD} / .14),0 40px 100px #000b">
+    <div style="position:absolute;left:30px;top:22px;right:30px;display:flex;justify-content:space-between;align-items:baseline"><b style="font:800 34px var(--sans);letter-spacing:-.02em"><span class="tx">My money, my way</span></b><span style="font:600 18px var(--sans);color:var(--muted)"><span class="tx">Built on the API</span></span></div>
+    ${mini("Corner Market", `<div class="gold" style="font:800 92px/1 var(--sans);letter-spacing:-.04em;margin-top:8px"><span class="tx">−${cut}%</span></div><div style="margin-top:12px;font:600 20px var(--sans);display:grid;gap:8px"><div><span class="tx">Last month ${eur(lastSum, 0)}</span>${bar(1, "32 83% 72%")}</div><div><span class="tx">This month ${eur(thisSum, 0)}</span>${bar(thisSum / lastSum, "188 57% 59%")}</div></div>`, 410, 270, 30, 90)}
+    ${mini("Food budget", `<div style="font:800 56px/1 var(--sans);letter-spacing:-.03em;margin-top:12px"><span class="tx">${eur(food.spent, 0)}</span><span style="font:600 26px var(--sans);color:var(--muted)"> of ${eur(bud.target, 0)}</span></div><div style="margin-top:20px">${bar(1, "0 84% 66%")}</div><div style="margin-top:12px;font:600 22px var(--sans);color:hsl(0 84% 70%)"><span class="tx">Over by ${eur(food.spent - bud.target, 0)}. Time to adjust.</span></div>`, 410, 270, 504, 90)}
+    ${mini("Biggest costs", `<div style="display:grid;gap:12px;margin-top:12px;font:600 22px var(--sans)">${top3.map((c) => `<div style="display:grid;grid-template-columns:130px 1fr 56px;align-items:center;gap:14px"><span class="tx">${c.category}</span>${bar(c.share_pct / top3[0].share_pct, "188 57% 59%")}<span style="text-align:right;color:var(--muted)"><span class="tx">${Math.round(c.share_pct)}%</span></span></div>`).join("")}</div>`, 884, 190, 30, 380)}
+  </div>`);
+  const gcards = windowEl.querySelectorAll(".gcard");
+  const foot = note("Needs the desktop app running. Your screens, your rules.", 100, 1020);
+  add("gui", [hd, sub, app, arrow, windowEl, foot], (t) => {
+    appear(hd, t, 0.2, { dur: 0.8 });
+    appear(sub, t, 0.6);
+    appear(app, t, 1.0, { dx: -40, dy: 0 });
+    appear(arrow, t, 1.9, { dx: -20, dy: 0 });
+    appear(windowEl, t, 2.3, { dy: 36 });
+    gcards.forEach((c, i) => appear(c, t, 2.9 + i * 0.6, { dy: 20, dur: 0.5 }));
+    appear(foot, t, 4.4);
   });
 }
 
@@ -205,47 +315,6 @@ const brand = h(`<div class="brandmark"><img src="/repo/assets/brand/dark-icon.p
     appear(arrow, t, 2.4, { dx: -30, dy: 0 });
     appear(screen, t, 2.8, { dx: 60, dy: 0 });
     chips.forEach((c, i) => appear(c, t, 3.8 + i * 0.6, { dy: 20 }));
-  });
-}
-
-// ── 6 · plug in your own tools (the API story) ──────────────────────────────
-{
-  const sp = rj("q-spending");
-  const cat = (n) => sp.by_category.find((c) => c.category === n);
-  const answer = `Mostly <b>Housing</b>: ${eur(cat("Housing").spent, 0)} (${Math.round(cat("Housing").share_pct)}%). Then <b>Food</b> ${eur(cat("Food").spent, 0)} and <b>Transport</b> ${eur(cat("Transport").spent, 0)}.`;
-  const words = answer.match(/\S+\s*/g);
-  const q = h(`<div class="bigq" style="left:96px;top:100px;font-size:84px">Want it smarter? <em>Plug in your own tools.</em></div>`);
-  const chat = h(`<div class="chat pop" style="left:96px;top:330px;width:860px;height:560px"><div class="chat-bar"><span class="dot"></span><b>Your local AI</b><span class="chat-tag">Runs on your device</span></div>
-    <div class="chat-body"><div class="chat-col"><div class="msg user" id="u" style="font-size:30px"></div>
-    <div class="tool" id="tl" style="display:none"><div class="tool-head"><span>${svg(ICON.chart, 20)}</span><b>Spending summary</b><span class="state done">✓ done</span></div></div>
-    <div class="msg bot" id="b" style="font-size:30px;display:none"></div></div></div></div>`);
-  const uq = "Where is my money going?";
-  const rowsData = [
-    [ICON.chat, "Chat with a local AI", "Your questions, answered on your device"],
-    [ICON.terminal, "Script it", "Automate the boring monthly bits"],
-    [ICON.chart, "Build your own dashboard", "Your screens, your rules"],
-  ];
-  const rowsEls = rowsData.map(([ic, t1, t2], i) => h(`<div class="pop" style="position:absolute;left:1010px;top:${330 + i * 170}px;width:814px;display:flex;align-items:center;gap:26px">${sticker(ic, 112, i === 0 ? CYAN : i === 1 ? GREEN : INDIGO)}<div><div style="font:800 40px var(--sans);letter-spacing:-.02em;white-space:nowrap"><span class="tx">${t1}</span></div><div style="font:500 26px var(--sans);color:var(--muted);margin-top:6px;white-space:nowrap"><span class="tx">${t2}</span></div></div></div>`));
-  const foot = h(`<div class="abs" style="left:1010px;top:860px;font:600 24px var(--sans);color:var(--muted)"><span class="tx">Optional. Made for tinkerers. Nothing leaves your device.</span></div>`);
-  add("tinker", [q, chat, ...rowsEls, foot], (t) => {
-    appear(q, t, 0.3, { dur: 0.9 });
-    appear(chat, t, 0.9, { dy: 30 });
-    const u = chat.querySelector("#u");
-    u.style.opacity = tw(t, 1.4, 1.6);
-    u.textContent = uq.slice(0, Math.max(0, Math.floor((t - 1.5) * 40)));
-    u.style.display = t >= 1.4 ? "" : "none";
-    const tl = chat.querySelector("#tl");
-    tl.style.display = t >= 2.6 ? "" : "none";
-    tl.style.opacity = tw(t, 2.6, 2.9);
-    const b = chat.querySelector("#b");
-    b.style.display = t >= 3.2 ? "" : "none";
-    b.innerHTML = words.slice(0, Math.max(0, Math.floor((t - 3.2) * 16))).join("");
-    rowsEls.forEach((r, i) => {
-      const at = 2.8 + i * 0.6;
-      appear(r, t, at, { dx: 40, dy: 0 });
-      drawIn(r.querySelector(".sticker"), tw(t, at + 0.1, at + 0.8, (x) => x));
-    });
-    appear(foot, t, 5.0);
   });
 }
 
@@ -282,8 +351,7 @@ const qrSite = await (await fetch("out/qr-site.svg")).text();
     <span class="w" style="display:inline-block">${word("Free.", "gold")}</span> <span class="w" style="display:inline-block">${word("Private.", "", CYAN)}</span><br>
     <span class="w" style="display:inline-block">${word("Open.", "", GREEN)}</span> <span class="w" style="display:inline-block">${word("Yours.", "", INDIGO)}</span></div>`);
   const domain = h(`<div class="abs" style="left:100px;top:700px;font:500 60px var(--mono);color:var(--fg)"><span class="tx">vaulted.money</span></div>`);
-  const fine = h(`<div class="abs" style="left:100px;top:880px;width:1100px;font:500 22px/1.45 var(--sans);color:var(--muted)"><span class="tx">Free to use and to build (MIT license). The app-store versions are an optional one-time purchase that supports development.</span></div>`);
-  const qr = h(`<div class="abs pop" style="left:1360px;top:300px;width:420px;text-align:center"><div style="width:380px;height:380px;margin:0 auto;border-radius:22px;background:#fff;padding:12px;box-shadow:0 0 70px hsl(188 57% 59% / .3)"><div class="qr" style="width:100%;height:100%">${qrSite}</div></div><div style="font:800 34px var(--sans);margin-top:22px"><span class="tx">Get it free</span></div><div style="font:500 22px var(--sans);color:var(--muted);margin-top:4px"><span class="tx">Scan with your phone's camera</span></div></div>`);
+  const qr = h(`<div class="abs pop" style="left:1360px;top:300px;width:420px;text-align:center"><div style="width:380px;height:380px;margin:0 auto;border-radius:22px;background:#fff;padding:12px;box-shadow:0 0 70px hsl(188 57% 59% / .3)"><div class="qr" style="width:100%;height:100%">${qrSite}</div></div><div style="font:800 34px var(--sans);margin-top:22px"><span class="tx">Try it free</span></div><div style="font:500 22px var(--sans);color:var(--muted);margin-top:4px"><span class="tx">Scan with your phone's camera</span></div></div>`);
   qr.querySelectorAll(".qr svg").forEach((s) => {
     const n = s.getAttribute("width");
     s.setAttribute("viewBox", `0 0 ${n} ${n}`);
@@ -292,14 +360,13 @@ const qrSite = await (await fetch("out/qr-site.svg")).text();
     s.style.shapeRendering = "crispEdges";
   });
   const black = h(`<div class="abs" style="inset:0;background:#000;opacity:0"></div>`);
-  add("cta", [logo, line, domain, qr, fine, black], (t) => {
+  add("cta", [logo, line, domain, qr, black], (t) => {
     pop(logo, t, 0.2, 0.8);
     logo.style.filter = `drop-shadow(0 0 ${28 + 14 * Math.sin(t * 2)}px hsl(188 57% 59% / .45))`;
     line.querySelectorAll(".w").forEach((w, i) => appear(w, t, 0.9 + i * 0.45, { dy: 26, dur: 0.6 }));
     appear(domain, t, 3.2);
     appear(qr, t, 3.6, { dx: 50, dy: 0 });
-    appear(fine, t, 4.6);
-    black.style.opacity = tw(t, 8.8, 10, (x) => x);
+    black.style.opacity = tw(t, 7.3, 8.5, (x) => x);
   });
 }
 
@@ -324,7 +391,7 @@ window.__render = (t) => {
     if (k > 0.001) b.update(lt);
   }
   // The small brand mark joins after the hook and leaves with the end card.
-  brand.style.opacity = tw(t, 8.6, 9.6) * (1 - tw(t, 61, 61.6));
+  brand.style.opacity = tw(t, 8.6, 9.6) * (1 - tw(t, 66.5, 67.1));
 };
 
 // QA helpers (used by qa-cards.mjs --cut short)

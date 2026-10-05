@@ -271,6 +271,29 @@ it("records the explainer-video API run", async () => {
     // September data. Only Date is faked; sockets and promises are real.
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 8, 30, 10, 0, 0));
+
+    // August: a month of history so comparisons ("this month vs last month") and
+    // budget advice are real. All dated in August, so September's numbers are unchanged.
+    const aug = (date: string, amount: number, vendor: string, category: string, sub: string) => ({ date, amount, account: "Checking", vendor, category, sub_category: sub });
+    await raw("POST", `/api/v1${L}/transactions/bulk`, {
+      transactions: [
+        aug("2026-08-01", 3200, "Acme Payroll", "Income", "Salary"),
+        aug("2026-08-02", -1150, "Landlord", "Housing", "Rent"),
+        aug("2026-08-04", -62, "City Transit", "Transport", "Public transit"),
+        aug("2026-08-20", -62, "City Transit", "Transport", "Public transit"),
+        aug("2026-08-03", -41.2, "Corner Market", "Food", "Groceries"),
+        aug("2026-08-08", -52.3, "Corner Market", "Food", "Groceries"),
+        aug("2026-08-12", -38.75, "Corner Market", "Food", "Groceries"),
+        aug("2026-08-17", -47.6, "Corner Market", "Food", "Groceries"),
+        aug("2026-08-24", -36.4, "Corner Market", "Food", "Groceries"),
+        aug("2026-08-29", -30.55, "Corner Market", "Food", "Groceries"),
+        aug("2026-08-09", -52.1, "Trattoria Roma", "Food", "Dining out"),
+        aug("2026-08-23", -46.5, "Trattoria Roma", "Food", "Dining out"),
+        aug("2026-08-11", -91.2, "Green Energy Co", "Utilities", "Electricity"),
+        aug("2026-08-08", -12.99, "StreamBox", "Entertainment", "Subscriptions"),
+        aug("2026-08-15", -33.1, "Pharma Plus", "Health", "Pharmacy"),
+      ],
+    });
     const statement = [
       "Booking Date,Description,Amount,Currency",
       "2026-09-28,Spotify,\"-9,99\",EUR",
@@ -300,6 +323,13 @@ it("records the explainer-video API run", async () => {
       try { return JSON.parse(text); } catch { return text; } // CSV reports are plain text
     };
     const snap = async (name: string) => writeFileSync(join(OUT, `backup-${name}.json`), (await raw("GET", "/api/v1/backups/export")).text);
+
+    // Questions the film asks in plain words ("have I cut back at the corner store?",
+    // "what should my next budget be?"), answered from this month and last month.
+    await tool("q-cs-this", "find_transactions", { vendor: "Corner Market", period: "this_month" });
+    await tool("q-cs-last", "find_transactions", { vendor: "Corner Market", period: "last_month" });
+    await tool("q-sum-last", "spending_summary", { period: "last_month" });
+    await tool("q-sum-this", "spending_summary", { period: "this_month" });
 
     await tool("q-spending", "spending_summary", { period: "last_30_days" });
     await tool("q-budget", "budgets_and_insights", {});
