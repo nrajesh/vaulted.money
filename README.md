@@ -78,6 +78,7 @@ The README is intentionally short. Use these pages for the details:
 | [Setup and Builds](documentation/SETUP.md) | Full web, desktop, Android, iOS, and release commands. |
 | [User Guide](documentation/USER_GUIDE.md) | What the app does and how to use the main workflows. |
 | [Developer Guide](documentation/DEVELOPER_GUIDE.md) | Project structure, quality checks, AI provider notes, and contribution workflow. |
+| [Local API](documentation/API.md) | Desktop REST API for scripts: manage data and generate reports and backups. |
 | [Architecture](documentation/ARCHITECTURE.md) | Technical diagrams and system design. |
 | [Why Vaulted Money Exists](documentation/WHY_VAULTED_MONEY.md) | Motivation, privacy stance, and project philosophy. |
 | [Support](documentation/SUPPORT.md) | How to get help. |

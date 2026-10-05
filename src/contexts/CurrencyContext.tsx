@@ -16,6 +16,10 @@ import {
   type FrankfurterRate,
 } from "@/constants/frankfurter";
 import { fetchWithTimeout } from "@/utils/apiUtils";
+import {
+  CURRENCIES_CHANGED_EVENT,
+  readCurrencyState,
+} from "@/api/currencySettings";
 
 interface CurrencyContextType {
   selectedCurrency: string;
@@ -77,6 +81,20 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     // Merge defaults with saved rates, prioritizing saved rates but ensuring defaults exist
     return { ...defaultExchangeRates, ...parsedSavedRates };
   });
+
+  // The local API edits these settings in localStorage directly; re-read them
+  // when it announces a change so the open UI does not overwrite its edits.
+  useEffect(() => {
+    const reloadFromStorage = () => {
+      const state = readCurrencyState();
+      setSelectedCurrency(state.base);
+      setCurrencies(state.currencies);
+      setExchangeRatesState(state.rates);
+    };
+    window.addEventListener(CURRENCIES_CHANGED_EVENT, reloadFromStorage);
+    return () =>
+      window.removeEventListener(CURRENCIES_CHANGED_EVENT, reloadFromStorage);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("selectedCurrency", selectedCurrency);

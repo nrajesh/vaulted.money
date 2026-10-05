@@ -37,6 +37,7 @@ import { Capacitor } from "@capacitor/core";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { AIProvider } from "@/types/dataProvider";
 import { useTranslation } from "react-i18next";
+import ApiAccessCard from "@/components/settings/ApiAccessCard";
 
 const SettingsPage = () => {
   const { t } = useTranslation();
@@ -490,6 +491,7 @@ const SettingsPage = () => {
 
       {/* About section */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <ApiAccessCard />
         <ThemedCard className="md:col-span-2 lg:col-span-3">
           <ThemedCardHeader>
             <ThemedCardTitle className="flex items-center gap-2">
