@@ -83,6 +83,33 @@ The README is intentionally short. Use these pages for the details:
 | [Why Vaulted Money Exists](documentation/WHY_VAULTED_MONEY.md) | Motivation, privacy stance, and project philosophy. |
 | [Support](documentation/SUPPORT.md) | How to get help. |
 
+## Using the Local API (desktop)
+
+The desktop app can expose a REST API on your own computer, so scripts and tools can manage your ledgers, accounts, transactions, recurring transactions, budgets, categories, vendors, currencies, languages and AI providers, and generate analytics, insights, reports and backups. It is off by default, listens on `127.0.0.1` only and needs a token. The web and mobile apps do not have it.
+
+1. Open **Settings → Local API**, switch it on, and copy the token.
+2. Call it with any HTTP client:
+
+```bash
+export VM="http://127.0.0.1:47821/api/v1"
+export VM_TOKEN="<token from settings>"
+AUTH="Authorization: Bearer $VM_TOKEN"
+
+# list ledgers, then add a transaction to one
+curl -H "$AUTH" $VM/ledgers
+curl -H "$AUTH" -H "Content-Type: application/json" -X POST $VM/ledgers/$LEDGER/transactions \
+  -d '{"date":"2026-01-15","amount":-42.5,"account":"Checking","vendor":"Grocer","category":"Food"}'
+
+# download a CSV report and a password-protected backup
+curl -H "$AUTH" -OJ "$VM/ledgers/$LEDGER/reports/income-expense?format=csv"
+curl -H "$AUTH" -H "Content-Type: application/json" -X POST -OJ $VM/backups/export \
+  -d '{"password":"a long passphrase"}'
+```
+
+`GET $VM` lists every endpoint. The app must be running (closing the window only hides it). Restoring a backup replaces data and needs `"confirm_replace": true`.
+
+The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md).
+
 ## Support the Project
 
 Vaulted Money is free and open-source under the MIT license. If you find it useful and want to support development, you have several options:

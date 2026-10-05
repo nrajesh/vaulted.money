@@ -363,6 +363,56 @@ describe("transactions", () => {
   });
 });
 
+describe("scheduled transactions", () => {
+  beforeEach(clearAll);
+
+  it("manages recurring transactions", async () => {
+    const ledger = await createLedger("EUR");
+    const base = `/ledgers/${ledger.id}/scheduled-transactions`;
+    const created = await ok<Entity>(
+      call("POST", base, {
+        date: "2030-01-01",
+        amount: -900,
+        account: "Bank",
+        vendor: "Landlord",
+        category: "Rent",
+        frequency: "1m",
+      }),
+      201,
+    );
+    expect(created.currency).toBe("EUR");
+    expect(
+      (await call("POST", base, { ...created, frequency: "often" })).status,
+    ).toBe(400);
+
+    const patched = await ok<Entity>(
+      call("PATCH", `${base}/${created.id}`, { amount: -950 }),
+    );
+    expect(patched.amount).toBe(-950);
+    const skipped = await ok<{ ignored_dates: string[] }>(
+      call("POST", `${base}/${created.id}/skip`, { date: "2030-02-01" }),
+    );
+    expect(skipped.ignored_dates).toEqual(["2030-02-01"]);
+
+    const cats = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/categories`),
+    );
+    expect(cats.data.map((c) => c.name)).toContain("Rent");
+
+    const other = await createLedger();
+    expect(
+      (
+        await call(
+          "GET",
+          `/ledgers/${other.id}/scheduled-transactions/${created.id}`,
+        )
+      ).status,
+    ).toBe(404);
+    expect((await call("DELETE", `${base}/${created.id}`)).status).toBe(204);
+    expect((await ok<{ data: unknown[] }>(call("GET", base))).data).toEqual([]);
+  });
+});
+
 describe("budgets", () => {
   beforeEach(clearAll);
 

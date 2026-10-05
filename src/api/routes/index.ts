@@ -8,6 +8,7 @@ import { currencyRoutes } from "./currencies";
 import { insightsReportRoutes } from "./insightsReports";
 import { languageRoutes } from "./languages";
 import { ledgerRoutes } from "./ledgers";
+import { scheduledTransactionRoutes } from "./scheduledTransactions";
 import { transactionRoutes } from "./transactions";
 import { vendorRoutes } from "./vendors";
 
@@ -17,6 +18,7 @@ const resourceRoutes: RouteDef[] = [
   ...vendorRoutes,
   ...categoryRoutes,
   ...transactionRoutes,
+  ...scheduledTransactionRoutes,
   ...budgetRoutes,
   ...currencyRoutes,
   ...aiProviderRoutes,

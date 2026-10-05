@@ -86,6 +86,19 @@ Under `/ledgers/{ledgerId}/transactions`.
 | `DELETE /transfer/{transferId}` | delete both legs |
 | `GET/PATCH/DELETE /{transactionId}` | |
 
+### Recurring (scheduled) transactions
+Under `/ledgers/{ledgerId}/scheduled-transactions`.
+
+| | |
+|---|---|
+| `GET` · `POST` | list · create `{date, amount, account, vendor, category, frequency, sub_category?, end_date?, remarks?, currency?, ignored_dates?}` |
+| `GET/PATCH/DELETE /{scheduledId}` | Deleting a schedule keeps the transactions it already created. |
+| `POST /{scheduledId}/skip` | `{date}`: skip one occurrence |
+
+- `date` is the **next** occurrence. The app turns due schedules into real transactions itself, whenever it is running, exactly as for schedules created in the UI.
+- `frequency`: `Daily`, `Weekly`, `Monthly`, `Yearly`, `One-time`, or a duration like `2w` (`d`, `w`, `m`, `y`).
+- Accounts, vendors and categories that do not exist yet are created; `currency` defaults to the account's.
+
 ### Budgets
 Under `/ledgers/{ledgerId}/budgets`. Responses include the computed `spent_amount`.
 
@@ -176,7 +189,6 @@ Anything running as your user on the same computer can read the token file, so t
 ## Limitations
 
 - Desktop only, and only while the app is running.
-- Scheduled (recurring) transactions are not exposed yet.
 - Scheduled-backup folders must be chosen in the app (they need an OS folder grant), so the API can pause, resume, retime and remove schedules but not create them.
 - Only one app instance serves the API; if the port is taken, pick another in Settings.
 
