@@ -11,7 +11,10 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DURATION, SCENES, scene } from "./timeline.mjs";
+// CUT=short builds the 70-second teaser's track (shorter waves, no chapter-based sections).
+const CUT = process.env.CUT ?? "full";
+const { DURATION, SCENES } = await import(CUT === "short" ? "./short/timeline.mjs" : "./timeline.mjs");
+const scene = (id) => SCENES.find((s) => s.id === id);
 
 const SR = 48000;
 const N = Math.ceil(DURATION * SR);
@@ -49,7 +52,9 @@ const CHORDS = [
   [48, 55, 59, 64, 67], // Cmaj7 (open)
   [55, 59, 62, 64, 69], // Gsus2/6-ish
 ];
-const T = { enable: scene("enable").start, create: scene("create").start, privacy: scene("privacy"), unique: scene("unique").start };
+const T = CUT === "short"
+  ? { enable: 3, create: 9, privacy: { start: 1e9, end: 1e9 }, unique: DURATION - 10 }
+  : { enable: scene("enable").start, create: scene("create").start, privacy: scene("privacy"), unique: scene("unique").start };
 // Quieter for the title and the privacy scene; fullest through the chat chapter.
 const section = (t) => (t < T.enable ? 0.7 : t >= T.privacy.start && t < T.privacy.end ? 0.6 : t < T.unique ? 1 : 0.8);
 
@@ -99,7 +104,7 @@ for (let b = 0; b * BEAT < DURATION; b++) {
 //  - a smooth raised-cosine envelope (no sharp crest, long even retreat)
 //  - nothing above ~1.6 kHz, so there is no hiss, only the rush of water
 //  - left and right are independent, with a slow drifting ripple, so it feels wide
-const WAVE = { rise: 3.4, fall: 5.8, peak: 0.036 };
+const WAVE = CUT === "short" ? { rise: 2.2, fall: 3.6, peak: 0.036 } : { rise: 3.4, fall: 5.8, peak: 0.036 };
 function pinkNoise() {
   // Paul Kellet's economy pink-noise filter.
   let b0 = 0, b1 = 0, b2 = 0;
@@ -183,5 +188,6 @@ header.writeUInt32LE(SR, 24); header.writeUInt32LE(SR * 4, 28); header.writeUInt
 header.write("data", 36); header.writeUInt32LE(data.length, 40);
 const out = join(dirname(fileURLToPath(import.meta.url)), "out");
 mkdirSync(out, { recursive: true });
-writeFileSync(join(out, "soundtrack.wav"), Buffer.concat([header, data]));
-console.log("• soundtrack.wav", DURATION.toFixed(1) + "s");
+const fileName = CUT === "short" ? "soundtrack-short.wav" : "soundtrack.wav";
+writeFileSync(join(out, fileName), Buffer.concat([header, data]));
+console.log("•", fileName, DURATION.toFixed(1) + "s");

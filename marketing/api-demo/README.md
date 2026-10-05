@@ -21,6 +21,33 @@ collection).
   names and your category list; no amounts, dates or accounts).
 - The agent dialogue's wording is illustrative; every call it shows is real.
 
+## The 70-second teaser (for people wary of yet another budget app)
+
+`short/` is a separate cut that reuses the engine, the recorded real data and the real screens
+but tells the story from the viewer's side rather than the feature list:
+
+| Time | Beat |
+|---|---|
+| 0:00 | "Another budget app?" Monthly fees, your bank login, your data in their cloud |
+| 0:09 | "Vaulted Money does it differently": **Free · Private · Open · Yours** (icon stickers) |
+| 0:17 | "Where did my money go?" (real Analytics screen, shares from the recorded run) |
+| 0:26 | "Am I over budget?" (real Dashboard, 104% on the Food budget) |
+| 0:33 | "Got a messy bank file?" (the bank CSV, then the real Transactions screen) |
+| 0:43 | "Want it smarter? Plug in your own tools" (the API story: a local AI, scripts, dashboards) |
+| 0:52 | "Not like the others": side by side (fee, servers, closed code, lock-in) |
+| 1:01 | Free. Private. Open. Yours. + one QR code to vaulted.money |
+
+**What "Free" claims.** Only what the repository supports: MIT-licensed, no hosted account, no
+subscription wall around budgeting, and no feature difference between builds. The end card carries
+one line of fine print: free to use and to build, while the app-store versions are an optional
+one-time purchase that supports development (README, "Support the Project"; specs/032).
+
+```bash
+node marketing/api-demo/qa-cards.mjs --cut short        # fit, capitals, 2.5 s in focus
+node marketing/api-demo/render.mjs --cut short          # → out/vaulted-money-teaser.mp4
+node marketing/api-demo/render.mjs --cut short --draft  # quick 960x540 check
+```
+
 ## Render
 
 ```bash

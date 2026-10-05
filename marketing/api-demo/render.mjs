@@ -15,7 +15,6 @@ import { createServer } from "node:http";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DURATION, FPS as BASE_FPS, chapters } from "./timeline.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const REPO = join(ROOT, "..", "..");
@@ -23,6 +22,12 @@ const OUT = join(ROOT, "out");
 const args = process.argv.slice(2);
 const flag = (n) => args.includes(`--${n}`);
 const opt = (n, d) => (args.includes(`--${n}`) ? args[args.indexOf(`--${n}`) + 1] : d);
+// --cut short renders the 70-second teaser (short/), otherwise the full walkthrough.
+const cut = opt("cut", "full");
+const timeline = await import(cut === "short" ? "./short/timeline.mjs" : "./timeline.mjs");
+const { DURATION, FPS: BASE_FPS } = timeline;
+const chapters = timeline.chapters;
+const prefix = cut === "short" ? "teaser-" : "";
 const draft = flag("draft");
 const fps = draft ? 15 : BASE_FPS;
 const scale = draft ? 0.5 : 1;
@@ -49,7 +54,7 @@ async function openPage() {
   const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: scale });
   const page = await ctx.newPage();
   page.on("pageerror", (e) => console.error("page error:", e.message));
-  await page.goto(base + "/index.html");
+  await page.goto(base + "/index.html?cut=" + cut);
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
   return page;
 }
@@ -86,29 +91,29 @@ await Promise.all(
 await browser.close(); server.close();
 
 // audio
-const audio = join(OUT, "soundtrack.wav");
+const audio = join(OUT, cut === "short" ? "soundtrack-short.wav" : "soundtrack.wav");
 const silent = flag("silent");
 if (!silent) {
   await new Promise((resolve, reject) => {
-    const p = spawn(process.execPath, [join(ROOT, "soundtrack.mjs")], { stdio: "inherit" });
+    const p = spawn(process.execPath, [join(ROOT, "soundtrack.mjs")], { stdio: "inherit", env: { ...process.env, CUT: cut } });
     p.on("close", (c) => (c === 0 ? resolve() : reject(new Error("soundtrack failed"))));
   });
 }
-const outFile = opt("out", join(OUT, draft ? "vaulted-money-local-api-draft.mp4" : "vaulted-money-local-api.mp4"));
+const outFile = opt("out", join(OUT, cut === "short" ? (draft ? "vaulted-money-teaser-draft.mp4" : "vaulted-money-teaser.mp4") : draft ? "vaulted-money-local-api-draft.mp4" : "vaulted-money-local-api.mp4"));
 
 // Chapters: embedded in the MP4 (QuickTime, VLC, most players show a chapter
 // menu), plus a WebVTT track, YouTube-style timestamps and a click-to-seek player page.
 const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 const vttTime = (t) => `${String(Math.floor(t / 3600)).padStart(2, "0")}:${String(Math.floor(t / 60) % 60).padStart(2, "0")}:${(t % 60).toFixed(3).padStart(6, "0")}`;
 const chapterList = chapters();
-const metaFile = join(OUT, "chapters.ffmetadata");
+const metaFile = join(OUT, prefix + "chapters.ffmetadata");
 writeFileSync(metaFile, ";FFMETADATA1\n" + chapterList.map((c) => `[CHAPTER]\nTIMEBASE=1/1000\nSTART=${Math.round(c.start * 1000)}\nEND=${Math.round(c.end * 1000)}\ntitle=${c.title}\n`).join("\n"));
-writeFileSync(join(OUT, "chapters.vtt"), "WEBVTT\n\n" + chapterList.map((c) => `${vttTime(c.start)} --> ${vttTime(c.end)}\n${c.title}\n`).join("\n"));
+writeFileSync(join(OUT, prefix + "chapters.vtt"), "WEBVTT\n\n" + chapterList.map((c) => `${vttTime(c.start)} --> ${vttTime(c.end)}\n${c.title}\n`).join("\n"));
 const srtTime = (t) => vttTime(t).replace(".", ",");
-writeFileSync(join(OUT, "chapters.srt"), chapterList.map((c, i) => `${i + 1}\n${srtTime(c.start)} --> ${srtTime(c.end)}\n${c.title}\n`).join("\n"));
-writeFileSync(join(OUT, "chapters.txt"), chapterList.map((c) => `${mmss(c.start)} ${c.title}`).join("\n") + "\n");
+writeFileSync(join(OUT, prefix + "chapters.srt"), chapterList.map((c, i) => `${i + 1}\n${srtTime(c.start)} --> ${srtTime(c.end)}\n${c.title}\n`).join("\n"));
+writeFileSync(join(OUT, prefix + "chapters.txt"), chapterList.map((c) => `${mmss(c.start)} ${c.title}`).join("\n") + "\n");
 const videoName = outFile.split("/").pop();
-writeFileSync(join(OUT, "player.html"), `<!doctype html>
+if (chapterList.length) writeFileSync(join(OUT, prefix + "player.html"), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vaulted Money · Local API film</title>
 <style>
@@ -135,11 +140,11 @@ const ff = ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", join(fr
 if (!silent) ff.push("-ss", String(from), "-t", String(to - from), "-i", audio);
 // QuickTime needs a real chapter track (a text track the video refers to as "chap").
 // MP4Box builds exactly that; without it, fall back to ffmpeg's own chapters.
-const hasMp4Box = spawnSync("which", ["MP4Box"]).status === 0;
-if (!hasMp4Box) ff.push("-i", metaFile, "-map_metadata", String(silent ? 1 : 2), "-map_chapters", String(silent ? 1 : 2));
+const hasMp4Box = spawnSync("which", ["MP4Box"]).status === 0 && chapterList.length > 0;
+if (!hasMp4Box && chapterList.length) ff.push("-i", metaFile, "-map_metadata", String(silent ? 1 : 2), "-map_chapters", String(silent ? 1 : 2));
 ff.push("-map", "0:v"); if (!silent) ff.push("-map", "1:a");
 // A keyframe on every chapter marker, so players can show its thumbnail and jump there instantly.
-ff.push("-force_key_frames", chapterList.map((c) => c.start.toFixed(3)).join(","));
+if (chapterList.length) ff.push("-force_key_frames", chapterList.map((c) => c.start.toFixed(3)).join(","));
 ff.push("-c:v", "libx264", "-preset", draft ? "veryfast" : "slow", "-crf", draft ? "26" : "17", "-pix_fmt", "yuv420p", "-vf", "format=yuv420p");
 if (!silent) ff.push("-c:a", "aac", "-b:a", "192k", "-shortest");
 const encoded = hasMp4Box ? outFile.replace(/\.mp4$/, ".encoded.mp4") : outFile;
@@ -151,7 +156,7 @@ await new Promise((resolve, reject) => {
 if (hasMp4Box) {
   // Video is track 1, audio track 2 (if any), the chapter track is added last.
   const chapterTrack = silent ? 2 : 3;
-  const mp4box = ["-add", encoded, "-add", join(OUT, "chapters.srt") + ":name=Chapters:lang=eng:disable", "-ref", `1:chap:${chapterTrack}`];
+  const mp4box = ["-add", encoded, "-add", join(OUT, prefix + "chapters.srt") + ":name=Chapters:lang=eng:disable", "-ref", `1:chap:${chapterTrack}`];
   if (!silent) mp4box.push("-ref", `2:chap:${chapterTrack}`);
   mp4box.push("-new", outFile); // (adding the older Nero chapter list too makes MP4Box drop the track)
   const result = spawnSync("MP4Box", mp4box, { stdio: ["ignore", "ignore", "inherit"] });

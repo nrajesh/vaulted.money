@@ -12,9 +12,10 @@ import { createServer } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DISSOLVE, SCENES } from "./timeline.mjs";
-
-const HOLD = 3.0; // seconds every card must stay in focus before the dissolve
+const args = process.argv.slice(2);
+const cut = args.includes("--cut") ? args[args.indexOf("--cut") + 1] : "full";
+const { DISSOLVE, SCENES } = await import(cut === "short" ? "./short/timeline.mjs" : "./timeline.mjs");
+const HOLD = cut === "short" ? 2.5 : 3.0; // seconds every card must stay in focus before the dissolve
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const REPO = join(ROOT, "..", "..");
 const TYPES = { ".html": "text/html", ".css": "text/css", ".mjs": "text/javascript", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
@@ -28,7 +29,7 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 const browser = await chromium.launch();
 const page = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
-await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
+await page.goto(`http://127.0.0.1:${server.address().port}/index.html?cut=${cut}`);
 await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
 
 let failures = 0;

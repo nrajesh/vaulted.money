@@ -8,6 +8,10 @@
 </head>
 <body>
 <div id="stage"></div>
-<script type="module" src="film.mjs"></script>
+<script type="module">
+  // ?cut=short loads the 70-second teaser; the default is the full walkthrough.
+  const cut = new URLSearchParams(location.search).get("cut");
+  await import(cut === "short" ? "./short/film.mjs" : "./film.mjs");
+</script>
 </body>
 </html>
