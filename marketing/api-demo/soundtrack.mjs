@@ -93,20 +93,48 @@ for (let b = 0; b * BEAT < DURATION; b++) {
   voice(t0, 0.35, (t) => Math.sin(TAU * (48 + 60 * Math.exp(-t * 28)) * t) * Math.exp(-t * 11) * 0.16, { send: 0.04 });
 }
 
-// Swoosh at each scene change (band-passed noise rising in pitch)
-for (const sc of SCENES.slice(1)) {
-  const t0 = sc.start - 0.45;
-  let lp = 0;
-  voice(t0, 1.3, (t) => {
-    const e = Math.sin(Math.PI * Math.min(1, t / 1.3)) ** 2;
-    const k = 0.04 + 0.5 * (t / 1.3) ** 2;
-    lp += (rnd() - lp) * k;
-    return lp * e * 0.35;
-  }, { send: 0.4, pan: 0 });
-  // tiny landing tone
-  const f = midi(CHORDS[Math.floor(sc.start / BAR) % 4][2] + 36);
-  voice(sc.start, 1.6, (t) => Math.sin(TAU * f * t) * Math.exp(-t * 3.2) * 0.05, { send: 0.6 });
+// Sea waves at each scene change: a swell that builds, breaks on the cut and
+// drains back, so every transition clears the head like a wave on a shore.
+//  - the body is brown-ish noise (heavy low-pass) whose brightness follows the swell
+//  - a hiss of foam breaks at the crest and fizzes away on the retreat
+//  - two slow, unrelated ripples make every wave a little different
+const WAVE = { swell: 2.3, retreat: 2.9 };
+function pink() {
+  // Paul Kellet's economy pink-noise filter.
+  let b0 = 0, b1 = 0, b2 = 0;
+  return () => {
+    const w = rnd();
+    b0 = 0.99765 * b0 + w * 0.099046;
+    b1 = 0.963 * b1 + w * 0.2965164;
+    b2 = 0.57 * b2 + w * 1.0526913;
+    return (b0 + b1 + b2 + w * 0.1848) * 0.2;
+  };
 }
+SCENES.slice(1).forEach((sc, n) => {
+  const crest = sc.start; // the wave breaks exactly on the scene change
+  const start = crest - WAVE.swell;
+  const total = WAVE.swell + WAVE.retreat;
+  for (const side of [-1, 1]) {
+    const body = pink(), foam = pink();
+    let lpBody = 0, lpFoam = 0, hpFoam = 0;
+    const ripple = 0.35 + 0.2 * ((n * 7) % 5) / 5; // Hz
+    const phase = n * 1.7;
+    voice(start, total, (t) => {
+      const swell = t < WAVE.swell ? Math.pow(t / WAVE.swell, 2.4) : Math.exp(-(t - WAVE.swell) * 1.05);
+      const rip = 1 + 0.18 * Math.sin(TAU * ripple * t + phase) + 0.1 * Math.sin(TAU * ripple * 2.3 * t + phase * 2);
+      // body: brightness rises with the swell and falls on the retreat
+      const kBody = 0.012 + 0.07 * swell;
+      lpBody += (body() - lpBody) * kBody;
+      // foam: a hiss that appears at the crest and fizzes away more slowly
+      const foamEnv = t < WAVE.swell ? Math.pow(Math.max(0, (t - WAVE.swell * 0.7) / (WAVE.swell * 0.3)), 2) * 0.5 : Math.exp(-(t - WAVE.swell) * 0.8);
+      const f = foam();
+      lpFoam += (f - lpFoam) * 0.5;
+      hpFoam = lpFoam - (hpFoam += (lpFoam - hpFoam) * 0.06);
+      const fizz = 0.55 + 0.45 * Math.sin(TAU * 9 * t + side) * Math.sin(TAU * 0.7 * t); // bubbling, not steady
+      return (lpBody * 5.2 * swell * rip + hpFoam * 2.6 * foamEnv * fizz * rip) * 0.075;
+    }, { pan: side * 0.55, send: 0.35 });
+  }
+});
 
 // Title sparkle and final resolve
 voice(0.2, 5, (t) => Math.sin(TAU * midi(81) * t) * Math.exp(-t * 1.2) * 0.05 * Math.min(1, t / 0.3), { send: 0.7 });

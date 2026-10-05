@@ -8,7 +8,7 @@ Lets a local AI agent (LM Studio, Claude Code, any MCP client) read and change y
 
 ## Why eight tools, not 99
 
-A model re-reads every tool definition on every turn. The API has ~99 operations (≈105 KB of spec), which makes small and local models slow. These eight definitions total ≈5 KB, return trimmed, pre-aggregated answers, and still reach every endpoint.
+A model re-reads every tool definition on every turn. The API has ~99 operations (≈105 kB of spec), which makes small and local models slow. These eight definitions total ≈5.6 kB, return trimmed, pre-aggregated answers, and still reach every endpoint.
 
 | Tool | Use it for | Changes data? |
 |---|---|---|

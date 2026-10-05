@@ -133,3 +133,32 @@ body { font-family: var(--sans); color: var(--fg); -webkit-font-smoothing: antia
 .stepcard { position: absolute; display: flex; gap: 18px; align-items: center; padding: 18px 22px; width: 640px; border-radius: 16px; border: 1px solid var(--border); background: var(--card); box-shadow: 0 20px 50px #0007; }
 .stepcard .n { width: 46px; height: 46px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 800 22px var(--sans); background: hsl(188 57% 59% / .15); color: var(--accent-soft); border: 1px solid hsl(188 57% 59% / .5); }
 .stepcard b { font: 700 24px var(--sans); display: block; } .stepcard small { font: 500 18px/1.35 var(--sans); color: var(--muted); }
+
+/* soft glow for the privacy wording; --g pulses gently (set per frame) */
+.glow { color: var(--accent-soft); text-shadow: 0 0 calc(10px + 14px * var(--g, .6)) hsl(188 57% 59% / calc(.32 + .5 * var(--g, .6))); }
+.pill.glowbox { box-shadow: 0 0 calc(10px + 16px * var(--g, .6)) hsl(188 57% 59% / calc(.18 + .3 * var(--g, .6))); }
+
+/* a label above each app screenshot (never over the picture) */
+.shotwrap { position: absolute; }
+.shotwrap .shotlabel { position: absolute; left: 2px; top: -34px; font: 600 17px var(--sans); color: var(--muted); letter-spacing: .02em; white-space: nowrap; }
+.shotwrap .shotlabel::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-right: 9px; box-shadow: 0 0 10px var(--accent); }
+.shotwrap .shot { position: absolute; inset: 0; left: 0; top: 0; }
+.shotwrap .shot::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 70px; background: linear-gradient(0deg, hsl(222 84% 5%), transparent); pointer-events: none; }
+
+/* code word that flips into its plain-language meaning */
+.flip { display: inline-grid; }
+.flip > span { grid-area: 1 / 1; }
+.flip .fa { font-family: var(--mono); color: var(--accent-soft); }
+
+/* takeaway slide: at most two big cards */
+.demo { position: absolute; inset: 0; }
+.take { position: absolute; display: flex; gap: 28px; align-items: flex-start; padding: 38px 42px; width: 820px; min-height: 280px; border-radius: 26px; background: linear-gradient(180deg, hsl(222 60% 9%), hsl(222 84% 5%)); border: 1px solid hsl(188 57% 59% / .45); box-shadow: 0 40px 100px #000c, 0 0 70px hsl(188 57% 59% / .12); }
+.take .tk-ico { width: 76px; height: 76px; flex: none; border-radius: 22px; display: grid; place-items: center; background: hsl(188 57% 59% / .14); color: var(--accent); }
+.take .tk-ico svg { width: 40px; height: 40px; }
+.take .tk-title { font: 800 46px/1.1 var(--sans); letter-spacing: -.03em; min-height: 52px; }
+.take .tk-title .fa { font-size: 40px; font-weight: 700; letter-spacing: 0; }
+.take .tk-text { font: 500 31px/1.42 var(--sans); color: hsl(210 30% 86%); margin-top: 18px; }
+
+/* neutral feature tags (kept apart from the green/blue/orange brand pills) */
+.ftag { display: inline-flex; align-items: center; gap: 12px; padding: 13px 22px; border-radius: 14px; background: hsl(217 32% 12%); border: 1px solid hsl(217 32% 30%); font: 600 23px var(--sans); color: hsl(210 30% 90%); }
+.ftag svg { width: 22px; height: 22px; color: var(--accent); flex: none; }

@@ -132,6 +132,12 @@ await desktop.getByRole("switch", { name: /enable local api/i }).click();
 await desktop.waitForTimeout(800);
 await card("settings-api-on");
 await desktop.close();
+// Light theme: the app reads its theme from localStorage ("vite-ui-theme").
+await load("final");
+await page.evaluate(() => localStorage.setItem("vite-ui-theme", "light"));
+await shot("/dashboard", "dashboard-light");
+await page.evaluate(() => localStorage.setItem("vite-ui-theme", "dark"));
+
 await page.goto(`${APP}/ledgers`);
 await page.waitForTimeout(1500);
 await page.screenshot({ path: join(SCREENS, "ledgers.png") });

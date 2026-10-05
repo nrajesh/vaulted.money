@@ -15,7 +15,7 @@ import { createServer } from "node:http";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DURATION, FPS as BASE_FPS } from "./timeline.mjs";
+import { DURATION, FPS as BASE_FPS, chapters } from "./timeline.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const REPO = join(ROOT, "..", "..");
@@ -95,8 +95,44 @@ if (!silent) {
   });
 }
 const outFile = opt("out", join(OUT, draft ? "vaulted-money-local-api-draft.mp4" : "vaulted-money-local-api.mp4"));
+
+// Chapters: embedded in the MP4 (QuickTime, VLC, most players show a chapter
+// menu), plus a WebVTT track, YouTube-style timestamps and a click-to-seek player page.
+const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+const vttTime = (t) => `${String(Math.floor(t / 3600)).padStart(2, "0")}:${String(Math.floor(t / 60) % 60).padStart(2, "0")}:${(t % 60).toFixed(3).padStart(6, "0")}`;
+const chapterList = chapters();
+const metaFile = join(OUT, "chapters.ffmetadata");
+writeFileSync(metaFile, ";FFMETADATA1\n" + chapterList.map((c) => `[CHAPTER]\nTIMEBASE=1/1000\nSTART=${Math.round(c.start * 1000)}\nEND=${Math.round(c.end * 1000)}\ntitle=${c.title}\n`).join("\n"));
+writeFileSync(join(OUT, "chapters.vtt"), "WEBVTT\n\n" + chapterList.map((c) => `${vttTime(c.start)} --> ${vttTime(c.end)}\n${c.title}\n`).join("\n"));
+writeFileSync(join(OUT, "chapters.txt"), chapterList.map((c) => `${mmss(c.start)} ${c.title}`).join("\n") + "\n");
+const videoName = outFile.split("/").pop();
+writeFileSync(join(OUT, "player.html"), `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vaulted Money · Local API film</title>
+<style>
+:root{--bg:#0a0f1a;--card:#0d1526;--line:#1e2a44;--fg:#f1f5f9;--muted:#8fa3bf;--accent:#5fcfdc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 Inter,system-ui,sans-serif}
+main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;max-width:1500px;margin:0 auto;padding:24px}
+video{width:100%;border-radius:14px;background:#000;border:1px solid var(--line)}
+h1{font-size:20px;margin:0 0 14px}nav{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;align-self:start;position:sticky;top:24px}
+nav button{all:unset;display:flex;gap:12px;width:100%;padding:10px 12px;border-radius:10px;cursor:pointer;box-sizing:border-box}
+nav button:hover{background:#13203a}nav button.on{background:#10303a;color:var(--accent)}nav time{color:var(--muted);font-variant-numeric:tabular-nums;min-width:44px}
+@media(max-width:900px){main{grid-template-columns:1fr}nav{position:static}}
+</style></head><body><main>
+<section><h1>Vaulted Money · the Local API</h1>
+<video id="v" controls preload="metadata" src="${videoName}"><track kind="chapters" srclang="en" label="Chapters" src="chapters.vtt" default></video></section>
+<nav aria-label="Chapters"><h1 style="font-size:15px;color:var(--muted);margin:4px 12px 8px">CHAPTERS</h1>
+${chapterList.map((c) => `<button data-t="${c.start}"><time>${mmss(c.start)}</time><span>${c.title}</span></button>`).join("\n")}
+</nav></main>
+<script>
+const v=document.getElementById("v"),btns=[...document.querySelectorAll("nav button")];
+btns.forEach(b=>b.onclick=()=>{v.currentTime=+b.dataset.t;v.play()});
+v.ontimeupdate=()=>{let a=-1;btns.forEach((b,i)=>{if(v.currentTime>=+b.dataset.t)a=i});btns.forEach((b,i)=>b.classList.toggle("on",i===a))};
+</script></body></html>`);
 const ff = ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", join(frames, "f%05d.jpg")];
 if (!silent) ff.push("-ss", String(from), "-t", String(to - from), "-i", audio);
+ff.push("-i", metaFile, "-map_metadata", String(silent ? 1 : 2), "-map_chapters", String(silent ? 1 : 2));
+ff.push("-map", "0:v"); if (!silent) ff.push("-map", "1:a");
 ff.push("-c:v", "libx264", "-preset", draft ? "veryfast" : "slow", "-crf", draft ? "26" : "17", "-pix_fmt", "yuv420p", "-vf", "format=yuv420p");
 if (!silent) ff.push("-c:a", "aac", "-b:a", "192k", "-shortest");
 ff.push("-movflags", "+faststart", outFile);

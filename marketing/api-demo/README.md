@@ -1,6 +1,6 @@
 # Vaulted Money: Local API explainer film
 
-A ~3-minute film showing the desktop app's [Local API](../../documentation/API.md):
+A ~4-minute film showing the desktop app's [Local API](../../documentation/API.md):
 create a ledger, add an account, add and import transactions, categorise from
 history, opt-in AI, the privacy model, handing the OpenAPI spec to an AI agent,
 and the three ways to drive it (the app's UI, your own GUI, the Postman
@@ -47,24 +47,42 @@ app's dark theme tokens (`src/globals.css`). Pacing is medium: each scene holds
 one idea for 9–14 s, cross-fades rather than cuts, and nothing new appears
 within ~1.2 s of the previous element.
 
+Each scene is a short, quick demo followed by a **takeaway slide** of at most two
+cards that stays up for 6-8 seconds: the animation earns attention, the cards are what
+people read. Code words (`dry_run`, tool names) appear for a moment and then flip into
+their plain meaning. The privacy wording glows softly.
+
 | Time | Scene |
 |---|---|
 | 0:00 | Title |
 | 0:07 | Switch it on (Settings → Local API) |
-| 0:17 | Create a ledger, add an account |
-| 0:30 | Add transactions, import a CSV (`dry_run` first) |
-| 0:43 | Categorise from history |
-| 0:54 | Optional AI (what the model receives) |
-| 1:08 | Privacy: loopback, token, no browser access, write-only keys |
-| 1:19 | **Chat with it** (6 scenes): local model + MCP server, 8 small tools vs the 105 KB spec |
-| 1:30 | …"Where is my money going?" and "Am I over budget?", with dates the server resolved |
-| 1:46 | …add a transaction by chat, with the approval prompt; the app shows it |
-| 1:59 | …import a bank CSV (preview, then import) |
-| 2:16 | …delete an account: preview, approval, confirm |
-| 2:31 | …other questions: top vendors, a vendor lookup, a CSV report via `search_api` + `call_api` |
-| 2:41 | Three ways to use it: app UI, custom GUI, Postman |
-| 2:53 | Why it is different |
-| 3:03 | End card |
+| 0:20 | Create a ledger and an account |
+| 0:33 | Add transactions and import a CSV (preview first) |
+| 0:47 | Categorise from history |
+| 0:59 | Optional AI: what the model receives and answers |
+| 1:19 | Privacy: loopback, token, no browser access, write-only keys |
+| 1:33 | Chat: how it works (local model + MCP server, 8 small tools vs the full spec) |
+| 1:49 | Chat: ask about your money (dates resolved by the server) |
+| 2:05 | Chat: add a transaction, behind an approval prompt |
+| 2:19 | Chat: import a bank CSV (preview, then import) |
+| 2:36 | Chat: delete an account (preview, approval, confirm) |
+| 2:51 | Chat: more questions |
+| 3:03 | Three ways to use it: app, your own interface, Postman |
+| 3:16 | Light and dark theme (real light-mode screens) |
+| 3:26 | Why it is different |
+| 3:40 | End card with QR codes (website and source) |
+
+Figures on screen are computed, not typed: operations, tools and sizes come from the recorded
+run (99 operations, 8 tools, ≈105 kB spec vs ≈5.6 kB tool list); the Postman collection has
+202 requests and a standard run makes 200 requests with 545 passing checks.
+
+**Chapters.** `render.mjs` embeds them in the MP4 (QuickTime, VLC and most players show a
+chapter menu) and writes `out/chapters.vtt`, `out/chapters.txt` (YouTube-style timestamps) and
+`out/player.html`, a page with a clickable chapter list. Open it next to the MP4. Clickable
+areas inside the picture are not possible in a video file.
+
+**QR codes.** `python3 marketing/api-demo/make-qr.py` (needs `pip install segno`) writes
+`out/qr-*.svg`; the render reads them.
 
 The chat scenes use `mcp-run.json`, recorded by the same capture step: it runs the real
 [MCP server](../../mcp/README.md) against the real API with "today" fixed to 30 Sep, so
