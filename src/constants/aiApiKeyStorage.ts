@@ -1,5 +1,8 @@
 const AI_API_KEY_PREFIX = "vaultedmoney_ai_apiKey_";
-const LEGACY_AI_API_KEY_PREFIX = "vaultedmoney_ai_apiKey_";
+// Keys saved before the rename from Budget It. This must differ from the
+// current prefix: writing removes the legacy key, so identical prefixes would
+// delete every key the moment it is saved.
+const LEGACY_AI_API_KEY_PREFIX = "budgetit_ai_apiKey_";
 
 export function readAiApiKeyFromStorage(providerId: string): string {
   const key = `${AI_API_KEY_PREFIX}${providerId}`;
@@ -17,11 +20,7 @@ export function readAiApiKeyFromStorage(providerId: string): string {
 
 export function writeAiApiKeyToStorage(providerId: string, apiKey: string) {
   localStorage.setItem(`${AI_API_KEY_PREFIX}${providerId}`, apiKey);
-  // The legacy and current prefixes are currently identical; removing the
-  // legacy key unconditionally would delete the value that was just written.
-  if (LEGACY_AI_API_KEY_PREFIX !== AI_API_KEY_PREFIX) {
-    localStorage.removeItem(`${LEGACY_AI_API_KEY_PREFIX}${providerId}`);
-  }
+  localStorage.removeItem(`${LEGACY_AI_API_KEY_PREFIX}${providerId}`);
 }
 
 export function removeAiApiKeyFromStorage(providerId: string) {
