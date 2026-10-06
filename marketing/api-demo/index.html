@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vaulted Money — Local API film</title>
+<link rel="stylesheet" href="out/fonts.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="stage"></div>
+<script type="module">
+  // ?cut=short loads the 70-second teaser; the default is the full walkthrough.
+  const cut = new URLSearchParams(location.search).get("cut");
+  await import(cut === "short" ? "./short/film.mjs" : "./film.mjs");
+</script>
+</body>
+</html>

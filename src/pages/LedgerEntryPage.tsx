@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useTransactions } from "@/contexts/TransactionsContext";
@@ -34,6 +34,7 @@ import { ManageLedgerDialog } from "@/components/dialogs/ManageLedgerDialog";
 import CSVMappingDialog from "@/components/transactions/CSVMappingDialog";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { decryptData } from "@/utils/crypto";
+import { unwrapBackupEnvelope } from "@/utils/backupUtils";
 import { showSuccess, showError } from "@/utils/toast";
 import PasswordDialog from "@/components/dialogs/PasswordDialog";
 import { Button } from "@/components/ui/button";
@@ -310,7 +311,7 @@ const LedgerEntryPage = () => {
             totalStages: 100,
           });
 
-          await dataProvider.importData(parsed);
+          await dataProvider.importData(unwrapBackupEnvelope(parsed));
 
           setOperationProgress({
             title: "Importing Data",
@@ -348,7 +349,7 @@ const LedgerEntryPage = () => {
       });
 
       const decryptedParams = await decryptData(tempImportFile, password);
-      const data = JSON.parse(decryptedParams);
+      const data = unwrapBackupEnvelope(JSON.parse(decryptedParams));
 
       setOperationProgress({
         title: "Importing Encrypted Data",

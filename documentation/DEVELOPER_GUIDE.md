@@ -20,8 +20,9 @@ The homepage is implemented in `src/pages/HomePage.tsx` and is kept outside the 
 
 ```text
 vaulted.money/
-├── electron/                  # Electron main and preload code
+├── electron/                  # Electron main and preload code (incl. Local API server)
 ├── src/
+│   ├── api/                   # Local API: route table, compute, OpenAPI, bridge
 │   ├── components/            # Reusable and feature UI
 │   ├── contexts/              # React context providers
 │   ├── hooks/                 # Custom hooks
@@ -60,10 +61,17 @@ pnpm validate
 
 | File | Purpose |
 | --- | --- |
+| [API.md](API.md) | Local API reference (desktop app). |
+| [API_COOKBOOK.md](API_COOKBOOK.md) | Recipes and client examples for the Local API. |
+| [postman/README.md](postman/README.md) | Postman collection, setup and test suite. |
 | [DESIGN.md](DESIGN.md) | Brand identity, logo geometry, and color strategy. |
 | [WHY_VAULTED_MONEY.md](WHY_VAULTED_MONEY.md) | Motivation and privacy philosophy. |
 | [SUPPORT.md](SUPPORT.md) | How to get help. |
 | [UI_UX_STANDARDS.md](UI_UX_STANDARDS.md) | UI and UX expectations. |
+
+## Local API
+
+The desktop app exposes an opt-in REST API (`src/api/`, `electron/apiServer.ts`). It is a public contract: any change to an API entity must update the route, `src/api/api.test.ts`, [API.md](API.md) and the Postman collection together. `pnpm test` fails if a route has no Postman request or if a Postman assertion fails. The full checklist is in [CLAUDE.md](CLAUDE.md#local-api-changes); the design is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## AI Provider Configuration
 

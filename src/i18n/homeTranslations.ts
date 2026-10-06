@@ -77,18 +77,18 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     roadmap: {
       description:
-        "Based on tagged releases and major shipped milestones so far, with the next planned platform expansion penciled in for August-September 2026.",
+        "Based on tagged releases and major shipped milestones so far.",
       snapshot: "Snapshot",
       milestoneCount: "5 milestones",
       milestoneShipped:
-        "Four major items already shipped in 2026, with native iOS and Android apps lined up next.",
+        "Five major items shipped in 2026, led by the desktop Local API.",
     },
     milestones: {
-      nativeApps: {
-        window: "August-September 2026",
-        title: "Native iOS and Android apps",
+      localApi: {
+        window: "October 2026",
+        title: "Local API for the desktop app",
         summary:
-          "Planned mobile releases will bring Vaulted Money into dedicated iPhone and Android app experiences while keeping the local-first model intact.",
+          "The Electron desktop app can now expose an opt-in REST API on your own machine, so you can script Vaulted Money, import and export data, or build your own interface while everything stays local.",
       },
       privacyRefresh: {
         window: "May 2026",
@@ -249,18 +249,18 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     roadmap: {
       description:
-        "Basado en versiones etiquetadas y los principales hitos entregados hasta ahora, con la próxima expansión de plataforma prevista para agosto-septiembre 2026.",
+        "Basado en versiones etiquetadas y los principales hitos entregados hasta ahora.",
       snapshot: "Resumen",
       milestoneCount: "5 hitos",
       milestoneShipped:
-        "Cuatro grandes elementos ya entregados en 2026, con apps nativas para iOS y Android a continuación.",
+        "Cinco grandes elementos entregados en 2026, encabezados por la API local de escritorio.",
     },
     milestones: {
-      nativeApps: {
-        window: "Agosto-septiembre 2026",
-        title: "Apps nativas para iOS y Android",
+      localApi: {
+        window: "Octubre 2026",
+        title: "API local para la app de escritorio",
         summary:
-          "Los lanzamientos móviles planificados llevarán Vaulted Money a experiencias dedicadas en iPhone y Android manteniendo el modelo local.",
+          "La app de escritorio Electron ahora puede exponer una API REST opcional en tu propio equipo, para automatizar Vaulted Money, importar y exportar datos o crear tu propia interfaz manteniendo todo local.",
       },
       privacyRefresh: {
         window: "Mayo 2026",
@@ -422,19 +422,17 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       encryptedBackup: "加密备份选项",
     },
     roadmap: {
-      description:
-        "基于已标记的版本和迄今已交付的主要里程碑，下一步计划于 2026 年 8-9 月进行平台扩展。",
+      description: "基于已标记的版本和迄今已交付的主要里程碑。",
       snapshot: "概览",
       milestoneCount: "5 个里程碑",
-      milestoneShipped:
-        "2026 年已交付四个主要项目，原生 iOS 和 Android 应用即将推出。",
+      milestoneShipped: "2026 年已交付五个主要项目，以桌面本地 API 为首。",
     },
     milestones: {
-      nativeApps: {
-        window: "2026 年 8-9 月",
-        title: "原生 iOS 和 Android 应用",
+      localApi: {
+        window: "2026 年 10 月",
+        title: "桌面应用本地 API",
         summary:
-          "计划中的移动版本将把 Vaulted Money 带入专属的 iPhone 和 Android 应用体验，同时保持本地优先模式。",
+          "Electron 桌面应用现在可以在你自己的电脑上提供可选的 REST API，让你编写脚本操作 Vaulted Money、导入导出数据或构建自己的界面，同时所有数据仍保留在本地。",
       },
       privacyRefresh: {
         window: "2026 年 5 月",
@@ -595,18 +593,18 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     roadmap: {
       description:
-        "Gebaseerd op getagde releases en belangrijke geleverde mijlpalen tot nu toe, met de volgende geplande platformuitbreiding gepland voor augustus-september 2026.",
+        "Gebaseerd op getagde releases en belangrijke geleverde mijlpalen tot nu toe.",
       snapshot: "Overzicht",
       milestoneCount: "5 mijlpalen",
       milestoneShipped:
-        "Vier belangrijke items al geleverd in 2026, met native iOS- en Android-apps als volgende.",
+        "Vijf belangrijke items geleverd in 2026, aangevoerd door de lokale desktop-API.",
     },
     milestones: {
-      nativeApps: {
-        window: "Augustus-september 2026",
-        title: "Native iOS- en Android-apps",
+      localApi: {
+        window: "Oktober 2026",
+        title: "Lokale API voor de desktop-app",
         summary:
-          "Geplande mobiele releases brengen Vaulted Money naar speciale iPhone- en Android-app-ervaringen met behoud van het lokaal-eerst model.",
+          "De Electron desktop-app kan nu een optionele REST API op je eigen computer aanbieden, zodat je Vaulted Money kunt scripten, gegevens kunt importeren en exporteren of je eigen interface kunt bouwen terwijl alles lokaal blijft.",
       },
       privacyRefresh: {
         window: "Mei 2026",
@@ -770,18 +768,18 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     roadmap: {
       description:
-        "இதுவரை வழங்கப்பட்ட பெரிய மைல்கற்கள் மற்றும் குறியிடப்பட்ட வெளியீடுகளின் அடிப்படையில், அடுத்த திட்டமிட்ட தளம் விரிவாக்கம் ஆகஸ்ட்-செப்டம்பர் 2026 க்கு திட்டமிடப்பட்டுள்ளது.",
+        "இதுவரை வழங்கப்பட்ட பெரிய மைல்கற்கள் மற்றும் குறியிடப்பட்ட வெளியீடுகளின் அடிப்படையில்.",
       snapshot: "சுருக்கம்",
       milestoneCount: "5 மைல்கற்கள்",
       milestoneShipped:
-        "2026 இல் நான்கு முக்கிய அம்சங்கள் ஏற்கனவே வழங்கப்பட்டன, நேட்டிவ் iOS மற்றும் Android பயன்பாடுகள் அடுத்ததாக வரவுள்ளன.",
+        "2026 இல் ஐந்து முக்கிய அம்சங்கள் வழங்கப்பட்டன, டெஸ்க்டாப் உள்ளூர் API முன்னிலையில்.",
     },
     milestones: {
-      nativeApps: {
-        window: "ஆகஸ்ட்-செப்டம்பர் 2026",
-        title: "நேட்டிவ் iOS மற்றும் Android பயன்பாடுகள்",
+      localApi: {
+        window: "அக்டோபர் 2026",
+        title: "டெஸ்க்டாப் பயன்பாட்டிற்கான உள்ளூர் API",
         summary:
-          "திட்டமிட்ட மொபைல் வெளியீடுகள் Vaulted Money ஐ உள்ளமை-முதல் மாதிரியை பராமரிக்கும் அதே வேளையில் அர்ப்பணிக்கப்பட்ட iPhone மற்றும் Android அனுபவங்களுக்கு கொண்டு வரும்.",
+          "Electron டெஸ்க்டாப் பயன்பாடு இப்போது உங்கள் சொந்த கணினியில் விருப்பத் தேர்வான REST API ஐ வழங்க முடியும்; அனைத்தும் உள்ளூரிலேயே இருக்கும் நிலையில் Vaulted Money ஐ ஸ்கிரிப்ட் செய்யலாம், தரவை இறக்குமதி/ஏற்றுமதி செய்யலாம் அல்லது உங்கள் சொந்த இடைமுகத்தை உருவாக்கலாம்.",
       },
       privacyRefresh: {
         window: "மே 2026",

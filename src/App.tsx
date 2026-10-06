@@ -49,6 +49,7 @@ const BackupPage = lazy(() => import("@/pages/BackupPage"));
 const CurrenciesPage = lazy(() => import("@/pages/CurrenciesPage"));
 const AIProviders = lazy(() => import("@/pages/AIProviders"));
 import BackupManager from "@/components/backup/BackupManager";
+import ApiBridge from "@/api/ApiBridge";
 const DonationPage = lazy(() => import("@/pages/DonationPage"));
 const AcknowledgmentsPage = lazy(() => import("@/pages/AcknowledgmentsPage"));
 import { ContinuitySyncManager } from "@/components/ContinuitySyncManager";
@@ -72,6 +73,7 @@ function App() {
                 <UserProvider>
                   <TransactionsProvider>
                     <BackupManager />
+                    <ApiBridge />
                     <Router>
                       <TourProvider>
                         <HelpTour />

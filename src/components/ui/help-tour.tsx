@@ -1,7 +1,7 @@
 import React from "react";
 import { Joyride, type EventData, STATUS } from "react-joyride";
 import { useTour } from "@/contexts/TourContext";
-import { useTheme as useNextTheme } from "next-themes";
+import { useTheme as useNextTheme } from "@/components/theme-provider";
 import { useTranslation } from "react-i18next";
 
 const HelpTour: React.FC = () => {

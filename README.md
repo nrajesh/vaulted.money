@@ -78,9 +78,38 @@ The README is intentionally short. Use these pages for the details:
 | [Setup and Builds](documentation/SETUP.md) | Full web, desktop, Android, iOS, and release commands. |
 | [User Guide](documentation/USER_GUIDE.md) | What the app does and how to use the main workflows. |
 | [Developer Guide](documentation/DEVELOPER_GUIDE.md) | Project structure, quality checks, AI provider notes, and contribution workflow. |
+| [Local API](documentation/API.md) | Desktop REST API for scripts: manage data and generate reports and backups. |
+| [API cookbook](documentation/API_COOKBOOK.md) | Recipes for using the app without the GUI, and for building your own interface. |
 | [Architecture](documentation/ARCHITECTURE.md) | Technical diagrams and system design. |
 | [Why Vaulted Money Exists](documentation/WHY_VAULTED_MONEY.md) | Motivation, privacy stance, and project philosophy. |
 | [Support](documentation/SUPPORT.md) | How to get help. |
+
+## Using the Local API (desktop)
+
+The desktop app can expose a REST API on your own computer, so scripts and tools can manage your ledgers, accounts, transactions, recurring transactions, budgets, categories, vendors, currencies, languages and AI providers, and generate analytics, insights, reports and backups. It is off by default, listens on `127.0.0.1` only and needs a token. The web and mobile apps do not have it.
+
+1. Open **Settings**, scroll down to the **Local API** card (desktop app only), switch it on, and copy the token.
+2. Call it with any HTTP client:
+
+```bash
+export VM="http://127.0.0.1:47821/api/v1"
+export VM_TOKEN="<token from settings>"
+AUTH="Authorization: Bearer $VM_TOKEN"
+
+# list ledgers, then add a transaction to one
+curl -H "$AUTH" $VM/ledgers
+curl -H "$AUTH" -H "Content-Type: application/json" -X POST $VM/ledgers/$LEDGER/transactions \
+  -d '{"date":"2026-01-15","amount":-42.5,"account":"Checking","vendor":"Grocer","category":"Food"}'
+
+# download a CSV report and a password-protected backup
+curl -H "$AUTH" -OJ "$VM/ledgers/$LEDGER/reports/income-expense?format=csv"
+curl -H "$AUTH" -H "Content-Type: application/json" -X POST -OJ $VM/backups/export \
+  -d '{"password":"a long passphrase"}'
+```
+
+`GET $VM` lists every endpoint. The app must be running (closing the window only hides it). Restoring a backup replaces data and needs `"confirm_replace": true`.
+
+Beyond basic data entry the API covers the app's clean-up tools (detect transfers, remove duplicates, categorize, reconcile balances, merge and clean up accounts/vendors/categories), CSV import and export, settings, and an OpenAPI description at `GET $VM/openapi.json` for generating your own client. The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md); [recipes for scripts, month-end routines and building your own interface](documentation/API_COOKBOOK.md) are in the cookbook. To try it from Postman, import the [ready-made collection](documentation/postman/README.md).
 
 ## Support the Project
 

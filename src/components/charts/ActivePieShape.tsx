@@ -23,7 +23,7 @@ export interface ActivePieShapeProps {
   onCenterClick?: () => void;
 }
 
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 
 export const ActivePieShape: React.FC<ActivePieShapeProps> = (props) => {
   const {

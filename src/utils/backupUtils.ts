@@ -98,6 +98,19 @@ export const generateBackupData = async (dataProvider: DataProvider) => {
 };
 
 /**
+ * Backups (from the app and from the Local API) wrap the data in a
+ * `{ appVersion, schemaVersion, exportTimestamp, data }` envelope, while
+ * `importData` expects the bare data. Returns the inner data for an envelope
+ * and the input unchanged otherwise (legacy backups have no envelope).
+ */
+export const unwrapBackupEnvelope = (parsed: unknown): unknown => {
+  const candidate = parsed as { appVersion?: unknown; data?: unknown } | null;
+  return candidate && candidate.appVersion && candidate.data
+    ? candidate.data
+    : parsed;
+};
+
+/**
  * Process import of a backup file string.
  * Detects encryption and returns necessary next steps or success.
  */
@@ -152,7 +165,7 @@ export const processEncryptedImport = async (
 ): Promise<ImportResult> => {
   try {
     const decryptedParams = await decryptData(content, password);
-    const data = JSON.parse(decryptedParams);
+    const data = unwrapBackupEnvelope(JSON.parse(decryptedParams));
     await dataProvider.importData(data);
     return { type: "success" };
   } catch (e: unknown) {

@@ -86,8 +86,14 @@ Use backup exports before:
 
 Encrypted backups are recommended when the file may live in cloud storage or on a shared computer.
 
+## Local API (Desktop App)
+
+The desktop app can run a local API so you can manage your data with scripts, Postman or your own interface instead of the GUI. It is off by default. Turn it on in Settings, copy the token, and see [API.md](API.md) and [API_COOKBOOK.md](API_COOKBOOK.md) for what you can do. It only accepts connections from your own computer and is not available in the web or mobile apps.
+
 ## Privacy Model
 
 By default, Vaulted Money stores data locally in browser storage or the Electron app's local storage. There is no hosted Vaulted Money account and no central Vaulted Money server.
+
+The Local API (desktop app, off by default) listens only on your own computer.
 
 The main exception is optional AI categorization. If you configure and use it, relevant categorization data is sent to your selected AI provider.

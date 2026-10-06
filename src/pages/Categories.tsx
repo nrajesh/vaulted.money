@@ -1,4 +1,5 @@
 import * as React from "react";
+import { renameCategory } from "@/api/entityOps";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useCategoryManagement } from "@/hooks/useCategoryManagement";
 import { Category } from "@/data/finance-data";
@@ -34,9 +35,12 @@ const CategoriesPage = () => {
       categoryId: string;
       newName: string;
     }) => {
-      // Direct DB update as a temporary measure until DataProvider interface is updated
+      // Shared with the local API: renames the category and every transaction,
+      // scheduled transaction and budget that references it by name.
       const { db } = await import("@/lib/dexieDB");
-      await db.categories.update(categoryId, { name: newName.trim() });
+      const category = await db.categories.get(categoryId);
+      if (!category) throw new Error("Category not found");
+      await renameCategory(category.user_id, category, newName.trim());
     },
     onSuccess: async () => {
       showSuccess("Category name updated successfully!");

@@ -1,0 +1,13 @@
+/* Teaser-only styling: big icon "stickers" and bold, human-sized type. */
+.sticker { display: grid; place-items: center; flex: none; }
+.sticker svg { overflow: visible; }
+.pcard { position: absolute; border-radius: 26px; background: linear-gradient(180deg, hsl(222 60% 9%), hsl(222 84% 5%)); border: 1px solid var(--border); box-shadow: 0 40px 100px #000b; }
+.pcard .word { font: 800 60px/1 var(--sans); letter-spacing: -.03em; }
+.pcard .line { font: 500 29px/1.4 var(--sans); color: hsl(210 30% 86%); }
+.bigq { position: absolute; font: 800 92px/1.02 var(--sans); letter-spacing: -.04em; }
+.bigq em { font-style: normal; background: linear-gradient(90deg, hsl(183 51% 74%), hsl(199 54% 52%)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gold { color: hsl(32 83% 72%); text-shadow: 0 0 calc(10px + 16px * var(--g, .6)) hsl(32 83% 72% / calc(.3 + .4 * var(--g, .6))); }
+.brandmark { position: absolute; left: 64px; top: 38px; display: flex; align-items: center; gap: 14px; font: 700 26px var(--sans); letter-spacing: -.02em; color: hsl(210 30% 92%); z-index: 40; }
+.brandmark img { width: 46px; height: 46px; object-fit: contain; }
+.bar { height: 26px; border-radius: 13px; background: linear-gradient(90deg, hsl(183 51% 74%), hsl(199 54% 46%)); }
+.shotwrap .shot { background: var(--card); }

@@ -13,6 +13,7 @@ export default tseslint.config(
       "android/app/build",
       "ios/build",
       "node_modules",
+      "marketing",
     ],
   },
   {
