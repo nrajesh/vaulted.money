@@ -101,12 +101,13 @@ const shotRing = (sh, x, y, w, hgt, cls = "") => {
   const off = -parseFloat(sh.querySelector("img").style.top);
   return ringAt(parseFloat(sh.style.left) + x * W, parseFloat(sh.style.top) + y * W - off, w * W, hgt * W, cls);
 };
-const brand = h(`<div class="brandmark"><img src="/repo/assets/brand/dark-icon.png"><span>Vaulted Money</span></div>`);
+const brand = h(`<div class="brandmark"><img src="/repo/assets/brand/dark-icon.png"><span>Vaulted Money <span style="color:var(--muted);font-weight:600">· Local API</span></span></div>`);
 
 // ── 1 · hook ────────────────────────────────────────────────────────────────
 {
-  const title = h(`<div class="bigq" style="left:96px;top:250px;font-size:122px">Another budget<br>app?</div>`);
+  const title = h(`<div class="bigq" style="left:96px;top:150px;font-size:122px">Another<br>budget<br>app?</div>`);
   const sub = h(`<div class="abs" style="left:100px;top:600px;font:500 46px var(--sans);color:var(--muted)"><span class="tx">You've tried the rest.</span></div>`);
+  const scope = h(`<div class="abs pop" style="left:100px;top:700px;display:flex;align-items:center;gap:16px;padding:14px 26px;border-radius:999px;border:1.5px solid hsl(${CYAN} / .6);background:hsl(${CYAN} / .1);font:700 30px var(--sans)"><span style="display:inline-block;width:32px;height:32px;color:hsl(${CYAN})">${svg(ICON.code, 32, 2.4)}</span><span class="tx">This video: the Local API, not the app's features</span></div>`);
   const pains = [
     [ICON.cardSlash, "Monthly fees"],
     [ICON.bank, "Your bank login"],
@@ -114,9 +115,10 @@ const brand = h(`<div class="brandmark"><img src="/repo/assets/brand/dark-icon.p
   ].map(([ic, label], i) => h(`<div class="pcard pop" style="left:1080px;top:${150 + i * 280}px;width:744px;height:236px;border-color:hsl(${RED} / .5);display:flex;align-items:center;gap:36px;padding:0 44px">
       ${sticker(ic, 150, RED)}<div class="word" style="font-size:44px;white-space:nowrap"><span class="tx">${label}</span></div>
       <div class="xbadge" style="position:absolute;right:26px;top:24px;width:50px;height:50px;border-radius:50%;background:hsl(${RED});color:#1b0505;display:grid;place-items:center"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round">${ICON.x}</svg></div></div>`));
-  add("hook", [title, sub, ...pains], (t) => {
+  add("hook", [title, sub, scope, ...pains], (t) => {
     appear(title, t, 0.3, { dur: 0.9 });
     appear(sub, t, 1.4);
+    appear(scope, t, 1.9);
     pains.forEach((p, i) => {
       const at = 2.2 + i * 0.7;
       appear(p, t, at, { dx: 60, dy: 0 });
@@ -347,12 +349,13 @@ const note = (txt, x, y) => h(`<div class="abs pop" style="left:${x}px;top:${y}p
 // ── 8 · the next step ───────────────────────────────────────────────────────
 const qrSite = await (await fetch("out/qr-site.svg")).text();
 {
-  const logo = h(`<img src="/repo/assets/brand/dark-icon.png" class="abs" style="left:80px;top:60px;width:320px;height:320px;object-fit:contain">`);
+  // Both logo variants side by side, centred over the words below (block centre x = 396).
+  const logo = h(`<div class="abs" style="left:96px;top:90px;width:600px;display:flex;justify-content:center;gap:36px"><div style="width:240px;height:240px;border-radius:44px;overflow:hidden;position:relative;background:hsl(222 47% 9%);border:1.5px solid hsl(188 57% 59% / .35)"><img src="/repo/assets/brand/dark-icon.png" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:520px;height:520px;max-width:none;object-fit:contain"></div><div style="width:240px;height:240px;border-radius:44px;overflow:hidden;position:relative;background:#f4f1ea;"><img src="/repo/assets/brand/light-icon.png" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:520px;height:520px;max-width:none;object-fit:contain"></div></div>`);
   const word = (txt, cls, tint) => `<span style="color:${tint ? `hsl(${tint})` : "inherit"}" class="${cls}"><span class="tx">${txt}</span></span>`;
-  const line = h(`<div class="abs" style="left:96px;top:380px;font:800 100px/1.05 var(--sans);letter-spacing:-.045em;white-space:nowrap">
+  const line = h(`<div class="abs" style="left:96px;width:600px;text-align:center;top:380px;font:800 100px/1.05 var(--sans);letter-spacing:-.045em;white-space:nowrap">
     <span class="w" style="display:inline-block">${word("Free.", "gold")}</span> <span class="w" style="display:inline-block">${word("Private.", "", CYAN)}</span><br>
     <span class="w" style="display:inline-block">${word("Open.", "", GREEN)}</span> <span class="w" style="display:inline-block">${word("Yours.", "", INDIGO)}</span></div>`);
-  const domain = h(`<div class="abs" style="left:100px;top:700px;font:500 60px var(--mono);color:var(--fg)"><span class="tx">vaulted.money</span></div>`);
+  const domain = h(`<div class="abs" style="left:96px;width:600px;text-align:center;top:700px;font:500 60px var(--mono);color:var(--fg)"><span class="tx">vaulted.money</span></div>`);
   const qr = h(`<div class="abs pop" style="left:1360px;top:300px;width:420px;text-align:center"><div style="width:380px;height:380px;margin:0 auto;border-radius:22px;background:#fff;padding:12px;box-shadow:0 0 70px hsl(188 57% 59% / .3)"><div class="qr" style="width:100%;height:100%">${qrSite}</div></div><div style="font:800 34px var(--sans);margin-top:22px"><span class="tx">Try it free</span></div><div style="font:500 22px var(--sans);color:var(--muted);margin-top:4px"><span class="tx">Scan with your phone's camera</span></div></div>`);
   qr.querySelectorAll(".qr svg").forEach((s) => {
     const n = s.getAttribute("width");
