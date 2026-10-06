@@ -32,6 +32,14 @@ overrides:
   "uuid@<11.1.1": ">=11.1.1"
   "@humanfs/node": ">=0.16.8"
   joi: ">=18.2.5"
+  jose: ">=4.15.5"
+  node-forge: ">=1.4.0"
+  qs: ">=6.16.0"
+  handlebars: ">=4.7.9"
+  underscore: ">=1.13.8"
+  csv-parse: ">=7.0.2"
+  source-map-js: ">=1.2.2"
+  postcss-selector-parser: ">=7.1.6"
 
 onlyBuiltDependencies:
   - electron
