@@ -37,7 +37,6 @@ import { cn } from "@/lib/utils";
 import SiteFooter from "@/components/SiteFooter";
 import BrandLockup from "@/components/BrandLockup";
 import HomeHeroDemo from "@/components/homepage/HomeHeroDemo";
-import HomeStoreLinks from "@/components/homepage/HomeStoreLinks";
 
 const webInstallCommand = `git clone https://github.com/nrajesh/vaulted.money.git
 cd vaulted.money
@@ -876,7 +875,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <HomeStoreLinks />
+      {/* "Get Vaulted Money" store section hidden until store listings exist (see HomeStoreLinks). */}
       <SiteFooter />
     </main>
   );
