@@ -107,7 +107,7 @@ const brand = h(`<div class="brandmark"><img src="/repo/assets/brand/dark-icon.p
 {
   const title = h(`<div class="bigq" style="left:96px;top:150px;font-size:122px">Another<br>budget<br>app?</div>`);
   const sub = h(`<div class="abs" style="left:100px;top:600px;font:500 46px var(--sans);color:var(--muted)"><span class="tx">You've tried the rest.</span></div>`);
-  const scope = h(`<div class="abs pop" style="left:100px;top:700px;display:flex;align-items:center;gap:16px;padding:14px 26px;border-radius:999px;border:1.5px solid hsl(${CYAN} / .6);background:hsl(${CYAN} / .1);font:700 30px var(--sans)"><span style="display:inline-block;width:32px;height:32px;color:hsl(${CYAN})">${svg(ICON.code, 32, 2.4)}</span><span class="tx">A Local API explainer</span></div>`);
+  const scope = h(`<div class="abs pop" style="left:100px;top:700px;display:flex;align-items:center;gap:16px;padding:14px 26px;border-radius:999px;border:1.5px solid hsl(${CYAN} / .6);background:hsl(${CYAN} / .1);font:700 30px var(--sans)"><span style="display:inline-block;width:32px;height:32px;color:hsl(${CYAN})">${svg(ICON.code, 32, 2.4)}</span><span class="tx">Featuring a powerful Local API</span></div>`);
   const pains = [
     [ICON.cardSlash, "Monthly fees"],
     [ICON.bank, "Your bank login"],
