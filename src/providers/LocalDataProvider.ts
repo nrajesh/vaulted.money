@@ -67,6 +67,19 @@ export class LocalDataProvider implements DataProvider {
     return await db.transactions.orderBy("date").reverse().toArray();
   }
 
+  async getTransactionById(id: string): Promise<Transaction | undefined> {
+    return await db.transactions.get(id);
+  }
+
+  async getTransactionsByTransferId(
+    transferId: string,
+  ): Promise<Transaction[]> {
+    return await db.transactions
+      .where("transfer_id")
+      .equals(transferId)
+      .toArray();
+  }
+
   async addTransaction(
     transaction: Omit<Transaction, "id" | "created_at">,
   ): Promise<Transaction> {
@@ -183,6 +196,12 @@ export class LocalDataProvider implements DataProvider {
       .equals(ledgerId)
       .reverse()
       .sortBy("date");
+  }
+
+  async getScheduledTransactionById(
+    id: string,
+  ): Promise<ScheduledTransaction | undefined> {
+    return await db.scheduled_transactions.get(id);
   }
 
   async addScheduledTransaction(
@@ -434,6 +453,13 @@ export class LocalDataProvider implements DataProvider {
     return await db.accounts.where("user_id").equals(ledgerId).toArray();
   }
 
+  async updateAccount(
+    id: string,
+    changes: Partial<Omit<Account, "id">>,
+  ): Promise<void> {
+    await db.accounts.update(id, changes);
+  }
+
   // Categories
   async ensureCategoryExists(
     rawName: string,
@@ -487,6 +513,10 @@ export class LocalDataProvider implements DataProvider {
 
   async getUserCategories(ledgerId: string): Promise<Category[]> {
     return await db.categories.where("user_id").equals(ledgerId).sortBy("name");
+  }
+
+  async getCategoryById(id: string): Promise<Category | undefined> {
+    return await db.categories.get(id);
   }
 
   async getSubCategories(ledgerId: string): Promise<SubCategory[]> {
@@ -617,8 +647,12 @@ export class LocalDataProvider implements DataProvider {
   }
 
   // Maintenance
-  async linkTransactionsAsTransfer(id1: string, id2: string): Promise<void> {
-    const transferId = uuidv4();
+  async linkTransactionsAsTransfer(
+    id1: string,
+    id2: string,
+    requestedTransferId?: string,
+  ): Promise<void> {
+    const transferId = requestedTransferId ?? uuidv4();
     await db.transaction("rw", [db.transactions, db.categories], async () => {
       const t1 = await db.transactions.get(id1);
       const t2 = await db.transactions.get(id2);
@@ -965,5 +999,38 @@ export class LocalDataProvider implements DataProvider {
         await db.ai_providers.put({ ...p, isDefault: p.id === id });
       }
     });
+  }
+
+  // Scheduled backups
+  async getBackupConfigs(): Promise<BackupConfig[]> {
+    return await db.backup_configs.toArray();
+  }
+
+  async getDueBackupConfigs(nowIso: string): Promise<BackupConfig[]> {
+    // ISO 8601 strings in UTC sort chronologically, so a string range query
+    // on the indexed `nextBackup` field finds every schedule that is due.
+    return await db.backup_configs
+      .where("nextBackup")
+      .belowOrEqual(nowIso)
+      .toArray();
+  }
+
+  async getBackupConfig(id: string): Promise<BackupConfig | undefined> {
+    return await db.backup_configs.get(id);
+  }
+
+  async addBackupConfig(config: BackupConfig): Promise<void> {
+    await db.backup_configs.add(config);
+  }
+
+  async updateBackupConfig(
+    id: string,
+    changes: Partial<Omit<BackupConfig, "id">>,
+  ): Promise<void> {
+    await db.backup_configs.update(id, changes);
+  }
+
+  async deleteBackupConfig(id: string): Promise<void> {
+    await db.backup_configs.delete(id);
   }
 }

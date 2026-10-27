@@ -14,10 +14,12 @@ import AddCategoryDialog from "@/components/dialogs/AddCategoryDialog";
 import CleanupEntitiesDialog from "@/components/management/CleanupEntitiesDialog";
 
 import ManageSubCategoriesDialog from "@/components/categories/ManageSubCategoriesDialog";
+import { useDataProvider } from "@/context/DataProviderContext";
 
 const CategoriesPage = () => {
   const { invalidateAllData, transactions } = useTransactions();
   const managementProps = useCategoryManagement();
+  const dataProvider = useDataProvider();
 
   const [editingCategoryId, setEditingCategoryId] = React.useState<
     string | null
@@ -37,8 +39,7 @@ const CategoriesPage = () => {
     }) => {
       // Shared with the local API: renames the category and every transaction,
       // scheduled transaction and budget that references it by name.
-      const { db } = await import("@/lib/dexieDB");
-      const category = await db.categories.get(categoryId);
+      const category = await dataProvider.getCategoryById(categoryId);
       if (!category) throw new Error("Category not found");
       await renameCategory(category.user_id, category, newName.trim());
     },

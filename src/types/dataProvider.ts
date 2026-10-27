@@ -144,6 +144,9 @@ export interface DataProvider {
 
   // Transactions
   getTransactions(ledgerId: string): Promise<Transaction[]>;
+  getTransactionById(id: string): Promise<Transaction | undefined>;
+  /** Both legs of a transfer, from any ledger. Callers filter by ledger. */
+  getTransactionsByTransferId(transferId: string): Promise<Transaction[]>;
   addTransaction(
     transaction: Omit<Transaction, "id" | "created_at">,
   ): Promise<Transaction>;
@@ -160,6 +163,9 @@ export interface DataProvider {
 
   // Scheduled Transactions
   getScheduledTransactions(ledgerId: string): Promise<ScheduledTransaction[]>;
+  getScheduledTransactionById(
+    id: string,
+  ): Promise<ScheduledTransaction | undefined>;
   addScheduledTransaction(
     transaction: Omit<ScheduledTransaction, "id" | "created_at">,
   ): Promise<ScheduledTransaction>;
@@ -191,6 +197,14 @@ export interface DataProvider {
   ): Promise<void>;
   deletePayee(id: string): Promise<void>;
   getAllAccounts(ledgerId: string): Promise<Account[]>;
+  /**
+   * Updates fields on the account row only. It does not rename the account or
+   * propagate a currency change to transactions; callers do that separately.
+   */
+  updateAccount(
+    id: string,
+    changes: Partial<Omit<Account, "id">>,
+  ): Promise<void>;
 
   // Categories
   ensureCategoryExists(name: string, ledgerId: string): Promise<string | null>;
@@ -200,6 +214,7 @@ export interface DataProvider {
     ledgerId: string,
   ): Promise<string | null>;
   getUserCategories(ledgerId: string): Promise<Category[]>;
+  getCategoryById(id: string): Promise<Category | undefined>;
   getSubCategories(ledgerId: string): Promise<SubCategory[]>;
   mergeCategories(
     targetName: string,
@@ -231,4 +246,16 @@ export interface DataProvider {
   updateAIProvider(provider: AIProvider): Promise<void>;
   deleteAIProvider(id: string): Promise<void>;
   setDefaultAIProvider(id: string): Promise<void>;
+
+  // Scheduled backups
+  getBackupConfigs(): Promise<BackupConfig[]>;
+  /** Schedules whose `nextBackup` is at or before `nowIso` (an ISO string). */
+  getDueBackupConfigs(nowIso: string): Promise<BackupConfig[]>;
+  getBackupConfig(id: string): Promise<BackupConfig | undefined>;
+  addBackupConfig(config: BackupConfig): Promise<void>;
+  updateBackupConfig(
+    id: string,
+    changes: Partial<Omit<BackupConfig, "id">>,
+  ): Promise<void>;
+  deleteBackupConfig(id: string): Promise<void>;
 }

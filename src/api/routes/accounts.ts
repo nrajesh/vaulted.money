@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { db } from "@/lib/dexieDB";
 import { conflict, json, noContent, notFound, parse } from "../http";
 import { propagateAccountCurrency, renamePayee } from "../entityOps";
 import type { RouteDef, RouteContext } from "../router";
@@ -128,7 +127,7 @@ export const accountRoutes: RouteDef[] = [
         await propagateAccountCurrency(ledgerId, name, patch.currency);
       }
 
-      await db.accounts.update(account.id, {
+      await ctx.services.dataProvider.updateAccount(account.id, {
         ...(patch.currency !== undefined && { currency: patch.currency }),
         ...(patch.starting_balance !== undefined && {
           starting_balance: patch.starting_balance,

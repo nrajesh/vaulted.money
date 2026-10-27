@@ -43,6 +43,7 @@ Before committing, ask: *"Can this be reproduced by running a command?"* If yes,
 
 - **Privacy-first**: No data leaves the device unless explicitly exported by the user. API keys are stored locally and never included in exports.
 - **Local-first**: The app must work 100% offline. IndexedDB via Dexie is the primary data store.
+- **Data goes through `DataProvider`**: Production code must not import `@/lib/dexieDB`; add a method to `DataProvider` (`src/types/dataProvider.ts`) and `LocalDataProvider` instead, with a test in `src/providers/DataProviderContract.test.ts`. ESLint enforces this. Never add a file to the rule's allowlist in `eslint.config.js`.
 - **Routes live in `src/App.tsx`**: Do not scatter route definitions elsewhere.
 - **Pages in `src/pages/`**, components in `src/components/`, hooks in `src/hooks/`.
 - For mobile-specific work, consult `documentation/IOS_RULES.md` and `documentation/ANDROID_RULES.md`.

@@ -361,6 +361,53 @@ describe("transactions", () => {
       ).total,
     ).toBe(0);
   });
+
+  it("only deletes a transfer from the ledger that owns it", async () => {
+    const ledger = await createLedger();
+    const otherLedger = await createLedger();
+    for (const name of ["Checking", "Savings"]) {
+      await ok(
+        call("POST", `/ledgers/${ledger.id}/accounts`, {
+          name,
+          currency: "USD",
+        }),
+        201,
+      );
+    }
+    const transfer = await ok<{ transfer_id: string }>(
+      call("POST", `/ledgers/${ledger.id}/transactions/transfer`, {
+        from_account: "Checking",
+        to_account: "Savings",
+        amount: 50,
+        date: "2020-05-01",
+      }),
+      201,
+    );
+
+    expect(
+      (
+        await call(
+          "DELETE",
+          `/ledgers/${otherLedger.id}/transactions/transfer/${transfer.transfer_id}`,
+        )
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await call(
+          "DELETE",
+          `/ledgers/${ledger.id}/transactions/transfer/no-such-transfer`,
+        )
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await ok<{ total: number }>(
+          call("GET", `/ledgers/${ledger.id}/transactions`),
+        )
+      ).total,
+    ).toBe(2);
+  });
 });
 
 describe("scheduled transactions", () => {
