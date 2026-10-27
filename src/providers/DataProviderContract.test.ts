@@ -111,6 +111,88 @@ const seedLedger = async (provider: DataProvider, ledgerId: string) => {
   return { transaction, scheduled, vendor, account, category, subCategory };
 };
 
+/**
+ * Adds near-duplicates of the seeded names to a ledger, as a merge would find
+ * them: account "Current", vendor "Bakery Ltd" and category "Groceries" (with
+ * sub-categories Bread, which Food also has, and Fruit), each with a
+ * transaction, a recurring transaction and budgets.
+ */
+const seedDuplicates = async (provider: DataProvider, ledgerId: string) => {
+  const duplicateNames = {
+    user_id: ledgerId,
+    account: "Current",
+    vendor: "Bakery Ltd",
+    category: "Groceries",
+  };
+  const transaction = await provider.addTransaction(
+    newTransaction({ ...duplicateNames, sub_category: "Bread" }),
+  );
+  const fruitTransaction = await provider.addTransaction(
+    newTransaction({ ...duplicateNames, sub_category: "Fruit" }),
+  );
+  const scheduled = await provider.addScheduledTransaction({
+    ...duplicateNames,
+    date: "2026-02-01",
+    amount: -10,
+    currency: "EUR",
+    frequency: "Monthly",
+  });
+  const groceries = (await provider.getUserCategories(ledgerId)).find(
+    ({ name }) => name === "Groceries",
+  )!;
+  const fruit = (await provider.getSubCategories(ledgerId)).find(
+    ({ name }) => name === "Fruit",
+  )!;
+
+  const budget = {
+    user_id: ledgerId,
+    target_amount: 100,
+    currency: "EUR",
+    start_date: "2026-01-01T00:00:00.000Z",
+    end_date: null,
+    frequency: "Monthly" as const,
+  };
+  await provider.addBudget({
+    ...budget,
+    budget_scope: "category",
+    category_id: groceries.id,
+    category_name: "Groceries",
+  });
+  await provider.addBudget({
+    ...budget,
+    budget_scope: "category",
+    category_id: groceries.id,
+    category_name: "Groceries",
+    sub_category_id: fruit.id,
+    sub_category_name: "Fruit",
+  });
+  for (const [scope, name] of [
+    ["vendor", "Bakery Ltd"],
+    ["account", "Current"],
+  ] as const) {
+    await provider.addBudget({
+      ...budget,
+      budget_scope: scope,
+      budget_scope_name: name,
+      category_id: "",
+      category_name: name,
+    });
+  }
+
+  return { transaction, fruitTransaction, scheduled };
+};
+
+/** Display names of a ledger's budgets of one scope, sorted. */
+const budgetNames = async (
+  provider: DataProvider,
+  ledgerId: string,
+  scope: NonNullable<Budget["budget_scope"]>,
+) =>
+  (await provider.getBudgetsWithSpending(ledgerId))
+    .filter((budget) => budget.budget_scope === scope)
+    .map((budget) => budget.category_name)
+    .sort();
+
 /** Everything a ledger holds, for "this ledger did not change" checks. */
 const snapshotLedger = async (provider: DataProvider, ledgerId: string) => ({
   transactions: await provider.getTransactions(ledgerId),
@@ -549,6 +631,164 @@ describe("DataProvider contract", () => {
         "vendor",
       ]);
       expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+  });
+
+  describe("merging", () => {
+    /*
+     * A merge keeps the target and moves past transactions onto it. The
+     * merged-away names' recurring transactions and budgets are deleted:
+     * there is no telling which of two duplicates' schedules or budgets the
+     * user still wants.
+     */
+    it("merges vendors, deleting the merged-away ones with their recurring transactions and budgets, in that ledger only", async () => {
+      await seedLedger(provider, LEDGER);
+      const duplicate = await seedDuplicates(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      await seedDuplicates(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.mergePayees("Bakery", ["Bakery Ltd"], LEDGER);
+
+      expect(
+        await provider.getVendorByName("Bakery Ltd", LEDGER),
+      ).toBeUndefined();
+      expect(
+        await provider.getTransactionById(duplicate.transaction.id),
+      ).toMatchObject({ vendor: "Bakery" });
+      expect(
+        await provider.getScheduledTransactionById(duplicate.scheduled.id),
+      ).toBeUndefined();
+      expect(await provider.getScheduledTransactions(LEDGER)).toHaveLength(1);
+      expect(await budgetNames(provider, LEDGER, "vendor")).toEqual(["Bakery"]);
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("merges accounts the same way", async () => {
+      await seedLedger(provider, LEDGER);
+      const duplicate = await seedDuplicates(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      await seedDuplicates(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.mergePayees("Checking", ["Current"], LEDGER);
+
+      expect(await provider.getVendorByName("Current", LEDGER)).toBeUndefined();
+      expect(await provider.getAllAccounts(LEDGER)).toHaveLength(1);
+      expect(
+        await provider.getTransactionById(duplicate.transaction.id),
+      ).toMatchObject({ account: "Checking" });
+      expect(
+        await provider.getScheduledTransactionById(duplicate.scheduled.id),
+      ).toBeUndefined();
+      expect(await budgetNames(provider, LEDGER, "account")).toEqual([
+        "Checking",
+      ]);
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("merges categories, moving their sub-categories and deleting their recurring transactions and budgets, in that ledger only", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      const duplicate = await seedDuplicates(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      await seedDuplicates(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.mergeCategories("Food", ["Groceries"], LEDGER);
+
+      expect(
+        (await provider.getUserCategories(LEDGER)).map(({ name }) => name),
+      ).toEqual(["Food"]);
+      expect(
+        await provider.getTransactionById(duplicate.transaction.id),
+      ).toMatchObject({ category: "Food", sub_category: "Bread" });
+      expect(
+        await provider.getTransactionById(duplicate.fruitTransaction.id),
+      ).toMatchObject({ category: "Food", sub_category: "Fruit" });
+      // Food already had Bread, so the merged-in Bread is folded into it.
+      expect(
+        (await provider.getSubCategories(LEDGER))
+          .map(({ name, category_id }) => ({ name, category_id }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      ).toEqual([
+        { name: "Bread", category_id: home.category.id },
+        { name: "Fruit", category_id: home.category.id },
+      ]);
+      expect(
+        await provider.getScheduledTransactionById(duplicate.scheduled.id),
+      ).toBeUndefined();
+      expect(await provider.getScheduledTransactions(LEDGER)).toHaveLength(1);
+      expect(await budgetNames(provider, LEDGER, "category")).toEqual([
+        "Food",
+        "Food",
+      ]);
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("leaves everything alone when the target is also listed as a source", async () => {
+      await seedLedger(provider, LEDGER);
+      const before = await snapshotLedger(provider, LEDGER);
+
+      await provider.mergePayees("Bakery", ["Bakery"], LEDGER);
+      await provider.mergeCategories("Food", ["Food"], LEDGER);
+
+      expect(await snapshotLedger(provider, LEDGER)).toEqual(before);
+    });
+
+    it("refuses to merge into a vendor or category the ledger does not have, and changes nothing", async () => {
+      await seedLedger(provider, LEDGER);
+      await seedDuplicates(provider, LEDGER);
+      const before = await snapshotLedger(provider, LEDGER);
+
+      await expect(
+        provider.mergePayees("Nobody", ["Bakery Ltd"], LEDGER),
+      ).rejects.toThrow('Vendor "Nobody" was not found');
+      await expect(
+        provider.mergeCategories("Nothing", ["Groceries"], LEDGER),
+      ).rejects.toThrow('Category "Nothing" was not found');
+      expect(await snapshotLedger(provider, LEDGER)).toEqual(before);
+    });
+  });
+
+  describe("ledger names", () => {
+    it("refuses a name another ledger already has, ignoring case and spaces", async () => {
+      await provider.addLedger({ name: "Home", currency: "EUR" });
+      const holiday = await provider.addLedger({
+        name: "Holiday",
+        currency: "EUR",
+      });
+
+      await expect(
+        provider.addLedger({ name: "  home ", currency: "USD" }),
+      ).rejects.toBeInstanceOf(NameConflictError);
+      await expect(
+        provider.updateLedger({ ...holiday, name: "HOME" }),
+      ).rejects.toBeInstanceOf(NameConflictError);
+      expect(
+        (await provider.getLedgers()).map(({ name }) => name).sort(),
+      ).toEqual(["Holiday", "Home"]);
+    });
+
+    it("lets a ledger keep or re-case its own name while other details change", async () => {
+      const home = await provider.addLedger({ name: "Home", currency: "EUR" });
+
+      await provider.updateLedger({ ...home, name: "home", currency: "USD" });
+
+      expect(await provider.getLedgers()).toEqual([
+        expect.objectContaining({ id: home.id, name: "home", currency: "USD" }),
+      ]);
+    });
+
+    it("trims ledger names and rejects blank ones", async () => {
+      const home = await provider.addLedger({
+        name: "  Home  ",
+        currency: "EUR",
+      });
+
+      expect(home.name).toBe("Home");
+      await expect(
+        provider.addLedger({ name: "   ", currency: "EUR" }),
+      ).rejects.toThrow("Name is required");
     });
   });
 

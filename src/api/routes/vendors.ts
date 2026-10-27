@@ -73,7 +73,7 @@ export const vendorRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/vendors/merge",
     summary:
-      "Merge vendors into a target vendor, re-pointing their transactions",
+      "Merge vendors into a target: moves their transactions to the target, then deletes them with their recurring transactions and budgets",
     body: mergeSchema,
     handler: async ({ params, body, services }) => {
       await requireLedger(services, params.ledgerId);

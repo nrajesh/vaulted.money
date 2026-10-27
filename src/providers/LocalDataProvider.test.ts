@@ -133,4 +133,30 @@ describe("LocalDataProvider", () => {
     expect(await db.sub_categories.count()).toBe(0);
     expect(await db.ledgers.count()).toBe(0);
   });
+
+  it("still opens and edits ledgers that shared a name before names had to be unique", async () => {
+    const stored = {
+      currency: "EUR",
+      created_at: "2026-01-01T00:00:00.000Z",
+      last_accessed: "2026-01-01T00:00:00.000Z",
+    };
+    await db.ledgers.bulkAdd([
+      { ...stored, id: "first", name: "Home" },
+      { ...stored, id: "second", name: "Home" },
+    ]);
+    const opened = "2026-10-27T12:00:00.000Z";
+
+    // Switching ledgers saves the whole ledger with a new last_accessed.
+    await provider.updateLedger({
+      ...stored,
+      id: "first",
+      name: "Home",
+      last_accessed: opened,
+    });
+
+    expect(await db.ledgers.get("first")).toMatchObject({
+      name: "Home",
+      last_accessed: opened,
+    });
+  });
 });

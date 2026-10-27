@@ -43,8 +43,13 @@ interface Entity {
   [key: string]: unknown;
 }
 
+let ledgerCount = 0;
+/** Ledger names must be unique, so each test ledger gets its own. */
 const createLedger = (currency = "USD") =>
-  ok<Ledger>(call("POST", "/ledgers", { name: "Home", currency }), 201);
+  ok<Ledger>(
+    call("POST", "/ledgers", { name: `Home ${++ledgerCount}`, currency }),
+    201,
+  );
 
 describe("router", () => {
   beforeEach(clearAll);
@@ -96,6 +101,101 @@ describe("ledgers, accounts, vendors, categories", () => {
     expect(
       (await ok<{ data: unknown[] }>(call("GET", "/ledgers"))).data,
     ).toEqual([]);
+  });
+
+  it("rejects a ledger name another ledger has, ignoring case, with 409", async () => {
+    const family = await ok<Ledger>(
+      call("POST", "/ledgers", { name: "Family", currency: "EUR" }),
+      201,
+    );
+    const other = await createLedger();
+
+    expect(
+      (await call("POST", "/ledgers", { name: " family ", currency: "USD" }))
+        .status,
+    ).toBe(409);
+    expect(
+      (await call("PATCH", `/ledgers/${other.id}`, { name: "FAMILY" })).status,
+    ).toBe(409);
+    expect(
+      (await call("PATCH", `/ledgers/${family.id}`, { currency: "USD" }))
+        .status,
+    ).toBe(200);
+  });
+
+  it("merges vendors and categories, deleting the merged-away ones' recurring transactions and budgets", async () => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    for (const [vendor, category] of [
+      ["Gym", "Health"],
+      ["Gym Ltd", "Fitness"],
+    ]) {
+      const names = { account: "Wallet", vendor, category };
+      await ok(
+        call("POST", `${base}/transactions`, {
+          ...names,
+          date: "2020-03-01",
+          amount: -30,
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/scheduled-transactions`, {
+          ...names,
+          date: "2030-01-01",
+          amount: -30,
+          frequency: "Monthly",
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, {
+          budget_scope: "vendor",
+          scope_name: vendor,
+          target_amount: 50,
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, { category, target_amount: 80 }),
+        201,
+      );
+    }
+
+    expect(
+      (
+        await call("POST", `${base}/vendors/merge`, {
+          target: "Gym",
+          sources: ["Gym Ltd"],
+        })
+      ).status,
+    ).toBe(204);
+    expect(
+      (
+        await call("POST", `${base}/categories/merge`, {
+          target: "Health",
+          sources: ["Fitness"],
+        })
+      ).status,
+    ).toBe(204);
+
+    const list = async (resource: string) =>
+      (await ok<{ data: Entity[] }>(call("GET", `${base}/${resource}`))).data;
+    expect(
+      (await list("transactions")).map(({ vendor, category }) => ({
+        vendor,
+        category,
+      })),
+    ).toEqual([
+      { vendor: "Gym", category: "Health" },
+      { vendor: "Gym", category: "Health" },
+    ]);
+    expect(
+      (await list("scheduled-transactions")).map(({ vendor }) => vendor),
+    ).toEqual(["Gym"]);
+    expect(
+      (await list("budgets")).map(({ category_name }) => category_name).sort(),
+    ).toEqual(["Gym", "Health"]);
   });
 
   it("creates accounts with balances, rejects duplicates and propagates renames", async () => {

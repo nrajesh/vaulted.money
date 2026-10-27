@@ -168,6 +168,12 @@ The same name can exist in several ledgers and mean different things. A query li
 **Sub-category budgets match by name in any category**
 Rename or delete a `sub_category` budget only when no other sub-category in the ledger still has that name.
 
+**Merges delete the merged-away schedules and budgets**
+A merge moves past transactions to the target. It then deletes the sources together with their recurring transactions and budgets, because there is no telling which duplicate's schedule or budget the user still wants. This was the owner's decision. Do not change merges to move them instead. A merge into a target that doesn't exist throws, and a target listed among its own sources is ignored.
+
+**Ledger names are unique**
+Ledgers are separate books to the user. `addLedger` and `updateLedger` refuse a name another ledger has, ignoring case and spaces. They check only when the name changes, so ledgers that already share a name still open.
+
 ---
 
 ## Local API changes

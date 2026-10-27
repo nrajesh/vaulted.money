@@ -638,6 +638,95 @@
           ]
         },
         {
+          "name": "Duplicate ledger name (any case) -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", () => pm.response.to.have.status(409));",
+                  "",
+                  "pm.test(\"Error code is conflict\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error.code).to.equal(\"conflict\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"postman test ledger\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ledgers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "409 Conflict",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"postman test ledger\",\n  \"currency\": \"USD\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"A ledger named \\\"Postman Test Ledger\\\" already exists\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "List ledgers",
           "event": [
             {

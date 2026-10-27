@@ -460,7 +460,7 @@ export const maintenanceRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/accounts/merge",
     summary:
-      'Merge accounts into a target account ("De-duplicate"). Body: {target, sources}',
+      'Merge accounts into a target ("De-duplicate"): moves their transactions to the target, then deletes them with their recurring transactions and budgets. Body: {target, sources}',
     body: mergeSchema,
     handler: mergeAccounts,
   },

@@ -4,7 +4,7 @@ This folder contains a ready-made Postman collection that exercises every endpoi
 
 | File | Purpose |
 |---|---|
-| `vaulted-money-local-api.postman_collection.json` | 206 requests in 18 folders, with tests |
+| `vaulted-money-local-api.postman_collection.json` | 207 requests in 18 folders, with tests |
 | `vaulted-money-local-api.postman_environment.json` | `baseUrl` and `token` variables |
 
 You do not need a Postman account or any special permissions. The API only listens on your own computer.
@@ -28,7 +28,7 @@ Open the collection → **Run** (Collection Runner), keep the order, and run.
 
 - Folders `00`–`15` are the safe flow, then `98 Cleanup`. Requests depend on earlier ones (for example, the ledger created in `01` is used everywhere), so run them in order. Individual requests can be re-sent, but if a folder fails midway, re-run from `01`.
 - **Untick `99 Optional (changes your settings)`** unless you want those side effects (it overwrites your stored exchange rates from the internet).
-- A passing run is 204 requests (everything except the two in `99`) with 553 assertions and no failures.
+- A passing run is 205 requests (everything except the two in `99`) with 555 assertions and no failures.
 
 ### What it touches in your real app
 
@@ -96,6 +96,7 @@ npx newman run vaulted-money-local-api.postman_collection.json \
 | `403 forbidden_host` | `baseUrl` uses a hostname other than `127.0.0.1`/`localhost`. |
 | `503 ui_not_ready` | The app window is still loading; retry in a moment. |
 | Variable shows as `{{ledgerId}}` in a URL | `01 Ledgers → Create ledger` did not run or failed; run it first. |
+| `01 Ledgers → Create ledger` returns `409` | Ledger names are unique, so a **Postman Test Ledger** left by an interrupted run blocks a new one. Delete it in the app and start from `01`. |
 | Many failures in `05` after a partial earlier run | Leftover data from an interrupted run. Delete the **Postman Test Ledger** in the app and start from `01`. |
 
 ## Keeping the collection up to date

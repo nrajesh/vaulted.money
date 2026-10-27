@@ -80,7 +80,8 @@ export const categoryRoutes: RouteDef[] = [
   {
     method: "POST",
     path: "/ledgers/:ledgerId/categories/merge",
-    summary: "Merge categories into a target category",
+    summary:
+      "Merge categories into a target: moves their transactions and sub-categories to the target, then deletes them with their recurring transactions and budgets",
     body: mergeSchema,
     handler: async (ctx) => {
       const { categories } = await load(ctx);

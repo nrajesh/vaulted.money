@@ -133,9 +133,9 @@ export interface AIProvider {
 }
 
 /**
- * Thrown when a rename would give two vendors/accounts, two categories, or two
- * sub-categories of one category the same name within a ledger. The Local API
- * reports it as 409 Conflict.
+ * Thrown when a name is already taken: two ledgers, or within a ledger two
+ * vendors/accounts, two categories, or two sub-categories of one category.
+ * The Local API reports it as 409 Conflict.
  */
 export class NameConflictError extends Error {
   constructor(message: string) {
@@ -167,6 +167,10 @@ export interface AccountDetailsChanges {
 export interface DataProvider {
   // Ledgers
   getLedgers(): Promise<Ledger[]>;
+  /**
+   * Ledger names are unique, ignoring case and surrounding spaces. Adding or
+   * renaming to a taken name throws NameConflictError.
+   */
   addLedger(
     ledger: Omit<Ledger, "id" | "created_at" | "last_accessed">,
   ): Promise<Ledger>;
@@ -221,6 +225,11 @@ export interface DataProvider {
   getAccountCurrency(accountName: string, ledgerId: string): Promise<string>;
   getAllVendors(ledgerId: string): Promise<Vendor[]>;
   getVendorByName(name: string, ledgerId: string): Promise<Vendor | undefined>;
+  /**
+   * Moves the sources' transactions to the target, then deletes the sources
+   * with their recurring transactions and budgets. Throws if the target does
+   * not exist in the ledger.
+   */
   mergePayees(
     targetName: string,
     sourceNames: string[],
@@ -259,6 +268,11 @@ export interface DataProvider {
   ): Promise<string | null>;
   getUserCategories(ledgerId: string): Promise<Category[]>;
   getSubCategories(ledgerId: string): Promise<SubCategory[]>;
+  /**
+   * Moves the sources' transactions and sub-categories to the target, then
+   * deletes the sources with their recurring transactions and budgets.
+   * Throws if the target does not exist in the ledger.
+   */
   mergeCategories(
     targetName: string,
     sourceNames: string[],

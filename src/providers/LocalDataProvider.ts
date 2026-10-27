@@ -40,18 +40,57 @@ export class LocalDataProvider implements DataProvider {
   async addLedger(
     ledger: Omit<Ledger, "id" | "created_at" | "last_accessed">,
   ): Promise<Ledger> {
-    const newLedger: Ledger = {
-      ...ledger,
-      id: uuidv4(),
-      created_at: new Date().toISOString(),
-      last_accessed: new Date().toISOString(),
-    };
-    await db.ledgers.add(newLedger);
-    return newLedger;
+    const name = requireName(ledger.name);
+    return await db.transaction("rw", db.ledgers, async () => {
+      await this.assertLedgerNameFree(name);
+      const newLedger: Ledger = {
+        ...ledger,
+        name,
+        id: uuidv4(),
+        created_at: new Date().toISOString(),
+        last_accessed: new Date().toISOString(),
+      };
+      await db.ledgers.add(newLedger);
+      return newLedger;
+    });
   }
 
   async updateLedger(ledger: Ledger): Promise<void> {
-    await db.ledgers.put(ledger);
+    await db.transaction("rw", db.ledgers, async () => {
+      const existing = await db.ledgers.get(ledger.id);
+      // Only a rename is checked, so ledgers that already shared a name
+      // before names had to be unique can still be opened and edited.
+      if (existing?.name === ledger.name) {
+        await db.ledgers.put(ledger);
+        return;
+      }
+      const name = requireName(ledger.name);
+      await this.assertLedgerNameFree(name, ledger.id);
+      await db.ledgers.put({ ...ledger, name });
+    });
+  }
+
+  /**
+   * Ledgers are separate books to the user, so two may not share a name.
+   * Like the ledger dialog, this ignores case and surrounding spaces.
+   */
+  private async assertLedgerNameFree(
+    name: string,
+    ledgerIdToIgnore?: string,
+  ): Promise<void> {
+    const wanted = name.toLowerCase();
+    const clash = await db.ledgers
+      .filter(
+        (other) =>
+          other.id !== ledgerIdToIgnore &&
+          other.name.trim().toLowerCase() === wanted,
+      )
+      .first();
+    if (clash) {
+      throw new NameConflictError(
+        `A ledger named "${clash.name}" already exists`,
+      );
+    }
   }
 
   async deleteLedger(id: string): Promise<void> {
@@ -387,37 +426,74 @@ export class LocalDataProvider implements DataProvider {
     return await db.vendors.where({ user_id: ledgerId, name: name }).first();
   }
 
+  /*
+   * Merges keep the target and move past transactions onto it. The
+   * merged-away names' recurring transactions and budgets are deleted rather
+   * than moved: with duplicates there is no telling which schedule or budget
+   * the user still wants, and moving them could double-count.
+   */
   async mergePayees(
     targetName: string,
     sourceNames: string[],
     ledgerId: string,
   ): Promise<void> {
+    // Listing the target as a source would otherwise delete it.
+    const sources = sourceNames.filter((name) => name !== targetName);
+    if (sources.length === 0) return;
+    const isSource = (name: string | null | undefined) =>
+      !!name && sources.includes(name);
+    const inLedger = isInLedger(ledgerId);
+
     await db.transaction(
       "rw",
-      db.transactions,
-      db.vendors,
-      db.accounts,
+      [
+        db.transactions,
+        db.vendors,
+        db.accounts,
+        db.scheduled_transactions,
+        db.budgets,
+      ],
       async () => {
-        await db.transactions
-          .where("user_id")
-          .equals(ledgerId)
-          .and((t) => sourceNames.includes(t.account))
-          .modify({ account: targetName });
+        const target = await db.vendors
+          .where("[user_id+name]")
+          .equals([ledgerId, targetName])
+          .first();
+        if (!target) throw new Error(`Vendor "${targetName}" was not found`);
 
         await db.transactions
           .where("user_id")
           .equals(ledgerId)
-          .and((t) => sourceNames.includes(t.vendor))
+          .and((t) => isSource(t.account))
+          .modify({ account: targetName });
+        await db.transactions
+          .where("user_id")
+          .equals(ledgerId)
+          .and((t) => isSource(t.vendor))
           .modify({ vendor: targetName });
+
+        await db.scheduled_transactions
+          .filter(
+            (scheduled) =>
+              inLedger(scheduled) &&
+              (isSource(scheduled.account) || isSource(scheduled.vendor)),
+          )
+          .delete();
+        await db.budgets
+          .filter(
+            (budget) =>
+              inLedger(budget) &&
+              isPayeeBudget(budget) &&
+              isSource(budget.budget_scope_name),
+          )
+          .delete();
 
         const sourceVendors = await db.vendors
           .where("[user_id+name]")
-          .anyOf(sourceNames.map((name) => [ledgerId, name]))
+          .anyOf(sources.map((name) => [ledgerId, name]))
           .toArray();
         const accountIdsToDelete = sourceVendors
           .map((v) => v.account_id)
-          .filter((id) => id != null) as string[];
-
+          .filter((id): id is string => !!id);
         await db.vendors.bulkDelete(sourceVendors.map((v) => v.id));
         if (accountIdsToDelete.length > 0) {
           await db.accounts.bulkDelete(accountIdsToDelete);
@@ -658,53 +734,91 @@ export class LocalDataProvider implements DataProvider {
       .sortBy("name");
   }
 
+  /** See mergePayees for why recurring transactions and budgets are deleted. */
   async mergeCategories(
     targetName: string,
     sourceNames: string[],
     ledgerId: string,
   ): Promise<void> {
+    // Listing the target as a source would otherwise delete it.
+    const sources = sourceNames.filter((name) => name !== targetName);
+    if (sources.length === 0) return;
+    const inLedger = isInLedger(ledgerId);
+
     await db.transaction(
       "rw",
-      db.transactions,
-      db.categories,
-      db.sub_categories,
-      db.budgets,
+      [
+        db.transactions,
+        db.categories,
+        db.sub_categories,
+        db.scheduled_transactions,
+        db.budgets,
+      ],
       async () => {
-        await db.transactions
-          .where("user_id")
-          .equals(ledgerId)
-          .and((t) => sourceNames.includes(t.category))
-          .modify({ category: targetName });
-
-        await db.budgets
-          .where("user_id")
-          .equals(ledgerId)
-          .and((b) => sourceNames.includes(b.category_name))
-          .modify({ category_name: targetName });
-
-        const targetCategory = await db.categories
+        const target = await db.categories
           .where("[user_id+name]")
           .equals([ledgerId, targetName])
           .first();
-
-        if (targetCategory) {
-          const sourceCategories = await db.categories
+        if (!target) {
+          throw new Error(`Category "${targetName}" was not found`);
+        }
+        const sourceIds = (
+          await db.categories
             .where("[user_id+name]")
-            .anyOf(sourceNames.map((name) => [ledgerId, name]))
-            .toArray();
-          const sourceIds = sourceCategories.map((c) => c.id);
+            .anyOf(sources.map((name) => [ledgerId, name]))
+            .toArray()
+        ).map((category) => category.id);
 
-          await db.sub_categories
-            .where("category_id")
-            .anyOf(sourceIds)
-            .modify({ category_id: targetCategory.id });
+        // Transactions keep their sub-category name, which the target gets
+        // below.
+        await db.transactions
+          .where("user_id")
+          .equals(ledgerId)
+          .and((t) => sources.includes(t.category))
+          .modify({ category: targetName });
+
+        await db.scheduled_transactions
+          .filter(
+            (scheduled) =>
+              inLedger(scheduled) && sources.includes(scheduled.category),
+          )
+          .delete();
+        // Budgets without a scope predate scopes and are category budgets.
+        await db.budgets
+          .filter(
+            (budget) =>
+              inLedger(budget) &&
+              (!budget.budget_scope || budget.budget_scope === "category") &&
+              (sourceIds.includes(budget.category_id) ||
+                sources.includes(budget.category_name)),
+          )
+          .delete();
+
+        // Move the sub-categories over. One whose name the target already
+        // has is folded into the target's: transactions store the name, so
+        // nothing else needs changing.
+        const targetSubNames = new Set(
+          (
+            await db.sub_categories
+              .where("category_id")
+              .equals(target.id)
+              .toArray()
+          ).map((sub) => sub.name),
+        );
+        const movingSubs = await db.sub_categories
+          .where("category_id")
+          .anyOf(sourceIds)
+          .toArray();
+        for (const sub of movingSubs) {
+          if (targetSubNames.has(sub.name)) {
+            await db.sub_categories.delete(sub.id);
+          } else {
+            await db.sub_categories.update(sub.id, { category_id: target.id });
+            targetSubNames.add(sub.name);
+          }
         }
 
-        const sourceCategories = await db.categories
-          .where("[user_id+name]")
-          .anyOf(sourceNames.map((name) => [ledgerId, name]))
-          .toArray();
-        await db.categories.bulkDelete(sourceCategories.map((c) => c.id));
+        await db.categories.bulkDelete(sourceIds);
       },
     );
   }
