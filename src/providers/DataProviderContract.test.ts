@@ -725,6 +725,27 @@ describe("DataProvider contract", () => {
       expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
     });
 
+    it("merges names that differ only in capitals", async () => {
+      await provider.addTransaction(newTransaction({ vendor: "Amazon" }));
+      const lowercase = await provider.addTransaction(
+        newTransaction({ vendor: "amazon", category: "food" }),
+      );
+
+      await provider.mergePayees("Amazon", ["amazon"], LEDGER);
+      await provider.mergeCategories("Food", ["food"], LEDGER);
+
+      expect(await provider.getTransactionById(lowercase.id)).toMatchObject({
+        vendor: "Amazon",
+        category: "Food",
+      });
+      expect(
+        (await provider.getAllVendors(LEDGER)).map(({ name }) => name).sort(),
+      ).toEqual(["Amazon", "Checking"]);
+      expect(
+        (await provider.getUserCategories(LEDGER)).map(({ name }) => name),
+      ).toEqual(["Food"]);
+    });
+
     it("leaves everything alone when the target is also listed as a source", async () => {
       await seedLedger(provider, LEDGER);
       const before = await snapshotLedger(provider, LEDGER);
