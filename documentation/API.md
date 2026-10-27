@@ -92,9 +92,9 @@ Under `/ledgers/{ledgerId}/transactions`.
 | `GET` | Filters: `from`, `to` (`YYYY-MM-DD`), `account`, `vendor`, `category`, `sub_category`, `min_amount`, `max_amount`, `type=income\|expense`, `search`, `exclude_transfers`, `limit` (default 100, max 1000), `offset` |
 | `POST` | `{date, amount, account, vendor, category, sub_category?, remarks?, currency?}`. Negative amounts are expenses. `currency` defaults to the account's. Unknown accounts, vendors and categories are created, as in the UI. |
 | `POST /bulk` | `{transactions: [...]}` (up to 1000) |
-| `POST /transfer` | `{from_account, to_account, amount, date, to_amount?, remarks?}`: two linked legs. `to_amount` is required when the currencies differ. |
+| `POST /transfer` | `{from_account, to_account, amount, date, to_amount?, remarks?}`: two linked legs. `to_amount` is required when the currencies differ and rejected (`400`) when they match and the amounts differ. |
 | `DELETE /transfer/{transferId}` | delete both legs |
-| `GET/PATCH/DELETE /{transactionId}` | |
+| `GET/PATCH/DELETE /{transactionId}` | Editing one leg of a transfer updates the other (date, category, remarks, swapped account and vendor, and the amount when both legs share a currency). Deleting one leg deletes both. Both match the app. |
 
 ### Recurring (scheduled) transactions
 Under `/ledgers/{ledgerId}/scheduled-transactions`.

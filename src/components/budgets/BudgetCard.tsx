@@ -389,10 +389,10 @@ function GoalCard({
           <div
             className="absolute top-0 h-full w-0.5 bg-slate-800 dark:bg-white rounded-full opacity-70 transition-all duration-500"
             style={{ left: `${Math.min(expectedProgress, 100)}%` }}
-            title={`Expected: ${expectedProgress.toFixed(0)}%`}
+            title={`Expected pace: ${expectedProgress.toFixed(0)}% by today`}
           >
             <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
-              {expectedProgress.toFixed(0)}%
+              Pace {expectedProgress.toFixed(0)}%
             </div>
           </div>
         </div>

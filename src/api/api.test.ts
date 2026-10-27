@@ -1809,3 +1809,115 @@ describe("input hardening", () => {
     }
   });
 });
+
+describe("transfer legs", () => {
+  beforeEach(clearAll);
+
+  const setup = async (secondCurrency = "USD") => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    await ok(
+      call("POST", `${base}/accounts`, { name: "Checking", currency: "USD" }),
+      201,
+    );
+    await ok(
+      call("POST", `${base}/accounts`, {
+        name: "Savings",
+        currency: secondCurrency,
+      }),
+      201,
+    );
+    return base;
+  };
+
+  const transfer = (base: string, extra: object = {}) =>
+    ok<{
+      outgoing: { id: string; transfer_id: string };
+      incoming: { id: string };
+    }>(
+      call("POST", `${base}/transactions/transfer`, {
+        from_account: "Checking",
+        to_account: "Savings",
+        amount: 40,
+        date: "2026-03-03",
+        ...extra,
+      }),
+      201,
+    );
+
+  it("mirrors an edit of one leg onto the other, swapping account and vendor", async () => {
+    const base = await setup();
+    const t = await transfer(base);
+    await ok(
+      call("PATCH", `${base}/transactions/${t.outgoing.id}`, {
+        amount: -75,
+        date: "2026-03-05",
+        remarks: "rent top-up",
+      }),
+    );
+    const other = await ok<Entity>(
+      call("GET", `${base}/transactions/${t.incoming.id}`),
+    );
+    expect(other).toMatchObject({
+      amount: 75,
+      date: "2026-03-05",
+      remarks: "rent top-up",
+      account: "Savings",
+      vendor: "Checking",
+    });
+  });
+
+  it("leaves the other leg's amount alone when the currencies differ", async () => {
+    const base = await setup("EUR");
+    const t = await transfer(base, { to_amount: 37 });
+    await ok(
+      call("PATCH", `${base}/transactions/${t.outgoing.id}`, { amount: -50 }),
+    );
+    const other = await ok<Entity>(
+      call("GET", `${base}/transactions/${t.incoming.id}`),
+    );
+    expect(other.amount).toBe(37);
+  });
+
+  it("deletes both legs when one is deleted", async () => {
+    const base = await setup();
+    const t = await transfer(base);
+    await ok(call("DELETE", `${base}/transactions/${t.incoming.id}`), 204);
+    const list = await ok<{ total: number }>(
+      call("GET", `${base}/transactions`),
+    );
+    expect(list.total).toBe(0);
+  });
+
+  it("still deletes a plain transaction on its own", async () => {
+    const base = await setup();
+    await transfer(base);
+    const lone = await ok<Entity>(
+      call("POST", `${base}/transactions`, {
+        date: "2026-03-04",
+        amount: -5,
+        account: "Checking",
+        vendor: "Cafe",
+        category: "Food",
+      }),
+      201,
+    );
+    await ok(call("DELETE", `${base}/transactions/${lone.id}`), 204);
+    const list = await ok<{ total: number }>(
+      call("GET", `${base}/transactions`),
+    );
+    expect(list.total).toBe(2);
+  });
+
+  it("rejects a to_amount that unbalances a same-currency transfer", async () => {
+    const base = await setup();
+    const res = await call("POST", `${base}/transactions/transfer`, {
+      from_account: "Checking",
+      to_account: "Savings",
+      amount: 10,
+      to_amount: 5,
+      date: "2026-03-03",
+    });
+    expect(res.status).toBe(400);
+  });
+});
