@@ -9,7 +9,6 @@ import {
   notFound,
   parse,
 } from "../http";
-import { renamePayee } from "../entityOps";
 import type { RouteContext, RouteDef } from "../router";
 import { requireLedger } from "./shared";
 
@@ -74,7 +73,7 @@ export const vendorRoutes: RouteDef[] = [
     method: "POST",
     path: "/ledgers/:ledgerId/vendors/merge",
     summary:
-      "Merge vendors into a target vendor, re-pointing their transactions",
+      "Merge vendors into a target: moves their transactions to the target, then deletes them with their recurring transactions and budgets",
     body: mergeSchema,
     handler: async ({ params, body, services }) => {
       await requireLedger(services, params.ledgerId);
@@ -103,19 +102,21 @@ export const vendorRoutes: RouteDef[] = [
   {
     method: "PATCH",
     path: "/ledgers/:ledgerId/vendors/:vendorId",
-    summary: "Rename a vendor (propagates to transactions and budgets)",
+    summary:
+      "Rename a vendor (propagates to transactions, recurring transactions and budgets)",
     body: nameSchema,
     handler: async (ctx) => {
       const vendor = await findVendor(ctx);
       const { name } = parse(nameSchema, ctx.body);
-      await renamePayee(ctx.params.ledgerId, vendor, name);
+      await ctx.services.dataProvider.renamePayee(vendor.id, name);
       return json({ ...vendor, name });
     },
   },
   {
     method: "DELETE",
     path: "/ledgers/:ledgerId/vendors/:vendorId",
-    summary: "Delete a vendor (use the accounts endpoint for accounts)",
+    summary:
+      "Delete a vendor and its recurring transactions and budgets (use the accounts endpoint for accounts)",
     handler: async (ctx) => {
       const vendor = await findVendor(ctx);
       if (vendor.is_account) {

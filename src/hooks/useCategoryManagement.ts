@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useDataProvider } from "@/context/DataProviderContext";
-import { db } from "@/lib/dexieDB";
 import { slugify } from "@/lib/utils";
 import { saveFile } from "@/utils/backupUtils";
 
@@ -24,6 +23,25 @@ export const useCategoryManagement = () => {
   } = useTransactions();
   const navigate = useNavigate();
   const dataProvider = useDataProvider();
+
+  // The sub-category dialog works with names, the provider with ids. Names
+  // are unique within a category.
+  const findSubCategoryId = async (
+    categoryId: string,
+    categoryName: string,
+    subCategoryName: string,
+  ): Promise<string> => {
+    if (!activeLedger?.id) throw new Error("No active ledger.");
+    const match = (await dataProvider.getSubCategories(activeLedger.id)).find(
+      (sub) => sub.category_id === categoryId && sub.name === subCategoryName,
+    );
+    if (!match) {
+      throw new Error(
+        `Sub-category "${subCategoryName}" was not found in "${categoryName}"`,
+      );
+    }
+    return match.id;
+  };
 
   const managementProps = useEntityManagement<Category>({
     entityName: "Category",
@@ -108,16 +126,17 @@ export const useCategoryManagement = () => {
       oldSubCategoryName: string;
       newSubCategoryName: string;
     }) => {
-      if (!activeLedger?.id) throw new Error("No active ledger.");
-
-      // Pragmatic fix: use db directly for complex updates not in provider interface yet
-      await db.sub_categories
-        .where({ category_id: categoryId, name: oldSubCategoryName })
-        .modify({ name: newSubCategoryName.trim() });
-
-      await db.transactions
-        .where({ category: categoryName, sub_category: oldSubCategoryName })
-        .modify({ sub_category: newSubCategoryName.trim() });
+      const subCategoryId = await findSubCategoryId(
+        categoryId,
+        categoryName,
+        oldSubCategoryName,
+      );
+      // Same rename as the Local API: updates the ledger's transactions,
+      // recurring transactions and budgets.
+      await dataProvider.renameSubCategory(
+        subCategoryId,
+        newSubCategoryName.trim(),
+      );
     },
     onSuccess: async () => {
       showSuccess("Sub-category renamed successfully!");
@@ -137,16 +156,12 @@ export const useCategoryManagement = () => {
       categoryName: string;
       subCategoryName: string;
     }) => {
-      if (!activeLedger?.id) throw new Error("No active ledger.");
-
-      // Pragmatic fix: use db directly
-      await db.sub_categories
-        .where({ category_id: categoryId, name: subCategoryName })
-        .delete();
-
-      await db.transactions
-        .where({ category: categoryName, sub_category: subCategoryName })
-        .modify({ sub_category: null });
+      const subCategoryId = await findSubCategoryId(
+        categoryId,
+        categoryName,
+        subCategoryName,
+      );
+      await dataProvider.deleteSubCategory(subCategoryId);
     },
     onSuccess: async () => {
       showSuccess("Sub-category deleted successfully!");
@@ -294,7 +309,6 @@ export const useCategoryManagement = () => {
     isLoadingCategories,
     refetchCategories,
     addCategoryMutation,
-    deleteCategoriesMutation: managementProps.deleteMutation,
     handleFileChange,
     handleExportClick,
     handleCategoryNameClick,
@@ -303,7 +317,6 @@ export const useCategoryManagement = () => {
     deleteSubCategoryMutation,
     isLoadingMutation:
       addCategoryMutation.isPending ||
-      managementProps.deleteMutation.isPending ||
       batchUpsertCategoriesMutation.isPending ||
       renameSubCategoryMutation.isPending ||
       deleteSubCategoryMutation.isPending ||

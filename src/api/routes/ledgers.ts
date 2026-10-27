@@ -32,7 +32,7 @@ export const ledgerRoutes: RouteDef[] = [
   {
     method: "POST",
     path: "/ledgers",
-    summary: "Create a ledger",
+    summary: "Create a ledger (names are unique, ignoring case)",
     body: createSchema,
     handler: async ({ body, services }) => {
       const input = parse(createSchema, body);
@@ -58,7 +58,7 @@ export const ledgerRoutes: RouteDef[] = [
   {
     method: "PATCH",
     path: "/ledgers/:ledgerId",
-    summary: "Update a ledger",
+    summary: "Update a ledger (names are unique, ignoring case)",
     body: patchSchema,
     handler: async ({ params, body, services }) => {
       const ledger = await requireLedger(services, params.ledgerId);

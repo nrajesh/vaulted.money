@@ -40,6 +40,8 @@ Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every 
 
 Ledger data is addressed explicitly (`/ledgers/{ledgerId}/...`); the API never depends on which ledger is open in the UI. The open UI is refreshed after each change made through the API.
 
+Transactions, recurring transactions and budgets refer to accounts, vendors, categories and sub-categories by **name**. Renames and deletes therefore update or remove those records too, but only in the ledger in the path: another ledger that uses the same name is never changed. A rename to a name already in use returns `409` and changes nothing. The app's own edit and delete buttons do exactly the same.
+
 ## Endpoints
 
 ### Ledgers
@@ -48,13 +50,15 @@ Ledger data is addressed explicitly (`/ledgers/{ledgerId}/...`); the API never d
 | `GET /ledgers` · `POST /ledgers` | list · create `{name, currency, short_name?, icon?}` |
 | `GET/PATCH/DELETE /ledgers/{id}` | read · update · delete **with all its data** |
 
+Ledger names are unique, ignoring case and surrounding spaces: creating or renaming to a taken name returns `409`. Ledgers that already shared a name can still be updated as long as the name is not changed.
+
 ### Accounts
 Under `/ledgers/{ledgerId}/accounts`. Accounts include a `balance` (starting balance plus transactions dated today or earlier, in the account's currency).
 
 | | |
 |---|---|
 | `GET` · `POST` | list · create `{name, currency, starting_balance?, type?, credit_limit?, remarks?}` |
-| `GET/PATCH/DELETE /{accountId}` | Renames and currency changes propagate to the account's transactions. Deleting keeps transactions. |
+| `GET/PATCH/DELETE /{accountId}` | A new name propagates to the account's transactions, recurring transactions and budgets; a new currency to its transactions and recurring transactions. Deleting keeps past transactions but removes the account's recurring transactions and budgets. |
 
 `type` is one of `Checking`, `Savings`, `Credit Card`, `Investment`, `Other`.
 
@@ -64,8 +68,8 @@ Under `/ledgers/{ledgerId}/vendors`.
 | | |
 |---|---|
 | `GET` · `POST` | list (`?include_accounts=true` to include accounts) · create `{name}` |
-| `GET/PATCH/DELETE /{vendorId}` | Rename propagates to transactions, scheduled transactions and budgets. |
-| `POST /merge` | `{target, sources: [...]}`: re-point transactions, delete sources |
+| `GET/PATCH/DELETE /{vendorId}` | Rename propagates to transactions, recurring transactions and budgets. Vendors and accounts share names, so renaming to an account's name is a `409`. Deleting keeps past transactions but removes the vendor's recurring transactions and budgets. |
+| `POST /merge` | `{target, sources: [...]}`: moves the sources' transactions to the target, then deletes the sources **with their recurring transactions and budgets** |
 
 ### Categories and sub-categories
 Under `/ledgers/{ledgerId}/categories`.
@@ -73,10 +77,10 @@ Under `/ledgers/{ledgerId}/categories`.
 | | |
 |---|---|
 | `GET` · `POST` | list with nested `sub_categories` · create `{name, sub_categories?: [...]}` |
-| `GET/PATCH/DELETE /{categoryId}` | Rename propagates. Delete also removes sub-categories and budgets for the category. |
-| `POST /merge` | `{target, sources: [...]}` |
+| `GET/PATCH/DELETE /{categoryId}` | Rename propagates to transactions, recurring transactions and budgets. Delete also removes the category's sub-categories and the recurring transactions and budgets that use it; past transactions keep the name. |
+| `POST /merge` | `{target, sources: [...]}`: moves the sources' transactions and sub-categories to the target (a sub-category the target already has is folded into it), then deletes the sources **with their recurring transactions and budgets** |
 | `GET` · `POST /{categoryId}/sub-categories` | list · create `{name}` |
-| `PATCH/DELETE /{categoryId}/sub-categories/{subId}` | Delete clears the tag on transactions and removes budgets scoped to it. |
+| `PATCH/DELETE /{categoryId}/sub-categories/{subId}` | Rename propagates like a category rename (`409` if the category already has the name). Delete clears the tag on transactions and recurring transactions and removes budgets scoped to it. |
 
 ### Transactions
 Under `/ledgers/{ledgerId}/transactions`.
@@ -171,6 +175,7 @@ How each behaves:
 - **Categorize Missing** gives uncategorized transactions the category last used with the same vendor. **AI is opt-in:** with `use_ai: true` it also asks your default AI provider about vendors with no history. That sends vendor names (never amounts) to the provider and fails with `400 ai_not_configured` if no provider and key are set. The default is `false`, so nothing leaves the device unless you ask.
 - **Reconcile Balance** compares the real balance you give with the app's balance (as of `date`, default today) and creates one `Balance Adjustment` transaction (category `Adjustment`) for the difference. Accounts that already match are left alone.
 - **Duplicate suggestions** group names that are identical after ignoring case, accents, punctuation and spacing, and suggest which to keep. (The app makes you pick duplicates by hand; the merge itself is the same.)
+- **Merging** keeps the target and moves past transactions onto it. The merged-away names' recurring transactions and budgets are deleted, not moved: with duplicates there is no telling which schedule or budget you still want. Re-create any you need on the target.
 - **Unused** is stricter than the app: a vendor or category counts as unused only if no transaction, recurring transaction or budget refers to it, so cleanup never silently deletes schedules or budgets. `Others` and `Transfer` are never listed. `ids` may only name currently-unused entries.
 
 ### CSV import and export

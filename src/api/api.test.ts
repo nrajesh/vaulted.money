@@ -43,8 +43,13 @@ interface Entity {
   [key: string]: unknown;
 }
 
+let ledgerCount = 0;
+/** Ledger names must be unique, so each test ledger gets its own. */
 const createLedger = (currency = "USD") =>
-  ok<Ledger>(call("POST", "/ledgers", { name: "Home", currency }), 201);
+  ok<Ledger>(
+    call("POST", "/ledgers", { name: `Home ${++ledgerCount}`, currency }),
+    201,
+  );
 
 describe("router", () => {
   beforeEach(clearAll);
@@ -96,6 +101,101 @@ describe("ledgers, accounts, vendors, categories", () => {
     expect(
       (await ok<{ data: unknown[] }>(call("GET", "/ledgers"))).data,
     ).toEqual([]);
+  });
+
+  it("rejects a ledger name another ledger has, ignoring case, with 409", async () => {
+    const family = await ok<Ledger>(
+      call("POST", "/ledgers", { name: "Family", currency: "EUR" }),
+      201,
+    );
+    const other = await createLedger();
+
+    expect(
+      (await call("POST", "/ledgers", { name: " family ", currency: "USD" }))
+        .status,
+    ).toBe(409);
+    expect(
+      (await call("PATCH", `/ledgers/${other.id}`, { name: "FAMILY" })).status,
+    ).toBe(409);
+    expect(
+      (await call("PATCH", `/ledgers/${family.id}`, { currency: "USD" }))
+        .status,
+    ).toBe(200);
+  });
+
+  it("merges vendors and categories, deleting the merged-away ones' recurring transactions and budgets", async () => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    for (const [vendor, category] of [
+      ["Gym", "Health"],
+      ["Gym Ltd", "Fitness"],
+    ]) {
+      const names = { account: "Wallet", vendor, category };
+      await ok(
+        call("POST", `${base}/transactions`, {
+          ...names,
+          date: "2020-03-01",
+          amount: -30,
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/scheduled-transactions`, {
+          ...names,
+          date: "2030-01-01",
+          amount: -30,
+          frequency: "Monthly",
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, {
+          budget_scope: "vendor",
+          scope_name: vendor,
+          target_amount: 50,
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, { category, target_amount: 80 }),
+        201,
+      );
+    }
+
+    expect(
+      (
+        await call("POST", `${base}/vendors/merge`, {
+          target: "Gym",
+          sources: ["Gym Ltd"],
+        })
+      ).status,
+    ).toBe(204);
+    expect(
+      (
+        await call("POST", `${base}/categories/merge`, {
+          target: "Health",
+          sources: ["Fitness"],
+        })
+      ).status,
+    ).toBe(204);
+
+    const list = async (resource: string) =>
+      (await ok<{ data: Entity[] }>(call("GET", `${base}/${resource}`))).data;
+    expect(
+      (await list("transactions")).map(({ vendor, category }) => ({
+        vendor,
+        category,
+      })),
+    ).toEqual([
+      { vendor: "Gym", category: "Health" },
+      { vendor: "Gym", category: "Health" },
+    ]);
+    expect(
+      (await list("scheduled-transactions")).map(({ vendor }) => vendor),
+    ).toEqual(["Gym"]);
+    expect(
+      (await list("budgets")).map(({ category_name }) => category_name).sort(),
+    ).toEqual(["Gym", "Health"]);
   });
 
   it("creates accounts with balances, rejects duplicates and propagates renames", async () => {
@@ -221,6 +321,127 @@ describe("ledgers, accounts, vendors, categories", () => {
       category: "Meals",
       sub_category: "Delivery",
     });
+  });
+
+  it("rejects renames to a name the ledger already uses with 409", async () => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    const checking = await ok<Entity>(
+      call("POST", `${base}/accounts`, { name: "Checking", currency: "USD" }),
+      201,
+    );
+    await ok(
+      call("POST", `${base}/accounts`, { name: "Savings", currency: "USD" }),
+      201,
+    );
+    const cafe = await ok<Entity>(
+      call("POST", `${base}/vendors`, { name: "Cafe" }),
+      201,
+    );
+    await ok(call("POST", `${base}/vendors`, { name: "Bar" }), 201);
+    const food = await ok<Entity>(
+      call("POST", `${base}/categories`, {
+        name: "Food",
+        sub_categories: ["Bread", "Cheese"],
+      }),
+      201,
+    );
+    await ok(call("POST", `${base}/categories`, { name: "Rent" }), 201);
+    const bread = (food.sub_categories as Entity[]).find(
+      (sub) => sub.name === "Bread",
+    )!;
+
+    const renames: [string, string][] = [
+      [`${base}/vendors/${cafe.id}`, "Bar"],
+      // Vendors and accounts share one set of names.
+      [`${base}/vendors/${cafe.id}`, "Checking"],
+      [`${base}/accounts/${checking.id}`, "Savings"],
+      [`${base}/categories/${food.id}`, "Rent"],
+      [`${base}/categories/${food.id}/sub-categories/${bread.id}`, "Cheese"],
+    ];
+    for (const [path, name] of renames) {
+      const response = await call("PATCH", path, { name });
+      expect({ path, name, status: response.status }).toEqual({
+        path,
+        name,
+        status: 409,
+      });
+    }
+    expect(
+      (await call("PATCH", `${base}/vendors/missing`, { name: "X" })).status,
+    ).toBe(404);
+  });
+
+  it("deletes a vendor or category without touching another ledger that uses the same names", async () => {
+    const home = await createLedger();
+    const other = await createLedger();
+    for (const ledger of [home, other]) {
+      const base = `/ledgers/${ledger.id}`;
+      await ok(
+        call("POST", `${base}/transactions`, {
+          date: "2020-03-01",
+          amount: -30,
+          account: "Wallet",
+          vendor: "Gym",
+          category: "Health",
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/scheduled-transactions`, {
+          date: "2030-01-01",
+          amount: -30,
+          account: "Wallet",
+          vendor: "Gym",
+          category: "Health",
+          frequency: "Monthly",
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, {
+          budget_scope: "vendor",
+          scope_name: "Gym",
+          target_amount: 50,
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, {
+          category: "Health",
+          target_amount: 80,
+        }),
+        201,
+      );
+    }
+    const homeBase = `/ledgers/${home.id}`;
+    const vendors = await ok<{ data: Entity[] }>(
+      call("GET", `${homeBase}/vendors`),
+    );
+    const categories = await ok<{ data: Entity[] }>(
+      call("GET", `${homeBase}/categories`),
+    );
+    const gym = vendors.data.find((vendor) => vendor.name === "Gym")!;
+    const health = categories.data.find((cat) => cat.name === "Health")!;
+
+    expect((await call("DELETE", `${homeBase}/vendors/${gym.id}`)).status).toBe(
+      204,
+    );
+    expect(
+      (await call("DELETE", `${homeBase}/categories/${health.id}`)).status,
+    ).toBe(204);
+
+    const countIn = async (ledgerId: string, resource: string) =>
+      (
+        await ok<{ data: Entity[] }>(
+          call("GET", `/ledgers/${ledgerId}/${resource}`),
+        )
+      ).data.length;
+    expect(await countIn(home.id, "scheduled-transactions")).toBe(0);
+    expect(await countIn(home.id, "budgets")).toBe(0);
+    expect(await countIn(home.id, "transactions")).toBe(1);
+    expect(await countIn(other.id, "scheduled-transactions")).toBe(1);
+    expect(await countIn(other.id, "budgets")).toBe(2);
   });
 });
 
@@ -360,6 +581,53 @@ describe("transactions", () => {
         )
       ).total,
     ).toBe(0);
+  });
+
+  it("only deletes a transfer from the ledger that owns it", async () => {
+    const ledger = await createLedger();
+    const otherLedger = await createLedger();
+    for (const name of ["Checking", "Savings"]) {
+      await ok(
+        call("POST", `/ledgers/${ledger.id}/accounts`, {
+          name,
+          currency: "USD",
+        }),
+        201,
+      );
+    }
+    const transfer = await ok<{ transfer_id: string }>(
+      call("POST", `/ledgers/${ledger.id}/transactions/transfer`, {
+        from_account: "Checking",
+        to_account: "Savings",
+        amount: 50,
+        date: "2020-05-01",
+      }),
+      201,
+    );
+
+    expect(
+      (
+        await call(
+          "DELETE",
+          `/ledgers/${otherLedger.id}/transactions/transfer/${transfer.transfer_id}`,
+        )
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await call(
+          "DELETE",
+          `/ledgers/${ledger.id}/transactions/transfer/no-such-transfer`,
+        )
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await ok<{ total: number }>(
+          call("GET", `/ledgers/${ledger.id}/transactions`),
+        )
+      ).total,
+    ).toBe(2);
   });
 });
 

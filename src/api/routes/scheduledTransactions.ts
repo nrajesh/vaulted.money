@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { db } from "@/lib/dexieDB";
 import type { ScheduledTransaction } from "@/types/dataProvider";
 import {
   badRequest,
@@ -38,7 +37,9 @@ const patchSchema = baseSchema.partial();
 
 async function find(ctx: RouteContext): Promise<ScheduledTransaction> {
   await requireLedger(ctx.services, ctx.params.ledgerId);
-  const item = await db.scheduled_transactions.get(ctx.params.scheduledId);
+  const item = await ctx.services.dataProvider.getScheduledTransactionById(
+    ctx.params.scheduledId,
+  );
   if (!item || item.user_id !== ctx.params.ledgerId) {
     throw notFound(`Scheduled transaction "${ctx.params.scheduledId}"`);
   }

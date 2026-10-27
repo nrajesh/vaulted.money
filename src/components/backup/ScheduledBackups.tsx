@@ -35,8 +35,8 @@ import {
 } from "lucide-react";
 import { parseFrequency, formatFrequency } from "@/utils/frequencyParser";
 import { showSuccess, showError } from "@/utils/toast";
-import { db } from "@/lib/dexieDB";
 import { BackupConfig } from "@/types/dataProvider";
+import { useDataProvider } from "@/context/DataProviderContext";
 
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/components/ui/use-toast";
@@ -77,6 +77,7 @@ const FadingUndo: React.FC<{ onUndo: () => void }> = ({ onUndo }) => {
 };
 
 const ScheduledBackups = () => {
+  const dataProvider = useDataProvider();
   const [frequencyInput, setFrequencyInput] = React.useState("");
   const [isEncrypted, setIsEncrypted] = React.useState(false);
   const [password, setPassword] = React.useState("");
@@ -146,13 +147,13 @@ const ScheduledBackups = () => {
 
   React.useEffect(() => {
     const fetchBackups = async () => {
-      const result = await db.backup_configs.toArray();
+      const result = await dataProvider.getBackupConfigs();
       setBackups(result);
     };
     fetchBackups();
     const interval = setInterval(fetchBackups, 2000); // Poll every 2s to see updates
     return () => clearInterval(interval);
-  }, []);
+  }, [dataProvider]);
 
   const handleSelectFolder = async () => {
     try {
@@ -208,7 +209,7 @@ const ScheduledBackups = () => {
         passwordHash: isEncrypted ? password : undefined,
       };
 
-      await db.backup_configs.add(newBackup);
+      await dataProvider.addBackupConfig(newBackup);
       showSuccess("Scheduled backup created!");
 
       // Reset form
@@ -271,7 +272,7 @@ const ScheduledBackups = () => {
 
     // 2. Schedule Permanent Delete (15 seconds)
     const timeoutId = setTimeout(async () => {
-      await db.backup_configs.delete(id);
+      await dataProvider.deleteBackupConfig(id);
 
       // Clean up stack
       undoStackRef.current = undoStackRef.current.filter(
