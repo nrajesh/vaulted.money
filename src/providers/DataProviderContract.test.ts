@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/lib/dexieDB";
-import type {
-  BackupConfig,
-  DataProvider,
-  Transaction,
+import {
+  NameConflictError,
+  type BackupConfig,
+  type Budget,
+  type DataProvider,
+  type Transaction,
 } from "@/types/dataProvider";
 import { LocalDataProvider } from "./LocalDataProvider";
 
@@ -38,6 +40,110 @@ const newTransaction = (
   category: "Food",
   ...overrides,
 });
+
+const OTHER_LEDGER = "ledger-2";
+
+/**
+ * Seeds a ledger with one of every record that stores a name: a transaction
+ * and a recurring transaction for Checking / Bakery / Food / Bread, and a
+ * budget for each scope. Budgets follow the app's storage convention: only
+ * category budgets carry a category id, while vendor, account and
+ * sub-category budgets keep the name in `budget_scope_name` and
+ * `category_name`. Seeding two ledgers gives them identical names, so tests
+ * can check that a change in one leaves the other untouched.
+ */
+const seedLedger = async (provider: DataProvider, ledgerId: string) => {
+  const transaction = await provider.addTransaction(
+    newTransaction({ user_id: ledgerId, sub_category: "Bread" }),
+  );
+  const scheduled = await provider.addScheduledTransaction({
+    user_id: ledgerId,
+    date: "2026-02-01",
+    amount: -10,
+    currency: "EUR",
+    account: "Checking",
+    vendor: "Bakery",
+    category: "Food",
+    sub_category: "Bread",
+    frequency: "Monthly",
+  });
+  const vendor = (await provider.getVendorByName("Bakery", ledgerId))!;
+  const account = (await provider.getVendorByName("Checking", ledgerId))!;
+  const [category] = await provider.getUserCategories(ledgerId);
+  const [subCategory] = await provider.getSubCategories(ledgerId);
+
+  const addBudget = (fields: Partial<Omit<Budget, "id" | "spent_amount">>) =>
+    provider.addBudget({
+      user_id: ledgerId,
+      category_id: "",
+      category_name: "",
+      target_amount: 100,
+      currency: "EUR",
+      start_date: "2026-01-01T00:00:00.000Z",
+      end_date: null,
+      frequency: "Monthly",
+      ...fields,
+    });
+  await addBudget({
+    budget_scope: "category",
+    category_id: category.id,
+    category_name: "Food",
+  });
+  await addBudget({
+    budget_scope: "category",
+    category_id: category.id,
+    category_name: "Food",
+    sub_category_id: subCategory.id,
+    sub_category_name: "Bread",
+  });
+  for (const [scope, name] of [
+    ["sub_category", "Bread"],
+    ["vendor", "Bakery"],
+    ["account", "Checking"],
+  ] as const) {
+    await addBudget({
+      budget_scope: scope,
+      budget_scope_name: name,
+      category_name: name,
+    });
+  }
+
+  return { transaction, scheduled, vendor, account, category, subCategory };
+};
+
+/** Everything a ledger holds, for "this ledger did not change" checks. */
+const snapshotLedger = async (provider: DataProvider, ledgerId: string) => ({
+  transactions: await provider.getTransactions(ledgerId),
+  scheduled: await provider.getScheduledTransactions(ledgerId),
+  budgets: await provider.getBudgetsWithSpending(ledgerId),
+  vendors: await provider.getAllVendors(ledgerId),
+  accounts: await provider.getAllAccounts(ledgerId),
+  categories: await provider.getUserCategories(ledgerId),
+  subCategories: await provider.getSubCategories(ledgerId),
+});
+
+type BudgetKind =
+  "category" | "category+sub_category" | "sub_category" | "vendor" | "account";
+
+const budgetFor = async (
+  provider: DataProvider,
+  ledgerId: string,
+  kind: BudgetKind,
+) =>
+  (await provider.getBudgetsWithSpending(ledgerId)).find((budget) => {
+    if (kind === "category") {
+      return budget.budget_scope === "category" && !budget.sub_category_id;
+    }
+    if (kind === "category+sub_category") {
+      return budget.budget_scope === "category" && !!budget.sub_category_id;
+    }
+    return budget.budget_scope === kind;
+  });
+
+const budgetScopes = async (provider: DataProvider, ledgerId: string) =>
+  (await provider.getBudgetsWithSpending(ledgerId))
+    .map((budget) => budget.budget_scope)
+    .sort();
 
 const newBackupConfig = (
   overrides: Partial<BackupConfig> = {},
@@ -87,17 +193,6 @@ describe("DataProvider contract", () => {
       expect(
         await provider.getScheduledTransactionById("missing"),
       ).toBeUndefined();
-    });
-
-    it("returns a category by id, or undefined when it does not exist", async () => {
-      const categoryId = await provider.ensureCategoryExists("Food", LEDGER);
-
-      expect(await provider.getCategoryById(categoryId!)).toMatchObject({
-        id: categoryId,
-        name: "Food",
-        user_id: LEDGER,
-      });
-      expect(await provider.getCategoryById("missing")).toBeUndefined();
     });
   });
 
@@ -162,24 +257,298 @@ describe("DataProvider contract", () => {
     });
   });
 
-  describe("accounts", () => {
-    it("updates only the account fields it is given", async () => {
-      await provider.ensurePayeeExists("Checking", true, LEDGER, {
+  describe("renaming vendors and accounts", () => {
+    it("renames a vendor everywhere the ledger stores its name", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.renamePayee(home.vendor.id, "Boulangerie");
+
+      expect(await provider.getVendorByName("Bakery", LEDGER)).toBeUndefined();
+      expect(
+        await provider.getVendorByName("Boulangerie", LEDGER),
+      ).toMatchObject({ id: home.vendor.id });
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ vendor: "Boulangerie" });
+      expect(
+        await provider.getScheduledTransactionById(home.scheduled.id),
+      ).toMatchObject({ vendor: "Boulangerie" });
+      expect(await budgetFor(provider, LEDGER, "vendor")).toMatchObject({
+        budget_scope_name: "Boulangerie",
+        category_name: "Boulangerie",
+      });
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("renames an account in the transactions, schedules and budgets that use it", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.renamePayee(home.account.id, "Current");
+
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ account: "Current" });
+      expect(
+        await provider.getScheduledTransactionById(home.scheduled.id),
+      ).toMatchObject({ account: "Current" });
+      expect(await budgetFor(provider, LEDGER, "account")).toMatchObject({
+        budget_scope_name: "Current",
+        category_name: "Current",
+      });
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("refuses a name another vendor or account in the ledger already has, and changes nothing", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      const before = await snapshotLedger(provider, LEDGER);
+
+      await expect(
+        provider.renamePayee(home.vendor.id, "Checking"),
+      ).rejects.toBeInstanceOf(NameConflictError);
+      expect(await snapshotLedger(provider, LEDGER)).toEqual(before);
+    });
+
+    it("allows a name that is only used in another ledger", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await provider.addTransaction(
+        newTransaction({ user_id: OTHER_LEDGER, vendor: "Patisserie" }),
+      );
+
+      await provider.renamePayee(home.vendor.id, "Patisserie");
+
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ vendor: "Patisserie" });
+    });
+
+    it("rejects a blank name and a vendor that does not exist", async () => {
+      const home = await seedLedger(provider, LEDGER);
+
+      await expect(provider.renamePayee(home.vendor.id, "  ")).rejects.toThrow(
+        "Name is required",
+      );
+      await expect(provider.renamePayee("missing", "New")).rejects.toThrow(
+        'Vendor "missing" was not found',
+      );
+    });
+  });
+
+  describe("updating account details", () => {
+    it("updates the account and copies a new name and currency to its records in the ledger", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.updateAccountDetails(home.account.id, {
+        name: "Current",
         currency: "USD",
-        startingBalance: 100,
+        starting_balance: 250,
+        type: "Savings",
         remarks: "Main account",
       });
-      const [account] = await provider.getAllAccounts(LEDGER);
 
-      await provider.updateAccount(account.id, { currency: "EUR" });
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ account: "Current", currency: "USD" });
+      expect(
+        await provider.getScheduledTransactionById(home.scheduled.id),
+      ).toMatchObject({ account: "Current", currency: "USD" });
+      expect(await provider.getAllAccounts(LEDGER)).toEqual([
+        expect.objectContaining({
+          id: home.account.account_id,
+          currency: "USD",
+          starting_balance: 250,
+          type: "Savings",
+          remarks: "Main account",
+        }),
+      ]);
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
 
-      const [updated] = await provider.getAllAccounts(LEDGER);
-      expect(updated).toMatchObject({
-        id: account.id,
-        currency: "EUR",
-        starting_balance: 100,
-        remarks: "Main account",
+    it("leaves fields it is not given unchanged", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      const [accountBefore] = await provider.getAllAccounts(LEDGER);
+
+      await provider.updateAccountDetails(home.account.id, {
+        remarks: "Joint",
       });
+
+      expect(await provider.getAllAccounts(LEDGER)).toEqual([
+        { ...accountBefore, remarks: "Joint" },
+      ]);
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ account: "Checking", currency: "EUR" });
+    });
+
+    it("refuses a vendor that is not an account, and a name already in use", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      const before = await snapshotLedger(provider, LEDGER);
+
+      await expect(
+        provider.updateAccountDetails(home.vendor.id, { remarks: "x" }),
+      ).rejects.toThrow('"Bakery" is not an account');
+      await expect(
+        provider.updateAccountDetails(home.account.id, {
+          name: "Bakery",
+          currency: "USD",
+        }),
+      ).rejects.toBeInstanceOf(NameConflictError);
+      expect(await snapshotLedger(provider, LEDGER)).toEqual(before);
+    });
+  });
+
+  describe("renaming categories and sub-categories", () => {
+    it("renames a category everywhere the ledger stores its name", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.renameCategory(home.category.id, "Groceries");
+
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ category: "Groceries" });
+      expect(
+        await provider.getScheduledTransactionById(home.scheduled.id),
+      ).toMatchObject({ category: "Groceries" });
+      expect(await budgetFor(provider, LEDGER, "category")).toMatchObject({
+        category_name: "Groceries",
+      });
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("refuses a category name the ledger already has, and changes nothing", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await provider.addTransaction(newTransaction({ category: "Rent" }));
+      const before = await snapshotLedger(provider, LEDGER);
+
+      await expect(
+        provider.renameCategory(home.category.id, "Rent"),
+      ).rejects.toBeInstanceOf(NameConflictError);
+      expect(await snapshotLedger(provider, LEDGER)).toEqual(before);
+    });
+
+    it("renames a sub-category everywhere the ledger stores its name", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.renameSubCategory(home.subCategory.id, "Pastry");
+
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ sub_category: "Pastry" });
+      expect(
+        await provider.getScheduledTransactionById(home.scheduled.id),
+      ).toMatchObject({ sub_category: "Pastry" });
+      expect(
+        await budgetFor(provider, LEDGER, "category+sub_category"),
+      ).toMatchObject({ sub_category_name: "Pastry" });
+      expect(await budgetFor(provider, LEDGER, "sub_category")).toMatchObject({
+        budget_scope_name: "Pastry",
+        category_name: "Pastry",
+      });
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("keeps a sub-category budget on the old name while another category still uses it", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await provider.addTransaction(
+        newTransaction({ category: "Travel", sub_category: "Bread" }),
+      );
+
+      await provider.renameSubCategory(home.subCategory.id, "Pastry");
+
+      expect(await budgetFor(provider, LEDGER, "sub_category")).toMatchObject({
+        budget_scope_name: "Bread",
+      });
+    });
+
+    it("refuses a sub-category name its category already has, but allows one from another category", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await provider.addTransaction(newTransaction({ sub_category: "Cheese" }));
+      await provider.addTransaction(
+        newTransaction({ category: "Travel", sub_category: "Snacks" }),
+      );
+
+      await expect(
+        provider.renameSubCategory(home.subCategory.id, "Cheese"),
+      ).rejects.toBeInstanceOf(NameConflictError);
+      await provider.renameSubCategory(home.subCategory.id, "Snacks");
+
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ sub_category: "Snacks" });
+    });
+  });
+
+  describe("deleting", () => {
+    it("deletes a sub-category and clears it from the ledger's records", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.deleteSubCategory(home.subCategory.id);
+
+      expect(await provider.getSubCategories(LEDGER)).toEqual([]);
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ category: "Food", sub_category: null });
+      expect(
+        await provider.getScheduledTransactionById(home.scheduled.id),
+      ).toMatchObject({ category: "Food", sub_category: null });
+      expect(await budgetScopes(provider, LEDGER)).toEqual([
+        "account",
+        "category",
+        "vendor",
+      ]);
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("deletes a vendor with its recurring transactions and budgets, in that ledger only", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.deletePayee(home.vendor.id);
+
+      expect(await provider.getVendorByName("Bakery", LEDGER)).toBeUndefined();
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ vendor: "Bakery" });
+      expect(await provider.getScheduledTransactions(LEDGER)).toEqual([]);
+      expect(await budgetScopes(provider, LEDGER)).toEqual([
+        "account",
+        "category",
+        "category",
+        "sub_category",
+      ]);
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
+    });
+
+    it("deletes a category with its sub-categories, recurring transactions and budgets, in that ledger only", async () => {
+      const home = await seedLedger(provider, LEDGER);
+      await seedLedger(provider, OTHER_LEDGER);
+      const otherBefore = await snapshotLedger(provider, OTHER_LEDGER);
+
+      await provider.deleteCategory(home.category.id);
+
+      expect(await provider.getUserCategories(LEDGER)).toEqual([]);
+      expect(await provider.getSubCategories(LEDGER)).toEqual([]);
+      expect(
+        await provider.getTransactionById(home.transaction.id),
+      ).toMatchObject({ category: "Food" });
+      expect(await provider.getScheduledTransactions(LEDGER)).toEqual([]);
+      expect(await budgetScopes(provider, LEDGER)).toEqual([
+        "account",
+        "vendor",
+      ]);
+      expect(await snapshotLedger(provider, OTHER_LEDGER)).toEqual(otherBefore);
     });
   });
 

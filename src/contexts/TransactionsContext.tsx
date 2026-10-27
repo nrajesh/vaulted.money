@@ -5,7 +5,6 @@ import {
 } from "@/utils/transactionMaintenance";
 import { Transaction, Category, SubCategory } from "@/data/finance-data";
 import { startOfDay } from "date-fns";
-import { db } from "@/lib/dexieDB";
 import { useCurrency } from "./CurrencyContext";
 import { Payee } from "@/components/dialogs/AddEditPayeeDialog";
 // import { useUser } from './UserContext'; // Replaced by useLedger
@@ -1228,12 +1227,14 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 2. Schedule Permanent Delete
       const timeoutId = setTimeout(async () => {
-        if (type === "vendor" || type === "account") {
-          for (const id of ids) {
+        // Same deletes as the Local API: each also removes the recurring
+        // transactions and budgets that use the name in this ledger.
+        for (const id of ids) {
+          if (type === "category") {
+            await dataProvider.deleteCategory(id);
+          } else {
             await dataProvider.deletePayee(id);
           }
-        } else if (type === "category") {
-          await db.categories.bulkDelete(ids);
         }
 
         undoStackRef.current = undoStackRef.current.filter(

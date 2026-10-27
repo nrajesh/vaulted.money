@@ -61,16 +61,6 @@ export default tseslint.config(
       "src/lib/dexieDB.ts",
       "src/providers/LocalDataProvider.ts",
       "src/**/*.test.{ts,tsx}",
-      // Not migrated yet. These rename or delete records, and moving them also
-      // needs behaviour fixes (ledger scoping, cleaning up related records), so
-      // they move in a follow-up to issue #253. Remove each file from this
-      // list once it uses DataProvider.
-      "src/api/entityOps.ts",
-      "src/components/dialogs/AddEditPayeeDialog.tsx",
-      "src/contexts/TransactionsContext.tsx",
-      "src/hooks/useCategoryManagement.ts",
-      "src/hooks/useEntityManagement.ts",
-      "src/pages/Vendors.tsx",
     ],
     rules: {
       "no-restricted-syntax": [

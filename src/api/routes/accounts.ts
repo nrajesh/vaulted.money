@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { conflict, json, noContent, notFound, parse } from "../http";
-import { propagateAccountCurrency, renamePayee } from "../entityOps";
 import type { RouteDef, RouteContext } from "../router";
 import {
   ACCOUNT_TYPES,
@@ -107,28 +106,16 @@ export const accountRoutes: RouteDef[] = [
     method: "PATCH",
     path: "/ledgers/:ledgerId/accounts/:accountId",
     summary:
-      "Update an account (renames and currency changes propagate to its transactions)",
+      "Update an account (a new name or currency propagates to its transactions and recurring transactions)",
     body: patchSchema,
     handler: async (ctx) => {
       const account = await findAccount(ctx);
       const patch = parse(patchSchema, ctx.body);
-      const ledgerId = ctx.params.ledgerId;
-
-      let name = account.name;
-      if (patch.name !== undefined && patch.name !== account.name) {
-        const vendor = await ctx.services.dataProvider.getVendorByName(
-          account.name,
-          ledgerId,
-        );
-        if (vendor) await renamePayee(ledgerId, vendor, patch.name);
-        name = patch.name;
-      }
-      if (patch.currency !== undefined && patch.currency !== account.currency) {
-        await propagateAccountCurrency(ledgerId, name, patch.currency);
-      }
-
-      await ctx.services.dataProvider.updateAccount(account.id, {
-        ...(patch.currency !== undefined && { currency: patch.currency }),
+      await ctx.services.dataProvider.updateAccountDetails(account.vendor_id, {
+        ...(patch.name !== undefined && { name: patch.name }),
+        // Only a changed currency needs copying to the account's transactions.
+        ...(patch.currency !== undefined &&
+          patch.currency !== account.currency && { currency: patch.currency }),
         ...(patch.starting_balance !== undefined && {
           starting_balance: patch.starting_balance,
         }),
@@ -144,7 +131,8 @@ export const accountRoutes: RouteDef[] = [
   {
     method: "DELETE",
     path: "/ledgers/:ledgerId/accounts/:accountId",
-    summary: "Delete an account (its transactions are kept)",
+    summary:
+      "Delete an account and its recurring transactions and budgets (past transactions are kept)",
     handler: async (ctx) => {
       const account = await findAccount(ctx);
       await ctx.services.dataProvider.deletePayee(account.vendor_id);

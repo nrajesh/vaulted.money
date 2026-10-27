@@ -28,7 +28,6 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useDataProvider } from "@/context/DataProviderContext";
-import { db } from "@/lib/dexieDB";
 
 export type Payee = {
   id: string;
@@ -125,54 +124,20 @@ const AddEditPayeeDialog: React.FC<AddEditPayeeDialogProps> = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       if (payee) {
-        // Pragmatic update for payee using db directly
-        if (payee.name !== values.name) {
-          await db.vendors.update(payee.id, { name: values.name });
-
-          // Propagate name change to transactions
-          await db.transactions
-            .where("vendor")
-            .equals(payee.name)
-            .modify({ vendor: values.name });
-          await db.transactions
-            .where("account")
-            .equals(payee.name)
-            .modify({ account: values.name });
-
-          // Propagate name change to scheduled transactions
-          await db.scheduled_transactions
-            .where("vendor")
-            .equals(payee.name)
-            .modify({ vendor: values.name });
-          await db.scheduled_transactions
-            .where("account")
-            .equals(payee.name)
-            .modify({ account: values.name });
-        }
-
-        // Always propagate currency to transactions and scheduled transactions
-        // (This ensures consistency even if previous updates failed or if state is stale)
+        // Same updates as the Local API: a new name (and, for an account, a
+        // new currency) is applied to every record in the ledger that stores
+        // it. A taken name throws, which keeps the dialog open.
         if (payee.is_account) {
-          const newCurrency = values.currency || "EUR";
-          // Using values.name because if name changed, it was updated above.
-          await db.transactions
-            .where("account")
-            .equals(values.name)
-            .modify({ currency: newCurrency });
-          await db.scheduled_transactions
-            .where("account")
-            .equals(values.name)
-            .modify({ currency: newCurrency });
-        }
-
-        if (payee.is_account && payee.account_id) {
-          await db.accounts.update(payee.account_id, {
-            currency: values.currency,
+          await dataProvider.updateAccountDetails(payee.id, {
+            name: values.name,
+            currency: values.currency || "EUR",
             starting_balance: values.starting_balance || 0,
             remarks: values.remarks || "",
             type: values.type,
             credit_limit: values.credit_limit,
           });
+        } else {
+          await dataProvider.renamePayee(payee.id, values.name);
         }
         showSuccess(
           `${payee.is_account ? "Account" : "Payee"} updated successfully!`,

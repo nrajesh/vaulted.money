@@ -1,5 +1,4 @@
 import * as React from "react";
-import { renameCategory } from "@/api/entityOps";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useCategoryManagement } from "@/hooks/useCategoryManagement";
 import { Category } from "@/data/finance-data";
@@ -37,11 +36,9 @@ const CategoriesPage = () => {
       categoryId: string;
       newName: string;
     }) => {
-      // Shared with the local API: renames the category and every transaction,
-      // scheduled transaction and budget that references it by name.
-      const category = await dataProvider.getCategoryById(categoryId);
-      if (!category) throw new Error("Category not found");
-      await renameCategory(category.user_id, category, newName.trim());
+      // Same rename as the Local API: updates every transaction, recurring
+      // transaction and budget in the ledger that stores the category name.
+      await dataProvider.renameCategory(categoryId, newName.trim());
     },
     onSuccess: async () => {
       showSuccess("Category name updated successfully!");

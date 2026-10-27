@@ -8,11 +8,6 @@ import {
   notFound,
   parse,
 } from "../http";
-import {
-  deleteSubCategory,
-  renameCategory,
-  renameSubCategory,
-} from "../entityOps";
 import type { RouteContext, RouteDef } from "../router";
 import { requireLedger } from "./shared";
 
@@ -120,19 +115,21 @@ export const categoryRoutes: RouteDef[] = [
   {
     method: "PATCH",
     path: "/ledgers/:ledgerId/categories/:categoryId",
-    summary: "Rename a category (propagates to transactions and budgets)",
+    summary:
+      "Rename a category (propagates to transactions, recurring transactions and budgets)",
     body: nameSchema,
     handler: async (ctx) => {
       const { category, subs } = await findCategory(ctx);
       const { name } = parse(nameSchema, ctx.body);
-      await renameCategory(ctx.params.ledgerId, category, name);
+      await ctx.services.dataProvider.renameCategory(category.id, name);
       return json(present({ ...category, name }, subs));
     },
   },
   {
     method: "DELETE",
     path: "/ledgers/:ledgerId/categories/:categoryId",
-    summary: "Delete a category, its sub-categories and dependent budgets",
+    summary:
+      "Delete a category with its sub-categories, recurring transactions and budgets",
     handler: async (ctx) => {
       const { category } = await findCategory(ctx);
       await ctx.services.dataProvider.deleteCategory(category.id);
@@ -170,26 +167,28 @@ export const categoryRoutes: RouteDef[] = [
   {
     method: "PATCH",
     path: "/ledgers/:ledgerId/categories/:categoryId/sub-categories/:subCategoryId",
-    summary: "Rename a sub-category",
+    summary:
+      "Rename a sub-category (propagates to transactions, recurring transactions and budgets)",
     body: nameSchema,
     handler: async (ctx) => {
-      const { category, subs } = await findCategory(ctx);
+      const { subs } = await findCategory(ctx);
       const sub = subs.find((s) => s.id === ctx.params.subCategoryId);
       if (!sub) throw notFound(`Sub-category "${ctx.params.subCategoryId}"`);
       const { name } = parse(nameSchema, ctx.body);
-      await renameSubCategory(ctx.params.ledgerId, category, sub, name);
+      await ctx.services.dataProvider.renameSubCategory(sub.id, name);
       return json({ ...sub, name });
     },
   },
   {
     method: "DELETE",
     path: "/ledgers/:ledgerId/categories/:categoryId/sub-categories/:subCategoryId",
-    summary: "Delete a sub-category",
+    summary:
+      "Delete a sub-category (transactions keep their category; its budgets are removed)",
     handler: async (ctx) => {
-      const { category, subs } = await findCategory(ctx);
+      const { subs } = await findCategory(ctx);
       const sub = subs.find((s) => s.id === ctx.params.subCategoryId);
       if (!sub) throw notFound(`Sub-category "${ctx.params.subCategoryId}"`);
-      await deleteSubCategory(ctx.params.ledgerId, category, sub);
+      await ctx.services.dataProvider.deleteSubCategory(sub.id);
       return noContent();
     },
   },

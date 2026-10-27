@@ -10,9 +10,26 @@ import {
   Ledger,
   BackupConfig,
   AIProvider,
+  AccountDetailsChanges,
+  NameConflictError,
 } from "../types/dataProvider";
 import { db } from "@/lib/dexieDB";
 import { v4 as uuidv4 } from "uuid";
+
+/** Matches rows whose `user_id` (the ledger id) is `ledgerId`. */
+const isInLedger =
+  (ledgerId: string | undefined) => (row: { user_id?: string }) =>
+    row.user_id === ledgerId;
+
+/** Budgets that track a vendor or account by name. */
+const isPayeeBudget = (budget: Budget) =>
+  budget.budget_scope === "account" || budget.budget_scope === "vendor";
+
+const requireName = (rawName: string): string => {
+  const name = rawName.trim();
+  if (!name) throw new Error("Name is required");
+  return name;
+};
 
 export class LocalDataProvider implements DataProvider {
   // Ledgers
@@ -409,55 +426,174 @@ export class LocalDataProvider implements DataProvider {
     );
   }
 
-  async deletePayee(id: string): Promise<void> {
-    const vendor = await db.vendors.get(id);
-    if (!vendor) return;
+  async renamePayee(vendorId: string, newName: string): Promise<void> {
+    const name = requireName(newName);
+    await db.transaction(
+      "rw",
+      [db.vendors, db.transactions, db.scheduled_transactions, db.budgets],
+      async () => {
+        await this.renamePayeeRecords(await this.requireVendor(vendorId), name);
+      },
+    );
+  }
 
+  async deletePayee(id: string): Promise<void> {
     await db.transaction(
       "rw",
       [db.vendors, db.accounts, db.scheduled_transactions, db.budgets],
       async () => {
-        // 1. Delete Vendor and Account
+        const vendor = await db.vendors.get(id);
+        if (!vendor) return;
+        const { name } = vendor;
+        const inLedger = isInLedger(vendor.user_id);
+
         await db.vendors.delete(id);
         if (vendor.account_id) {
           await db.accounts.delete(vendor.account_id);
         }
 
-        // 2. Cleanup Scheduled Transactions referencing this payee/account
-        const name = vendor.name;
-        const scheduledToDelete = await db.scheduled_transactions
-          .filter((st) => st.account === name || st.vendor === name)
-          .toArray();
-        if (scheduledToDelete.length > 0) {
-          await db.scheduled_transactions.bulkDelete(
-            scheduledToDelete.map((st) => st.id),
-          );
-        }
-
-        // 3. Cleanup Budgets referencing this account/payee
-        const budgetsToDelete = await db.budgets
+        // A recurring transaction would recreate the vendor on its next run,
+        // and a budget for it could never match again. Past transactions
+        // keep the name.
+        await db.scheduled_transactions
           .filter(
-            (b) =>
-              (b.budget_scope === "account" || b.budget_scope === "vendor") &&
-              b.budget_scope_name === name,
+            (scheduled) =>
+              inLedger(scheduled) &&
+              (scheduled.account === name || scheduled.vendor === name),
           )
-          .toArray();
-        if (budgetsToDelete.length > 0) {
-          await db.budgets.bulkDelete(budgetsToDelete.map((b) => b.id));
-        }
+          .delete();
+        await db.budgets
+          .filter(
+            (budget) =>
+              inLedger(budget) &&
+              isPayeeBudget(budget) &&
+              budget.budget_scope_name === name,
+          )
+          .delete();
       },
     );
+  }
+
+  private async requireVendor(vendorId: string): Promise<Vendor> {
+    const vendor = await db.vendors.get(vendorId);
+    if (!vendor) throw new Error(`Vendor "${vendorId}" was not found`);
+    return vendor;
+  }
+
+  /**
+   * Renames a vendor or account and every record in its ledger that stores
+   * the old name. Vendors and accounts share one set of names per ledger, and
+   * a transfer stores the other account in its `vendor` field, so both the
+   * `vendor` and `account` fields are updated. Callers run this inside a
+   * transaction over vendors, transactions, scheduled_transactions and
+   * budgets.
+   */
+  private async renamePayeeRecords(
+    vendor: Vendor,
+    newName: string,
+  ): Promise<void> {
+    const oldName = vendor.name;
+    if (newName === oldName) return;
+    const inLedger = isInLedger(vendor.user_id);
+
+    const clash = await db.vendors
+      .where("name")
+      .equals(newName)
+      .filter((other) => inLedger(other) && other.id !== vendor.id)
+      .first();
+    if (clash) {
+      throw new NameConflictError(
+        `A vendor or account named "${newName}" already exists`,
+      );
+    }
+
+    await db.vendors.update(vendor.id, { name: newName });
+    await db.transactions
+      .where("vendor")
+      .equals(oldName)
+      .filter(inLedger)
+      .modify({ vendor: newName });
+    await db.transactions
+      .where("account")
+      .equals(oldName)
+      .filter(inLedger)
+      .modify({ account: newName });
+    await db.scheduled_transactions
+      .where("vendor")
+      .equals(oldName)
+      .filter(inLedger)
+      .modify({ vendor: newName });
+    await db.scheduled_transactions
+      .where("account")
+      .equals(oldName)
+      .filter(inLedger)
+      .modify({ account: newName });
+    // Vendor and account budgets hold the name twice: `budget_scope_name`
+    // for matching and `category_name` for display.
+    await db.budgets
+      .filter(
+        (budget) =>
+          inLedger(budget) &&
+          isPayeeBudget(budget) &&
+          budget.budget_scope_name === oldName,
+      )
+      .modify((budget) => {
+        budget.budget_scope_name = newName;
+        if (budget.category_name === oldName) budget.category_name = newName;
+      });
   }
 
   async getAllAccounts(ledgerId: string): Promise<Account[]> {
     return await db.accounts.where("user_id").equals(ledgerId).toArray();
   }
 
-  async updateAccount(
-    id: string,
-    changes: Partial<Omit<Account, "id">>,
+  async updateAccountDetails(
+    vendorId: string,
+    changes: AccountDetailsChanges,
   ): Promise<void> {
-    await db.accounts.update(id, changes);
+    const newName =
+      changes.name === undefined ? undefined : requireName(changes.name);
+    await db.transaction(
+      "rw",
+      [
+        db.vendors,
+        db.accounts,
+        db.transactions,
+        db.scheduled_transactions,
+        db.budgets,
+      ],
+      async () => {
+        const vendor = await this.requireVendor(vendorId);
+        if (!vendor.is_account) {
+          throw new Error(`"${vendor.name}" is not an account`);
+        }
+        if (newName !== undefined) {
+          await this.renamePayeeRecords(vendor, newName);
+        }
+        const accountName = newName ?? vendor.name;
+        const inLedger = isInLedger(vendor.user_id);
+
+        if (changes.currency !== undefined) {
+          // Each transaction stores its account's currency, so a currency
+          // change is copied to them.
+          await db.transactions
+            .where("account")
+            .equals(accountName)
+            .filter(inLedger)
+            .modify({ currency: changes.currency });
+          await db.scheduled_transactions
+            .where("account")
+            .equals(accountName)
+            .filter(inLedger)
+            .modify({ currency: changes.currency });
+        }
+
+        const { name: _name, ...accountFields } = changes;
+        if (vendor.account_id && Object.keys(accountFields).length > 0) {
+          await db.accounts.update(vendor.account_id, accountFields);
+        }
+      },
+    );
   }
 
   // Categories
@@ -513,10 +649,6 @@ export class LocalDataProvider implements DataProvider {
 
   async getUserCategories(ledgerId: string): Promise<Category[]> {
     return await db.categories.where("user_id").equals(ledgerId).sortBy("name");
-  }
-
-  async getCategoryById(id: string): Promise<Category | undefined> {
-    return await db.categories.get(id);
   }
 
   async getSubCategories(ledgerId: string): Promise<SubCategory[]> {
@@ -577,42 +709,248 @@ export class LocalDataProvider implements DataProvider {
     );
   }
 
-  async deleteCategory(id: string): Promise<void> {
-    const category = await db.categories.get(id);
-    if (!category) return;
+  async renameCategory(categoryId: string, newName: string): Promise<void> {
+    const name = requireName(newName);
+    await db.transaction(
+      "rw",
+      [db.categories, db.transactions, db.scheduled_transactions, db.budgets],
+      async () => {
+        const category = await db.categories.get(categoryId);
+        if (!category) {
+          throw new Error(`Category "${categoryId}" was not found`);
+        }
+        const oldName = category.name;
+        if (name === oldName) return;
+        const inLedger = isInLedger(category.user_id);
 
+        const clash = await db.categories
+          .where("name")
+          .equals(name)
+          .filter((other) => inLedger(other) && other.id !== categoryId)
+          .first();
+        if (clash) {
+          throw new NameConflictError(
+            `A category named "${name}" already exists`,
+          );
+        }
+
+        await db.categories.update(categoryId, { name });
+        await db.transactions
+          .where("category")
+          .equals(oldName)
+          .filter(inLedger)
+          .modify({ category: name });
+        await db.scheduled_transactions
+          .filter(
+            (scheduled) =>
+              inLedger(scheduled) && scheduled.category === oldName,
+          )
+          .modify({ category: name });
+        await db.budgets
+          .filter(
+            (budget) => inLedger(budget) && budget.category_id === categoryId,
+          )
+          .modify({ category_name: name });
+      },
+    );
+  }
+
+  async deleteCategory(id: string): Promise<void> {
     await db.transaction(
       "rw",
       [db.categories, db.sub_categories, db.scheduled_transactions, db.budgets],
       async () => {
-        // 1. Delete Category and Sub-categories
+        const category = await db.categories.get(id);
+        if (!category) return;
+        const { name } = category;
+        const inLedger = isInLedger(category.user_id);
+        const subCategories = await db.sub_categories
+          .where("category_id")
+          .equals(id)
+          .toArray();
+
         await db.categories.delete(id);
         await db.sub_categories.where("category_id").equals(id).delete();
-
-        // 2. Cleanup Scheduled Transactions referencing this category
-        const name = category.name;
-        const scheduledToDelete = await db.scheduled_transactions
-          .filter((st) => st.category === name)
-          .toArray();
-        if (scheduledToDelete.length > 0) {
-          await db.scheduled_transactions.bulkDelete(
-            scheduledToDelete.map((st) => st.id),
-          );
-        }
-
-        // 3. Cleanup Budgets referencing this category
-        const budgetsToDelete = await db.budgets
+        // A recurring transaction would recreate the category on its next
+        // run. Past transactions keep the name.
+        await db.scheduled_transactions
           .filter(
-            (b) =>
-              b.category_id === id ||
-              (b.budget_scope === "category" && b.budget_scope_name === name),
+            (scheduled) => inLedger(scheduled) && scheduled.category === name,
           )
-          .toArray();
-        if (budgetsToDelete.length > 0) {
-          await db.budgets.bulkDelete(budgetsToDelete.map((b) => b.id));
+          .delete();
+        await db.budgets
+          .filter(
+            (budget) =>
+              inLedger(budget) &&
+              (budget.category_id === id ||
+                (budget.budget_scope === "category" &&
+                  budget.budget_scope_name === name)),
+          )
+          .delete();
+        for (const subCategory of subCategories) {
+          await this.deleteSubCategoryBudgets(subCategory);
         }
       },
     );
+  }
+
+  async renameSubCategory(
+    subCategoryId: string,
+    newName: string,
+  ): Promise<void> {
+    const name = requireName(newName);
+    await db.transaction(
+      "rw",
+      [
+        db.sub_categories,
+        db.categories,
+        db.transactions,
+        db.scheduled_transactions,
+        db.budgets,
+      ],
+      async () => {
+        const subCategory = await db.sub_categories.get(subCategoryId);
+        const category =
+          subCategory && (await db.categories.get(subCategory.category_id));
+        if (!subCategory || !category) {
+          throw new Error(`Sub-category "${subCategoryId}" was not found`);
+        }
+        const oldName = subCategory.name;
+        if (name === oldName) return;
+        const inLedger = isInLedger(subCategory.user_id);
+
+        const clash = await db.sub_categories
+          .where("category_id")
+          .equals(category.id)
+          .filter((other) => other.name === name && other.id !== subCategoryId)
+          .first();
+        if (clash) {
+          throw new NameConflictError(
+            `Category "${category.name}" already has a sub-category named "${name}"`,
+          );
+        }
+
+        await db.sub_categories.update(subCategoryId, { name });
+        const isTagged = (row: Transaction | ScheduledTransaction) =>
+          inLedger(row) &&
+          row.category === category.name &&
+          row.sub_category === oldName;
+        await db.transactions
+          .where("category")
+          .equals(category.name)
+          .filter(isTagged)
+          .modify({ sub_category: name });
+        await db.scheduled_transactions
+          .filter(isTagged)
+          .modify({ sub_category: name });
+        await db.budgets
+          .filter(
+            (budget) =>
+              inLedger(budget) && budget.sub_category_id === subCategoryId,
+          )
+          .modify({ sub_category_name: name });
+
+        // Sub-category budgets match transactions by sub-category name in
+        // any category. They follow the rename only if no other
+        // sub-category in the ledger still has the old name.
+        if (
+          !(await this.isSubCategoryNameInUse(oldName, subCategory.user_id))
+        ) {
+          await db.budgets
+            .filter(
+              (budget) =>
+                inLedger(budget) &&
+                budget.budget_scope === "sub_category" &&
+                budget.budget_scope_name === oldName,
+            )
+            .modify((budget) => {
+              budget.budget_scope_name = name;
+              if (budget.category_name === oldName) budget.category_name = name;
+            });
+        }
+      },
+    );
+  }
+
+  async deleteSubCategory(subCategoryId: string): Promise<void> {
+    await db.transaction(
+      "rw",
+      [
+        db.sub_categories,
+        db.categories,
+        db.transactions,
+        db.scheduled_transactions,
+        db.budgets,
+      ],
+      async () => {
+        const subCategory = await db.sub_categories.get(subCategoryId);
+        if (!subCategory) return;
+        const category = await db.categories.get(subCategory.category_id);
+        const inLedger = isInLedger(subCategory.user_id);
+
+        await db.sub_categories.delete(subCategoryId);
+        if (category) {
+          // Transactions keep their category and lose only the tag.
+          const isTagged = (row: Transaction | ScheduledTransaction) =>
+            inLedger(row) &&
+            row.category === category.name &&
+            row.sub_category === subCategory.name;
+          await db.transactions
+            .where("category")
+            .equals(category.name)
+            .filter(isTagged)
+            .modify({ sub_category: null });
+          await db.scheduled_transactions
+            .filter(isTagged)
+            .modify({ sub_category: null });
+        }
+        await this.deleteSubCategoryBudgets(subCategory);
+      },
+    );
+  }
+
+  private async isSubCategoryNameInUse(
+    name: string,
+    ledgerId: string,
+  ): Promise<boolean> {
+    const matches = await db.sub_categories
+      .where("name")
+      .equals(name)
+      .filter(isInLedger(ledgerId))
+      .count();
+    return matches > 0;
+  }
+
+  /**
+   * Removes budgets for a sub-category that no longer exists: category
+   * budgets narrowed to it by id, and sub-category budgets for its name
+   * unless another sub-category in the ledger still has that name. Callers
+   * run this inside a transaction over sub_categories and budgets.
+   */
+  private async deleteSubCategoryBudgets(
+    subCategory: SubCategory,
+  ): Promise<void> {
+    const inLedger = isInLedger(subCategory.user_id);
+    await db.budgets
+      .filter(
+        (budget) =>
+          inLedger(budget) && budget.sub_category_id === subCategory.id,
+      )
+      .delete();
+    const nameStillUsed = await this.isSubCategoryNameInUse(
+      subCategory.name,
+      subCategory.user_id,
+    );
+    if (!nameStillUsed) {
+      await db.budgets
+        .filter(
+          (budget) =>
+            inLedger(budget) &&
+            budget.budget_scope === "sub_category" &&
+            budget.budget_scope_name === subCategory.name,
+        )
+        .delete();
+    }
   }
 
   // Budgets

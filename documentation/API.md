@@ -40,6 +40,8 @@ Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every 
 
 Ledger data is addressed explicitly (`/ledgers/{ledgerId}/...`); the API never depends on which ledger is open in the UI. The open UI is refreshed after each change made through the API.
 
+Transactions, recurring transactions and budgets refer to accounts, vendors, categories and sub-categories by **name**. Renames and deletes therefore update or remove those records too, but only in the ledger in the path: another ledger that uses the same name is never changed. A rename to a name already in use returns `409` and changes nothing. The app's own edit and delete buttons do exactly the same.
+
 ## Endpoints
 
 ### Ledgers
@@ -54,7 +56,7 @@ Under `/ledgers/{ledgerId}/accounts`. Accounts include a `balance` (starting bal
 | | |
 |---|---|
 | `GET` · `POST` | list · create `{name, currency, starting_balance?, type?, credit_limit?, remarks?}` |
-| `GET/PATCH/DELETE /{accountId}` | Renames and currency changes propagate to the account's transactions. Deleting keeps transactions. |
+| `GET/PATCH/DELETE /{accountId}` | A new name propagates to the account's transactions, recurring transactions and budgets; a new currency to its transactions and recurring transactions. Deleting keeps past transactions but removes the account's recurring transactions and budgets. |
 
 `type` is one of `Checking`, `Savings`, `Credit Card`, `Investment`, `Other`.
 
@@ -64,7 +66,7 @@ Under `/ledgers/{ledgerId}/vendors`.
 | | |
 |---|---|
 | `GET` · `POST` | list (`?include_accounts=true` to include accounts) · create `{name}` |
-| `GET/PATCH/DELETE /{vendorId}` | Rename propagates to transactions, scheduled transactions and budgets. |
+| `GET/PATCH/DELETE /{vendorId}` | Rename propagates to transactions, recurring transactions and budgets. Vendors and accounts share names, so renaming to an account's name is a `409`. Deleting keeps past transactions but removes the vendor's recurring transactions and budgets. |
 | `POST /merge` | `{target, sources: [...]}`: re-point transactions, delete sources |
 
 ### Categories and sub-categories
@@ -73,10 +75,10 @@ Under `/ledgers/{ledgerId}/categories`.
 | | |
 |---|---|
 | `GET` · `POST` | list with nested `sub_categories` · create `{name, sub_categories?: [...]}` |
-| `GET/PATCH/DELETE /{categoryId}` | Rename propagates. Delete also removes sub-categories and budgets for the category. |
+| `GET/PATCH/DELETE /{categoryId}` | Rename propagates to transactions, recurring transactions and budgets. Delete also removes the category's sub-categories and the recurring transactions and budgets that use it; past transactions keep the name. |
 | `POST /merge` | `{target, sources: [...]}` |
 | `GET` · `POST /{categoryId}/sub-categories` | list · create `{name}` |
-| `PATCH/DELETE /{categoryId}/sub-categories/{subId}` | Delete clears the tag on transactions and removes budgets scoped to it. |
+| `PATCH/DELETE /{categoryId}/sub-categories/{subId}` | Rename propagates like a category rename (`409` if the category already has the name). Delete clears the tag on transactions and recurring transactions and removes budgets scoped to it. |
 
 ### Transactions
 Under `/ledgers/{ledgerId}/transactions`.

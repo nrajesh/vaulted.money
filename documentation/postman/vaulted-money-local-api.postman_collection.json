@@ -1614,6 +1614,101 @@
           ]
         },
         {
+          "name": "Rename to another account's name -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", () => pm.response.to.have.status(409));",
+                  "",
+                  "pm.test(\"Error code is conflict\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error.code).to.equal(\"conflict\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Savings\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts/{{accountId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "accounts",
+                "{{accountId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "409 Conflict",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"PM Savings\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/accounts/{{accountId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers",
+                    "{{ledgerId}}",
+                    "accounts",
+                    "{{accountId}}"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"A vendor or account named \\\"PM Savings\\\" already exists\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Create throwaway account",
           "event": [
             {
@@ -2380,6 +2475,101 @@
               ],
               "cookie": [],
               "body": "{\n  \"id\": \"d92c0cfe-5dd1-4b6b-b872-42fa0b9ddb1d\",\n  \"user_id\": \"d2e84dc4-d990-46c7-9fcb-6e84030f7a80\",\n  \"name\": \"PM Supermarket\",\n  \"is_account\": false,\n  \"account_id\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Rename to an account's name -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", () => pm.response.to.have.status(409));",
+                  "",
+                  "pm.test(\"Error code is conflict\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error.code).to.equal(\"conflict\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Checking\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors/{{vendorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "vendors",
+                "{{vendorId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "409 Conflict",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"PM Checking\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/vendors/{{vendorId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers",
+                    "{{ledgerId}}",
+                    "vendors",
+                    "{{vendorId}}"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"A vendor or account named \\\"PM Checking\\\" already exists\"\n  }\n}"
             }
           ]
         },
@@ -3317,6 +3507,105 @@
           ]
         },
         {
+          "name": "Rename sub-category to a sibling's name -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", () => pm.response.to.have.status(409));",
+                  "",
+                  "pm.test(\"Error code is conflict\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error.code).to.equal(\"conflict\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Bulk\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}/sub-categories/{{subCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "{{categoryId}}",
+                "sub-categories",
+                "{{subCategoryId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "409 Conflict",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"PM Bulk\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}/sub-categories/{{subCategoryId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers",
+                    "{{ledgerId}}",
+                    "categories",
+                    "{{categoryId}}",
+                    "sub-categories",
+                    "{{subCategoryId}}"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"Category \\\"PM Food\\\" already has a sub-category named \\\"PM Bulk\\\"\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Create category to merge",
           "event": [
             {
@@ -3407,6 +3696,101 @@
               ],
               "cookie": [],
               "body": "{\n  \"id\": \"32d2f97d-8dd0-4808-bdf9-6ce622659d4a\",\n  \"user_id\": \"d2e84dc4-d990-46c7-9fcb-6e84030f7a80\",\n  \"name\": \"PM Misc\",\n  \"created_at\": \"2026-10-05T14:12:49.383Z\",\n  \"sub_categories\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Rename category to an existing name -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", () => pm.response.to.have.status(409));",
+                  "",
+                  "pm.test(\"Error code is conflict\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error.code).to.equal(\"conflict\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PM Misc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "categories",
+                "{{categoryId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "409 Conflict",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"PM Misc\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/categories/{{categoryId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers",
+                    "{{ledgerId}}",
+                    "categories",
+                    "{{categoryId}}"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"A category named \\\"PM Misc\\\" already exists\"\n  }\n}"
             }
           ]
         },

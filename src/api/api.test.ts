@@ -222,6 +222,127 @@ describe("ledgers, accounts, vendors, categories", () => {
       sub_category: "Delivery",
     });
   });
+
+  it("rejects renames to a name the ledger already uses with 409", async () => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    const checking = await ok<Entity>(
+      call("POST", `${base}/accounts`, { name: "Checking", currency: "USD" }),
+      201,
+    );
+    await ok(
+      call("POST", `${base}/accounts`, { name: "Savings", currency: "USD" }),
+      201,
+    );
+    const cafe = await ok<Entity>(
+      call("POST", `${base}/vendors`, { name: "Cafe" }),
+      201,
+    );
+    await ok(call("POST", `${base}/vendors`, { name: "Bar" }), 201);
+    const food = await ok<Entity>(
+      call("POST", `${base}/categories`, {
+        name: "Food",
+        sub_categories: ["Bread", "Cheese"],
+      }),
+      201,
+    );
+    await ok(call("POST", `${base}/categories`, { name: "Rent" }), 201);
+    const bread = (food.sub_categories as Entity[]).find(
+      (sub) => sub.name === "Bread",
+    )!;
+
+    const renames: [string, string][] = [
+      [`${base}/vendors/${cafe.id}`, "Bar"],
+      // Vendors and accounts share one set of names.
+      [`${base}/vendors/${cafe.id}`, "Checking"],
+      [`${base}/accounts/${checking.id}`, "Savings"],
+      [`${base}/categories/${food.id}`, "Rent"],
+      [`${base}/categories/${food.id}/sub-categories/${bread.id}`, "Cheese"],
+    ];
+    for (const [path, name] of renames) {
+      const response = await call("PATCH", path, { name });
+      expect({ path, name, status: response.status }).toEqual({
+        path,
+        name,
+        status: 409,
+      });
+    }
+    expect(
+      (await call("PATCH", `${base}/vendors/missing`, { name: "X" })).status,
+    ).toBe(404);
+  });
+
+  it("deletes a vendor or category without touching another ledger that uses the same names", async () => {
+    const home = await createLedger();
+    const other = await createLedger();
+    for (const ledger of [home, other]) {
+      const base = `/ledgers/${ledger.id}`;
+      await ok(
+        call("POST", `${base}/transactions`, {
+          date: "2020-03-01",
+          amount: -30,
+          account: "Wallet",
+          vendor: "Gym",
+          category: "Health",
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/scheduled-transactions`, {
+          date: "2030-01-01",
+          amount: -30,
+          account: "Wallet",
+          vendor: "Gym",
+          category: "Health",
+          frequency: "Monthly",
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, {
+          budget_scope: "vendor",
+          scope_name: "Gym",
+          target_amount: 50,
+        }),
+        201,
+      );
+      await ok(
+        call("POST", `${base}/budgets`, {
+          category: "Health",
+          target_amount: 80,
+        }),
+        201,
+      );
+    }
+    const homeBase = `/ledgers/${home.id}`;
+    const vendors = await ok<{ data: Entity[] }>(
+      call("GET", `${homeBase}/vendors`),
+    );
+    const categories = await ok<{ data: Entity[] }>(
+      call("GET", `${homeBase}/categories`),
+    );
+    const gym = vendors.data.find((vendor) => vendor.name === "Gym")!;
+    const health = categories.data.find((cat) => cat.name === "Health")!;
+
+    expect((await call("DELETE", `${homeBase}/vendors/${gym.id}`)).status).toBe(
+      204,
+    );
+    expect(
+      (await call("DELETE", `${homeBase}/categories/${health.id}`)).status,
+    ).toBe(204);
+
+    const countIn = async (ledgerId: string, resource: string) =>
+      (
+        await ok<{ data: Entity[] }>(
+          call("GET", `/ledgers/${ledgerId}/${resource}`),
+        )
+      ).data.length;
+    expect(await countIn(home.id, "scheduled-transactions")).toBe(0);
+    expect(await countIn(home.id, "budgets")).toBe(0);
+    expect(await countIn(home.id, "transactions")).toBe(1);
+    expect(await countIn(other.id, "scheduled-transactions")).toBe(1);
+    expect(await countIn(other.id, "budgets")).toBe(2);
+  });
 });
 
 describe("transactions", () => {

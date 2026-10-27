@@ -131,7 +131,7 @@ Key points:
 - **Off by default.** The user turns it on in Settings, which stores the port and a generated token in `api-config.json` (mode `0600`) under the app data folder.
 - **Loopback only, no browser access.** Requests carrying an `Origin` header are refused, so web pages cannot call it.
 - **One route table.** `src/api/routes/index.ts` is the source of truth for the router, the generated `/openapi.json`, and the Postman coverage test.
-- **Shared logic with the UI.** Renames, transfer detection, duplicate detection and AI categorization live in shared code (`src/api/entityOps.ts`, `src/utils/transactionMaintenance.ts`, `useAutoCategorize`) so the UI and the API behave the same.
+- **Shared logic with the UI.** Renames, transfer detection, duplicate detection and AI categorization live in shared code (the rename and delete methods on `DataProvider`, `src/utils/transactionMaintenance.ts`, `useAutoCategorize`) so the UI and the API behave the same.
 - **Safe by default.** Secrets (AI keys, backup password hashes) are never returned. Deletions need `confirm_delete`, restores need `confirm_replace`, bulk operations support `dry_run`, and AI use is opt-in per request.
 - **Not available on web or mobile**, which cannot host a local server.
 

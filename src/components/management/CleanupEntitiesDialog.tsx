@@ -64,23 +64,8 @@ const CleanupEntitiesDialog: React.FC<CleanupEntitiesDialogProps> = ({
     setIsProcessing(true);
     try {
       if (entityType === "vendor") {
-        // Batch delete not directly exposed in DataProvider for vendors but we can loop or add it.
-        // LocalDataProvider supports bulkDelete on db directly if we were inside, but here we use the interface.
-        // Interface only has 'deleteTransaction' etc. Wait, we don't have deleteVendor in interface?
-        // Interface has 'getAllVendors'.
-        // We need to add 'deleteVendor' and 'deleteCategory' to interface or loop?
-        // The hook useEntityManagement uses `deleteRpcFn` which we stubbed.
-        // We should probably add `deleteVendor` to DataProvider.
-
-        // For now, I'll loop call delete? No, I can't delete vendors via DataProvider yet!
-        // I missed adding deleteVendor/deleteCategory to DataProvider interface in Step 1 of this turn.
-        // I will use a loop with a direct db access workaround or fail?
-        // Actually, I can update the interface in the next step or right now?
-        // I'll update the interface in the "Refactor Providers/Context" step or assumes it exists?
-
-        // Loop for now as interface handles singular delete, or we add bulkDelete.
-        // Singular is fine for user-selected cleanup actions which aren't massive usually.
-        // Or Promise.all
+        // Each delete also removes the vendor's recurring transactions and
+        // budgets in its ledger.
         await Promise.all(
           selectedIds.map((id) => dataProvider.deletePayee(id)),
         );

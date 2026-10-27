@@ -4,7 +4,7 @@ This folder contains a ready-made Postman collection that exercises every endpoi
 
 | File | Purpose |
 |---|---|
-| `vaulted-money-local-api.postman_collection.json` | 202 requests in 18 folders, with tests |
+| `vaulted-money-local-api.postman_collection.json` | 206 requests in 18 folders, with tests |
 | `vaulted-money-local-api.postman_environment.json` | `baseUrl` and `token` variables |
 
 You do not need a Postman account or any special permissions. The API only listens on your own computer.
@@ -28,7 +28,7 @@ Open the collection → **Run** (Collection Runner), keep the order, and run.
 
 - Folders `00`–`15` are the safe flow, then `98 Cleanup`. Requests depend on earlier ones (for example, the ledger created in `01` is used everywhere), so run them in order. Individual requests can be re-sent, but if a folder fails midway, re-run from `01`.
 - **Untick `99 Optional (changes your settings)`** unless you want those side effects (it overwrites your stored exchange rates from the internet).
-- A passing run is 200 requests (everything except the two in `99`) with 545 assertions and no failures.
+- A passing run is 204 requests (everything except the two in `99`) with 553 assertions and no failures.
 
 ### What it touches in your real app
 

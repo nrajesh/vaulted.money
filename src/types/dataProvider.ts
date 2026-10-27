@@ -132,8 +132,39 @@ export interface AIProvider {
   isDefault?: boolean;
 }
 
+/**
+ * Thrown when a rename would give two vendors/accounts, two categories, or two
+ * sub-categories of one category the same name within a ledger. The Local API
+ * reports it as 409 Conflict.
+ */
+export class NameConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NameConflictError";
+  }
+}
+
+/** Account fields that `updateAccountDetails` can change. */
+export interface AccountDetailsChanges {
+  name?: string;
+  currency?: string;
+  starting_balance?: number;
+  type?: AccountType;
+  remarks?: string;
+  credit_limit?: number;
+}
+
+/*
+ * Renames and deletes
+ *
+ * Transactions, recurring transactions and budgets store vendor, account,
+ * category and sub-category *names*, not ids. So renaming or deleting one of
+ * those entities must update every record in its ledger that holds the name,
+ * and must never touch another ledger, where the same name can belong to a
+ * different entity. The rename and delete methods below do this in one
+ * database transaction each, so a failure leaves nothing half-changed.
+ */
 export interface DataProvider {
-  // Ledgers
   // Ledgers
   getLedgers(): Promise<Ledger[]>;
   addLedger(
@@ -195,15 +226,28 @@ export interface DataProvider {
     sourceNames: string[],
     ledgerId: string,
   ): Promise<void>;
+  /**
+   * Renames a vendor or account (vendors and accounts share one set of names
+   * per ledger) in its transactions, recurring transactions and budgets.
+   * Throws NameConflictError if the name is taken in the ledger.
+   */
+  renamePayee(vendorId: string, newName: string): Promise<void>;
+  /**
+   * Deletes a vendor or account, plus the recurring transactions and the
+   * vendor/account budgets that use its name in the same ledger. Past
+   * transactions keep the name.
+   */
   deletePayee(id: string): Promise<void>;
   getAllAccounts(ledgerId: string): Promise<Account[]>;
   /**
-   * Updates fields on the account row only. It does not rename the account or
-   * propagate a currency change to transactions; callers do that separately.
+   * Updates an account, identified by its vendor id (the vendor row holds the
+   * name). A new name is applied as in `renamePayee`; a currency is copied to
+   * the account's transactions and recurring transactions. Fields not given
+   * stay unchanged.
    */
-  updateAccount(
-    id: string,
-    changes: Partial<Omit<Account, "id">>,
+  updateAccountDetails(
+    vendorId: string,
+    changes: AccountDetailsChanges,
   ): Promise<void>;
 
   // Categories
@@ -214,14 +258,27 @@ export interface DataProvider {
     ledgerId: string,
   ): Promise<string | null>;
   getUserCategories(ledgerId: string): Promise<Category[]>;
-  getCategoryById(id: string): Promise<Category | undefined>;
   getSubCategories(ledgerId: string): Promise<SubCategory[]>;
   mergeCategories(
     targetName: string,
     sourceNames: string[],
     ledgerId: string,
   ): Promise<void>;
+  /** Throws NameConflictError if the ledger already has the name. */
+  renameCategory(categoryId: string, newName: string): Promise<void>;
+  /**
+   * Deletes a category with its sub-categories, plus the recurring
+   * transactions and budgets that use it in the same ledger. Past
+   * transactions keep the name.
+   */
   deleteCategory(id: string): Promise<void>;
+  /** Throws NameConflictError if the parent category already has the name. */
+  renameSubCategory(subCategoryId: string, newName: string): Promise<void>;
+  /**
+   * Deletes a sub-category, clears it from transactions and recurring
+   * transactions in the ledger, and removes the budgets scoped to it.
+   */
+  deleteSubCategory(subCategoryId: string): Promise<void>;
 
   // Budgets
   getBudgetsWithSpending(ledgerId: string): Promise<Budget[]>;

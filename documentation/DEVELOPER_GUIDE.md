@@ -116,7 +116,8 @@ Restart the development server or rebuild the app after changing CSP domains.
 - UI-only state should usually stay local with `useState`.
 - Async data loading uses TanStack Query where appropriate.
 - Local persistence is implemented through Dexie and IndexedDB.
-- Read and write stored data through the `DataProvider` interface (`useDataProvider()` in components, `services.dataProvider` in Local API routes). Only `src/providers/LocalDataProvider.ts` imports `@/lib/dexieDB`. ESLint enforces this outside test files. A few older files are still on an explicit allowlist in `eslint.config.js` until they are migrated.
+- Read and write stored data through the `DataProvider` interface (`useDataProvider()` in components, `services.dataProvider` in Local API routes). Only `src/providers/LocalDataProvider.ts` imports `@/lib/dexieDB`. ESLint enforces this outside test files.
+- Rename and delete vendors, accounts, categories and sub-categories only through their `DataProvider` methods (`renamePayee`, `updateAccountDetails`, `renameCategory`, `renameSubCategory` and the `delete*` methods). Other records store these names, and the methods update them inside the same ledger in one database transaction.
 
 ## Deployment
 
