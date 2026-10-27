@@ -58,7 +58,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
+import EraseAllDataDialog from "@/components/dialogs/EraseAllDataDialog";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import { FeedbackLauncher } from "@/components/feedback/FeedbackLauncher";
@@ -894,16 +894,33 @@ const LedgerEntryPage = () => {
               </Button>
 
               <Button
+                variant={ledgers.length > 0 ? "outline" : "default"}
                 onClick={() => setIsGenerateConfirmOpen(true)}
-                className="h-auto justify-start rounded-xl bg-indigo-600 px-4 py-4 text-left text-white hover:bg-indigo-700 whitespace-normal sm:col-span-2"
+                className={cn(
+                  "h-auto justify-start rounded-xl px-4 py-4 text-left whitespace-normal sm:col-span-2",
+                  // With data present this wipes everything, so it must not look
+                  // like the main call to action.
+                  ledgers.length === 0
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                    : "border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive",
+                )}
               >
                 <RotateCcw className="mt-0.5 h-5 w-5" />
                 <span className="min-w-0">
                   <span className="block font-semibold">
                     Generate demo data
                   </span>
-                  <span className="block text-xs text-indigo-100">
-                    Populate the app quickly when you want sample ledgers.
+                  <span
+                    className={cn(
+                      "block text-xs",
+                      ledgers.length === 0
+                        ? "text-indigo-100"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {ledgers.length === 0
+                      ? "Populate the app quickly when you want sample ledgers."
+                      : "Replaces all existing data with sample ledgers."}
                   </span>
                 </span>
               </Button>
@@ -974,7 +991,8 @@ const LedgerEntryPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ConfirmationDialog
+      <EraseAllDataDialog
+        ledgerCount={ledgers.length}
         isOpen={isGenerateConfirmOpen}
         onOpenChange={setIsGenerateConfirmOpen}
         onConfirm={handleGenerateDemoData}

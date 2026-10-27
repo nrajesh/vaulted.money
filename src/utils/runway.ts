@@ -54,6 +54,17 @@ export function isScheduleActive(
   return Number.isNaN(end.getTime()) || end >= today;
 }
 
+/** A leg of a transfer between the user's own accounts. */
+export function isTransfer(t: {
+  category?: string | null;
+  transfer_id?: string | null;
+}) {
+  return (
+    Boolean(t.transfer_id) ||
+    (t.category ?? "").trim().toLowerCase() === "transfer"
+  );
+}
+
 /**
  * Whether a past transaction counts as everyday spending or income. Transfers
  * only move money between the user's own accounts, and transactions that came
@@ -64,7 +75,5 @@ export function isDiscretionary(t: {
   transfer_id?: string | null;
   is_scheduled_origin?: boolean;
 }) {
-  if (t.is_scheduled_origin) return false;
-  if (t.transfer_id) return false;
-  return (t.category ?? "").trim().toLowerCase() !== "transfer";
+  return !t.is_scheduled_origin && !isTransfer(t);
 }

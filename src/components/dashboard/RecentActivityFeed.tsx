@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
 import { Transaction } from "@/types/dataProvider";
 import { cn, slugify } from "@/lib/utils";
 import {
@@ -44,6 +45,10 @@ export const RecentActivityFeed = ({
 }: RecentActivityFeedProps) => {
   const { formatCurrency, convertBetweenCurrencies, selectedCurrency } =
     useCurrency();
+  const { t: translate } = useTranslation();
+  const unknownLabel = translate("dashboard.recentActivity.unknown", {
+    defaultValue: "Unknown",
+  });
 
   // Sort by date desc and take top 5
   const recentTransactions = [...transactions]
@@ -53,12 +58,18 @@ export const RecentActivityFeed = ({
   return (
     <Card className={cn("h-full", className)}>
       <CardHeader>
-        <CardTitle>Recent Activity Feed</CardTitle>
+        <CardTitle>
+          {translate("dashboard.recentActivity.title", {
+            defaultValue: "Recent Activity Feed",
+          })}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {recentTransactions.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-4">
-            No recent activity
+            {translate("dashboard.recentActivity.empty", {
+              defaultValue: "No recent activity",
+            })}
           </div>
         ) : (
           recentTransactions.map((t) => {
@@ -72,7 +83,7 @@ export const RecentActivityFeed = ({
               ),
             );
             // Fallback for vendor if it's undefined (though type says string, legacy data might be loose)
-            const label = t.vendor || t.remarks || "Unknown";
+            const label = t.vendor || t.remarks || unknownLabel;
 
             return (
               <div key={t.id} className="flex items-center justify-between">
