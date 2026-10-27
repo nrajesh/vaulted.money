@@ -151,8 +151,9 @@ const AccountDeduplicationDialog: React.FC<
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Selected duplicates will be permanently deleted after merging
-                their transactions.
+                Selected duplicates will be permanently deleted after their
+                transactions are moved. Their recurring transactions and budgets
+                are deleted too.
               </p>
             </div>
           )}

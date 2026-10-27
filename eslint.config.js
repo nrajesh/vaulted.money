@@ -52,4 +52,34 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "warn",
     },
   },
+  {
+    // Production code reads and writes data through the DataProvider interface
+    // (src/types/dataProvider.ts). Only its Dexie implementation may import the
+    // database. Tests may use Dexie directly to set up and inspect data.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/lib/dexieDB.ts",
+      "src/providers/LocalDataProvider.ts",
+      "src/**/*.test.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportDeclaration[source.value=/dexieDB$/]",
+          message: "Use the DataProvider (useDataProvider) instead of Dexie.",
+        },
+        {
+          // `no-restricted-imports` does not see dynamic import() calls.
+          selector: "ImportExpression[source.value=/dexieDB$/]",
+          message: "Use the DataProvider (useDataProvider) instead of Dexie.",
+        },
+        {
+          selector:
+            ":matches(ExportAllDeclaration, ExportNamedDeclaration)[source.value=/dexieDB$/]",
+          message: "Do not re-export Dexie; expose data through DataProvider.",
+        },
+      ],
+    },
+  },
 );

@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { DataProvider } from "@/types/dataProvider";
+import { NameConflictError, type DataProvider } from "@/types/dataProvider";
 import {
   ApiError,
   json,
@@ -138,6 +138,9 @@ export async function dispatch(
       services,
     });
   } catch (error) {
+    if (error instanceof NameConflictError) {
+      return errorResponse(409, "conflict", error.message);
+    }
     if (error instanceof ApiError) {
       return errorResponse(
         error.status,

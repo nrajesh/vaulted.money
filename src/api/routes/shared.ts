@@ -1,4 +1,3 @@
-import { db } from "@/lib/dexieDB";
 import type { Account, Ledger, Transaction } from "@/types/dataProvider";
 import { notFound } from "../http";
 import type { ApiServices } from "../router";
@@ -91,10 +90,11 @@ export const currentConverter = () => {
 };
 
 export const getTransactionInLedger = async (
+  services: ApiServices,
   ledgerId: string,
   id: string,
 ): Promise<Transaction> => {
-  const tx = await db.transactions.get(id);
+  const tx = await services.dataProvider.getTransactionById(id);
   if (!tx || tx.user_id !== ledgerId) throw notFound(`Transaction "${id}"`);
   return tx;
 };

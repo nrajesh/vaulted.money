@@ -43,6 +43,7 @@ Before committing, ask: *"Can this be reproduced by running a command?"* If yes,
 
 - **Privacy-first**: No data leaves the device unless explicitly exported by the user. API keys are stored locally and never included in exports.
 - **Local-first**: The app must work 100% offline. IndexedDB via Dexie is the primary data store.
+- **Data goes through `DataProvider`**: Production code must not import `@/lib/dexieDB`; add a method to `DataProvider` (`src/types/dataProvider.ts`) and `LocalDataProvider` instead, with a test in `src/providers/DataProviderContract.test.ts`. ESLint enforces this. Do not add exceptions to the rule in `eslint.config.js`.
 - **Routes live in `src/App.tsx`**: Do not scatter route definitions elsewhere.
 - **Pages in `src/pages/`**, components in `src/components/`, hooks in `src/hooks/`.
 - For mobile-specific work, consult `documentation/IOS_RULES.md` and `documentation/ANDROID_RULES.md`.
@@ -154,6 +155,27 @@ jsdom's focus bookkeeping changes between patch releases. `document.hasFocus()` 
 
 ---
 
+## Data integrity — lessons learned
+
+These came from issue #253, where UI renames and deletes reached into Dexie directly.
+
+**Names act as foreign keys**
+Transactions, recurring transactions and budgets store vendor, account, category and sub-category *names*, not ids. Vendor, account and sub-category budgets hold the name twice, in `budget_scope_name` and in the display field `category_name`. A rename or delete must update or remove every record that stores the name. Use the `DataProvider` methods (`renamePayee`, `updateAccountDetails`, `renameCategory`, `renameSubCategory`, `delete*`). Each runs in one Dexie transaction.
+
+**Scope every name match to the ledger**
+The same name can exist in several ledgers and mean different things. A query like `where("vendor").equals(name)` without a `user_id` check changes every ledger. The deletes used to wipe other ledgers' recurring transactions this way. `src/providers/DataProviderContract.test.ts` seeds two ledgers with identical names to catch it.
+
+**Sub-category budgets match by name in any category**
+Rename or delete a `sub_category` budget only when no other sub-category in the ledger still has that name.
+
+**Merges delete the merged-away schedules and budgets**
+A merge moves past transactions to the target. It then deletes the sources together with their recurring transactions and budgets, because there is no telling which duplicate's schedule or budget the user still wants. This was the owner's decision. Do not change merges to move them instead. A merge into a target that doesn't exist throws, and a target listed among its own sources is ignored.
+
+**Ledger names are unique**
+Ledgers are separate books to the user. `addLedger` and `updateLedger` refuse a name another ledger has, ignoring case and spaces. They check only when the name changes, so ledgers that already share a name still open.
+
+---
+
 ## Local API changes
 
 The desktop Local API (`src/api/`, `electron/apiServer.ts`) is a public contract that scripts depend on. **Any change that touches an API entity must update the API, its tests, its docs and the Postman collection in the same change.** "Entity" means anything the API exposes: ledgers, accounts, vendors, categories/sub-categories, transactions, recurring transactions, budgets, currencies, AI providers, languages, backups, and the analytics/insights/reports outputs.
@@ -161,7 +183,7 @@ The desktop Local API (`src/api/`, `electron/apiServer.ts`) is a public contract
 This applies when you:
 
 - add, remove, rename or change an endpoint, parameter, request field, response field, status code or error;
-- change an entity's type or storage in `src/types/dataProvider.ts`, `src/lib/dexieDB.ts` or `LocalDataProvider`, or the logic the API shares with the UI (`src/api/entityOps.ts`, `src/api/compute/*`, `src/utils/budgetUtils.ts`, `backupUtils.ts`);
+- change an entity's type or storage in `src/types/dataProvider.ts`, `src/lib/dexieDB.ts` or `LocalDataProvider`, or the logic the API shares with the UI (the rename and delete methods on `DataProvider`, `src/api/compute/*`, `src/utils/budgetUtils.ts`, `backupUtils.ts`);
 - change a validation rule, default or side effect (renames that propagate, cascading deletes, auto-created records).
 
 Checklist:

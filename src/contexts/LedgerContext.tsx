@@ -11,7 +11,6 @@ import { Ledger } from "@/types/dataProvider";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { navigateAppPath } from "@/utils/navigation";
-// import { db } from '@/lib/dexieDB'; // Unused if accessing via dataProvider only
 
 interface LedgerContextType {
   activeLedger: Ledger | null;
