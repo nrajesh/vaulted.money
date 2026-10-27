@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Budget } from "@/types/dataProvider";
 import {
   badRequest,
+  currencyCodeSchema,
   isoDateSchema,
   json,
   noContent,
@@ -14,9 +15,9 @@ import { currentConverter, requireLedger } from "./shared";
 
 const frequencySchema = z
   .string()
-  .regex(/^(Monthly|Quarterly|Yearly|One-time|\d+[dwmy])$/, {
+  .regex(/^(Monthly|Quarterly|Yearly|One-time|[1-9]\d*[dwmy])$/, {
     message:
-      'must be Monthly, Quarterly, Yearly, One-time or a duration like "3m"',
+      'must be Monthly, Quarterly, Yearly, One-time or a duration like "3m" (positive number)',
   });
 
 const createSchema = z.object({
@@ -29,7 +30,7 @@ const createSchema = z.object({
   /** Required for account, vendor and sub_category scopes: the entity name. */
   scope_name: z.string().trim().min(1).optional(),
   target_amount: z.number().finite().positive(),
-  currency: z.string().trim().min(1).optional(),
+  currency: currencyCodeSchema.optional(),
   frequency: frequencySchema.default("Monthly"),
   start_date: isoDateSchema.optional(),
   end_date: isoDateSchema.nullish(),
@@ -43,7 +44,7 @@ const createSchema = z.object({
 
 const patchSchema = z.object({
   target_amount: z.number().finite().positive().optional(),
-  currency: z.string().trim().min(1).optional(),
+  currency: currencyCodeSchema.optional(),
   frequency: frequencySchema.optional(),
   start_date: isoDateSchema.optional(),
   end_date: isoDateSchema.nullish(),
@@ -55,6 +56,13 @@ const patchSchema = z.object({
 });
 
 const iso = (value: string) => new Date(value).toISOString();
+
+/** A budget that ends before it starts can never match a transaction. */
+function requireEndAfterStart(start: string, end: string | null | undefined) {
+  if (end && iso(end) < iso(start)) {
+    throw badRequest('"end_date" must not be before "start_date"');
+  }
+}
 
 /** Adds the computed `spent_amount` the UI would show. */
 async function withSpending(ctx: RouteContext, budgets: Budget[]) {
@@ -150,6 +158,7 @@ export const budgetRoutes: RouteDef[] = [
       }
 
       const start = input.start_date ?? new Date().toISOString();
+      requireEndAfterStart(start, input.end_date);
       const budget = {
         user_id: ledgerId,
         category_id: categoryId,
@@ -223,6 +232,7 @@ export const budgetRoutes: RouteDef[] = [
         updated.account_scope_values = values;
         updated.account_scope = values ? "GROUP" : "ALL";
       }
+      requireEndAfterStart(updated.start_date, updated.end_date);
       await ctx.services.dataProvider.updateBudget(updated);
       return json((await withSpending(ctx, [updated]))[0]);
     },

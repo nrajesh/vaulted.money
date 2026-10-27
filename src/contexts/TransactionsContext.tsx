@@ -205,7 +205,9 @@ const calculateNextDate = (currentDate: Date, frequency: string): Date => {
   } else {
     const match = frequency.match(/^(\d+)([dwmy])$/);
     if (match) {
-      intervalValue = parseInt(match[1], 10);
+      // A zero interval would return the same date forever, and the caller
+      // loops until the date reaches today, which would hang the app on launch.
+      intervalValue = Math.max(1, parseInt(match[1], 10));
       intervalUnit = match[2];
     }
   }

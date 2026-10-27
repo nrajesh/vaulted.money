@@ -1688,3 +1688,124 @@ describe("OpenAPI document", () => {
     expect(Object.keys(spec.paths).length).toBeGreaterThan(50);
   });
 });
+
+describe("input hardening", () => {
+  beforeEach(clearAll);
+
+  const transaction = {
+    date: "2026-03-01",
+    amount: -10,
+    account: "Checking",
+    vendor: "Shop",
+    category: "Food",
+  };
+
+  it.each(["2026-02-30", "2026-13-01", "1", "03/04/2026", "garbage"])(
+    "rejects %s as a date instead of storing it verbatim",
+    async (date) => {
+      const ledger = await createLedger();
+      const res = await call("POST", `/ledgers/${ledger.id}/transactions`, {
+        ...transaction,
+        date,
+      });
+      expect(res.status).toBe(400);
+      const list = await ok<{ total: number }>(
+        call("GET", `/ledgers/${ledger.id}/transactions`),
+      );
+      expect(list.total).toBe(0);
+    },
+  );
+
+  it("still accepts plain dates and full timestamps", async () => {
+    const ledger = await createLedger();
+    for (const date of ["2026-02-28", "2024-02-29", "2026-03-01T10:30:00Z"]) {
+      await ok(
+        call("POST", `/ledgers/${ledger.id}/transactions`, {
+          ...transaction,
+          date,
+        }),
+        201,
+      );
+    }
+  });
+
+  it("rejects a garbage from/to filter instead of silently matching nothing", async () => {
+    const ledger = await createLedger();
+    const res = await call(
+      "GET",
+      `/ledgers/${ledger.id}/transactions`,
+      undefined,
+      { from: "garbage" },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it.each(["0d", "00w", "0m", "0y"])(
+    "rejects the zero-length frequency %s, which would hang the scheduler",
+    async (frequency) => {
+      const ledger = await createLedger();
+      const res = await call(
+        "POST",
+        `/ledgers/${ledger.id}/scheduled-transactions`,
+        { ...transaction, frequency },
+      );
+      expect(res.status).toBe(400);
+    },
+  );
+
+  it("accepts positive custom frequencies", async () => {
+    const ledger = await createLedger();
+    for (const frequency of ["1d", "2w", "10m", "3y"]) {
+      await ok(
+        call("POST", `/ledgers/${ledger.id}/scheduled-transactions`, {
+          ...transaction,
+          frequency,
+        }),
+        201,
+      );
+    }
+  });
+
+  it("rejects a schedule or budget that ends before it starts", async () => {
+    const ledger = await createLedger();
+    const schedule = await call(
+      "POST",
+      `/ledgers/${ledger.id}/scheduled-transactions`,
+      {
+        ...transaction,
+        date: "2026-04-01",
+        frequency: "Monthly",
+        end_date: "2020-01-01",
+      },
+    );
+    expect(schedule.status).toBe(400);
+
+    await call("POST", `/ledgers/${ledger.id}/transactions`, transaction);
+    const budget = await call("POST", `/ledgers/${ledger.id}/budgets`, {
+      category: "Food",
+      target_amount: 100,
+      start_date: "2026-05-01",
+      end_date: "2026-01-01",
+    });
+    expect(budget.status).toBe(400);
+  });
+
+  it("normalises currency codes and rejects malformed ones", async () => {
+    const ledger = await createLedger();
+    const lower = await ok<{ currency: string }>(
+      call("POST", `/ledgers/${ledger.id}/accounts`, {
+        name: "Euro account",
+        currency: "eur",
+      }),
+      201,
+    );
+    expect(lower.currency).toBe("EUR");
+    for (const currency of ["NOPE", "E1", ""]) {
+      const res = await call("POST", "/ledgers", {
+        name: `Bad ${currency}`,
+        currency,
+      });
+      expect(res.status).toBe(400);
+    }
+  });
+});

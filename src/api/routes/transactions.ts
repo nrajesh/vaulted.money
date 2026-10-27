@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { Transaction } from "@/types/dataProvider";
 import {
   badRequest,
+  currencyCodeSchema,
+  dateParam,
   flag,
   isoDateSchema,
   json,
@@ -28,7 +30,7 @@ const txSchema = z.object({
   category: z.string().trim().min(1),
   sub_category: z.string().trim().nullish(),
   remarks: z.string().nullish(),
-  currency: z.string().trim().min(1).optional(),
+  currency: currencyCodeSchema.optional(),
 });
 const patchSchema = txSchema.partial();
 const bulkSchema = z.object({
@@ -79,6 +81,8 @@ export function filterTransactions(
   all: Transaction[],
   q: Record<string, string>,
 ) {
+  const from = dateParam("from", q.from);
+  const to = dateParam("to", q.to);
   const min = numberParam("min_amount", q.min_amount);
   const max = numberParam("max_amount", q.max_amount);
   const search = q.search?.toLowerCase();
@@ -88,8 +92,8 @@ export function filterTransactions(
   }
   return all.filter((t) => {
     const day = dayOf(t.date);
-    if (q.from && day < q.from) return false;
-    if (q.to && day > q.to) return false;
+    if (from && day < from) return false;
+    if (to && day > to) return false;
     if (q.account && t.account !== q.account) return false;
     if (q.vendor && t.vendor !== q.vendor) return false;
     if (q.category && t.category !== q.category) return false;
