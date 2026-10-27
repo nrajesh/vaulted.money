@@ -163,6 +163,7 @@ export function BudgetCard({
         <div className="absolute top-4 right-4 z-50">
           <Checkbox
             checked={isSelected}
+            aria-label={`Select budget ${budget.category_name}`}
             onCheckedChange={() =>
               onToggleSelection && onToggleSelection(budget.id)
             }
@@ -309,6 +310,7 @@ function GoalCard({
         <div className="absolute top-4 right-4 z-50">
           <Checkbox
             checked={isSelected}
+            aria-label={`Select budget ${budget.category_name}`}
             onCheckedChange={() =>
               onToggleSelection && onToggleSelection(budget.id)
             }

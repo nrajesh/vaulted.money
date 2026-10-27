@@ -88,6 +88,7 @@ import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
 import { LanguageIcon } from "@/components/language/LanguageIcon";
 import { FeedbackLauncher } from "@/components/feedback/FeedbackLauncher";
 import SiteFooter from "@/components/SiteFooter";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import BrandLockup from "@/components/BrandLockup";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -951,11 +952,27 @@ const Layout = () => {
           <Outlet />
         </main>
         {!isHomepageMobilePreview && <SiteFooter />}
+        {!isHomepageMobilePreview && (
+          <>
+            <MobileBottomNav />
+            {/* Keeps the footer clear of the fixed tab bar on phones. */}
+            <div
+              aria-hidden="true"
+              className="h-[calc(3.5rem+env(safe-area-inset-bottom))] md:hidden"
+            />
+          </>
+        )}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               onClick={() => setIsAddDialogOpen(true)}
-              className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 h-12 w-12 rounded-full px-0 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white sm:bottom-6 sm:right-6 sm:h-14 sm:w-14"
+              className={cn(
+                "fixed right-4 z-50 h-12 w-12 rounded-full px-0 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white sm:right-6 sm:h-14 sm:w-14 md:bottom-6",
+                // Clear the tab bar on phones; the homepage preview has none.
+                isHomepageMobilePreview
+                  ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]"
+                  : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))]",
+              )}
               aria-label={t("layout.addTransaction", {
                 defaultValue: "Add Transaction",
               })}

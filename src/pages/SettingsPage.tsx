@@ -205,6 +205,7 @@ const SettingsPage = () => {
           <ThemedCardContent>
             <div className="flex items-center space-x-2">
               <Input
+                aria-label="Future transaction months"
                 type="number"
                 value={futureMonths}
                 onChange={handleFutureMonthsChange}
@@ -416,6 +417,7 @@ const SettingsPage = () => {
                 </ThemedCardDescription>
               </div>
               <Switch
+                aria-label="Automatically sync across devices"
                 checked={syncConfig.config.autoSyncEnabled}
                 onCheckedChange={(checked) =>
                   syncConfig.toggleAutoSync(checked)

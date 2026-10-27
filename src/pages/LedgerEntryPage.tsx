@@ -754,6 +754,7 @@ const LedgerEntryPage = () => {
                           onClick={(event) => event.stopPropagation()}
                         >
                           <Checkbox
+                            aria-label={`Select ledger ${ledger.name}`}
                             checked={isSelected}
                             onCheckedChange={(checked) =>
                               handleToggleSelect(ledger.id, checked as boolean)

@@ -288,6 +288,7 @@ export function SmartScheduleDialog({
               <div className="grid grid-cols-12 gap-4 p-4 font-medium text-sm bg-muted/50 border-b items-center">
                 <div className="col-span-1 flex justify-center">
                   <Checkbox
+                    aria-label="Select all suggestions"
                     checked={
                       suggestions.length > 0 &&
                       suggestions.every((s) => s.isSelected)
@@ -315,6 +316,7 @@ export function SmartScheduleDialog({
                     >
                       <div className="col-span-1 flex flex-col items-center justify-center gap-1">
                         <Checkbox
+                          aria-label={`Select suggestion ${idx + 1}`}
                           checked={item.isSelected}
                           onCheckedChange={() => toggleSelection(idx)}
                         />

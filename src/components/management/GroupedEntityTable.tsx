@@ -232,18 +232,20 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7"
+                                      className="h-9 w-9"
                                       onClick={() => handleEditClick(item)}
                                       disabled={!isDeletable(item)}
+                                      aria-label={`Edit ${item.name}`}
                                     >
                                       <Edit className="h-3.5 w-3.5" />
                                     </Button>
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                                       onClick={() => handleDeleteClick(item)}
                                       disabled={!isDeletable(item)}
+                                      aria-label={`Delete ${item.name}`}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </Button>

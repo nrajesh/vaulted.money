@@ -163,6 +163,7 @@ const TransactionRow = React.memo(
             >
               <div className="flex flex-col items-center justify-center gap-1">
                 <Checkbox
+                  aria-label={`Select transaction: ${transaction.vendor || "No Payee"}`}
                   checked={isSelected}
                   onCheckedChange={() => onToggleSelect(transaction.id)}
                 />
@@ -371,6 +372,7 @@ const TransactionMobileCard = React.memo(
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <Checkbox
+                  aria-label={`Select transaction: ${transaction.vendor || "No Payee"}`}
                   checked={isSelected}
                   onCheckedChange={() => onToggleSelect(transaction.id)}
                   onClick={(e) => e.stopPropagation()}
@@ -455,6 +457,8 @@ const TransactionMobileCard = React.memo(
                         });
                       }
                     }}
+                    title="Go to Scheduled Transaction"
+                    aria-label="Go to Scheduled Transaction"
                     className="rounded-full bg-blue-100 p-1.5 dark:bg-blue-900/30"
                   >
                     <CalendarClock className="h-3.5 w-3.5 text-blue-500" />
