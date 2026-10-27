@@ -34,7 +34,10 @@ overrides:
   joi: ">=18.2.5"
   jose: ">=4.15.5"
   node-forge: ">=1.4.0"
-  qs: ">=6.16.0"
+  # 6.16.1 fixes GHSA-6pq8-jhm2-2vcw. Pinned because 6.16.2 and 6.17.0 were
+  # released the day this was set (2026-10-27); relax to ">=6.16.1" once they
+  # have been out for a couple of weeks.
+  qs: "6.16.1"
   handlebars: ">=4.7.9"
   underscore: ">=1.13.8"
   csv-parse: ">=7.0.2"
