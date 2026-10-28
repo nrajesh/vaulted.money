@@ -1,1199 +1,74 @@
-import {
-  DataProvider,
+import type {
   Budget,
+  DataProvider,
+  ScheduledTransaction,
   Transaction,
-  Ledger,
 } from "@/types/dataProvider";
+import { buildDemoPlan, type DemoLedgerPlan } from "./demoDataPlan";
 
 export interface ProgressCallback {
   (progress: { stage: string; progress: number; totalStages: number }): void;
+}
+
+export interface DemoDataOptions {
+  /** The moment history is measured back from. Defaults to the current time. */
+  now?: Date;
+  /** Fixes the random variation; defaults to a fresh one on every run. */
+  seed?: number;
 }
 
 /** Batches DB writes so IndexedDB work is visible in the UI progress bar. */
 const TRANSACTION_INSERT_BATCH_SIZE = 250;
 
 /**
- * Maps real work units to 0–99% (caller emits 100% only when fully done).
- * Prevents the bar from racing ahead while heavy Dexie work is still running.
+ * Wipes the app and writes four demo ledgers (personal, family, cross-border
+ * and freelance). What the ledgers contain is decided by `buildDemoPlan`; this
+ * function only saves it. Every date is relative to `options.now`, so the
+ * history always ends today no matter when the button is clicked.
  */
-function createWeightedProgress(onProgress: ProgressCallback) {
-  const BP_TOTAL = 10_000;
-  let bpDone = 0;
-
-  const emit = (stage: string) => {
-    const progress = Math.min(
-      99,
-      Math.max(0, Math.floor((bpDone / BP_TOTAL) * 99)),
-    );
-    onProgress({ stage, progress, totalStages: 100 });
-  };
-
-  const advance = (bp: number, stage: string) => {
-    bpDone = Math.min(BP_TOTAL, bpDone + Math.max(0, bp));
-    emit(stage);
-  };
-
-  return { advance, emit };
-}
-
-const DEMO_BUDGETS: {
-  category?: string;
-  sub?: string;
-  amount: number;
-  frequency: string;
-  budget_scope?: "category" | "account" | "vendor";
-  budget_scope_name?: string;
-  is_goal?: boolean;
-  goal_context?: string;
-}[] = [
-  // Category-level spending budgets
-  { category: "Groceries", amount: 800, frequency: "Monthly" },
-  { category: "Dining Out", sub: "Coffee", amount: 120, frequency: "Monthly" },
-  { category: "Entertainment", amount: 200, frequency: "Monthly" },
-  { category: "Transport", sub: "Fuel", amount: 250, frequency: "Monthly" },
-  { category: "Shopping", amount: 300, frequency: "Monthly" },
-  { category: "Pets", amount: 100, frequency: "Monthly" },
-  { category: "Personal Care", amount: 150, frequency: "Monthly" },
-  { category: "Education", amount: 500, frequency: "Yearly" },
-  { category: "Utilities", amount: 400, frequency: "Monthly" },
-  { category: "Health", amount: 300, frequency: "Monthly" },
-  {
-    category: "Dining Out",
-    sub: "Restaurants",
-    amount: 400,
-    frequency: "Monthly",
-  },
-  { category: "Home Services", amount: 200, frequency: "Monthly" },
-  {
-    category: "Transport",
-    sub: "Public Transport",
-    amount: 100,
-    frequency: "Monthly",
-  },
-  {
-    category: "Shopping",
-    sub: "Electronics",
-    amount: 1000,
-    frequency: "Yearly",
-  },
-  { category: "Shopping", sub: "Clothing", amount: 200, frequency: "Monthly" },
-  { category: "Housing", sub: "Rent", amount: 1500, frequency: "Monthly" },
-  // Account-level spending budgets
-  {
-    amount: 2000,
-    frequency: "Monthly",
-    budget_scope: "account",
-    budget_scope_name: "__ACCOUNT_0__",
-  },
-  {
-    amount: 500,
-    frequency: "Monthly",
-    budget_scope: "account",
-    budget_scope_name: "__ACCOUNT_1__",
-  },
-  // Vendor-level spending budgets
-  {
-    amount: 50,
-    frequency: "Monthly",
-    budget_scope: "vendor",
-    budget_scope_name: "Netflix",
-  },
-  {
-    amount: 200,
-    frequency: "Monthly",
-    budget_scope: "vendor",
-    budget_scope_name: "Employer",
-  },
-  // Savings goals
-  {
-    category: "Groceries",
-    amount: 5000,
-    frequency: "Monthly",
-    is_goal: true,
-    goal_context: "Groceries",
-  },
-  {
-    amount: 10000,
-    frequency: "Monthly",
-    budget_scope: "account",
-    budget_scope_name: "__ACCOUNT_1__",
-    is_goal: true,
-    goal_context: "__ACCOUNT_1__",
-  },
-];
-
-interface DemoScheduledTransaction {
-  accountType: string;
-  vendor: string;
-  category: string;
-  sub_category?: string;
-  amount: number;
-  frequency: string;
-  remarks: string;
-  isTransfer?: boolean;
-  next_date_offset?: number;
-}
-
-// Template for scheduled transactions for HOME budget
-const HOME_SCHEDULED_TRANSACTIONS: DemoScheduledTransaction[] = [
-  {
-    accountType: "Checking",
-    vendor: "Landlord",
-    category: "Housing",
-    sub_category: "Rent",
-    amount: -1200,
-    frequency: "Monthly",
-    remarks: "Rent Payment",
-  },
-  {
-    accountType: "Credit Card",
-    vendor: "Netflix",
-    category: "Entertainment",
-    sub_category: "Streaming",
-    amount: -15.99,
-    frequency: "Monthly",
-    remarks: "Netflix Subscription",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Savings",
-    category: "Transfer",
-    amount: -500,
-    frequency: "Monthly",
-    remarks: "Monthly Savings Transfer",
-    isTransfer: true,
-  },
-  {
-    accountType: "Checking",
-    vendor: "IRS",
-    category: "Legal",
-    sub_category: "Taxes",
-    amount: -15000,
-    frequency: "Yearly",
-    remarks: "Tax Payment",
-    next_date_offset: 2,
-  },
-  {
-    accountType: "Credit Card",
-    vendor: "Gym",
-    category: "Health",
-    sub_category: "Gym",
-    amount: -29.99,
-    frequency: "Monthly",
-    remarks: "Gym Membership",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Electric Company",
-    category: "Utilities",
-    sub_category: "Electricity",
-    amount: -150,
-    frequency: "Monthly",
-    remarks: "Electricity Bill",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Employer",
-    category: "Income",
-    sub_category: "Salary",
-    amount: 4500,
-    frequency: "Monthly",
-    remarks: "Monthly Salary",
-  },
-];
-
-// Template for CHILD budget
-const CHILD_SCHEDULED_TRANSACTIONS: DemoScheduledTransaction[] = [
-  {
-    accountType: "Checking", // Allowance account
-    vendor: "Spotify",
-    category: "Entertainment",
-    sub_category: "Streaming",
-    amount: -9.99,
-    frequency: "Monthly",
-    remarks: "Music Subscription",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Savings", // Junior Isa
-    category: "Transfer",
-    amount: -20,
-    frequency: "Monthly",
-    remarks: "Save for game console",
-    isTransfer: true,
-  },
-  {
-    accountType: "Checking",
-    vendor: "Parents",
-    category: "Income",
-    sub_category: "Allowance",
-    amount: 50,
-    frequency: "Weekly",
-    remarks: "Weekly Allowance",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Cinema",
-    category: "Entertainment",
-    sub_category: "Movies",
-    amount: -15,
-    frequency: "Monthly",
-    remarks: "Movie Night",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Bookstore",
-    category: "Education",
-    sub_category: "Books",
-    amount: -25,
-    frequency: "Monthly",
-    remarks: "Books",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Online Course",
-    category: "Education",
-    sub_category: "Courses",
-    amount: -10,
-    frequency: "Monthly",
-    remarks: "Coding Course",
-  },
-];
-
-// Template for OFFSHORE budget
-const OFFSHORE_SCHEDULED_TRANSACTIONS: DemoScheduledTransaction[] = [
-  {
-    accountType: "Checking", // Foreign Checking
-    vendor: "Property Management",
-    category: "Housing",
-    sub_category: "Rent",
-    amount: -250, // Maintenance fee?
-    frequency: "Monthly",
-    remarks: "Villa Maintenance",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Offshore Savings",
-    category: "Transfer",
-    amount: -2000,
-    frequency: "Quarterly",
-    remarks: "Quarterly Profit Transfer",
-    isTransfer: true,
-  },
-  {
-    accountType: "Checking",
-    vendor: "Tax Authority",
-    category: "Legal",
-    sub_category: "Taxes",
-    amount: -500,
-    frequency: "Yearly",
-    remarks: "Property Tax",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Cleaner",
-    category: "Home Services",
-    sub_category: "Cleaning",
-    amount: -100,
-    frequency: "Monthly",
-    remarks: "Cleaning Service",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Tenant",
-    category: "Income",
-    sub_category: "Rental",
-    amount: 3000,
-    frequency: "Monthly",
-    remarks: "Rental Income",
-  },
-  {
-    accountType: "Checking",
-    vendor: "Utility Provider",
-    category: "Utilities",
-    sub_category: "Combined",
-    amount: -200,
-    frequency: "Monthly",
-    remarks: "Utilities",
-  },
-];
-
-// --- RANDOM DATA HELPERS ---
-const CATEGORIES_CONFIG = {
-  Groceries: ["Supermarket", "Organic Store", "Bakery", "Butcher", "Market"],
-  "Dining Out": ["Restaurants", "Coffee", "Bars", "Fast Food", "Delivery"],
-  Entertainment: ["Movies", "Games", "Streaming", "Concert", "Events"],
-  Transport: ["Fuel", "Public Transport", "Taxi", "Parking", "Service"],
-  Shopping: ["Clothing", "Electronics", "Home Goods", "Gifts", "Online"],
-  Utilities: ["Electricity", "Water", "Internet", "Phone", "Gas"],
-  Health: ["Pharmacy", "Doctor", "Dentist", "Gym", "Insurance"],
-  "Home Services": ["Cleaning", "Repairs", "Garden", "Security", "Decor"],
-  Education: ["Books", "Courses", "Tuition", "Supplies", "Software"],
-  "Personal Care": ["Haircut", "Cosmetics", "Spa", "Gym", "Therapy"],
-  Pets: ["Food", "Vet", "Toys", "Grooming", "Insurance"],
-  Housing: ["Rent", "Mortgage", "Repairs", "Furniture", "Taxes"],
-  Income: ["Salary", "Freelance", "Bonus", "Interest", "Refund"],
-  Transfer: ["Transfer"],
-  Legal: ["Taxes", "Gov", "Attorney", "Court"],
-};
-
-const VENDOR_PREFIXES = [
-  "The",
-  "My",
-  "Best",
-  "Local",
-  "City",
-  "Online",
-  "Daily",
-];
-
-const VENDOR_SUFFIXES = [
-  "Store",
-  "Shop",
-  "Services",
-  "Mart",
-  "Hub",
-  "Place",
-  "Point",
-  "Center",
-];
-
-const CATEGORY_VENDORS: Record<string, string[]> = {
-  Groceries: [
-    "Whole Foods",
-    "Trader Joe's",
-    "Safeway",
-    "Kroger",
-    "Aldi",
-    "Lidl",
-    "Costco",
-    "Tesco",
-    "Sainsbury's",
-    "Waitrose",
-    "Marks & Spencer",
-    "Publix",
-    "Spinneys",
-    "Carrefour",
-    "Local Market",
-    "Neighborhood Co-op",
-    "Fresh Market",
-    "Giant Eagle",
-    "Sprouts",
-    "Wegmans",
-  ],
-  "Dining Out": [
-    "Starbucks",
-    "McDonald's",
-    "Subway",
-    "Chipotle",
-    "Olive Garden",
-    "Local Bistro",
-    "Sushi Bar",
-    "Pizza Express",
-    "Wagamama",
-    "Nando's",
-    "Five Guys",
-    "Burger King",
-    "Taco Bell",
-    "Panda Express",
-    "Sonic Drive-In",
-    "Steakhouse",
-    "Rooftop Lounge",
-    "Brunch Spot",
-    "Dim Sum Parlor",
-    "Gelato Shop",
-    "Craft Brewery",
-    "The Wine Cellar",
-  ],
-  Entertainment: [
-    "Netflix",
-    "Hulu",
-    "Disney+",
-    "AMC Theatres",
-    "Steam",
-    "PlayStation",
-    "Spotify",
-    "Apple TV+",
-    "Paramount+",
-    "HBO Max",
-    "YouTube Premium",
-    "Nintendo eShop",
-    "Audible",
-    "Kindle Store",
-    "Live Nation",
-    "Ticketmaster",
-    "Escape Room",
-    "Bowling Alley",
-    "Art Museum",
-    "Botanical Garden",
-    "Zoo Membership",
-  ],
-  Transport: [
-    "Shell",
-    "Chevron",
-    "Exxon",
-    "Uber",
-    "Lyft",
-    "Public Transport",
-    "Parking Garage",
-    "Tesla Supercharger",
-    "BP",
-    "Mobil",
-    "Train Station",
-    "Bus Pass",
-    "Avis",
-    "Hertz",
-    "Lime Scooter",
-    "Bird Bike",
-    "Toll Road",
-    "Bridge Toll",
-    "Car Wash",
-    "Mechanic Shop",
-    "AutoZone",
-  ],
-  Shopping: [
-    "Amazon",
-    "Target",
-    "Walmart",
-    "Apple Store",
-    "Nike",
-    "H&M",
-    "Zara",
-    "Best Buy",
-    "IKEA",
-    "Wayfair",
-    "Sephora",
-    "Lush",
-    "Uniqlo",
-    "Nordstrom",
-    "Macy's",
-    "ASOS",
-    "Etsy",
-    "eBay",
-    "LEGO Store",
-    "GameStop",
-  ],
-  Utilities: [
-    "PG&E",
-    "Comcast",
-    "Verizon",
-    "AT&T",
-    "Water Dept",
-    "Waste Management",
-    "British Gas",
-    "Sky",
-    "Virgin Media",
-    "O2",
-    "EE",
-    "Vodafone",
-    "Duke Energy",
-    "Consolidated Edison",
-    "National Grid",
-  ],
-  Health: [
-    "CVS",
-    "Walgreens",
-    "General Hospital",
-    "City Dental",
-    "Gym",
-    "Yoga Studio",
-    "Boots",
-    "Holland & Barrett",
-    "Therapy Co",
-    "Vision Express",
-    "Physio Point",
-    "Health Insurance",
-    "Medication Refill",
-    "Urgent Care",
-  ],
-  "Home Services": [
-    "House Cleaning",
-    "Plumbing Pros",
-    "Gardening Pro",
-    "SecureHome",
-    "Handyman",
-    "TaskRabbit",
-    "Angi",
-    "Roofing Experts",
-    "AC Repair",
-    "Smart Home Install",
-    "Window Cleaning",
-    "Pest Control",
-  ],
-  Education: [
-    "University",
-    "Coursera",
-    "Udemy",
-    "Bookstore",
-    "School Supplies",
-    "Skillshare",
-    "MasterClass",
-    "Language School",
-    "Tutoring Center",
-    "Adobe Creative Cloud",
-  ],
-  "Personal Care": [
-    "Hair Salon",
-    "Sephora",
-    "Spa Oasis",
-    "Barber Shop",
-    "Nail Boutique",
-    "Massage Pro",
-    "Skin Clinic",
-    "Grooming Lounge",
-  ],
-  Pets: [
-    "PetCo",
-    "PetSmart",
-    "Local Vet",
-    "Pet Groomers",
-    "BarkBox",
-    "Chewy",
-    "Dog Walker",
-    "Cat Sitter",
-    "Aquarium Shop",
-  ],
-  Housing: [
-    "Landlord",
-    "Mortgage Co",
-    "Property Management",
-    "Home Depot",
-    "IKEA",
-    "Lowes",
-    "Insurance Co",
-    "City Tax",
-    "HOA Dues",
-    "Security Monitoring",
-  ],
-  Income: [
-    "Employer",
-    "Freelance Client",
-    "IRS Refund",
-    "Bank Interest",
-    "Dividends",
-    "Rental Income",
-    "Consulting",
-    "Project Payment",
-    "Gift",
-    "Side Hustle",
-  ],
-  Legal: [
-    "IRS",
-    "City Court",
-    "Legal Services",
-    "Tax Authority",
-    "Gov.za",
-    "Law Firm",
-  ],
-};
-
-const EXPENSE_REMARKS = [
-  "Card payment",
-  "Mobile app order",
-  "Family purchase",
-  "Weekend spend",
-  "Auto-categorized",
-  "Everyday expense",
-  "Needs review",
-  "One-off purchase",
-  "Shared household cost",
-  "Subscription charge",
-];
-
-const INCOME_REMARKS = [
-  "Monthly income",
-  "Client payout",
-  "Bonus credit",
-  "Interest payout",
-  "Reimbursement",
-  "Side project income",
-];
-
-const TRANSFER_REMARKS = [
-  "Savings move",
-  "Planned transfer",
-  "Balance adjustment",
-  "Account funding",
-  "Cash flow rebalance",
-];
-
-function getRandomVendor(category: string, subCategory: string): string {
-  if (category === "Income") {
-    const incomeVendors = CATEGORY_VENDORS.Income;
-    return incomeVendors[Math.floor(Math.random() * incomeVendors.length)];
-  }
-
-  // 70% chance to use a predefined vendor for the category
-  if (Math.random() > 0.3 && CATEGORY_VENDORS[category]) {
-    const list = CATEGORY_VENDORS[category];
-    return list[Math.floor(Math.random() * list.length)];
-  }
-
-  // Fallback to random generation
-  if (subCategory && Math.random() > 0.5)
-    return `${subCategory} ${VENDOR_SUFFIXES[Math.floor(Math.random() * VENDOR_SUFFIXES.length)]}`;
-
-  const prefix =
-    VENDOR_PREFIXES[Math.floor(Math.random() * VENDOR_PREFIXES.length)];
-  const suffix =
-    VENDOR_SUFFIXES[Math.floor(Math.random() * VENDOR_SUFFIXES.length)];
-  return `${prefix} ${category} ${suffix}`;
-}
-
-function getRandomRemark(
-  category: string,
-  amount: number,
-  isTransfer: boolean,
-): string {
-  // Keep many transactions clean while still generating realistic variety.
-  if (Math.random() < 0.55) return "";
-
-  if (isTransfer || category === "Transfer") {
-    const text =
-      TRANSFER_REMARKS[Math.floor(Math.random() * TRANSFER_REMARKS.length)];
-    return `${text} (${Math.abs(amount).toFixed(2)})`;
-  }
-
-  if (category === "Income") {
-    const text =
-      INCOME_REMARKS[Math.floor(Math.random() * INCOME_REMARKS.length)];
-    return `${text} (${amount.toFixed(2)})`;
-  }
-
-  const text =
-    EXPENSE_REMARKS[Math.floor(Math.random() * EXPENSE_REMARKS.length)];
-  if (Math.random() < 0.3) return `${text} - ${category}`;
-  return text;
-}
-
-function getRandomDate(index: number): string {
-  const now = new Date();
-  let daysAgo: number;
-
-  // Guarantee each ledger spans at least 3 years.
-  // The first generated transaction in every ledger is pushed deep into history.
-  if (index === 0) {
-    daysAgo = 1120 + Math.floor(Math.random() * 180); // ~3.1y to ~3.6y
-  } else {
-    const roll = Math.random();
-
-    if (roll < 0.62) {
-      // Dense recent months
-      daysAgo = Math.floor(Math.random() * 150);
-    } else if (roll < 0.87) {
-      // Mid-range history
-      daysAgo = 150 + Math.floor(Math.random() * 450);
-    } else {
-      // Long-tail older history (still within ~3.6 years)
-      daysAgo = 600 + Math.floor(Math.random() * 700);
-    }
-  }
-
-  const date = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
-
-  // Add more intra-day variety by randomizing hours/minutes
-  date.setHours(Math.floor(Math.random() * 24));
-  date.setMinutes(Math.floor(Math.random() * 60));
-  date.setSeconds(Math.floor(Math.random() * 60));
-
-  return date.toISOString();
-}
-
 export const generateDiverseDemoData = async (
   dataProvider: DataProvider,
   onProgress: ProgressCallback,
+  options: DemoDataOptions = {},
 ) => {
-  const { advance, emit } = createWeightedProgress(onProgress);
+  const now = options.now ?? new Date();
+  const seed = options.seed ?? Date.now() ^ Math.floor(Math.random() * 1e9);
+  const plans = buildDemoPlan(now, seed);
 
-  // Weight budget (basis points, total 10_000): clear + ledger rows + 3× populate
-  const BP_CLEAR = 1_200;
-  const BP_LEDGER_ROW = 100;
-  const LEDGER_COUNT = 3;
-  const BP_AFTER_CLEAR = 10_000 - BP_CLEAR - LEDGER_COUNT * BP_LEDGER_ROW;
-  const BP_PER_LEDGER_POPULATE = Math.floor(BP_AFTER_CLEAR / LEDGER_COUNT);
-
-  // 1. Clear ALL Data
-  advance(0, "Clearing existing data...");
-  await dataProvider.clearAllData();
-  advance(BP_CLEAR, "Existing data cleared");
-
-  // 2. Create Ledgers
-  const ledgersToCreate = [
-    {
-      name: "Home Budget",
-      currency: "EUR",
-      icon: "home",
-      short_name: "Home",
-      accounts: ["Joint Checking", "Savings", "Credit Card"],
-      currencies: ["EUR", "GBP", "USD"],
-      scheduledTransactions: HOME_SCHEDULED_TRANSACTIONS,
-      budgetCount: 6,
-    },
-    {
-      name: "Child Budget",
-      currency: "EUR",
-      icon: "baby",
-      short_name: "Child",
-      accounts: ["Allowance", "Pocket Money", "Junior Isa"],
-      currencies: ["EUR", "EUR", "EUR"],
-      scheduledTransactions: CHILD_SCHEDULED_TRANSACTIONS,
-      budgetCount: 4,
-    },
-    {
-      name: "Offshore",
-      currency: "EUR",
-      icon: "globe",
-      short_name: "Off",
-      accounts: ["Offshore Savings", "Foreign Checking"],
-      currencies: ["INR", "EUR"],
-      scheduledTransactions: OFFSHORE_SCHEDULED_TRANSACTIONS,
-      budgetCount: 5,
-    },
-  ];
-
-  const createdLedgers = [];
-
-  for (const l of ledgersToCreate) {
-    const newLedger = await dataProvider.addLedger({
-      name: l.name,
-      currency: l.currency,
-      icon: l.icon,
-      short_name: l.short_name,
+  // Progress is counted in saved records, so the bar moves with real work.
+  const totalWork =
+    1 +
+    plans.reduce(
+      (sum, plan) =>
+        sum +
+        1 +
+        plan.accounts.length +
+        Object.keys(plan.categories).length +
+        plan.scheduled.length +
+        plan.budgets.length +
+        Math.ceil(plan.transactions.length / TRANSACTION_INSERT_BATCH_SIZE),
+      0,
+    );
+  let done = 0;
+  const step = (stage: string, units = 1) => {
+    done += units;
+    onProgress({
+      stage,
+      progress: Math.min(99, Math.floor((done / totalWork) * 99)),
+      totalStages: 100,
     });
-    createdLedgers.push({ ...newLedger, config: l });
-    advance(BP_LEDGER_ROW, `Created ledger: ${l.name}`);
-  }
+  };
 
-  // 3. Populate Data per Ledger
-  const categoryEntries = Object.entries(CATEGORIES_CONFIG);
-  let categoryEnsureSteps = 0;
-  for (const [, subs] of categoryEntries) {
-    categoryEnsureSteps += 1 + subs.length;
-  }
+  onProgress({
+    stage: "Clearing existing data...",
+    progress: 0,
+    totalStages: 100,
+  });
+  await dataProvider.clearAllData();
+  step("Existing data cleared");
 
-  for (const ledgerItem of createdLedgers) {
-    const ledger = ledgerItem as Ledger & {
-      config: (typeof ledgersToCreate)[0];
-    };
-    const lId = ledger.id;
-    const config = ledger.config;
-
-    const nAcc = Math.max(1, config.accounts.length);
-    const scheduledTransactions = config.scheduledTransactions || [];
-    let schedProgressSteps = 0;
-    for (const s of scheduledTransactions) {
-      if (!s.isTransfer) schedProgressSteps += 1;
-      schedProgressSteps += 1;
-      if (s.isTransfer) schedProgressSteps += 2;
-    }
-    schedProgressSteps = Math.max(1, schedProgressSteps);
-
-    const numTransactions = 1500;
-
-    const wAccounts = Math.floor(BP_PER_LEDGER_POPULATE * 0.08);
-    const wCategories = Math.floor(BP_PER_LEDGER_POPULATE * 0.28);
-    const wBudgets = Math.max(1, Math.floor(BP_PER_LEDGER_POPULATE * 0.06));
-    const wScheduled = Math.max(1, Math.floor(BP_PER_LEDGER_POPULATE * 0.1));
-    const wTxGen = Math.max(1, Math.floor(BP_PER_LEDGER_POPULATE * 0.02));
-    const wVendors = Math.floor(BP_PER_LEDGER_POPULATE * 0.16);
-    const wInsert = Math.max(
-      1,
-      BP_PER_LEDGER_POPULATE -
-        wAccounts -
-        wCategories -
-        wBudgets -
-        wScheduled -
-        wTxGen -
-        wVendors,
-    );
-
-    const bpPerSchedOp = Math.max(
-      1,
-      Math.floor(wScheduled / schedProgressSteps),
-    );
-
-    emit(`Populating ${config.name} — accounts…`);
-
-    // --- Create Accounts ---
-    const accountMap = new Map<string, string>(); // Name -> Currency
-    const createdAccountNames: string[] = [];
-
-    // Pre-create accounts as they are needed for transactions
-    let accountBpApplied = 0;
-    for (let i = 0; i < config.accounts.length; i++) {
-      const accName = config.accounts[i];
-      const accCurr = config.currencies[i];
-
-      await dataProvider.ensurePayeeExists(accName, true, lId, {
-        currency: accCurr,
-        startingBalance: Math.floor(Math.random() * 20000) + 5000, // Boost starting balance significantly
-        type: accName.includes("Isa")
-          ? "Investment"
-          : accName.includes("Card")
-            ? "Credit Card"
-            : accName.includes("Savings")
-              ? "Savings"
-              : "Checking",
-      });
-      accountMap.set(accName, accCurr);
-      createdAccountNames.push(accName);
-      const targetApplied = Math.floor((wAccounts * (i + 1)) / nAcc);
-      const delta = targetApplied - accountBpApplied;
-      if (delta > 0) {
-        advance(delta, `${config.name}: account ${accName}`);
-        accountBpApplied += delta;
-      }
-    }
-    const accountBpRemainder = wAccounts - accountBpApplied;
-    if (accountBpRemainder > 0) {
-      advance(accountBpRemainder, `${config.name}: accounts`);
-    }
-
-    // --- Create Categories ---
-    const categoryMap = new Map<string, string>(); // Name -> ID
-    const subCategoryMap = new Map<string, string[]>(); // Category -> SubCategories[]
-
-    // Pre-create categories
-    let categoryBpApplied = 0;
-    let catStepIdx = 0;
-    for (const [cat, subs] of categoryEntries) {
-      const id = await dataProvider.ensureCategoryExists(cat, lId);
-      catStepIdx += 1;
-      {
-        const targetApplied = Math.floor(
-          (wCategories * catStepIdx) / categoryEnsureSteps,
-        );
-        const delta = targetApplied - categoryBpApplied;
-        if (delta > 0) {
-          advance(delta, `${config.name}: category ${cat}`);
-          categoryBpApplied += delta;
-        }
-      }
-      if (id) {
-        categoryMap.set(cat, id);
-        subCategoryMap.set(cat, subs);
-        // Create sub-categories
-        for (const sub of subs) {
-          await dataProvider.ensureSubCategoryExists(sub, id, lId);
-          catStepIdx += 1;
-          const targetApplied = Math.floor(
-            (wCategories * catStepIdx) / categoryEnsureSteps,
-          );
-          const delta = targetApplied - categoryBpApplied;
-          if (delta > 0) {
-            advance(delta, `${config.name}: sub-category ${sub}`);
-            categoryBpApplied += delta;
-          }
-        }
-      }
-    }
-    const categoryBpRemainder = wCategories - categoryBpApplied;
-    if (categoryBpRemainder > 0) {
-      advance(categoryBpRemainder, `${config.name}: categories`);
-    }
-
-    // --- Create Budgets ---
-    const shuffledBudgets = [...DEMO_BUDGETS].sort(() => 0.5 - Math.random());
-    const selectedBudgets = shuffledBudgets.slice(0, config.budgetCount);
-    const nBudgetSlots = Math.max(1, selectedBudgets.length);
-    let budgetBpApplied = 0;
-
-    for (let bi = 0; bi < selectedBudgets.length; bi++) {
-      const budget = selectedBudgets[bi];
-      const scope = budget.budget_scope || "category";
-
-      // Resolve __ACCOUNT_N__ placeholders to real account names
-      let resolvedScopeName = budget.budget_scope_name || "";
-      let resolvedGoalContext = budget.goal_context || "";
-      const placeholderMatch = resolvedScopeName.match(/^__ACCOUNT_(\d+)__$/);
-      if (placeholderMatch) {
-        const idx = parseInt(placeholderMatch[1], 10);
-        resolvedScopeName =
-          createdAccountNames[idx % createdAccountNames.length] ||
-          createdAccountNames[0];
-      }
-      const goalPlaceholderMatch =
-        resolvedGoalContext.match(/^__ACCOUNT_(\d+)__$/);
-      if (goalPlaceholderMatch) {
-        const idx = parseInt(goalPlaceholderMatch[1], 10);
-        resolvedGoalContext =
-          createdAccountNames[idx % createdAccountNames.length] ||
-          createdAccountNames[0];
-      }
-
-      // For category-scoped budgets, resolve category ID
-      let catId = "";
-      if (scope === "category") {
-        catId = categoryMap.get(budget.category || "") || "";
-        if (!catId) continue; // Skip if category doesn't exist
-      }
-
-      // Target date for goals: 6 months from now
-      const targetDate = budget.is_goal
-        ? new Date(
-            new Date().getFullYear(),
-            new Date().getMonth() + 6,
-            1,
-          ).toISOString()
-        : null;
-
-      await dataProvider.addBudget({
-        user_id: lId,
-        category_id: catId,
-        category_name:
-          scope === "category" ? budget.category || "" : resolvedScopeName,
-        target_amount: budget.amount,
-        currency: config.currency,
-        start_date: new Date(new Date().getFullYear(), 0, 1).toISOString(),
-        end_date: null,
-        frequency: budget.frequency as Budget["frequency"],
-        sub_category_name: budget.sub,
-        budget_scope: scope,
-        budget_scope_name: scope !== "category" ? resolvedScopeName : undefined,
-        is_goal: budget.is_goal || false,
-        target_date: targetDate,
-        goal_context: budget.is_goal ? resolvedGoalContext : undefined,
-      });
-      const targetApplied = Math.floor((wBudgets * (bi + 1)) / nBudgetSlots);
-      const delta = targetApplied - budgetBpApplied;
-      if (delta > 0) {
-        advance(delta, `${config.name}: budgets`);
-        budgetBpApplied += delta;
-      }
-    }
-    const budgetBpRemainder = wBudgets - budgetBpApplied;
-    if (budgetBpRemainder > 0) {
-      advance(budgetBpRemainder, `${config.name}: budgets`);
-    }
-
-    // --- Create Scheduled Transactions ---
-    for (const sched of scheduledTransactions) {
-      let accountName = createdAccountNames.find((n) => {
-        const lowerN = n.toLowerCase();
-        if (sched.accountType === "Checking")
-          return (
-            lowerN.includes("checking") ||
-            lowerN.includes("allowance") ||
-            lowerN.includes("foreign")
-          );
-        if (sched.accountType === "Credit Card") return lowerN.includes("card");
-        if (sched.accountType === "Savings")
-          return (
-            lowerN.includes("savings") ||
-            lowerN.includes("isa") ||
-            lowerN.includes("pocket")
-          );
-        return false;
-      });
-      if (!accountName) accountName = createdAccountNames[0];
-
-      let vendorName = sched.vendor;
-      if (sched.isTransfer) {
-        const targetAcc = createdAccountNames.find(
-          (n) =>
-            n !== accountName &&
-            (n.includes("Savings") ||
-              n.includes("Checking") ||
-              n.includes("Pocket")),
-        );
-        if (targetAcc) vendorName = targetAcc;
-        else
-          vendorName =
-            createdAccountNames.find((n) => n !== accountName) ||
-            "Unknown Account";
-      } else if (sched.category === "Income") {
-        vendorName = sched.vendor;
-      }
-
-      const schedDate = new Date();
-      schedDate.setDate(schedDate.getDate() + (sched.next_date_offset || 1));
-
-      if (!sched.isTransfer) {
-        await dataProvider.ensurePayeeExists(vendorName, false, lId);
-        advance(bpPerSchedOp, `${config.name}: scheduled payees`);
-      }
-
-      await dataProvider.addScheduledTransaction({
-        user_id: lId,
-        account: accountName,
-        vendor: vendorName,
-        category: sched.category,
-        sub_category: sched.sub_category || null,
-        amount: sched.amount,
-        currency: accountMap.get(accountName) || "USD",
-        date: schedDate.toISOString(),
-        frequency: sched.frequency,
-        remarks: sched.remarks,
-      });
-      advance(bpPerSchedOp, `${config.name}: scheduled transactions`);
-
-      if (sched.isTransfer) {
-        await dataProvider.ensureCategoryExists("Transfer", lId);
-        advance(bpPerSchedOp, `${config.name}: scheduled transfer (link)`);
-        await dataProvider.addScheduledTransaction({
-          user_id: lId,
-          account: vendorName,
-          vendor: accountName,
-          category: "Transfer",
-          sub_category: null,
-          amount: -sched.amount,
-          currency: accountMap.get(vendorName) || "USD",
-          date: schedDate.toISOString(),
-          frequency: sched.frequency,
-          remarks: sched.remarks,
-        });
-        advance(bpPerSchedOp, `${config.name}: scheduled transfer (mirror)`);
-      }
-    }
-
-    // --- GENERATE BULK TRANSACTIONS ---
-    const availableCategories = Object.keys(CATEGORIES_CONFIG).filter(
-      (c) => c !== "Transfer",
-    );
-    const transactionsBatch: Omit<Transaction, "id" | "created_at">[] = [];
-    const vendorsToEnsure = new Set<string>();
-
-    // Generate phase (in-memory) — fast; one progress bump so the bar does not lie about DB work
-    for (let i = 0; i < numTransactions; i++) {
-      const isTransfer = Math.random() < 0.08;
-      const date = getRandomDate(i);
-
-      // Boost Income Probability to ~20% (from ~8%) to ensure positive growth
-      const isIncomeOverride = Math.random() < 0.2;
-
-      if (isTransfer && createdAccountNames.length > 1 && !isIncomeOverride) {
-        const acc1 =
-          createdAccountNames[
-            Math.floor(Math.random() * createdAccountNames.length)
-          ];
-        let acc2 =
-          createdAccountNames[
-            Math.floor(Math.random() * createdAccountNames.length)
-          ];
-        while (acc2 === acc1) {
-          acc2 =
-            createdAccountNames[
-              Math.floor(Math.random() * createdAccountNames.length)
-            ];
-        }
-        const amount = Math.floor(Math.random() * 500) + 10;
-
-        // Transfer Pair
-        transactionsBatch.push({
-          user_id: lId,
-          date: date,
-          amount: -amount,
-          currency: accountMap.get(acc1) || config.currency,
-          account: acc1,
-          vendor: acc2,
-          category: "Transfer",
-          remarks: getRandomRemark("Transfer", -amount, true),
-        });
-        transactionsBatch.push({
-          user_id: lId,
-          date: date,
-          amount: amount,
-          currency: accountMap.get(acc2) || config.currency,
-          account: acc2,
-          vendor: acc1,
-          category: "Transfer",
-          remarks: getRandomRemark("Transfer", amount, true),
-        });
-        continue;
-      }
-
-      // Normal Tx
-      let cat;
-      if (isIncomeOverride) {
-        cat = "Income";
-      } else {
-        // Pick random non-income category
-        const expenses = availableCategories.filter((c) => c !== "Income");
-        cat = expenses[Math.floor(Math.random() * expenses.length)];
-      }
-
-      const subs = subCategoryMap.get(cat) || [];
-      const sub =
-        subs.length > 0 ? subs[Math.floor(Math.random() * subs.length)] : null;
-      const vendor = getRandomVendor(cat, sub || "");
-      const account =
-        createdAccountNames[
-          Math.floor(Math.random() * createdAccountNames.length)
-        ];
-      const currency = accountMap.get(account) || config.currency;
-
-      let amount: number;
-      if (cat === "Income") {
-        // Boost income amount slightly
-        amount = Math.floor(Math.random() * 4000) + 1500;
-      } else {
-        amount = -Math.floor(Math.random() * 200) - 5;
-        if (cat === "Housing") amount = -Math.floor(Math.random() * 1000) - 500;
-        if (cat === "Groceries") amount = -Math.floor(Math.random() * 150) - 10;
-      }
-
-      vendorsToEnsure.add(vendor);
-
-      transactionsBatch.push({
-        user_id: lId,
-        date: date,
-        amount: amount,
-        currency: currency,
-        account: account,
-        vendor: vendor,
-        category: cat,
-        sub_category: sub,
-        remarks: getRandomRemark(cat, amount, false),
-      });
-    }
-    advance(wTxGen, `${config.name}: transactions prepared (in memory)`);
-
-    // Bulk Ensure Entities (Vendors)
-    // Note: ensurePayeeExists is singular, so we loop.
-    const vendorList = [...vendorsToEnsure];
-    let vendorBpApplied = 0;
-    for (let vi = 0; vi < vendorList.length; vi++) {
-      await dataProvider.ensurePayeeExists(vendorList[vi], false, lId);
-      const targetApplied = Math.floor(
-        (wVendors * (vi + 1)) / vendorList.length,
-      );
-      const delta = targetApplied - vendorBpApplied;
-      if (delta > 0) {
-        advance(
-          delta,
-          `${config.name}: vendors (${vi + 1}/${vendorList.length})`,
-        );
-        vendorBpApplied += delta;
-      }
-    }
-    const vendorBpRemainder = wVendors - vendorBpApplied;
-    if (vendorBpRemainder > 0) {
-      advance(vendorBpRemainder, `${config.name}: vendors`);
-    }
-
-    const txTotal = transactionsBatch.length;
-    let insertBpApplied = 0;
-    for (let off = 0; off < txTotal; off += TRANSACTION_INSERT_BATCH_SIZE) {
-      const slice = transactionsBatch.slice(
-        off,
-        off + TRANSACTION_INSERT_BATCH_SIZE,
-      );
-      await dataProvider.addMultipleTransactions(slice);
-      const doneCount = Math.min(off + slice.length, txTotal);
-      const targetApplied = Math.floor((wInsert * doneCount) / txTotal);
-      const delta = targetApplied - insertBpApplied;
-      if (delta > 0) {
-        advance(
-          delta,
-          `${config.name}: saving transactions (${doneCount}/${txTotal})`,
-        );
-        insertBpApplied += delta;
-      }
-    }
-    const insertBpRemainder = wInsert - insertBpApplied;
-    if (insertBpRemainder > 0) {
-      advance(insertBpRemainder, `${config.name}: transactions saved`);
-    }
+  for (const plan of plans) {
+    await saveLedger(dataProvider, plan, step);
   }
 
   onProgress({
@@ -1202,3 +77,102 @@ export const generateDiverseDemoData = async (
     totalStages: 100,
   });
 };
+
+async function saveLedger(
+  dataProvider: DataProvider,
+  plan: DemoLedgerPlan,
+  step: (stage: string, units?: number) => void,
+) {
+  const name = plan.ledger.name;
+  const ledger = await dataProvider.addLedger({ ...plan.ledger });
+  const ledgerId = ledger.id;
+  step(`Created ledger: ${name}`);
+
+  for (const account of plan.accounts) {
+    await dataProvider.ensurePayeeExists(account.name, true, ledgerId, {
+      currency: account.currency,
+      startingBalance: account.startingBalance,
+      type: account.type,
+      creditLimit: account.creditLimit,
+      remarks: account.remarks,
+    });
+    step(`${name}: account ${account.name}`);
+  }
+
+  const categoryIds = new Map<string, string>();
+  for (const [category, subCategories] of Object.entries(plan.categories)) {
+    const categoryId = await dataProvider.ensureCategoryExists(
+      category,
+      ledgerId,
+    );
+    if (categoryId) {
+      categoryIds.set(category, categoryId);
+      for (const sub of subCategories) {
+        await dataProvider.ensureSubCategoryExists(sub, categoryId, ledgerId);
+      }
+    }
+    step(`${name}: category ${category}`);
+  }
+
+  // Vendors are created from the names the transactions actually use, plus a
+  // few with no activity so "Cleanup Unused" has something to find.
+  const accountNames = new Set(plan.accounts.map((a) => a.name));
+  const vendorNames = new Set<string>(plan.unusedVendors);
+  for (const t of plan.transactions) vendorNames.add(t.vendor);
+  for (const s of plan.scheduled) vendorNames.add(s.vendor);
+  for (const vendor of vendorNames) {
+    if (!accountNames.has(vendor)) {
+      await dataProvider.ensurePayeeExists(vendor, false, ledgerId);
+    }
+  }
+
+  // Schedules first, so transactions they produced can point back at them.
+  const scheduleIds = new Map<string, string>();
+  for (const { key, ...schedule } of plan.scheduled) {
+    const created = await dataProvider.addScheduledTransaction({
+      ...schedule,
+      user_id: ledgerId,
+    } as Omit<ScheduledTransaction, "id" | "created_at">);
+    if (created?.id) scheduleIds.set(key, created.id);
+    step(`${name}: scheduled ${schedule.remarks ?? schedule.vendor}`);
+  }
+
+  for (
+    let offset = 0;
+    offset < plan.transactions.length;
+    offset += TRANSACTION_INSERT_BATCH_SIZE
+  ) {
+    const batch = plan.transactions
+      .slice(offset, offset + TRANSACTION_INSERT_BATCH_SIZE)
+      .map(({ scheduleKey, ...t }) => ({
+        ...t,
+        user_id: ledgerId,
+        recurrence_id: scheduleKey
+          ? (scheduleIds.get(scheduleKey) ?? null)
+          : null,
+      }));
+    await dataProvider.addMultipleTransactions(
+      batch as Omit<Transaction, "id" | "created_at">[],
+    );
+    step(
+      `${name}: saving transactions (${Math.min(
+        offset + TRANSACTION_INSERT_BATCH_SIZE,
+        plan.transactions.length,
+      )}/${plan.transactions.length})`,
+    );
+  }
+
+  for (const budget of plan.budgets) {
+    // Non-category scopes keep the entity name as the display name and carry no
+    // category id, exactly as the Budgets dialog stores them.
+    const scope = budget.budget_scope ?? "category";
+    const categoryId =
+      scope === "category" ? (categoryIds.get(budget.category_name) ?? "") : "";
+    await dataProvider.addBudget({
+      ...budget,
+      user_id: ledgerId,
+      category_id: categoryId,
+    } as Omit<Budget, "id" | "spent_amount">);
+    step(`${name}: budget ${budget.category_name}`);
+  }
+}

@@ -66,6 +66,16 @@ export function calculateBudgetSpent(
   ) {
     allowedAccountTypes = new Set(budget.account_scope_values);
 
+    // The UI passes accounts as "payees": the vendor row merged with the
+    // account details, so their `id` is the vendor's. They carry the name and
+    // type directly, which is the most reliable way to resolve a type.
+    accounts.forEach((a) => {
+      const name = (a as { name?: string }).name;
+      if (name && a.type) {
+        accountTypeMap.set(name.trim().toLowerCase(), a.type);
+      }
+    });
+
     // Build map - MORE ROBUST: Include any vendor with an account_id, ignoring is_account flag if needed
     vendors.forEach((v) => {
       if (v.account_id && v.name) {

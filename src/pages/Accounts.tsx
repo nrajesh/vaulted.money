@@ -96,6 +96,7 @@ const AccountsPage = () => {
           AccountBalanceReconciliationDialog
         }
         TableComponent={GroupedEntityTable}
+        groupBy="type"
         disablePagination={true}
       />
     </div>

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { hasScheduleEnded } from "@/utils/scheduleUtils";
 import {
   findDuplicateRecurringInstances,
   findTransferPairs,
@@ -1421,6 +1422,9 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const nextDate = new Date(st.date);
       nextDate.setHours(0, 0, 0, 0);
+
+      // A schedule past its end date creates nothing more.
+      if (hasScheduleEnded(st.end_date, nextDate)) continue;
 
       // FAST-FORWARD LOGIC:
       // If the scheduled date is strictly in the past (before today), we skip execution
