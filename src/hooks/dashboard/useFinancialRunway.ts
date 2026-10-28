@@ -2,6 +2,11 @@ import { useMemo } from "react";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { startOfMonth, subMonths, isAfter, isBefore } from "date-fns";
+import {
+  isDiscretionary,
+  isScheduleActive,
+  monthlyOccurrences,
+} from "@/utils/runway";
 
 export const useFinancialRunway = () => {
   const { transactions, accounts, scheduledTransactions } = useTransactions();
@@ -34,24 +39,19 @@ export const useFinancialRunway = () => {
     let income = 0;
     let expenses = 0;
 
+    const today = new Date();
     scheduledTransactions.forEach((t) => {
+      if (!isScheduleActive(t.end_date, today)) return;
+      // A recurring transfer only moves money between the user's accounts.
+      if (!isDiscretionary(t)) return;
+
       const amount = convertBetweenCurrencies(
         t.amount,
         t.currency || "USD",
         selectedCurrency || "USD",
       );
 
-      // Normalize to Monthly
-      let monthlyMultiplier = 1;
-      const freq = t.frequency?.toLowerCase() || "";
-
-      if (freq.includes("weekly"))
-        monthlyMultiplier = 4.33; // Average weeks in a month
-      else if (freq.includes("daily")) monthlyMultiplier = 30;
-      else if (freq.includes("yearly")) monthlyMultiplier = 1 / 12;
-      else if (freq.includes("quarterly")) monthlyMultiplier = 1 / 3;
-
-      const monthlyAmount = amount * monthlyMultiplier;
+      const monthlyAmount = amount * monthlyOccurrences(t.frequency);
 
       if (monthlyAmount > 0) income += monthlyAmount;
       else expenses += Math.abs(monthlyAmount);
@@ -83,7 +83,9 @@ export const useFinancialRunway = () => {
       return (
         isAfter(tDate, startOfPeriod) &&
         isBefore(tDate, endOfPeriod) &&
-        !t.is_scheduled_origin // key: exclude things that were scheduled
+        // Excludes scheduled instances (already counted as fixed costs) and
+        // transfers between the user's own accounts.
+        isDiscretionary(t)
       );
     });
 

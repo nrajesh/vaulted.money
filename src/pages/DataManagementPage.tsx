@@ -31,8 +31,10 @@ import { useTransactions } from "@/contexts/TransactionsContext";
 import { useTransactionFilters } from "@/hooks/transactions/useTransactionFilters";
 import { useLedger } from "@/contexts/LedgerContext";
 import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
+import { useTranslation } from "react-i18next";
 
 const DataManagementPage = () => {
+  const { t } = useTranslation();
   const dataProvider = useDataProvider();
   const navigate = useNavigate();
   const { generateDiverseDemoData, clearAllTransactions } = useTransactions();
@@ -56,7 +58,9 @@ const DataManagementPage = () => {
   const handleExportPlain = async () => {
     try {
       const filename = `budget_backup_${new Date().toISOString().split("T")[0]}.json`;
-      const description = "Vaulted Money Full Backup (All Ledgers)";
+      const description = t("dataManagement.export.description", {
+        defaultValue: "Vaulted Money Full Backup (All Ledgers)",
+      });
 
       const data = await generateBackupData(dataProvider);
       const jsonString = JSON.stringify(data, null, 2);
@@ -64,14 +68,27 @@ const DataManagementPage = () => {
       const success = await saveFile(filename, jsonString, description);
 
       if (success) {
-        showSuccess("File saved successfully!");
+        showSuccess(
+          t("dataManagement.export.saved", {
+            defaultValue: "File saved successfully!",
+          }),
+        );
       } else {
-        showSuccess("Export file download started.");
+        showSuccess(
+          t("dataManagement.export.started", {
+            defaultValue: "Export file download started.",
+          }),
+        );
       }
     } catch (e: unknown) {
       const error = e as Error;
       if (error.message !== "Save cancelled by user") {
-        showError(`Export failed: ${error.message}`);
+        showError(
+          t("dataManagement.export.failed", {
+            message: error.message,
+            defaultValue: "Export failed: {{message}}",
+          }),
+        );
       }
     }
   };
@@ -86,16 +103,27 @@ const DataManagementPage = () => {
       const success = await saveFile(
         filename,
         encrypted,
-        "Vaulted Money Full Backup (Encrypted)",
+        t("dataManagement.export.descriptionEncrypted", {
+          defaultValue: "Vaulted Money Full Backup (Encrypted)",
+        }),
       );
 
       if (success) {
-        showSuccess("Encrypted file saved successfully!");
+        showSuccess(
+          t("dataManagement.export.encryptedSaved", {
+            defaultValue: "Encrypted file saved successfully!",
+          }),
+        );
       }
     } catch (e: unknown) {
       const error = e as Error;
       if (error.message !== "Save cancelled by user") {
-        showError(`Encryption failed: ${error.message}`);
+        showError(
+          t("dataManagement.export.encryptionFailed", {
+            message: error.message,
+            defaultValue: "Encryption failed: {{message}}",
+          }),
+        );
       }
     }
   };
@@ -117,13 +145,22 @@ const DataManagementPage = () => {
       const result = await processImport(content, dataProvider);
 
       if (result.type === "success") {
-        showSuccess("Data imported successfully!");
+        showSuccess(
+          t("dataManagement.import.done", {
+            defaultValue: "Data imported successfully!",
+          }),
+        );
         window.location.reload();
       } else if (result.type === "encrypted") {
         setTempImportFile(result.content);
         setIsImportPasswordOpen(true);
       } else if (result.type === "error") {
-        showError(result.message || "Import failed");
+        showError(
+          result.message ||
+            t("dataManagement.import.failed", {
+              defaultValue: "Import failed",
+            }),
+        );
       }
     };
     reader.readAsText(file);
@@ -140,11 +177,18 @@ const DataManagementPage = () => {
     );
 
     if (result.type === "success") {
-      showSuccess("Encrypted data imported successfully!");
+      showSuccess(
+        t("dataManagement.import.encryptedDone", {
+          defaultValue: "Encrypted data imported successfully!",
+        }),
+      );
       setTempImportFile(null);
       window.location.reload();
     } else if (result.type === "error") {
-      showError(result.message || "Import failed");
+      showError(
+        result.message ||
+          t("dataManagement.import.failed", { defaultValue: "Import failed" }),
+      );
     }
   };
 
@@ -161,11 +205,20 @@ const DataManagementPage = () => {
       localStorage.removeItem("userLoggedOut");
       // filter_selectedAccounts is handled by handleClearAllFilters
 
-      showSuccess("All application data has been reset.");
+      showSuccess(
+        t("dataManagement.reset.done", {
+          defaultValue: "All application data has been reset.",
+        }),
+      );
 
       navigate("/ledgers");
     } catch (error: unknown) {
-      showError(`Reset failed: ${(error as Error).message}`);
+      showError(
+        t("dataManagement.reset.failed", {
+          message: (error as Error).message,
+          defaultValue: "Reset failed: {{message}}",
+        }),
+      );
     } finally {
       setIsResetConfirmOpen(false);
     }
@@ -186,9 +239,14 @@ const DataManagementPage = () => {
     <div className="page-container">
       <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
         <div>
-          <h1 className="app-gradient-title app-page-title">Data</h1>
+          <h1 className="app-gradient-title app-page-title">
+            {t("dataManagement.title", { defaultValue: "Data" })}
+          </h1>
           <p className="app-page-subtitle">
-            Export, import, and schedule backups for your data.
+            {t("dataManagement.subtitle", {
+              defaultValue:
+                "Export, import, and schedule backups for your data.",
+            })}
           </p>
         </div>
       </div>
@@ -196,22 +254,30 @@ const DataManagementPage = () => {
       <ThemedCard className="tour-data-export border-blue-200 bg-blue-50/50 dark:border-blue-900/50 dark:bg-blue-950/20">
         <ThemedCardHeader>
           <ThemedCardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-            Manual Backup & Restore
+            {t("dataManagement.manual.title", {
+              defaultValue: "Manual Backup & Restore",
+            })}
           </ThemedCardTitle>
           <ThemedCardDescription>
-            Export your data to a local file immediately, or restore from a
-            previous backup.
+            {t("dataManagement.manual.description", {
+              defaultValue:
+                "Export your data to a local file immediately, or restore from a previous backup.",
+            })}
           </ThemedCardDescription>
         </ThemedCardHeader>
         <ThemedCardContent className="space-y-4">
           <Alert className="bg-blue-100/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
             <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <AlertTitle className="text-blue-800 dark:text-blue-300">
-              Important
+              {t("dataManagement.manual.importantTitle", {
+                defaultValue: "Important",
+              })}
             </AlertTitle>
             <AlertDescription className="text-blue-700 dark:text-blue-300">
-              Since this is a local-first app, if you clear your browser data,
-              you will lose your records. Please export regular backups.
+              {t("dataManagement.manual.importantBody", {
+                defaultValue:
+                  "Since this is a local-first app, if you clear your browser data, you will lose your records. Please export regular backups.",
+              })}
             </AlertDescription>
           </Alert>
 
@@ -219,14 +285,18 @@ const DataManagementPage = () => {
             <div className="flex flex-wrap gap-2">
               <Button onClick={handleExportPlain} variant="outline">
                 <FileJson className="mr-2 h-4 w-4" />
-                Export JSON
+                {t("dataManagement.manual.exportJson", {
+                  defaultValue: "Export JSON",
+                })}
               </Button>
               <Button
                 onClick={() => setIsExportPasswordOpen(true)}
                 variant="outline"
               >
                 <FileLock className="mr-2 h-4 w-4" />
-                Export Encrypted
+                {t("dataManagement.manual.exportEncrypted", {
+                  defaultValue: "Export Encrypted",
+                })}
               </Button>
             </div>
 
@@ -242,7 +312,9 @@ const DataManagementPage = () => {
               />
               <Button onClick={handleImportClick} variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
-                Import JSON
+                {t("dataManagement.manual.importJson", {
+                  defaultValue: "Import JSON",
+                })}
               </Button>
             </div>
           </div>
@@ -256,10 +328,15 @@ const DataManagementPage = () => {
         <ThemedCard className="tour-data-reset border-red-200/50 dark:border-red-900/50 bg-red-50/20 dark:bg-red-950/10">
           <ThemedCardHeader>
             <ThemedCardTitle className="text-red-600 dark:text-red-400">
-              Reset All Data
+              {t("dataManagement.reset.title", {
+                defaultValue: "Reset All Data",
+              })}
             </ThemedCardTitle>
             <ThemedCardDescription>
-              Permanently delete all transaction, vendor, and account records.
+              {t("dataManagement.reset.description", {
+                defaultValue:
+                  "Permanently delete all transaction, vendor, and account records.",
+              })}
             </ThemedCardDescription>
           </ThemedCardHeader>
           <ThemedCardContent>
@@ -268,7 +345,9 @@ const DataManagementPage = () => {
               onClick={() => setIsResetConfirmOpen(true)}
             >
               <DatabaseZap className="mr-2 h-4 w-4" />
-              Reset All Data
+              {t("dataManagement.reset.title", {
+                defaultValue: "Reset All Data",
+              })}
             </Button>
           </ThemedCardContent>
         </ThemedCard>
@@ -277,11 +356,15 @@ const DataManagementPage = () => {
         <ThemedCard className="tour-data-demo border-indigo-200/50 dark:border-indigo-900/50 bg-indigo-50/20 dark:bg-indigo-950/10">
           <ThemedCardHeader>
             <ThemedCardTitle className="text-indigo-600 dark:text-indigo-400">
-              Generate Demo Data
+              {t("dataManagement.demo.title", {
+                defaultValue: "Generate Demo Data",
+              })}
             </ThemedCardTitle>
             <ThemedCardDescription>
-              Generate diverse demo transactions. This will clear existing data
-              first.
+              {t("dataManagement.demo.description", {
+                defaultValue:
+                  "Generate diverse demo transactions. This will clear existing data first.",
+              })}
             </ThemedCardDescription>
           </ThemedCardHeader>
           <ThemedCardContent>
@@ -290,7 +373,9 @@ const DataManagementPage = () => {
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
-              Generate Data
+              {t("dataManagement.demo.button", {
+                defaultValue: "Generate Data",
+              })}
             </Button>
           </ThemedCardContent>
         </ThemedCard>
@@ -301,35 +386,63 @@ const DataManagementPage = () => {
         isOpen={isResetConfirmOpen}
         onOpenChange={setIsResetConfirmOpen}
         onConfirm={handleResetData}
-        title="Are you sure you want to reset all data?"
-        description="This action cannot be undone. All your transaction, vendor, and account data for ALL ledgers will be permanently deleted."
-        confirmText="Reset Data"
+        title={t("dataManagement.reset.confirmTitle", {
+          defaultValue: "Are you sure you want to reset all data?",
+        })}
+        description={t("dataManagement.reset.confirmDescription", {
+          defaultValue:
+            "This action cannot be undone. All your transaction, vendor, and account data for ALL ledgers will be permanently deleted.",
+        })}
+        confirmText={t("dataManagement.reset.confirmButton", {
+          defaultValue: "Reset Data",
+        })}
       />
 
       <ConfirmationDialog
         isOpen={isGenerateConfirmOpen}
         onOpenChange={setIsGenerateConfirmOpen}
         onConfirm={handleGenerateDemoData}
-        title="Generate new demo data?"
-        description="This will clear all existing transactions and generate new diverse demo data. This action cannot be undone."
-        confirmText="Generate"
+        title={t("dataManagement.demo.confirmTitle", {
+          defaultValue: "Generate new demo data?",
+        })}
+        description={t("dataManagement.demo.confirmDescription", {
+          defaultValue:
+            "This will clear all existing transactions and generate new diverse demo data. This action cannot be undone.",
+        })}
+        confirmText={t("dataManagement.demo.confirmButton", {
+          defaultValue: "Generate",
+        })}
       />
       <PasswordDialog
         isOpen={isExportPasswordOpen}
         onOpenChange={setIsExportPasswordOpen}
         onConfirm={handleExportEncryptedParams}
-        title="Encrypt Backup"
-        description="Enter a password to encrypt your backup file. You will need this password to restore your data."
-        confirmText="Encrypt & Download"
+        title={t("dataManagement.encrypt.title", {
+          defaultValue: "Encrypt Backup",
+        })}
+        description={t("dataManagement.encrypt.description", {
+          defaultValue:
+            "Enter a password to encrypt your backup file. You will need this password to restore your data.",
+        })}
+        confirmText={t("dataManagement.encrypt.confirm", {
+          defaultValue: "Encrypt & Download",
+        })}
       />
 
       <PasswordDialog
         isOpen={isImportPasswordOpen}
         onOpenChange={setIsImportPasswordOpen}
         onConfirm={handleImportEncryptedParams}
-        title="Decrypt Backup"
-        description="This file is encrypted. Please enter the password to restore your data."
-        confirmText="Decrypt & Import"
+        title={t("dataManagement.decrypt.title", {
+          defaultValue: "Decrypt Backup",
+        })}
+        description={t("dataManagement.decrypt.description", {
+          defaultValue:
+            "This file is encrypted. Please enter the password to restore your data.",
+        })}
+        confirmText={t("dataManagement.decrypt.confirm", {
+          defaultValue: "Decrypt & Import",
+        })}
       />
     </div>
   );

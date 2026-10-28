@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Budget } from "../../types/budgets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +11,7 @@ interface BudgetSummaryProps {
 }
 
 export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-3">
@@ -78,7 +80,9 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
       <Card className="bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Avg. Monthly Budget
+            {t("budgets.summary.avgBudget", {
+              defaultValue: "Avg. Monthly Budget",
+            })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -86,14 +90,18 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
             {formatCurrency(totalTarget, currency)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Normalized across all budgets
+            {t("budgets.summary.avgBudgetHint", {
+              defaultValue: "Normalized across all budgets",
+            })}
           </p>
         </CardContent>
       </Card>
       <Card className="bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Avg. Monthly Spent
+            {t("budgets.summary.avgSpent", {
+              defaultValue: "Avg. Monthly Spent",
+            })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -101,14 +109,18 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
             {formatCurrency(totalSpent, currency)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Based on spending to date
+            {t("budgets.summary.avgSpentHint", {
+              defaultValue: "Based on spending to date",
+            })}
           </p>
         </CardContent>
       </Card>
       <Card className="bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Avg. Monthly Remaining
+            {t("budgets.summary.avgRemaining", {
+              defaultValue: "Avg. Monthly Remaining",
+            })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -116,7 +128,13 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
             {formatCurrency(remaining, currency)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {remaining >= 0 ? "Under monthly average" : "Over monthly average"}
+            {remaining >= 0
+              ? t("budgets.summary.under", {
+                  defaultValue: "Under monthly average",
+                })
+              : t("budgets.summary.over", {
+                  defaultValue: "Over monthly average",
+                })}
           </p>
         </CardContent>
       </Card>

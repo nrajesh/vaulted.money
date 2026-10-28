@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { Transaction } from "@/types/dataProvider";
 import {
   badRequest,
+  currencyCodeSchema,
+  dateParam,
   flag,
   isoDateSchema,
   json,
@@ -28,7 +30,7 @@ const txSchema = z.object({
   category: z.string().trim().min(1),
   sub_category: z.string().trim().nullish(),
   remarks: z.string().nullish(),
-  currency: z.string().trim().min(1).optional(),
+  currency: currencyCodeSchema.optional(),
 });
 const patchSchema = txSchema.partial();
 const bulkSchema = z.object({
@@ -75,10 +77,30 @@ async function createTransaction(
   });
 }
 
+/** Import artefacts carry a "split-" id and are not real linked transfers. */
+const isLinkedTransfer = (
+  t: Transaction,
+): t is Transaction & { transfer_id: string } =>
+  Boolean(t.transfer_id) && !t.transfer_id!.startsWith("split-");
+
+/** The other leg of a transfer, looked up inside the ledger only. */
+async function transferLegs(
+  services: RouteContext["services"],
+  ledgerId: string,
+  tx: Transaction,
+): Promise<Transaction[]> {
+  if (!isLinkedTransfer(tx)) return [];
+  return (
+    await services.dataProvider.getTransactionsByTransferId(tx.transfer_id)
+  ).filter((leg) => leg.user_id === ledgerId);
+}
+
 export function filterTransactions(
   all: Transaction[],
   q: Record<string, string>,
 ) {
+  const from = dateParam("from", q.from);
+  const to = dateParam("to", q.to);
   const min = numberParam("min_amount", q.min_amount);
   const max = numberParam("max_amount", q.max_amount);
   const search = q.search?.toLowerCase();
@@ -88,8 +110,8 @@ export function filterTransactions(
   }
   return all.filter((t) => {
     const day = dayOf(t.date);
-    if (q.from && day < q.from) return false;
-    if (q.to && day > q.to) return false;
+    if (from && day < from) return false;
+    if (to && day > to) return false;
     if (q.account && t.account !== q.account) return false;
     if (q.vendor && t.vendor !== q.vendor) return false;
     if (q.category && t.category !== q.category) return false;
@@ -208,6 +230,16 @@ export const transactionRoutes: RouteDef[] = [
         );
       }
 
+      if (
+        from.currency === to.currency &&
+        input.to_amount !== undefined &&
+        input.to_amount !== input.amount
+      ) {
+        throw badRequest(
+          '"to_amount" only applies when the accounts use different currencies',
+        );
+      }
+
       const dp = ctx.services.dataProvider;
       const common = {
         user_id: ctx.params.ledgerId,
@@ -273,7 +305,8 @@ export const transactionRoutes: RouteDef[] = [
   {
     method: "PATCH",
     path: "/ledgers/:ledgerId/transactions/:transactionId",
-    summary: "Update a transaction",
+    summary:
+      "Update a transaction (editing one leg of a transfer updates the other, like the app)",
     body: patchSchema,
     handler: async ({ params, body, services }) => {
       await requireLedger(services, params.ledgerId);
@@ -305,21 +338,54 @@ export const transactionRoutes: RouteDef[] = [
         ),
       };
       await dp.updateTransaction(updated);
+
+      // Same rules as editing a transfer in the app: the other leg follows the
+      // shared fields and swaps account and vendor. Its amount mirrors this one
+      // only when both legs use the same currency; across currencies the two
+      // amounts are independent and the other leg keeps its own.
+      const otherLeg = (
+        await transferLegs(services, params.ledgerId, existing)
+      ).find((leg) => leg.id !== existing.id);
+      if (otherLeg) {
+        await dp.updateTransaction({
+          ...otherLeg,
+          date: updated.date,
+          category: updated.category,
+          sub_category: updated.sub_category,
+          remarks: updated.remarks,
+          account: updated.vendor,
+          vendor: updated.account,
+          amount:
+            otherLeg.currency === updated.currency
+              ? -updated.amount
+              : otherLeg.amount,
+        });
+      }
       return json(updated);
     },
   },
   {
     method: "DELETE",
     path: "/ledgers/:ledgerId/transactions/:transactionId",
-    summary: "Delete a transaction",
+    summary:
+      "Delete a transaction (deleting one leg of a transfer deletes both, like the app)",
     handler: async ({ params, services }) => {
       await requireLedger(services, params.ledgerId);
-      await getTransactionInLedger(
+      const existing = await getTransactionInLedger(
         services,
         params.ledgerId,
         params.transactionId,
       );
-      await services.dataProvider.deleteTransaction(params.transactionId);
+      // Deleting one leg of a transfer deletes both, as the app does; a lone
+      // leg would leave the account balances out of step.
+      const legs = await transferLegs(services, params.ledgerId, existing);
+      if (legs.length > 1) {
+        await services.dataProvider.deleteMultipleTransactions(
+          legs.map((leg) => leg.id),
+        );
+      } else {
+        await services.dataProvider.deleteTransaction(params.transactionId);
+      }
       return noContent();
     },
   },

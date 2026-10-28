@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -83,6 +84,8 @@ interface EntityManagementPageProps<T extends { id: string; name: string }> {
     onClose: () => void;
   }>;
   groupBy?: keyof T;
+  /** Display text for a group heading; defaults to the raw value. */
+  groupLabel?: (value: string) => string;
 }
 
 const EntityManagementPage = <T extends { id: string; name: string }>({
@@ -130,6 +133,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
   CleanupDialogComponent,
   BalanceReconciliationDialogComponent,
   groupBy,
+  groupLabel,
   disablePagination = false,
   TableComponent = EntityTable,
 }: EntityManagementPageProps<T> & {
@@ -146,8 +150,10 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
     isEditing: (id: string) => boolean;
     isUpdating: boolean;
     groupBy?: keyof T;
+    groupLabel?: (value: string) => string;
   }>;
 }) => {
+  const { t } = useTranslation();
   const [isDeduplicateOpen, setIsDeduplicateOpen] = React.useState(false);
   const [isCleanupOpen, setIsCleanupOpen] = React.useState(false);
   const [isBalanceReconcileOpen, setIsBalanceReconcileOpen] =
@@ -186,8 +192,14 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
         isLoading={isLoading || isImporting || isLoadingMutation}
         message={
           isImporting
-            ? `Importing ${entityNamePlural}...`
-            : `Loading ${entityNamePlural}...`
+            ? t("management.status.importing", {
+                name: entityNamePlural,
+                defaultValue: "Importing {{name}}...",
+              })
+            : t("management.status.loading", {
+                name: entityNamePlural,
+                defaultValue: "Loading {{name}}...",
+              })
         }
       />
       <div className="app-page-header flex flex-col items-start gap-4">
@@ -202,12 +214,16 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                 variant="outline"
                 onClick={() => setIsBalanceReconcileOpen(true)}
               >
-                Reconcile Balance
+                {t("management.actions.reconcile", {
+                  defaultValue: "Reconcile Balance",
+                })}
               </Button>
             )}
             {CleanupDialogComponent && (
               <Button variant="outline" onClick={() => setIsCleanupOpen(true)}>
-                Cleanup Unused
+                {t("management.actions.cleanup", {
+                  defaultValue: "Cleanup Unused",
+                })}
               </Button>
             )}
             {DeduplicationDialogComponent && (
@@ -215,7 +231,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                 variant="outline"
                 onClick={() => setIsDeduplicateOpen(true)}
               >
-                De-duplicate
+                {t("management.actions.dedupe", {
+                  defaultValue: "De-duplicate",
+                })}
               </Button>
             )}
             {extraActions}
@@ -229,17 +247,25 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
               ) : (
                 <Upload className="mr-2 h-4 w-4" />
               )}
-              Import CSV
+              {t("management.actions.importCsv", {
+                defaultValue: "Import CSV",
+              })}
             </Button>
             <Button onClick={() => handleExportClick(data)} variant="outline">
               <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              {t("management.actions.exportCsv", {
+                defaultValue: "Export CSV",
+              })}
             </Button>
             <Button
               onClick={handleAddClick}
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
-              <PlusCircle className="mr-2 h-4 w-4" /> Add {entityName}
+              <PlusCircle className="mr-2 h-4 w-4" />{" "}
+              {t("management.actions.add", {
+                name: entityName,
+                defaultValue: "Add {{name}}",
+              })}
             </Button>
             <Button
               variant="outline"
@@ -252,7 +278,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
               ) : (
                 <RotateCcw className="h-4 w-4" />
               )}
-              <span className="sr-only">Refresh</span>
+              <span className="sr-only">
+                {t("management.actions.refresh", { defaultValue: "Refresh" })}
+              </span>
             </Button>
           </div>
         </div>
@@ -268,8 +296,13 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
         <Input
           placeholder={
             customFilter
-              ? "Search by name, currency, e.g. 'negative', '> 1000'..."
-              : "Search by name..."
+              ? t("management.search.accounts", {
+                  defaultValue:
+                    "Search by name, currency, e.g. 'negative', '> 1000'...",
+                })
+              : t("management.search.default", {
+                  defaultValue: "Search by name...",
+                })
           }
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -279,7 +312,10 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
       <Card className="app-table-shell">
         <CardHeader>
           <CardTitle className="text-slate-900 dark:text-slate-100">
-            Manage Your {title}
+            {t("management.manageYour", {
+              name: title,
+              defaultValue: "Manage Your {{name}}",
+            })}
           </CardTitle>
         </CardHeader>
         <CardContent className="tour-entity-table space-y-4">
@@ -293,7 +329,10 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
             <div className="flex min-h-12 flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="px-1 text-sm font-medium">
-                  {numSelected} selected
+                  {t("management.status.selected", {
+                    count: numSelected,
+                    defaultValue: "{{count}} selected",
+                  })}
                 </span>
                 <div className="h-4 w-px bg-border" />
                 <Button
@@ -302,11 +341,19 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                   onClick={clearSelection}
                   disabled={numSelected === 0}
                   className="h-10 w-10 p-0 disabled:pointer-events-none disabled:opacity-45 sm:h-9 sm:w-auto sm:px-3"
-                  title="Clear selection"
+                  title={t("management.actions.clearSelection", {
+                    defaultValue: "Clear selection",
+                  })}
                 >
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Clear selection</span>
-                  <span className="hidden sm:inline sm:ml-1">Clear</span>
+                  <span className="sr-only">
+                    {t("management.actions.clearSelection", {
+                      defaultValue: "Clear selection",
+                    })}
+                  </span>
+                  <span className="hidden sm:inline sm:ml-1">
+                    {t("management.actions.clear", { defaultValue: "Clear" })}
+                  </span>
                 </Button>
               </div>
               <Button
@@ -315,15 +362,23 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                 onClick={handleBulkDeleteClick}
                 disabled={numSelected === 0 || isLoadingMutation}
                 className="h-10 w-10 p-0 disabled:pointer-events-none disabled:border disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 sm:h-9 sm:w-auto sm:px-3"
-                title="Delete selected"
+                title={t("management.actions.deleteSelected", {
+                  defaultValue: "Delete selected",
+                })}
               >
                 {isLoadingMutation ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Trash2 className="h-4 w-4" />
                 )}
-                <span className="sr-only">Delete selected</span>
-                <span className="hidden sm:inline sm:ml-1">Delete</span>
+                <span className="sr-only">
+                  {t("management.actions.deleteSelected", {
+                    defaultValue: "Delete selected",
+                  })}
+                </span>
+                <span className="hidden sm:inline sm:ml-1">
+                  {t("management.actions.delete", { defaultValue: "Delete" })}
+                </span>
               </Button>
             </div>
           </div>
@@ -345,14 +400,26 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
             isEditing={isEditing}
             isUpdating={isUpdating}
             groupBy={groupBy}
+            groupLabel={groupLabel}
           />
         </CardContent>
         {!disablePagination && (
           <CardFooter className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               {numSelected > 0
-                ? `${numSelected} of ${filteredData.length} row(s) selected.`
-                : `Showing ${startIndex + 1} to ${Math.min(endIndex, filteredData.length)} of ${filteredData.length} ${entityNamePlural}`}
+                ? t("management.status.rowsSelected", {
+                    selected: numSelected,
+                    total: filteredData.length,
+                    defaultValue: "{{selected}} of {{total}} row(s) selected.",
+                  })
+                : t("management.status.showing", {
+                    from: startIndex + 1,
+                    to: Math.min(endIndex, filteredData.length),
+                    total: filteredData.length,
+                    name: entityNamePlural,
+                    defaultValue:
+                      "Showing {{from}} to {{to}} of {{total}} {{name}}",
+                  })}
             </div>
             <Pagination>
               <PaginationContent>
@@ -402,9 +469,14 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
         isOpen={isConfirmOpen}
         onOpenChange={setIsConfirmOpen}
         onConfirm={confirmDelete}
-        title="Are you sure?"
-        description="This will permanently delete the selected item(s) and may affect related transactions. This action cannot be undone."
-        confirmText="Delete"
+        title={t("management.confirmDelete.title", {
+          defaultValue: "Are you sure?",
+        })}
+        description={t("management.confirmDelete.description", {
+          defaultValue:
+            "This will permanently delete the selected item(s) and may affect related transactions. This action cannot be undone.",
+        })}
+        confirmText={t("management.actions.delete", { defaultValue: "Delete" })}
       />
     </div>
   );

@@ -140,9 +140,9 @@ importers:
       dexie:
         specifier: ^4.4.6
         version: 4.4.7
-      html2canvas:
-        specifier: ^1.4.1
-        version: 1.4.1
+      html2canvas-pro:
+        specifier: ^2.5.2
+        version: 2.5.2
       i18next:
         specifier: ^26.0.3
         version: 26.5.11(typescript@6.0.3)
@@ -3006,6 +3006,10 @@ packages:
 
   html-parse-stringify@4.0.1:
     resolution: {integrity: sha512-0zHsZJrK7S3K2aucXWL6ycoYJ/iNtIcFHC/nYQgFklPtrv5LpJctIiSCroWZWeuoXvuyFdzp6KzjJQ+OT5MfFw==}
+
+  html2canvas-pro@2.5.2:
+    resolution: {integrity: sha512-uka+0oVG/yB4B7U9M/+aJFF0aKZVmMWZKi4unemkQh537cLu3jXPvZtXakTuPl3taOI+O43RhuV6kn2igk1Z6g==}
+    engines: {node: '>=24.0.0'}
 
   html2canvas@1.4.1:
     resolution: {integrity: sha512-fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA==}
@@ -6664,7 +6668,8 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
-  base64-arraybuffer@1.0.2: {}
+  base64-arraybuffer@1.0.2:
+    optional: true
 
   base64-js@1.5.1: {}
 
@@ -6977,6 +6982,7 @@ snapshots:
   css-line-break@2.1.0:
     dependencies:
       utrie: 1.0.2
+    optional: true
 
   css-tree@3.2.1:
     dependencies:
@@ -7601,10 +7607,13 @@ snapshots:
 
   html-parse-stringify@4.0.1: {}
 
+  html2canvas-pro@2.5.2: {}
+
   html2canvas@1.4.1:
     dependencies:
       css-line-break: 2.1.0
       text-segmentation: 1.0.3
+    optional: true
 
   http-cache-semantics@4.3.0: {}
 
@@ -8969,6 +8978,7 @@ snapshots:
   text-segmentation@1.0.3:
     dependencies:
       utrie: 1.0.2
+    optional: true
 
   through2@4.0.2:
     dependencies:
@@ -9117,6 +9127,7 @@ snapshots:
   utrie@1.0.2:
     dependencies:
       base64-arraybuffer: 1.0.2
+    optional: true
 
   uuid@14.0.3: {}
 

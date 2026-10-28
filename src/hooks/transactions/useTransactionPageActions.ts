@@ -91,8 +91,16 @@ export const useTransactionPageActions = (
 ) => {
   const { activeLedger }: { activeLedger: Ledger | null } = useLedger();
   const dataProvider = useDataProvider();
-  const { detectAndLinkTransfers, setOperationProgress, invalidateAllData } =
-    useTransactions();
+  const {
+    findTransferSuggestions,
+    linkTransferPairs,
+    setOperationProgress,
+    invalidateAllData,
+  } = useTransactions();
+  const [transferReview, setTransferReview] = useState<{
+    isOpen: boolean;
+    pairs: [Transaction, Transaction][];
+  }>({ isOpen: false, pairs: [] });
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -629,14 +637,7 @@ export const useTransactionPageActions = (
         desc += ` Skipped ${skippedCount} invalid rows.`;
       }
 
-      try {
-        const linkedCount = await detectAndLinkTransfers();
-        if (linkedCount > 0) {
-          desc += ` Automatically linked ${linkedCount} transfer pairs.`;
-        }
-      } catch (e) {
-        console.error("Transfer detection failed", e);
-      }
+      desc += " Use Detect Transfers to review possible transfer pairs.";
 
       toast({
         title: "Import Successful",
@@ -736,17 +737,25 @@ export const useTransactionPageActions = (
     setMappingDialogState((prev) => ({ ...prev, isOpen: false }));
   };
 
-  const handleDetectTransfers = async () => {
-    const count = await detectAndLinkTransfers();
-    if (count > 0) {
-      showSuccess(`Successfully linked ${count} transfer pairs.`);
+  /** Looks for transfer pairs and lets the user choose which to link. */
+  const handleDetectTransfers = () => {
+    const pairs = findTransferSuggestions();
+    if (pairs.length > 0) {
+      setTransferReview({ isOpen: true, pairs });
     } else {
       toast({
         title: "No transfers detected",
         description:
-          "Checked all uncategorized transactions for matching pairs.",
+          "No matching pairs were found among unlinked transactions.",
       });
     }
+  };
+
+  const handleLinkSuggestedTransfers = async (
+    selected: [Transaction, Transaction][],
+  ) => {
+    const count = await linkTransferPairs(selected);
+    if (count > 0) showSuccess(`Linked ${count} transfer pairs.`);
   };
 
   return {
@@ -761,5 +770,8 @@ export const useTransactionPageActions = (
     setMappingDialogState,
     handleMappingConfirm,
     handleDetectTransfers,
+    transferReview,
+    setTransferReview,
+    handleLinkSuggestedTransfers,
   };
 };

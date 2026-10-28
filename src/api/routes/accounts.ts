@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { conflict, json, noContent, notFound, parse } from "../http";
+import {
+  conflict,
+  currencyCodeSchema,
+  json,
+  noContent,
+  notFound,
+  parse,
+} from "../http";
 import type { RouteDef, RouteContext } from "../router";
 import {
   ACCOUNT_TYPES,
@@ -11,7 +18,7 @@ import {
 
 const createSchema = z.object({
   name: z.string().trim().min(1),
-  currency: z.string().trim().min(1),
+  currency: currencyCodeSchema,
   starting_balance: z.number().finite().default(0),
   type: z.enum(ACCOUNT_TYPES).default("Checking"),
   credit_limit: z.number().finite().nonnegative().optional(),

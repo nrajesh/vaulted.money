@@ -1,5 +1,6 @@
 import type { Resource } from "i18next";
 import { homeTranslations } from "./homeTranslations";
+import { applyAreaTranslations } from "./areas";
 
 export const builtInLanguageOptions = [
   {
@@ -94,6 +95,13 @@ export const resources: Resource = {
         },
       },
       dialogs: {
+        eraseAll: {
+          warningOne:
+            "1 ledger and everything in it will be permanently deleted.",
+          warningMany:
+            "{{total}} ledgers and everything in them will be permanently deleted.",
+          prompt: "Type {{phrase}} to confirm",
+        },
         common: {
           cancel: "Cancel",
           continue: "Continue",
@@ -203,6 +211,50 @@ export const resources: Resource = {
         skip: "Skip",
       },
       dashboard: {
+        runway: {
+          title: "Financial Runway",
+          subtitle: "Based on fixed expenses + recent spending",
+          infinite: "Infinite",
+          savingsGrowing: "Savings are growing!",
+          burn: "Savings cover {{amount}}/mo burn",
+          monthlyStats: "Monthly Stats",
+          fixedCost: "Fixed Cost",
+          avgSpending: "Avg Spending",
+          totalSavings: "Total Savings",
+          lessThanMonth: "< 1 Month",
+          month_one: "{{count}} Month",
+          month_other: "{{count}} Months",
+          year_one: "{{count}} Year",
+          year_other: "{{count}} Years",
+        },
+        budgetStatus: {
+          title: "Budget Status",
+          subtitle: "Monthly spending vs limits",
+          used: "{{percent}}% Used",
+          over: "{{amount}} over budget",
+          remaining: "{{amount}} remaining",
+          added: "+{{amount}} Added",
+          spent: "-{{amount}} Spent",
+          none: "No Budgets Set",
+          noneHint: "Set up spending limits to track your financial goals.",
+          create: "Create Budget",
+        },
+        overview: {
+          title: "Overview • {{month}}",
+          netWorth: "Net Worth",
+          income: "Income",
+          expenses: "Expenses",
+        },
+        recentActivity: {
+          title: "Recent Activity Feed",
+          empty: "No recent activity",
+          unknown: "Unknown",
+        },
+        spendingByCategory: {
+          title: "Spending by Category",
+          description: "Top spending categories broken down by sub-category",
+          uncategorized: "Uncategorized",
+        },
         header: {
           subtitle: "Overview of your financial health",
         },
@@ -549,6 +601,13 @@ export const resources: Resource = {
         },
       },
       dialogs: {
+        eraseAll: {
+          warningOne:
+            "1 libro y todo su contenido se eliminarán de forma permanente.",
+          warningMany:
+            "{{total}} libros y todo su contenido se eliminarán de forma permanente.",
+          prompt: "Escribe {{phrase}} para confirmar",
+        },
         common: {
           cancel: "Cancelar",
           continue: "Continuar",
@@ -658,6 +717,52 @@ export const resources: Resource = {
         skip: "Omitir",
       },
       dashboard: {
+        runway: {
+          title: "Autonomía financiera",
+          subtitle: "Basado en gastos fijos + gasto reciente",
+          infinite: "Infinita",
+          savingsGrowing: "¡Tus ahorros están creciendo!",
+          burn: "Los ahorros cubren {{amount}}/mes de gasto",
+          monthlyStats: "Estadísticas mensuales",
+          fixedCost: "Costo fijo",
+          avgSpending: "Gasto promedio",
+          totalSavings: "Ahorros totales",
+          lessThanMonth: "< 1 mes",
+          month_one: "{{count}} mes",
+          month_other: "{{count}} meses",
+          year_one: "{{count}} año",
+          year_other: "{{count}} años",
+        },
+        budgetStatus: {
+          title: "Estado del presupuesto",
+          subtitle: "Gasto mensual frente a límites",
+          used: "{{percent}}% usado",
+          over: "{{amount}} sobre el presupuesto",
+          remaining: "{{amount}} restantes",
+          added: "+{{amount}} añadido",
+          spent: "-{{amount}} gastado",
+          none: "Sin presupuestos",
+          noneHint:
+            "Define límites de gasto para seguir tus metas financieras.",
+          create: "Crear presupuesto",
+        },
+        overview: {
+          title: "Resumen • {{month}}",
+          netWorth: "Patrimonio neto",
+          income: "Ingresos",
+          expenses: "Gastos",
+        },
+        recentActivity: {
+          title: "Actividad reciente",
+          empty: "Sin actividad reciente",
+          unknown: "Desconocido",
+        },
+        spendingByCategory: {
+          title: "Gasto por categoría",
+          description:
+            "Principales categorías de gasto desglosadas por subcategoría",
+          uncategorized: "Sin categoría",
+        },
         header: {
           subtitle: "Resumen de tu salud financiera",
         },
@@ -920,6 +1025,11 @@ export const resources: Resource = {
         },
       },
       dialogs: {
+        eraseAll: {
+          warningOne: "1 个账本及其全部内容将被永久删除。",
+          warningMany: "{{total}} 个账本及其全部内容将被永久删除。",
+          prompt: "输入 {{phrase}} 以确认",
+        },
         common: {
           cancel: "取消",
           continue: "继续",
@@ -977,6 +1087,48 @@ export const resources: Resource = {
         skip: "跳过",
       },
       dashboard: {
+        runway: {
+          title: "财务跑道",
+          subtitle: "基于固定支出和近期消费",
+          infinite: "无限",
+          savingsGrowing: "储蓄正在增长！",
+          burn: "储蓄可覆盖每月 {{amount}} 的消耗",
+          monthlyStats: "月度统计",
+          fixedCost: "固定成本",
+          avgSpending: "平均支出",
+          totalSavings: "储蓄总额",
+          lessThanMonth: "不足 1 个月",
+          month_other: "{{count}} 个月",
+          year_other: "{{count}} 年",
+        },
+        budgetStatus: {
+          title: "预算状态",
+          subtitle: "每月支出与限额",
+          used: "已使用 {{percent}}%",
+          over: "超出预算 {{amount}}",
+          remaining: "剩余 {{amount}}",
+          added: "已添加 +{{amount}}",
+          spent: "已支出 -{{amount}}",
+          none: "未设置预算",
+          noneHint: "设置支出限额以追踪您的财务目标。",
+          create: "创建预算",
+        },
+        overview: {
+          title: "概览 • {{month}}",
+          netWorth: "净资产",
+          income: "收入",
+          expenses: "支出",
+        },
+        recentActivity: {
+          title: "最近活动",
+          empty: "暂无最近活动",
+          unknown: "未知",
+        },
+        spendingByCategory: {
+          title: "按类别支出",
+          description: "按子类别细分的主要支出类别",
+          uncategorized: "未分类",
+        },
         header: {
           subtitle: "概览你的财务健康状况",
         },
@@ -1198,6 +1350,12 @@ export const resources: Resource = {
         },
       },
       dialogs: {
+        eraseAll: {
+          warningOne: "1 grootboek en alles erin wordt permanent verwijderd.",
+          warningMany:
+            "{{total}} grootboeken en alles erin worden permanent verwijderd.",
+          prompt: "Typ {{phrase}} om te bevestigen",
+        },
         common: {
           cancel: "Annuleren",
           continue: "Doorgaan",
@@ -1307,6 +1465,52 @@ export const resources: Resource = {
         skip: "Overslaan",
       },
       dashboard: {
+        runway: {
+          title: "Financiële looptijd",
+          subtitle: "Gebaseerd op vaste lasten + recente uitgaven",
+          infinite: "Oneindig",
+          savingsGrowing: "Je spaargeld groeit!",
+          burn: "Spaargeld dekt {{amount}}/mnd aan uitgaven",
+          monthlyStats: "Maandstatistieken",
+          fixedCost: "Vaste kosten",
+          avgSpending: "Gem. uitgaven",
+          totalSavings: "Totaal spaargeld",
+          lessThanMonth: "< 1 maand",
+          month_one: "{{count}} maand",
+          month_other: "{{count}} maanden",
+          year_one: "{{count}} jaar",
+          year_other: "{{count}} jaar",
+        },
+        budgetStatus: {
+          title: "Budgetstatus",
+          subtitle: "Maandelijkse uitgaven t.o.v. limieten",
+          used: "{{percent}}% gebruikt",
+          over: "{{amount}} over budget",
+          remaining: "{{amount}} resterend",
+          added: "+{{amount}} toegevoegd",
+          spent: "-{{amount}} uitgegeven",
+          none: "Geen budgetten ingesteld",
+          noneHint:
+            "Stel bestedingslimieten in om je financiële doelen te volgen.",
+          create: "Budget maken",
+        },
+        overview: {
+          title: "Overzicht • {{month}}",
+          netWorth: "Netto vermogen",
+          income: "Inkomsten",
+          expenses: "Uitgaven",
+        },
+        recentActivity: {
+          title: "Recente activiteit",
+          empty: "Geen recente activiteit",
+          unknown: "Onbekend",
+        },
+        spendingByCategory: {
+          title: "Uitgaven per categorie",
+          description:
+            "Belangrijkste uitgavencategorieën uitgesplitst per subcategorie",
+          uncategorized: "Zonder categorie",
+        },
         header: {
           subtitle: "Overzicht van je financiele gezondheid",
         },
@@ -1653,6 +1857,12 @@ export const resources: Resource = {
         },
       },
       dialogs: {
+        eraseAll: {
+          warningOne: "1 லெட்ஜரும் அதிலுள்ள அனைத்தும் நிரந்தரமாக நீக்கப்படும்.",
+          warningMany:
+            "{{total}} லெட்ஜர்களும் அவற்றிலுள்ள அனைத்தும் நிரந்தரமாக நீக்கப்படும்.",
+          prompt: "உறுதிப்படுத்த {{phrase}} என தட்டச்சு செய்யவும்",
+        },
         addEditTransaction: {
           tabs: {
             expense: "செலவு",
@@ -1723,6 +1933,51 @@ export const resources: Resource = {
         skip: "தவிர்",
       },
       dashboard: {
+        runway: {
+          title: "நிதி இருப்புக் காலம்",
+          subtitle: "நிலையான செலவுகள் + சமீபத்திய செலவுகளின் அடிப்படையில்",
+          infinite: "வரம்பற்றது",
+          savingsGrowing: "சேமிப்பு அதிகரித்து வருகிறது!",
+          burn: "சேமிப்பு மாதத்திற்கு {{amount}} செலவை ஈடுசெய்கிறது",
+          monthlyStats: "மாதாந்திர புள்ளிவிவரங்கள்",
+          fixedCost: "நிலையான செலவு",
+          avgSpending: "சராசரி செலவு",
+          totalSavings: "மொத்த சேமிப்பு",
+          lessThanMonth: "1 மாதத்திற்கும் குறைவு",
+          month_one: "{{count}} மாதம்",
+          month_other: "{{count}} மாதங்கள்",
+          year_one: "{{count}} ஆண்டு",
+          year_other: "{{count}} ஆண்டுகள்",
+        },
+        budgetStatus: {
+          title: "பட்ஜெட் நிலை",
+          subtitle: "மாதாந்திர செலவு vs வரம்புகள்",
+          used: "{{percent}}% பயன்படுத்தப்பட்டது",
+          over: "பட்ஜெட்டை விட {{amount}} அதிகம்",
+          remaining: "{{amount}} மீதம்",
+          added: "+{{amount}} சேர்க்கப்பட்டது",
+          spent: "-{{amount}} செலவானது",
+          none: "பட்ஜெட் அமைக்கப்படவில்லை",
+          noneHint:
+            "உங்கள் நிதி இலக்குகளைக் கண்காணிக்க செலவு வரம்புகளை அமைக்கவும்.",
+          create: "பட்ஜெட் உருவாக்கு",
+        },
+        overview: {
+          title: "கண்ணோட்டம் • {{month}}",
+          netWorth: "நிகர மதிப்பு",
+          income: "வருமானம்",
+          expenses: "செலவுகள்",
+        },
+        recentActivity: {
+          title: "சமீபத்திய செயல்பாடு",
+          empty: "சமீபத்திய செயல்பாடு இல்லை",
+          unknown: "தெரியாதது",
+        },
+        spendingByCategory: {
+          title: "வகை வாரியான செலவு",
+          description: "துணை வகை வாரியாகப் பிரிக்கப்பட்ட முக்கிய செலவு வகைகள்",
+          uncategorized: "வகைப்படுத்தப்படாதது",
+        },
         header: {
           subtitle: "உங்கள் நிதி நிலையின் ஒரு பார்வை.",
         },
@@ -1941,6 +2196,8 @@ for (const [lang, homeKeys] of Object.entries(homeTranslations)) {
     (bundle.translation as Record<string, unknown>).home = homeKeys;
   }
 }
+
+applyAreaTranslations(resources);
 
 export const supportedLanguages = ["en", "es", "zh", "nl", "ta"] as const;
 export type SupportedLanguage = string;

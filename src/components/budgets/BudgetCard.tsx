@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { formatDisplayDate } from "@/utils/dateFormat";
 import { Budget } from "../../types/budgets";
 import { Transaction } from "@/data/finance-data";
 import { Wallet, Store, Tag, Layers } from "lucide-react";
@@ -24,7 +26,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { format, startOfMonth, endOfMonth, endOfDay, parseISO } from "date-fns";
+import { startOfMonth, endOfMonth, endOfDay, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useGoalProgress } from "@/hooks/useGoalProgress";
@@ -39,6 +41,16 @@ interface BudgetCardProps {
   transactions?: Transaction[];
 }
 
+function frequencyLabel(
+  frequency: string,
+  t: (key: string, options: { defaultValue: string }) => string,
+) {
+  const known = ["Monthly", "Quarterly", "Yearly", "One-time"];
+  return known.includes(frequency)
+    ? t(`budgets.frequency.${frequency}`, { defaultValue: frequency })
+    : frequency;
+}
+
 export function BudgetCard({
   budget,
   onEdit,
@@ -48,6 +60,7 @@ export function BudgetCard({
   transactions = [],
 }: BudgetCardProps) {
   const { accounts } = useTransactions();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   // Goal progress (only computed when is_goal)
@@ -143,13 +156,13 @@ export function BudgetCard({
   const percentage = Math.min(100, rawPercentage);
   const remaining = budget.target_amount - budget.spent_amount;
 
-  const formattedStartDate = format(
-    new Date(budget.start_date),
-    "MMM dd, yyyy",
+  const formattedStartDate = formatDisplayDate(
+    budget.start_date,
+    i18n.language,
   );
   const formattedEndDate = budget.end_date
-    ? format(new Date(budget.end_date), "MMM dd, yyyy")
-    : "Ongoing";
+    ? formatDisplayDate(budget.end_date, i18n.language)
+    : t("budgets.card.ongoing", { defaultValue: "Ongoing" });
 
   return (
     <Card
@@ -163,6 +176,10 @@ export function BudgetCard({
         <div className="absolute top-4 right-4 z-50">
           <Checkbox
             checked={isSelected}
+            aria-label={t("budgets.card.select", {
+              name: budget.category_name,
+              defaultValue: "Select budget {{name}}",
+            })}
             onCheckedChange={() =>
               onToggleSelection && onToggleSelection(budget.id)
             }
@@ -196,25 +213,39 @@ export function BudgetCard({
           )}
         </CardTitle>
         <CardDescription className="text-slate-600 dark:text-slate-400">
-          {budget.frequency}
+          {frequencyLabel(budget.frequency, t)}
           <br />
           {formattedStartDate} - {formattedEndDate}
           <br />
           <span className="text-xs text-slate-500 dark:text-slate-500">
-            Scope:{" "}
-            {budget.account_scope === "GROUP"
-              ? budget.account_scope_values?.join(", ") || "Specific Accounts"
-              : "All Accounts"}
+            {t("budgets.card.scope", {
+              scope:
+                budget.account_scope === "GROUP"
+                  ? budget.account_scope_values?.join(", ") ||
+                    t("budgets.card.specificAccounts", {
+                      defaultValue: "Specific Accounts",
+                    })
+                  : t("budgets.card.allAccounts", {
+                      defaultValue: "All Accounts",
+                    }),
+              defaultValue: "Scope: {{scope}}",
+            })}
           </span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between text-sm font-medium text-slate-700 dark:text-slate-300">
           <span>
-            Spent: {formatCurrency(budget.spent_amount, budget.currency)}
+            {t("budgets.card.spent", {
+              amount: formatCurrency(budget.spent_amount, budget.currency),
+              defaultValue: "Spent: {{amount}}",
+            })}
           </span>
           <span>
-            Target: {formatCurrency(budget.target_amount, budget.currency)}
+            {t("budgets.card.target", {
+              amount: formatCurrency(budget.target_amount, budget.currency),
+              defaultValue: "Target: {{amount}}",
+            })}
           </span>
         </div>
         <Progress
@@ -225,11 +256,17 @@ export function BudgetCard({
         <div className="text-sm">
           {remaining >= 0 ? (
             <span className="text-green-600 font-medium">
-              {formatCurrency(remaining, budget.currency)} remaining
+              {t("budgets.card.remaining", {
+                amount: formatCurrency(remaining, budget.currency),
+                defaultValue: "{{amount}} remaining",
+              })}
             </span>
           ) : (
             <span className="text-red-600 font-medium">
-              {formatCurrency(Math.abs(remaining), budget.currency)} over budget
+              {t("budgets.card.over", {
+                amount: formatCurrency(Math.abs(remaining), budget.currency),
+                defaultValue: "{{amount}} over budget",
+              })}
             </span>
           )}
         </div>
@@ -241,12 +278,16 @@ export function BudgetCard({
               variant="outline"
               size="icon"
               onClick={() => onEdit(budget)}
-              aria-label="Edit budget"
+              aria-label={t("budgets.card.edit", {
+                defaultValue: "Edit budget",
+              })}
             >
               <Edit className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Edit budget</TooltipContent>
+          <TooltipContent>
+            {t("budgets.card.edit", { defaultValue: "Edit budget" })}
+          </TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -254,12 +295,16 @@ export function BudgetCard({
               variant="destructive"
               size="icon"
               onClick={() => onDelete(budget.id)}
-              aria-label="Delete budget"
+              aria-label={t("budgets.card.delete", {
+                defaultValue: "Delete budget",
+              })}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Delete budget</TooltipContent>
+          <TooltipContent>
+            {t("budgets.card.delete", { defaultValue: "Delete budget" })}
+          </TooltipContent>
         </Tooltip>
       </CardFooter>
     </Card>
@@ -287,6 +332,7 @@ function GoalCard({
   onToggleSelection,
   onTitleClick,
 }: GoalCardProps) {
+  const { t, i18n } = useTranslation();
   const {
     accumulatedAmount,
     progressPercentage,
@@ -295,13 +341,13 @@ function GoalCard({
     monthlyContribution,
   } = goalProgress;
 
-  const formattedStartDate = format(
-    new Date(budget.start_date),
-    "MMM dd, yyyy",
+  const formattedStartDate = formatDisplayDate(
+    budget.start_date,
+    i18n.language,
   );
   const formattedTargetDate = budget.target_date
-    ? format(new Date(budget.target_date), "MMM dd, yyyy")
-    : "End of month";
+    ? formatDisplayDate(budget.target_date, i18n.language)
+    : t("budgets.card.endOfMonth", { defaultValue: "End of month" });
 
   return (
     <Card className="border-emerald-300 dark:border-emerald-700 shadow-lg bg-gradient-to-br from-emerald-50/60 via-teal-50/40 to-cyan-50/30 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-cyan-950/10 relative">
@@ -309,6 +355,10 @@ function GoalCard({
         <div className="absolute top-4 right-4 z-50">
           <Checkbox
             checked={isSelected}
+            aria-label={t("budgets.card.select", {
+              name: budget.category_name,
+              defaultValue: "Select budget {{name}}",
+            })}
             onCheckedChange={() =>
               onToggleSelection && onToggleSelection(budget.id)
             }
@@ -346,22 +396,31 @@ function GoalCard({
             {isOnTrack ? (
               <>
                 <CheckCircle2 className="h-3 w-3" />
-                On track
+                {t("budgets.card.onTrack", { defaultValue: "On track" })}
               </>
             ) : (
               <>
                 <AlertTriangle className="h-3 w-3" />
-                Off track
+                {t("budgets.card.offTrack", { defaultValue: "Off track" })}
               </>
             )}
           </div>
         </div>
         <CardDescription className="text-emerald-700/60 dark:text-emerald-400/60">
-          🎯 Goal • {formattedStartDate} → {formattedTargetDate}
+          {t("budgets.card.goal", {
+            start: formattedStartDate,
+            end: formattedTargetDate,
+            defaultValue: "🎯 Goal • {{start}} → {{end}}",
+          })}
           {budget.goal_context && (
             <>
               <br />
-              <span className="text-xs">Context: {budget.goal_context}</span>
+              <span className="text-xs">
+                {t("budgets.card.context", {
+                  context: budget.goal_context,
+                  defaultValue: "Context: {{context}}",
+                })}
+              </span>
             </>
           )}
         </CardDescription>
@@ -369,10 +428,16 @@ function GoalCard({
       <CardContent className="space-y-4">
         <div className="flex justify-between text-sm font-medium text-emerald-800 dark:text-emerald-200">
           <span>
-            Saved: {formatCurrency(accumulatedAmount, budget.currency)}
+            {t("budgets.card.saved", {
+              amount: formatCurrency(accumulatedAmount, budget.currency),
+              defaultValue: "Saved: {{amount}}",
+            })}
           </span>
           <span>
-            Target: {formatCurrency(budget.target_amount, budget.currency)}
+            {t("budgets.card.target", {
+              amount: formatCurrency(budget.target_amount, budget.currency),
+              defaultValue: "Target: {{amount}}",
+            })}
           </span>
         </div>
 
@@ -387,21 +452,33 @@ function GoalCard({
           <div
             className="absolute top-0 h-full w-0.5 bg-slate-800 dark:bg-white rounded-full opacity-70 transition-all duration-500"
             style={{ left: `${Math.min(expectedProgress, 100)}%` }}
-            title={`Expected: ${expectedProgress.toFixed(0)}%`}
+            title={t("budgets.card.paceTitle", {
+              percent: expectedProgress.toFixed(0),
+              defaultValue: "Expected pace: {{percent}}% by today",
+            })}
           >
             <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
-              {expectedProgress.toFixed(0)}%
+              {t("budgets.card.pace", {
+                percent: expectedProgress.toFixed(0),
+                defaultValue: "Pace {{percent}}%",
+              })}
             </div>
           </div>
         </div>
 
         <div className="flex justify-between items-center text-sm">
           <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
-            {progressPercentage.toFixed(1)}% complete
+            {t("budgets.card.complete", {
+              percent: progressPercentage.toFixed(1),
+              defaultValue: "{{percent}}% complete",
+            })}
           </span>
           {monthlyContribution !== null && monthlyContribution > 0 && (
             <span className="text-emerald-600/70 dark:text-emerald-400/70 text-xs">
-              ~{formatCurrency(monthlyContribution, budget.currency)}/mo needed
+              {t("budgets.card.perMonthNeeded", {
+                amount: formatCurrency(monthlyContribution, budget.currency),
+                defaultValue: "~{{amount}}/mo needed",
+              })}
             </span>
           )}
         </div>
@@ -411,9 +488,12 @@ function GoalCard({
           <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2">
             <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
             <span>
-              You&apos;re behind schedule. Expected{" "}
-              {expectedProgress.toFixed(0)}% but at{" "}
-              {progressPercentage.toFixed(0)}%.
+              {t("budgets.card.behind", {
+                expected: expectedProgress.toFixed(0),
+                actual: progressPercentage.toFixed(0),
+                defaultValue:
+                  "You're behind schedule. Expected {{expected}}% but at {{actual}}%.",
+              })}
             </span>
           </div>
         )}
@@ -426,12 +506,16 @@ function GoalCard({
               size="icon"
               className="border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
               onClick={() => onEdit(budget)}
-              aria-label="Edit budget"
+              aria-label={t("budgets.card.edit", {
+                defaultValue: "Edit budget",
+              })}
             >
               <Edit className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Edit budget</TooltipContent>
+          <TooltipContent>
+            {t("budgets.card.edit", { defaultValue: "Edit budget" })}
+          </TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -439,12 +523,16 @@ function GoalCard({
               variant="destructive"
               size="icon"
               onClick={() => onDelete(budget.id)}
-              aria-label="Delete budget"
+              aria-label={t("budgets.card.delete", {
+                defaultValue: "Delete budget",
+              })}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Delete budget</TooltipContent>
+          <TooltipContent>
+            {t("budgets.card.delete", { defaultValue: "Delete budget" })}
+          </TooltipContent>
         </Tooltip>
       </CardFooter>
     </Card>

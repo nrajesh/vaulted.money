@@ -15,6 +15,7 @@ import { useDataProvider } from "@/context/DataProviderContext";
 import { useLedger } from "@/contexts/LedgerContext";
 import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useTranslation } from "react-i18next";
 import { Transaction } from "@/data/finance-data";
 
 interface SmartBudgetDialogProps {
@@ -40,6 +41,7 @@ export function SmartBudgetDialog({
   const { transactions } = useTransactions();
   const dataProvider = useDataProvider();
   const { activeLedger } = useLedger();
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const [suggestions, setSuggestions] = useState<SuggestedBudget[]>([]);
@@ -149,8 +151,12 @@ export function SmartBudgetDialog({
 
     if (selectedItems.length === 0) {
       toast({
-        title: "No budgets selected",
-        description: "Please select at least one budget to create.",
+        title: t("budgets.smart.noneSelected.title", {
+          defaultValue: "No budgets selected",
+        }),
+        description: t("budgets.smart.noneSelected.description", {
+          defaultValue: "Please select at least one budget to create.",
+        }),
         variant: "destructive",
       });
       setIsSaving(false);
@@ -224,15 +230,26 @@ export function SmartBudgetDialog({
       const parts: string[] = [];
       if (createdCount > 0)
         parts.push(
-          `Created ${createdCount} smart budget${createdCount !== 1 ? "s" : ""}.`,
+          t("budgets.smart.created", {
+            count: createdCount,
+            defaultValue: "Created {{count}} smart budget(s).",
+          }),
         );
       if (skippedCount > 0)
         parts.push(
-          `Skipped ${skippedCount} duplicate${skippedCount !== 1 ? "s" : ""}.`,
+          t("budgets.smart.skipped", {
+            count: skippedCount,
+            defaultValue: "Skipped {{count}} duplicate(s).",
+          }),
         );
 
       toast({
-        title: createdCount > 0 ? "Budgets created" : "No new budgets",
+        title:
+          createdCount > 0
+            ? t("budgets.smart.toastCreated", {
+                defaultValue: "Budgets created",
+              })
+            : t("budgets.smart.toastNone", { defaultValue: "No new budgets" }),
         description: parts.join(" "),
       });
       onSave();
@@ -240,9 +257,15 @@ export function SmartBudgetDialog({
     } catch (error: unknown) {
       console.error(error);
       const message =
-        error instanceof Error ? error.message : "Something went wrong.";
+        error instanceof Error
+          ? error.message
+          : t("budgets.smart.error.generic", {
+              defaultValue: "Something went wrong.",
+            });
       toast({
-        title: "Error creating budgets",
+        title: t("budgets.smart.error.title", {
+          defaultValue: "Error creating budgets",
+        }),
         description: message,
         variant: "destructive",
       });
@@ -280,12 +303,15 @@ export function SmartBudgetDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-purple-500" />
-            Smart Budget Creation
+            {t("budgets.smart.title", {
+              defaultValue: "Smart Budget Creation",
+            })}
           </DialogTitle>
           <DialogDescription>
-            We analyzed your past transactions and found these top spending
-            categories. Adjust the proposed monthly amounts and select the
-            budgets you want to create.
+            {t("budgets.smart.description", {
+              defaultValue:
+                "We analyzed your past transactions and found these top spending categories. Adjust the proposed monthly amounts and select the budgets you want to create.",
+            })}
           </DialogDescription>
         </DialogHeader>
 
@@ -293,7 +319,9 @@ export function SmartBudgetDialog({
           <div className="flex flex-col items-center justify-center py-10 space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">
-              Analyzing your spending habits...
+              {t("budgets.smart.analyzing", {
+                defaultValue: "Analyzing your spending habits...",
+              })}
             </p>
           </div>
         ) : (
@@ -302,6 +330,9 @@ export function SmartBudgetDialog({
               <div className="grid grid-cols-12 gap-4 p-4 font-medium text-sm bg-muted/50 border-b items-center">
                 <div className="col-span-1 flex justify-center">
                   <Checkbox
+                    aria-label={t("budgets.smart.selectAll", {
+                      defaultValue: "Select all suggestions",
+                    })}
                     checked={
                       suggestions.length > 0 &&
                       suggestions.every((s) => s.isSelected)
@@ -311,15 +342,23 @@ export function SmartBudgetDialog({
                     }
                   />
                 </div>
-                <div className="col-span-6">Category</div>
-                <div className="col-span-2 text-right">Avg. Spend</div>
-                <div className="col-span-3 text-right">Budget</div>
+                <div className="col-span-6">
+                  {t("budgets.smart.category", { defaultValue: "Category" })}
+                </div>
+                <div className="col-span-2 text-right">
+                  {t("budgets.smart.avgSpend", { defaultValue: "Avg. Spend" })}
+                </div>
+                <div className="col-span-3 text-right">
+                  {t("budgets.smart.budget", { defaultValue: "Budget" })}
+                </div>
               </div>
               <div className="max-h-[400px] overflow-y-auto">
                 {suggestions.length === 0 ? (
                   <div className="p-8 text-center text-muted-foreground">
-                    Not enough data to make suggestions. Upload more
-                    transactions!
+                    {t("budgets.smart.notEnough", {
+                      defaultValue:
+                        "Not enough data to make suggestions. Upload more transactions!",
+                    })}
                   </div>
                 ) : (
                   suggestions.map((item, idx) => (
@@ -329,6 +368,10 @@ export function SmartBudgetDialog({
                     >
                       <div className="col-span-1 flex justify-center">
                         <Checkbox
+                          aria-label={t("budgets.smart.selectOne", {
+                            number: idx + 1,
+                            defaultValue: "Select suggestion {{number}}",
+                          })}
                           checked={item.isSelected}
                           onCheckedChange={() => toggleSelection(idx)}
                         />
@@ -351,7 +394,10 @@ export function SmartBudgetDialog({
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {item.transactionCount} transactions
+                          {t("budgets.smart.transactionCount", {
+                            count: item.transactionCount,
+                            defaultValue: "{{count}} transactions",
+                          })}
                         </div>
                       </div>
                       <div className="col-span-2 text-right text-sm text-muted-foreground">
@@ -379,7 +425,7 @@ export function SmartBudgetDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
+            {t("budgets.smart.cancel", { defaultValue: "Cancel" })}
           </Button>
           <Button
             onClick={handleCreateBudgets}
@@ -388,7 +434,10 @@ export function SmartBudgetDialog({
             }
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create {suggestions.filter((s) => s.isSelected).length} Budgets
+            {t("budgets.smart.create", {
+              count: suggestions.filter((s) => s.isSelected).length,
+              defaultValue: "Create {{count}} Budgets",
+            })}
           </Button>
         </DialogFooter>
       </DialogContent>

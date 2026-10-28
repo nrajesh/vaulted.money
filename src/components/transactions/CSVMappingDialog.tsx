@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ImportConfig } from "@/utils/csvUtils";
+import { useTranslation } from "react-i18next";
 
 interface CSVMappingDialogProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ const CSVMappingDialog = ({
   onConfirm,
   isNewLedger,
 }: CSVMappingDialogProps) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState<"config" | "mapping">("config");
   const [config, setConfig] = useState<ImportConfig>({
     delimiter: ",",
@@ -216,17 +218,31 @@ const CSVMappingDialog = ({
 
   const previewRows = csvData.slice(0, 3);
 
+  // Only the label is translated: matching still uses the English field names.
+  const fieldLabel = (header: string) =>
+    t(`csvImport.fields.${header.replace(/\s+/g, "")}`, {
+      defaultValue: header,
+    });
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="grid w-[calc(100%-1rem)] max-w-3xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-2xl p-0">
         <DialogHeader className="border-b px-4 pb-3 pt-4 sm:px-6">
           <DialogTitle>
-            {step === "config" ? "Import Settings" : "Map Columns"}
+            {step === "config"
+              ? t("csvImport.title.config", { defaultValue: "Import Settings" })
+              : t("csvImport.title.mapping", { defaultValue: "Map Columns" })}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
             {step === "config"
-              ? "Choose how the CSV should be read before importing it."
-              : "Match each Vaulted Money field to the correct CSV column."}
+              ? t("csvImport.subtitle.config", {
+                  defaultValue:
+                    "Choose how the CSV should be read before importing it.",
+                })
+              : t("csvImport.subtitle.mapping", {
+                  defaultValue:
+                    "Match each Vaulted Money field to the correct CSV column.",
+                })}
           </p>
         </DialogHeader>
 
@@ -235,7 +251,11 @@ const CSVMappingDialog = ({
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label>CSV Delimiter</Label>
+                  <Label>
+                    {t("csvImport.delimiter.label", {
+                      defaultValue: "CSV Delimiter",
+                    })}
+                  </Label>
                   <Select
                     value={config.delimiter}
                     onValueChange={(val) =>
@@ -246,15 +266,31 @@ const CSVMappingDialog = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value=",">Comma (,)</SelectItem>
-                      <SelectItem value=";">Semicolon (;)</SelectItem>
-                      <SelectItem value="\t">Tab (\t)</SelectItem>
+                      <SelectItem value=",">
+                        {t("csvImport.delimiter.comma", {
+                          defaultValue: "Comma (,)",
+                        })}
+                      </SelectItem>
+                      <SelectItem value=";">
+                        {t("csvImport.delimiter.semicolon", {
+                          defaultValue: "Semicolon (;)",
+                        })}
+                      </SelectItem>
+                      <SelectItem value="\t">
+                        {t("csvImport.delimiter.tab", {
+                          defaultValue: "Tab (\\t)",
+                        })}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="grid gap-2 sm:col-span-2">
-                  <Label>Date Format (in CSV)</Label>
+                  <Label>
+                    {t("csvImport.date.label", {
+                      defaultValue: "Date Format (in CSV)",
+                    })}
+                  </Label>
                   <Select
                     value={config.dateFormat}
                     onValueChange={(val) =>
@@ -265,25 +301,41 @@ const CSVMappingDialog = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="auto">Auto-detect</SelectItem>
+                      <SelectItem value="auto">
+                        {t("csvImport.date.auto", {
+                          defaultValue: "Auto-detect",
+                        })}
+                      </SelectItem>
                       <SelectItem value="d/M/yyyy">
-                        Day/Month/Year (e.g. 31/01/2024)
+                        {t("csvImport.date.dmy", {
+                          defaultValue: "Day/Month/Year (e.g. 31/01/2024)",
+                        })}
                       </SelectItem>
                       <SelectItem value="M/d/yyyy">
-                        Month/Day/Year (e.g. 01/31/2024)
+                        {t("csvImport.date.mdy", {
+                          defaultValue: "Month/Day/Year (e.g. 01/31/2024)",
+                        })}
                       </SelectItem>
                       <SelectItem value="yyyy-MM-dd">
-                        Year-Month-Day (e.g. 2024-01-31)
+                        {t("csvImport.date.ymd", {
+                          defaultValue: "Year-Month-Day (e.g. 2024-01-31)",
+                        })}
                       </SelectItem>
                       <SelectItem value="d.M.yyyy">
-                        Day.Month.Year (e.g. 31.01.2024)
+                        {t("csvImport.date.dotted", {
+                          defaultValue: "Day.Month.Year (e.g. 31.01.2024)",
+                        })}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Decimal Format</Label>
+                  <Label>
+                    {t("csvImport.decimal.label", {
+                      defaultValue: "Decimal Format",
+                    })}
+                  </Label>
                   <Select
                     value={config.decimalSeparator}
                     onValueChange={(val) =>
@@ -297,16 +349,26 @@ const CSVMappingDialog = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value=".">1,234.56 (Dot decimal)</SelectItem>
+                      <SelectItem value=".">
+                        {t("csvImport.decimal.dot", {
+                          defaultValue: "1,234.56 (Dot decimal)",
+                        })}
+                      </SelectItem>
                       <SelectItem value=",">
-                        1.234,56 (Comma decimal)
+                        {t("csvImport.decimal.comma", {
+                          defaultValue: "1.234,56 (Comma decimal)",
+                        })}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Amount Sign Convention</Label>
+                  <Label>
+                    {t("csvImport.sign.label", {
+                      defaultValue: "Amount Sign Convention",
+                    })}
+                  </Label>
                   <Select
                     value={config.expenseSign}
                     onValueChange={(val) =>
@@ -322,26 +384,41 @@ const CSVMappingDialog = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="negative">
-                        Negative is Expense (-100)
+                        {t("csvImport.sign.negative", {
+                          defaultValue: "Negative is Expense (-100)",
+                        })}
                       </SelectItem>
                       <SelectItem value="positive">
-                        Positive is Expense (100)
+                        {t("csvImport.sign.positive", {
+                          defaultValue: "Positive is Expense (100)",
+                        })}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
                     {hasNegativeValues
-                      ? "Negative values detected in CSV. 'Negative is Expense' setting enforced."
+                      ? t("csvImport.sign.enforced", {
+                          defaultValue:
+                            "Negative values detected in CSV. 'Negative is Expense' setting enforced.",
+                        })
                       : config.expenseSign === "positive"
-                        ? "Expenses entered as positive numbers"
-                        : "Expenses entered as negative numbers"}
+                        ? t("csvImport.sign.positiveHint", {
+                            defaultValue:
+                              "Expenses entered as positive numbers",
+                          })
+                        : t("csvImport.sign.negativeHint", {
+                            defaultValue:
+                              "Expenses entered as negative numbers",
+                          })}
                   </p>
                 </div>
               </div>
 
               {!isNewLedger && (
                 <div className="grid gap-2">
-                  <Label>Import Mode</Label>
+                  <Label>
+                    {t("csvImport.mode.label", { defaultValue: "Import Mode" })}
+                  </Label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="flex items-start gap-3 rounded-xl border border-border/70 px-3 py-3 transition-colors hover:border-primary/40">
                       <input
@@ -360,10 +437,15 @@ const CSVMappingDialog = ({
                       />
                       <span className="space-y-1">
                         <span className="block font-medium text-foreground">
-                          Append to existing
+                          {t("csvImport.mode.append", {
+                            defaultValue: "Append to existing",
+                          })}
                         </span>
                         <span className="block text-xs text-muted-foreground">
-                          Keep current transactions and add the new rows.
+                          {t("csvImport.mode.appendHint", {
+                            defaultValue:
+                              "Keep current transactions and add the new rows.",
+                          })}
                         </span>
                       </span>
                     </label>
@@ -384,10 +466,15 @@ const CSVMappingDialog = ({
                       />
                       <span className="space-y-1">
                         <span className="block font-medium text-foreground">
-                          Replace existing
+                          {t("csvImport.mode.replace", {
+                            defaultValue: "Replace existing",
+                          })}
                         </span>
                         <span className="block text-xs text-muted-foreground">
-                          Clear the destination before importing the CSV.
+                          {t("csvImport.mode.replaceHint", {
+                            defaultValue:
+                              "Clear the destination before importing the CSV.",
+                          })}
                         </span>
                       </span>
                     </label>
@@ -397,7 +484,9 @@ const CSVMappingDialog = ({
 
               <div className="border rounded-md p-3 bg-muted/30 mt-4">
                 <Label className="mb-2 block">
-                  Available Data Preview (First 3 rows)
+                  {t("csvImport.preview.title", {
+                    defaultValue: "Available Data Preview (First 3 rows)",
+                  })}
                 </Label>
                 {previewRows.length > 0 ? (
                   <>
@@ -408,7 +497,10 @@ const CSVMappingDialog = ({
                           className="rounded-xl border bg-background/80 p-3"
                         >
                           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                            Row {rowIndex + 1}
+                            {t("csvImport.preview.row", {
+                              number: rowIndex + 1,
+                              defaultValue: "Row {{number}}",
+                            })}
                           </p>
                           <div className="space-y-2">
                             {csvHeaders.map((header) => (
@@ -455,14 +547,22 @@ const CSVMappingDialog = ({
                   </>
                 ) : (
                   <div className="text-xs text-muted-foreground p-2 text-center">
-                    {isLoading ? "Reading..." : "No data properly parsed."}
+                    {isLoading
+                      ? t("csvImport.preview.reading", {
+                          defaultValue: "Reading...",
+                        })
+                      : t("csvImport.preview.empty", {
+                          defaultValue: "No data properly parsed.",
+                        })}
                     <div className="mt-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleParse(false)}
                       >
-                        Refresh Preview
+                        {t("csvImport.preview.refresh", {
+                          defaultValue: "Refresh Preview",
+                        })}
                       </Button>
                     </div>
                   </div>
@@ -474,7 +574,10 @@ const CSVMappingDialog = ({
           {step === "mapping" && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Map the columns from your CSV to the system fields.
+                {t("csvImport.mapping.intro", {
+                  defaultValue:
+                    "Map the columns from your CSV to the system fields.",
+                })}
               </p>
               <div className="grid gap-4">
                 {requiredHeaders.map((header) => (
@@ -482,7 +585,7 @@ const CSVMappingDialog = ({
                     key={header}
                     className="rounded-xl border border-border/70 bg-background/70 p-3 sm:grid sm:grid-cols-[minmax(0,10rem)_1fr] sm:items-center sm:gap-4"
                   >
-                    <Label className="mb-2 sm:mb-0">{header}</Label>
+                    <Label className="mb-2 sm:mb-0">{fieldLabel(header)}</Label>
                     <div>
                       <Select
                         value={mapping[header] || UNMAPPED_COLUMN_VALUE}
@@ -491,11 +594,17 @@ const CSVMappingDialog = ({
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select column" />
+                          <SelectValue
+                            placeholder={t("csvImport.mapping.selectColumn", {
+                              defaultValue: "Select column",
+                            })}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={UNMAPPED_COLUMN_VALUE}>
-                            No column
+                            {t("csvImport.mapping.noColumn", {
+                              defaultValue: "No column",
+                            })}
                           </SelectItem>
                           <SelectSeparator />
                           {csvHeaders.map((csvHeader) => (
@@ -521,14 +630,18 @@ const CSVMappingDialog = ({
                 onClick={onClose}
                 className="w-full sm:w-auto"
               >
-                Cancel
+                {t("csvImport.actions.cancel", { defaultValue: "Cancel" })}
               </Button>
               <Button
                 onClick={() => handleParse(true)}
                 disabled={!file || isLoading}
                 className="w-full sm:w-auto"
               >
-                {isLoading ? "Reading..." : "Next"}
+                {isLoading
+                  ? t("csvImport.preview.reading", {
+                      defaultValue: "Reading...",
+                    })
+                  : t("csvImport.actions.next", { defaultValue: "Next" })}
               </Button>
             </>
           ) : (
@@ -538,7 +651,7 @@ const CSVMappingDialog = ({
                 onClick={onClose}
                 className="w-full sm:w-auto"
               >
-                Cancel
+                {t("csvImport.actions.cancel", { defaultValue: "Cancel" })}
               </Button>
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 <Button
@@ -546,10 +659,12 @@ const CSVMappingDialog = ({
                   onClick={() => setStep("config")}
                   className="w-full sm:w-auto"
                 >
-                  Back
+                  {t("csvImport.actions.back", { defaultValue: "Back" })}
                 </Button>
                 <Button onClick={handleConfirm} className="w-full sm:w-auto">
-                  Import Transactions
+                  {t("csvImport.actions.import", {
+                    defaultValue: "Import Transactions",
+                  })}
                 </Button>
               </div>
             </>
