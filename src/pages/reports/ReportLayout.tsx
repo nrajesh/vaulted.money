@@ -7,14 +7,11 @@ import { useTransactionFilters } from "@/hooks/transactions/useTransactionFilter
 import { useTransactionData } from "@/hooks/transactions/useTransactionData";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { showSuccess, showError } from "@/utils/toast";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { useQuery } from "@tanstack/react-query";
 import { useLedger } from "@/contexts/LedgerContext";
 import { Budget } from "@/types/dataProvider";
 import { slugify } from "@/lib/utils";
 import { useDataProvider } from "@/context/DataProviderContext";
-import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { saveFile } from "@/utils/backupUtils";
 
@@ -144,6 +141,16 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
 
   const handlePdfExport = async () => {
     try {
+      // Loaded on demand: these libraries are large and only needed to export.
+      const [
+        { default: jsPDF },
+        { default: autoTable },
+        { default: html2canvas },
+      ] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+        import("html2canvas-pro"),
+      ]);
       const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
