@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { AlertTriangle, Bug, Lightbulb, MessageSquarePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,24 +23,29 @@ import { showError, showSuccess } from "@/utils/toast";
 
 const OPTIONS: Array<{
   kind: FeedbackKind;
+  /** Translation key prefix, e.g. "bug" -> feedback.bug.title */
+  id: "bug" | "idea" | "security";
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   {
     kind: FEEDBACK_KIND.BUG,
+    id: "bug",
     title: "Report an issue",
     description: "Open a bug report with the required details pre-filled.",
     icon: Bug,
   },
   {
     kind: FEEDBACK_KIND.FEEDBACK,
+    id: "idea",
     title: "Share feedback",
     description: "Suggest an improvement or feature request.",
     icon: Lightbulb,
   },
   {
     kind: FEEDBACK_KIND.VULNERABILITY,
+    id: "security",
     title: "Security vulnerability",
     description: "Use responsible disclosure from the security policy page.",
     icon: AlertTriangle,
@@ -56,6 +62,7 @@ interface FeedbackLauncherProps {
 export const FeedbackLauncher = ({
   triggerClassName,
 }: FeedbackLauncherProps) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const [open, setOpen] = React.useState(false);
   const [selectedKind, setSelectedKind] = React.useState<FeedbackKind>(
@@ -83,11 +90,15 @@ export const FeedbackLauncher = ({
         document.execCommand("copy");
         document.body.removeChild(textArea);
       }
-      showSuccess("Diagnostics copied");
+      showSuccess(t("feedback.copied", { defaultValue: "Diagnostics copied" }));
     } catch {
-      showError("Unable to copy diagnostics");
+      showError(
+        t("feedback.copyFailed", {
+          defaultValue: "Unable to copy diagnostics",
+        }),
+      );
     }
-  }, [location.pathname, selectedKind]);
+  }, [location.pathname, selectedKind, t]);
 
   const handleContinue = React.useCallback(() => {
     const feedbackUrl = buildGitHubFeedbackUrl(selectedKind, {
@@ -105,20 +116,26 @@ export const FeedbackLauncher = ({
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Give feedback"
-          title="Feedback"
+          aria-label={t("feedback.give", { defaultValue: "Give feedback" })}
+          title={t("feedback.tooltip", { defaultValue: "Feedback" })}
           className={triggerClassName}
         >
           <MessageSquarePlus className="size-5" />
-          <span className="sr-only">Give feedback</span>
+          <span className="sr-only">
+            {t("feedback.give", { defaultValue: "Give feedback" })}
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Share feedback</DialogTitle>
+          <DialogTitle>
+            {t("feedback.dialogTitle", { defaultValue: "Share feedback" })}
+          </DialogTitle>
           <DialogDescription>
-            Choose what you want to report. We will open the matching GitHub
-            page in a new tab.
+            {t("feedback.dialogDescription", {
+              defaultValue:
+                "Choose what you want to report. We will open the matching GitHub page in a new tab.",
+            })}
           </DialogDescription>
         </DialogHeader>
 
@@ -143,9 +160,15 @@ export const FeedbackLauncher = ({
                     <Icon className="size-4" />
                   </div>
                   <div>
-                    <p className="font-medium">{option.title}</p>
+                    <p className="font-medium">
+                      {t(`feedback.${option.id}.title`, {
+                        defaultValue: option.title,
+                      })}
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      {option.description}
+                      {t(`feedback.${option.id}.description`, {
+                        defaultValue: option.description,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -155,21 +178,25 @@ export const FeedbackLauncher = ({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          No GitHub account? Use Copy diagnostics and share details with the
-          maintainer.
+          {t("feedback.noGithub", {
+            defaultValue:
+              "No GitHub account? Use Copy diagnostics and share details with the maintainer.",
+          })}
         </p>
 
         <DialogFooter className="gap-2">
           <Button variant="secondary" onClick={copyDiagnostics}>
-            Copy diagnostics
+            {t("feedback.copy", { defaultValue: "Copy diagnostics" })}
           </Button>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t("dialogs.common.cancel", { defaultValue: "Cancel" })}
           </Button>
           <Button onClick={handleContinue}>
             {selectedKind === FEEDBACK_KIND.VULNERABILITY
-              ? "Open security policy"
-              : "Open GitHub issue"}
+              ? t("feedback.openSecurity", {
+                  defaultValue: "Open security policy",
+                })
+              : t("feedback.openIssue", { defaultValue: "Open GitHub issue" })}
           </Button>
         </DialogFooter>
       </DialogContent>

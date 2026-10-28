@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { ScheduledTransaction } from "@/types/dataProvider";
 import {
   badRequest,
+  currencyCodeSchema,
   isoDateSchema,
   json,
   noContent,
@@ -14,9 +15,9 @@ import { loadAccountResources, requireLedger } from "./shared";
 /** Same formats the app understands: named, or `<n><d|w|m|y>` such as `2w`. */
 const frequencySchema = z
   .string()
-  .regex(/^(Daily|Weekly|Monthly|Yearly|One-time|\d+[dwmy])$/, {
+  .regex(/^(Daily|Weekly|Monthly|Yearly|One-time|[1-9]\d*[dwmy])$/, {
     message:
-      'must be Daily, Weekly, Monthly, Yearly, One-time or a duration like "2w" (d, w, m, y)',
+      'must be Daily, Weekly, Monthly, Yearly, One-time or a duration like "2w" (d, w, m, y) with a positive number',
   });
 
 const baseSchema = z.object({
@@ -30,10 +31,20 @@ const baseSchema = z.object({
   frequency: frequencySchema,
   end_date: isoDateSchema.nullish(),
   remarks: z.string().nullish(),
-  currency: z.string().trim().min(1).optional(),
+  currency: currencyCodeSchema.optional(),
   ignored_dates: z.array(isoDateSchema).optional(),
 });
 const patchSchema = baseSchema.partial();
+
+/** An end date before the first occurrence would make the schedule never run. */
+function requireEndAfterStart(
+  date: string,
+  endDate: string | null | undefined,
+) {
+  if (endDate && endDate.slice(0, 10) < date.slice(0, 10)) {
+    throw badRequest('"end_date" must not be before "date"');
+  }
+}
 
 async function find(ctx: RouteContext): Promise<ScheduledTransaction> {
   await requireLedger(ctx.services, ctx.params.ledgerId);
@@ -80,6 +91,7 @@ export const scheduledTransactionRoutes: RouteDef[] = [
     handler: async (ctx) => {
       const ledger = await requireLedger(ctx.services, ctx.params.ledgerId);
       const input = parse(baseSchema, ctx.body);
+      requireEndAfterStart(input.date, input.end_date);
       const accounts = await loadAccountResources(ctx.services, ledger.id);
       const currency =
         input.currency ??
@@ -123,6 +135,7 @@ export const scheduledTransactionRoutes: RouteDef[] = [
           Object.entries(patch).filter(([, v]) => v !== undefined),
         ),
       };
+      requireEndAfterStart(updated.date, updated.end_date);
       await ensurePayees(
         ctx,
         updated.account,

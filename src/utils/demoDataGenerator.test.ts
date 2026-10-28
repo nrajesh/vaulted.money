@@ -4,6 +4,7 @@ import { DataProvider } from "@/types/dataProvider";
 
 function createMockProvider(): DataProvider {
   let ledgerCounter = 0;
+  let scheduleCounter = 0;
   const ledgers: { id: string; name: string }[] = [];
 
   return {
@@ -31,7 +32,9 @@ function createMockProvider(): DataProvider {
     clearBudgets: vi.fn().mockResolvedValue(undefined),
     clearScheduledTransactions: vi.fn().mockResolvedValue(undefined),
     getScheduledTransactions: vi.fn().mockResolvedValue([]),
-    addScheduledTransaction: vi.fn().mockResolvedValue({}),
+    addScheduledTransaction: vi.fn().mockImplementation(async () => ({
+      id: `schedule-${++scheduleCounter}`,
+    })),
     updateScheduledTransaction: vi.fn().mockResolvedValue(undefined),
     deleteScheduledTransaction: vi.fn().mockResolvedValue(undefined),
     deleteMultipleScheduledTransactions: vi.fn().mockResolvedValue(undefined),
@@ -67,65 +70,87 @@ function createMockProvider(): DataProvider {
 }
 
 describe("generateDiverseDemoData", () => {
-  it("creates richer note diversity in generated transactions", async () => {
+  const NOW = new Date(2029, 2, 14, 18, 0);
+  const run = async () => {
     const provider = createMockProvider();
+    const progress: number[] = [];
+    await generateDiverseDemoData(provider, (p) => progress.push(p.progress), {
+      now: NOW,
+      seed: 3,
+    });
+    const transactions = vi
+      .mocked(provider.addMultipleTransactions)
+      .mock.calls.flatMap(([batch]) => batch);
+    return { provider, progress, transactions };
+  };
 
-    await generateDiverseDemoData(provider, () => undefined);
-
-    const addMany = vi.mocked(provider.addMultipleTransactions);
-    const allBatches = addMany.mock.calls.map((call) => call[0]);
-    const allTransactions = allBatches.flat();
-
-    const nonEmptyRemarks = allTransactions
-      .map((tx) => tx.remarks)
-      .filter((v): v is string => !!v && v.trim().length > 0);
-
-    const uniqueRemarks = new Set(nonEmptyRemarks);
-    expect(uniqueRemarks.size).toBeGreaterThanOrEqual(5);
+  it("clears everything first, then creates the four ledgers", async () => {
+    const { provider } = await run();
+    expect(provider.clearAllData).toHaveBeenCalledOnce();
+    const order = [
+      vi.mocked(provider.clearAllData).mock.invocationCallOrder[0],
+      vi.mocked(provider.addLedger).mock.invocationCallOrder[0],
+    ];
+    expect(order[0]).toBeLessThan(order[1]);
+    expect(
+      vi.mocked(provider.addLedger).mock.calls.map(([l]) => l.name),
+    ).toEqual(["Home Budget", "Child Budget", "Offshore", "Freelance Studio"]);
   });
 
-  it("covers at least three years for each generated ledger", async () => {
-    const provider = createMockProvider();
-    await generateDiverseDemoData(provider, () => undefined);
-
-    const addMany = vi.mocked(provider.addMultipleTransactions);
-    const threeYearsAgo = new Date();
-    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
-
-    // Demo data saves transactions in multiple IndexedDB chunks per ledger.
-    expect(addMany.mock.calls.length).toBeGreaterThanOrEqual(3);
-
-    const allTransactions = addMany.mock.calls.map(([batch]) => batch).flat();
-    const oldest = allTransactions.reduce((min, tx) => {
-      const d = new Date(tx.date);
-      return d < min ? d : min;
-    }, new Date());
-
-    expect(oldest.getTime()).toBeLessThanOrEqual(threeYearsAgo.getTime());
+  it("measures history back from the given date, not from fixed years", async () => {
+    const { transactions } = await run();
+    const dates = transactions.map((t) => new Date(t.date).getTime());
+    const years = (NOW.getTime() - Math.min(...dates)) / (365.25 * 86_400_000);
+    expect(years).toBeGreaterThan(4.5);
+    expect(Math.max(...dates)).toBeLessThanOrEqual(NOW.getTime());
+    expect(new Date(Math.min(...dates)).getFullYear()).toBeLessThanOrEqual(
+      2024,
+    );
   });
 
-  it("keeps recent months denser than older windows", async () => {
-    const provider = createMockProvider();
-    await generateDiverseDemoData(provider, () => undefined);
+  it("saves transactions in batches, each tied to its ledger", async () => {
+    const { provider, transactions } = await run();
+    const batches = vi.mocked(provider.addMultipleTransactions).mock.calls;
+    expect(batches.length).toBeGreaterThan(20);
+    for (const [batch] of batches)
+      expect(batch.length).toBeLessThanOrEqual(250);
+    for (const t of transactions) {
+      expect(t.user_id).toMatch(/^ledger-\d$/);
+      expect("scheduleKey" in t).toBe(false);
+    }
+  });
 
-    const addMany = vi.mocked(provider.addMultipleTransactions);
-    const allTransactions = addMany.mock.calls.map(([batch]) => batch).flat();
+  it("points schedule-generated transactions at the schedule that made them", async () => {
+    const { provider, transactions } = await run();
+    const scheduleIds = new Set(
+      vi
+        .mocked(provider.addScheduledTransaction)
+        .mock.results.map((_, i) => `schedule-${i + 1}`),
+    );
+    const origins = transactions.filter((t) => t.is_scheduled_origin);
+    expect(origins.length).toBeGreaterThan(500);
+    for (const t of origins)
+      expect(scheduleIds.has(t.recurrence_id!)).toBe(true);
+  });
 
-    const now = Date.now();
-    const msInDay = 24 * 60 * 60 * 1000;
-    const recentCutoff = now - 120 * msInDay; // ~4 months
-    const oldWindowStart = now - 3 * 365 * msInDay;
-    const oldWindowEnd = now - 2 * 365 * msInDay;
+  it("stores budgets the way the Budgets dialog does", async () => {
+    const { provider } = await run();
+    const budgets = vi.mocked(provider.addBudget).mock.calls.map(([b]) => b);
+    expect(budgets.length).toBeGreaterThan(20);
+    const account = budgets.find((b) => b.budget_scope === "account")!;
+    expect(account.category_id).toBe("");
+    const category = budgets.find(
+      (b) => (b.budget_scope ?? "category") === "category",
+    )!;
+    expect(category.category_id).toBe("cat-id");
+  });
 
-    const recentCount = allTransactions.filter(
-      (tx) => new Date(tx.date).getTime() >= recentCutoff,
-    ).length;
-
-    const olderYearCount = allTransactions.filter((tx) => {
-      const t = new Date(tx.date).getTime();
-      return t >= oldWindowStart && t < oldWindowEnd;
-    }).length;
-
-    expect(recentCount).toBeGreaterThan(olderYearCount);
+  it("reports steadily increasing progress that only reaches 100 at the end", async () => {
+    const { progress } = await run();
+    for (let i = 1; i < progress.length; i++) {
+      expect(progress[i]).toBeGreaterThanOrEqual(progress[i - 1]);
+    }
+    expect(progress[progress.length - 1]).toBe(100);
+    expect(progress.filter((p) => p === 100)).toHaveLength(1);
   });
 });

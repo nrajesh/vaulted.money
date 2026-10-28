@@ -201,6 +201,22 @@ Never expose secrets (AI API keys, backup password hashes) through the API, and 
 
 ---
 
+## Translations
+
+User-visible text goes through `t("key", { defaultValue })` and every key is added for all five languages in `src/i18n/areas/` (see `documentation/I18N.md`). `src/i18n/coverageGuard.test.ts` fails if a key is undefined or if a file gains hard-coded English. Never build sentences by concatenation, and format dates with `formatDisplayDate`.
+
+---
+
+## Demo data
+
+"Generate demo data" is the app's shop window. Its content lives in `src/utils/demoDataPlan.ts` (see `documentation/DEMO_DATA.md`).
+
+- **When you add or change a user-visible feature, give the demo a scenario that uses it** and assert it in `src/utils/demoDataPlan.test.ts` or `src/api/demoData.test.ts`.
+- **Never hard-code a date or year** in demo data. Derive everything from the `now` the plan is given; the tests run it with several different "today" values.
+- Keep it deterministic for a seed, and keep balances believable (no overdrawn cash accounts, cards within their limit).
+
+---
+
 ## Quality checks
 
 ```bash

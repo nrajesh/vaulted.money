@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, {
   useState,
   useMemo,
@@ -33,6 +34,7 @@ export function BudgetPaginationWrapper({
   selectedBudgetIds,
   onToggleSelection,
 }: BudgetPaginationWrapperProps) {
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState(0);
@@ -115,9 +117,13 @@ export function BudgetPaginationWrapper({
   if (budgets.length === 0) {
     return (
       <div className="text-center py-12 border-2 border-dashed rounded-lg">
-        <h3 className="text-lg font-medium">No budgets found</h3>
+        <h3 className="text-lg font-medium">
+          {t("budgets.page.empty", { defaultValue: "No budgets found" })}
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Get started by creating your first budget.
+          {t("budgets.page.emptyHint", {
+            defaultValue: "Get started by creating your first budget.",
+          })}
         </p>
       </div>
     );
@@ -152,19 +158,27 @@ export function BudgetPaginationWrapper({
             disabled={currentPage === 1}
             variant="outline"
             size="icon"
-            aria-label="Previous page"
+            aria-label={t("budgets.page.prevPage", {
+              defaultValue: "Previous page",
+            })}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
+            {t("management.status.page", {
+              page: currentPage,
+              total: totalPages,
+              defaultValue: "Page {{page}} of {{total}}",
+            })}
           </span>
           <Button
             onClick={goToNextPage}
             disabled={currentPage === totalPages}
             variant="outline"
             size="icon"
-            aria-label="Next page"
+            aria-label={t("budgets.page.nextPage", {
+              defaultValue: "Next page",
+            })}
           >
             <ArrowRight className="h-4 w-4" />
           </Button>

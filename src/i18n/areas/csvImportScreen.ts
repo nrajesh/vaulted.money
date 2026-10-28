@@ -1,0 +1,417 @@
+import type { AreaTranslations } from "./types";
+
+/**
+ * The CSV import dialog. Machine-written: ask a native speaker to review.
+ */
+export const csvImportScreen: AreaTranslations = {
+  en: {
+    csvImport: {
+      title: {
+        config: "Import Settings",
+        mapping: "Map Columns",
+      },
+      subtitle: {
+        config: "Choose how the CSV should be read before importing it.",
+        mapping: "Match each Vaulted Money field to the correct CSV column.",
+      },
+      delimiter: {
+        label: "CSV Delimiter",
+        comma: "Comma (,)",
+        semicolon: "Semicolon (;)",
+        tab: "Tab (\\t)",
+      },
+      date: {
+        label: "Date Format (in CSV)",
+        auto: "Auto-detect",
+        dmy: "Day/Month/Year (e.g. 31/01/2024)",
+        mdy: "Month/Day/Year (e.g. 01/31/2024)",
+        ymd: "Year-Month-Day (e.g. 2024-01-31)",
+        dotted: "Day.Month.Year (e.g. 31.01.2024)",
+      },
+      decimal: {
+        label: "Decimal Format",
+        dot: "1,234.56 (Dot decimal)",
+        comma: "1.234,56 (Comma decimal)",
+      },
+      sign: {
+        label: "Amount Sign Convention",
+        negative: "Negative is Expense (-100)",
+        positive: "Positive is Expense (100)",
+        enforced:
+          "Negative values detected in CSV. 'Negative is Expense' setting enforced.",
+        positiveHint: "Expenses entered as positive numbers",
+        negativeHint: "Expenses entered as negative numbers",
+      },
+      mode: {
+        label: "Import Mode",
+        append: "Append to existing",
+        appendHint: "Keep current transactions and add the new rows.",
+        replace: "Replace existing",
+        replaceHint: "Clear the destination before importing the CSV.",
+      },
+      preview: {
+        title: "Available Data Preview (First 3 rows)",
+        row: "Row {{number}}",
+        reading: "Reading...",
+        empty: "No data properly parsed.",
+        refresh: "Refresh Preview",
+      },
+      mapping: {
+        intro: "Map the columns from your CSV to the system fields.",
+        selectColumn: "Select column",
+        noColumn: "No column",
+      },
+      actions: {
+        cancel: "Cancel",
+        next: "Next",
+        back: "Back",
+        import: "Import Transactions",
+      },
+      fields: {
+        Date: "Date",
+        Account: "Account",
+        Payee: "Payee",
+        Category: "Category",
+        Subcategory: "Subcategory",
+        Currency: "Currency",
+        Amount: "Amount",
+        Notes: "Notes",
+        Frequency: "Frequency",
+        EndDate: "End Date",
+        TransferID: "Transfer ID",
+        AccountType: "Account Type",
+        TransferAccount: "Transfer Account",
+        TransferAmount: "Transfer Amount",
+      },
+    },
+  },
+  es: {
+    csvImport: {
+      title: {
+        config: "Ajustes de importación",
+        mapping: "Asignar columnas",
+      },
+      subtitle: {
+        config: "Elige cómo se debe leer el CSV antes de importarlo.",
+        mapping:
+          "Asocia cada campo de Vaulted Money con la columna correcta del CSV.",
+      },
+      delimiter: {
+        label: "Delimitador del CSV",
+        comma: "Coma (,)",
+        semicolon: "Punto y coma (;)",
+        tab: "Tabulador (\\t)",
+      },
+      date: {
+        label: "Formato de fecha (en el CSV)",
+        auto: "Detección automática",
+        dmy: "Día/Mes/Año (p. ej. 31/01/2024)",
+        mdy: "Mes/Día/Año (p. ej. 01/31/2024)",
+        ymd: "Año-Mes-Día (p. ej. 2024-01-31)",
+        dotted: "Día.Mes.Año (p. ej. 31.01.2024)",
+      },
+      decimal: {
+        label: "Formato decimal",
+        dot: "1,234.56 (decimal con punto)",
+        comma: "1.234,56 (decimal con coma)",
+      },
+      sign: {
+        label: "Convención de signo del importe",
+        negative: "Negativo es gasto (-100)",
+        positive: "Positivo es gasto (100)",
+        enforced:
+          "Se detectaron valores negativos en el CSV. Se aplica la opción «Negativo es gasto».",
+        positiveHint: "Los gastos se indican con números positivos",
+        negativeHint: "Los gastos se indican con números negativos",
+      },
+      mode: {
+        label: "Modo de importación",
+        append: "Añadir a lo existente",
+        appendHint:
+          "Conserva las transacciones actuales y añade las filas nuevas.",
+        replace: "Reemplazar lo existente",
+        replaceHint: "Vacía el destino antes de importar el CSV.",
+      },
+      preview: {
+        title: "Vista previa de los datos (primeras 3 filas)",
+        row: "Fila {{number}}",
+        reading: "Leyendo...",
+        empty: "No se pudo leer ningún dato correctamente.",
+        refresh: "Actualizar vista previa",
+      },
+      mapping: {
+        intro: "Asocia las columnas de tu CSV con los campos del sistema.",
+        selectColumn: "Seleccionar columna",
+        noColumn: "Sin columna",
+      },
+      actions: {
+        cancel: "Cancelar",
+        next: "Siguiente",
+        back: "Atrás",
+        import: "Importar transacciones",
+      },
+      fields: {
+        Date: "Fecha",
+        Account: "Cuenta",
+        Payee: "Beneficiario",
+        Category: "Categoría",
+        Subcategory: "Subcategoría",
+        Currency: "Moneda",
+        Amount: "Importe",
+        Notes: "Notas",
+        Frequency: "Frecuencia",
+        EndDate: "Fecha de fin",
+        TransferID: "ID de transferencia",
+        AccountType: "Tipo de cuenta",
+        TransferAccount: "Cuenta de transferencia",
+        TransferAmount: "Importe de transferencia",
+      },
+    },
+  },
+  zh: {
+    csvImport: {
+      title: {
+        config: "导入设置",
+        mapping: "映射列",
+      },
+      subtitle: {
+        config: "导入前请选择如何读取 CSV。",
+        mapping: "将每个 Vaulted Money 字段与正确的 CSV 列对应。",
+      },
+      delimiter: {
+        label: "CSV 分隔符",
+        comma: "逗号 (,)",
+        semicolon: "分号 (;)",
+        tab: "制表符 (\\t)",
+      },
+      date: {
+        label: "日期格式（CSV 中）",
+        auto: "自动检测",
+        dmy: "日/月/年（例如 31/01/2024）",
+        mdy: "月/日/年（例如 01/31/2024）",
+        ymd: "年-月-日（例如 2024-01-31）",
+        dotted: "日.月.年（例如 31.01.2024）",
+      },
+      decimal: {
+        label: "小数格式",
+        dot: "1,234.56（点作小数点）",
+        comma: "1.234,56（逗号作小数点）",
+      },
+      sign: {
+        label: "金额符号约定",
+        negative: "负数为支出 (-100)",
+        positive: "正数为支出 (100)",
+        enforced: "在 CSV 中检测到负值，已强制使用“负数为支出”。",
+        positiveHint: "支出以正数表示",
+        negativeHint: "支出以负数表示",
+      },
+      mode: {
+        label: "导入模式",
+        append: "追加到现有数据",
+        appendHint: "保留当前交易并添加新行。",
+        replace: "替换现有数据",
+        replaceHint: "导入 CSV 前先清空目标。",
+      },
+      preview: {
+        title: "可用数据预览（前 3 行）",
+        row: "第 {{number}} 行",
+        reading: "正在读取...",
+        empty: "没有正确解析出数据。",
+        refresh: "刷新预览",
+      },
+      mapping: {
+        intro: "将 CSV 中的列映射到系统字段。",
+        selectColumn: "选择列",
+        noColumn: "不映射",
+      },
+      actions: {
+        cancel: "取消",
+        next: "下一步",
+        back: "上一步",
+        import: "导入交易",
+      },
+      fields: {
+        Date: "日期",
+        Account: "账户",
+        Payee: "收款方",
+        Category: "分类",
+        Subcategory: "子分类",
+        Currency: "货币",
+        Amount: "金额",
+        Notes: "备注",
+        Frequency: "频率",
+        EndDate: "结束日期",
+        TransferID: "转账 ID",
+        AccountType: "账户类型",
+        TransferAccount: "转入账户",
+        TransferAmount: "转账金额",
+      },
+    },
+  },
+  nl: {
+    csvImport: {
+      title: {
+        config: "Importinstellingen",
+        mapping: "Kolommen koppelen",
+      },
+      subtitle: {
+        config: "Kies hoe de CSV moet worden gelezen voordat je importeert.",
+        mapping: "Koppel elk Vaulted Money-veld aan de juiste CSV-kolom.",
+      },
+      delimiter: {
+        label: "CSV-scheidingsteken",
+        comma: "Komma (,)",
+        semicolon: "Puntkomma (;)",
+        tab: "Tab (\\t)",
+      },
+      date: {
+        label: "Datumnotatie (in CSV)",
+        auto: "Automatisch detecteren",
+        dmy: "Dag/Maand/Jaar (bijv. 31/01/2024)",
+        mdy: "Maand/Dag/Jaar (bijv. 01/31/2024)",
+        ymd: "Jaar-Maand-Dag (bijv. 2024-01-31)",
+        dotted: "Dag.Maand.Jaar (bijv. 31.01.2024)",
+      },
+      decimal: {
+        label: "Decimaalnotatie",
+        dot: "1,234.56 (punt als decimaalteken)",
+        comma: "1.234,56 (komma als decimaalteken)",
+      },
+      sign: {
+        label: "Tekenconventie voor bedragen",
+        negative: "Negatief is uitgave (-100)",
+        positive: "Positief is uitgave (100)",
+        enforced:
+          "Negatieve waarden gevonden in de CSV. De instelling 'Negatief is uitgave' wordt afgedwongen.",
+        positiveHint: "Uitgaven worden als positieve getallen ingevoerd",
+        negativeHint: "Uitgaven worden als negatieve getallen ingevoerd",
+      },
+      mode: {
+        label: "Importmodus",
+        append: "Toevoegen aan bestaande",
+        appendHint:
+          "Behoud de huidige transacties en voeg de nieuwe rijen toe.",
+        replace: "Bestaande vervangen",
+        replaceHint: "Wis de bestemming voordat de CSV wordt geïmporteerd.",
+      },
+      preview: {
+        title: "Voorbeeld van beschikbare gegevens (eerste 3 rijen)",
+        row: "Rij {{number}}",
+        reading: "Bezig met lezen...",
+        empty: "Geen gegevens correct ingelezen.",
+        refresh: "Voorbeeld vernieuwen",
+      },
+      mapping: {
+        intro: "Koppel de kolommen uit je CSV aan de systeemvelden.",
+        selectColumn: "Kolom kiezen",
+        noColumn: "Geen kolom",
+      },
+      actions: {
+        cancel: "Annuleren",
+        next: "Volgende",
+        back: "Terug",
+        import: "Transacties importeren",
+      },
+      fields: {
+        Date: "Datum",
+        Account: "Rekening",
+        Payee: "Begunstigde",
+        Category: "Categorie",
+        Subcategory: "Subcategorie",
+        Currency: "Valuta",
+        Amount: "Bedrag",
+        Notes: "Notities",
+        Frequency: "Frequentie",
+        EndDate: "Einddatum",
+        TransferID: "Overschrijvings-ID",
+        AccountType: "Rekeningtype",
+        TransferAccount: "Overschrijvingsrekening",
+        TransferAmount: "Overschrijvingsbedrag",
+      },
+    },
+  },
+  ta: {
+    csvImport: {
+      title: {
+        config: "இறக்குமதி அமைப்புகள்",
+        mapping: "நெடுவரிசைகளை இணை",
+      },
+      subtitle: {
+        config:
+          "இறக்குமதிக்கு முன் CSV எவ்வாறு படிக்கப்பட வேண்டும் என்பதைத் தேர்ந்தெடுக்கவும்.",
+        mapping:
+          "ஒவ்வொரு Vaulted Money புலத்தையும் சரியான CSV நெடுவரிசையுடன் பொருத்தவும்.",
+      },
+      delimiter: {
+        label: "CSV பிரிப்பான்",
+        comma: "காற்புள்ளி (,)",
+        semicolon: "அரைப்புள்ளி (;)",
+        tab: "தத்தல் (\\t)",
+      },
+      date: {
+        label: "தேதி வடிவம் (CSV இல்)",
+        auto: "தானாகக் கண்டறி",
+        dmy: "நாள்/மாதம்/ஆண்டு (எ.கா. 31/01/2024)",
+        mdy: "மாதம்/நாள்/ஆண்டு (எ.கா. 01/31/2024)",
+        ymd: "ஆண்டு-மாதம்-நாள் (எ.கா. 2024-01-31)",
+        dotted: "நாள்.மாதம்.ஆண்டு (எ.கா. 31.01.2024)",
+      },
+      decimal: {
+        label: "தசம வடிவம்",
+        dot: "1,234.56 (புள்ளி தசமம்)",
+        comma: "1.234,56 (காற்புள்ளி தசமம்)",
+      },
+      sign: {
+        label: "தொகை குறி மரபு",
+        negative: "எதிர்மறை என்பது செலவு (-100)",
+        positive: "நேர்மறை என்பது செலவு (100)",
+        enforced:
+          "CSV இல் எதிர்மறை மதிப்புகள் கண்டறியப்பட்டன. 'எதிர்மறை என்பது செலவு' அமைப்பு கட்டாயமாக்கப்பட்டது.",
+        positiveHint: "செலவுகள் நேர்மறை எண்களாக உள்ளிடப்படுகின்றன",
+        negativeHint: "செலவுகள் எதிர்மறை எண்களாக உள்ளிடப்படுகின்றன",
+      },
+      mode: {
+        label: "இறக்குமதி முறை",
+        append: "இருப்பவற்றுடன் சேர்",
+        appendHint:
+          "தற்போதைய பரிவர்த்தனைகளை வைத்து புதிய வரிசைகளைச் சேர்க்கவும்.",
+        replace: "இருப்பவற்றை மாற்று",
+        replaceHint: "CSV ஐ இறக்குமதி செய்வதற்கு முன் இலக்கை அழிக்கவும்.",
+      },
+      preview: {
+        title: "கிடைக்கும் தரவு முன்னோட்டம் (முதல் 3 வரிசைகள்)",
+        row: "வரிசை {{number}}",
+        reading: "படிக்கிறது...",
+        empty: "தரவு சரியாகப் பகுக்கப்படவில்லை.",
+        refresh: "முன்னோட்டத்தைப் புதுப்பி",
+      },
+      mapping: {
+        intro: "உங்கள் CSV நெடுவரிசைகளை கணினி புலங்களுடன் இணைக்கவும்.",
+        selectColumn: "நெடுவரிசையைத் தேர்ந்தெடு",
+        noColumn: "நெடுவரிசை இல்லை",
+      },
+      actions: {
+        cancel: "ரத்துசெய்",
+        next: "அடுத்து",
+        back: "பின்",
+        import: "பரிவர்த்தனைகளை இறக்குமதி செய்",
+      },
+      fields: {
+        Date: "தேதி",
+        Account: "கணக்கு",
+        Payee: "பெறுநர்",
+        Category: "வகை",
+        Subcategory: "துணை வகை",
+        Currency: "நாணயம்",
+        Amount: "தொகை",
+        Notes: "குறிப்புகள்",
+        Frequency: "அடிக்கடி",
+        EndDate: "முடிவு தேதி",
+        TransferID: "பரிமாற்ற ID",
+        AccountType: "கணக்கு வகை",
+        TransferAccount: "பரிமாற்றக் கணக்கு",
+        TransferAmount: "பரிமாற்றத் தொகை",
+      },
+    },
+  },
+};

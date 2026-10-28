@@ -38,6 +38,8 @@ Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every 
 | Deletes | `204 No Content` |
 | Downloads | `Content-Disposition: attachment` (see below) |
 
+Dates must be real calendar days, either `YYYY-MM-DD` or a full ISO 8601 timestamp: `2026-02-30`, `03/04/2026` and bare numbers are rejected with `400`, and so is a garbage `from`/`to` filter. Currency codes are three letters (`EUR`; lower case is upper-cased). Custom frequencies and budget intervals need a positive number (`2w`, not `0w`), and a recurring transaction or budget cannot end before it starts.
+
 Ledger data is addressed explicitly (`/ledgers/{ledgerId}/...`); the API never depends on which ledger is open in the UI. The open UI is refreshed after each change made through the API.
 
 Transactions, recurring transactions and budgets refer to accounts, vendors, categories and sub-categories by **name**. Renames and deletes therefore update or remove those records too, but only in the ledger in the path: another ledger that uses the same name is never changed. A rename to a name already in use returns `409` and changes nothing. The app's own edit and delete buttons do exactly the same.
@@ -90,9 +92,9 @@ Under `/ledgers/{ledgerId}/transactions`.
 | `GET` | Filters: `from`, `to` (`YYYY-MM-DD`), `account`, `vendor`, `category`, `sub_category`, `min_amount`, `max_amount`, `type=income\|expense`, `search`, `exclude_transfers`, `limit` (default 100, max 1000), `offset` |
 | `POST` | `{date, amount, account, vendor, category, sub_category?, remarks?, currency?}`. Negative amounts are expenses. `currency` defaults to the account's. Unknown accounts, vendors and categories are created, as in the UI. |
 | `POST /bulk` | `{transactions: [...]}` (up to 1000) |
-| `POST /transfer` | `{from_account, to_account, amount, date, to_amount?, remarks?}`: two linked legs. `to_amount` is required when the currencies differ. |
+| `POST /transfer` | `{from_account, to_account, amount, date, to_amount?, remarks?}`: two linked legs. `to_amount` is required when the currencies differ and rejected (`400`) when they match and the amounts differ. |
 | `DELETE /transfer/{transferId}` | delete both legs |
-| `GET/PATCH/DELETE /{transactionId}` | |
+| `GET/PATCH/DELETE /{transactionId}` | Editing one leg of a transfer updates the other (date, category, remarks, swapped account and vendor, and the amount when both legs share a currency). Deleting one leg deletes both. Both match the app. |
 
 ### Recurring (scheduled) transactions
 Under `/ledgers/{ledgerId}/scheduled-transactions`.
@@ -104,7 +106,7 @@ Under `/ledgers/{ledgerId}/scheduled-transactions`.
 | `POST /{scheduledId}/skip` | `{date}`: skip one occurrence |
 
 - `date` is the **next** occurrence. The app turns due schedules into real transactions itself, whenever it is running, exactly as for schedules created in the UI.
-- `frequency`: `Daily`, `Weekly`, `Monthly`, `Yearly`, `One-time`, or a duration like `2w` (`d`, `w`, `m`, `y`).
+- `frequency`: `Daily`, `Weekly`, `Monthly`, `Yearly`, `One-time`, or a duration like `2w` (`d`, `w`, `m`, `y`; the number must be at least 1).
 - Accounts, vendors and categories that do not exist yet are created; `currency` defaults to the account's.
 
 ### Budgets

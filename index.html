@@ -3,6 +3,18 @@
 
 <head>
   <meta charset="UTF-8" />
+  <!--
+    The build uses relative asset URLs (base "./") so the same output works
+    under Electron's file:// protocol. On http(s) with path routing, a deep link
+    such as /reports/essential would then request /reports/assets/*.js, receive
+    the SPA fallback HTML and render a blank page. Pin the document base to the
+    site root there. This must stay before any other URL-bearing tag.
+  -->
+  <script>
+    if (/^https?:$/.test(location.protocol)) {
+      document.write('<base href="/">');
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <!-- Favicons -->
