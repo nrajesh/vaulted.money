@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 import "fake-indexeddb/auto";
 import { beforeEach } from "vitest";
+// Real translations in every test: without them `t` returns the raw default
+// text and never fills in {{placeholders}}, which hides interpolation bugs.
+import "@/i18n/config";
 
 /*
  * Reset jsdom's focus state before every test.

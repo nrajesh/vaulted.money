@@ -201,6 +201,12 @@ Never expose secrets (AI API keys, backup password hashes) through the API, and 
 
 ---
 
+## Translations
+
+User-visible text goes through `t("key", { defaultValue })` and every key is added for all five languages in `src/i18n/areas/` (see `documentation/I18N.md`). `src/i18n/coverageGuard.test.ts` fails if a key is undefined or if a file gains hard-coded English. Never build sentences by concatenation, and format dates with `formatDisplayDate`.
+
+---
+
 ## Demo data
 
 "Generate demo data" is the app's shop window. Its content lives in `src/utils/demoDataPlan.ts` (see `documentation/DEMO_DATA.md`).

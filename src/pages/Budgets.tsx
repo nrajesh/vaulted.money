@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { calculateBudgetSpent } from "@/utils/budgetUtils";
 
 export default function BudgetsPage() {
+  const { t } = useTranslation();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -56,14 +58,16 @@ export default function BudgetsPage() {
         setBudgets(data || []);
       } catch (error: unknown) {
         toast({
-          title: "Error fetching budgets",
+          title: t("budgets.page.errorFetching", {
+            defaultValue: "Error fetching budgets",
+          }),
           description: (error as Error).message,
           variant: "destructive",
         });
       }
       setIsLoading(false);
     },
-    [dataProvider, toast],
+    [dataProvider, toast, t],
   );
 
   useEffect(() => {
@@ -167,7 +171,9 @@ export default function BudgetsPage() {
       // So simple delete is fine.
     } catch (error: unknown) {
       toast({
-        title: "Error deleting budget",
+        title: t("budgets.page.errorDeleting", {
+          defaultValue: "Error deleting budget",
+        }),
         description: (error as Error).message,
         variant: "destructive",
       });
@@ -203,12 +209,19 @@ export default function BudgetsPage() {
       });
       setSelectedBudgetIds(new Set());
       toast({
-        title: "Budgets deleted",
-        description: `Successfully deleted ${selectedBudgetIds.size} budgets.`,
+        title: t("budgets.page.deletedMany.title", {
+          defaultValue: "Budgets deleted",
+        }),
+        description: t("budgets.page.deletedMany.description", {
+          count: selectedBudgetIds.size,
+          defaultValue: "Successfully deleted {{count}} budgets.",
+        }),
       });
     } catch (error: unknown) {
       toast({
-        title: "Error deleting budgets",
+        title: t("budgets.page.errorDeletingMany", {
+          defaultValue: "Error deleting budgets",
+        }),
         description: (error as Error).message,
         variant: "destructive",
       });
@@ -231,9 +244,13 @@ export default function BudgetsPage() {
     <div className="page-container">
       <div className="app-page-header flex flex-col items-start gap-4">
         <div>
-          <h1 className="app-gradient-title app-page-title">Budgets</h1>
+          <h1 className="app-gradient-title app-page-title">
+            {t("budgets.page.title", { defaultValue: "Budgets" })}
+          </h1>
           <p className="app-page-subtitle">
-            Track your spending limits and goals
+            {t("budgets.page.subtitle", {
+              defaultValue: "Track your spending limits and goals",
+            })}
           </p>
         </div>
         <div className="app-action-panel">
@@ -244,13 +261,14 @@ export default function BudgetsPage() {
               onClick={() => setIsSmartBudgetOpen(true)}
             >
               <Wand2 className="mr-2 h-4 w-4" />
-              Smart Create
+              {t("budgets.page.smartCreate", { defaultValue: "Smart Create" })}
             </Button>
             <Button
               onClick={() => handleOpenDialog()}
               className="tour-create-budget bg-indigo-600 hover:bg-indigo-700 text-white"
             >
-              <PlusCircle className="mr-2 h-4 w-4" /> Create Budget
+              <PlusCircle className="mr-2 h-4 w-4" />{" "}
+              {t("budgets.page.create", { defaultValue: "Create Budget" })}
             </Button>
           </div>
         </div>
@@ -260,7 +278,9 @@ export default function BudgetsPage() {
         <div className="tour-budget-search-bar app-filter-panel">
           <div className="flex flex-wrap items-center gap-2">
             <Input
-              placeholder="Search budgets by category name..."
+              placeholder={t("budgets.page.search", {
+                defaultValue: "Search budgets by category name...",
+              })}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full sm:max-w-md"
@@ -272,8 +292,10 @@ export default function BudgetsPage() {
             >
               {selectedBudgetIds.size === filteredBudgets.length &&
               filteredBudgets.length > 0
-                ? "Deselect All"
-                : "Select All"}
+                ? t("budgets.page.deselectAll", {
+                    defaultValue: "Deselect All",
+                  })
+                : t("budgets.page.selectAll", { defaultValue: "Select All" })}
             </Button>
             {selectedBudgetIds.size > 0 && (
               <Button
@@ -282,7 +304,10 @@ export default function BudgetsPage() {
                 className="animate-in fade-in zoom-in duration-300"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete ({selectedBudgetIds.size})
+                {t("budgets.page.deleteCount", {
+                  count: selectedBudgetIds.size,
+                  defaultValue: "Delete ({{count}})",
+                })}
               </Button>
             )}
           </div>
@@ -293,7 +318,9 @@ export default function BudgetsPage() {
         </div>
 
         <div>
-          <h2 className="app-section-title mb-4">Active Budgets</h2>
+          <h2 className="app-section-title mb-4">
+            {t("budgets.page.active", { defaultValue: "Active Budgets" })}
+          </h2>
 
           <BudgetPaginationWrapper
             budgets={activeBudgets}
@@ -308,7 +335,9 @@ export default function BudgetsPage() {
           {inactiveBudgets.length > 0 && (
             <div className="mt-8">
               <h2 className="app-section-title mb-4 text-muted-foreground">
-                Inactive Budgets
+                {t("budgets.page.inactive", {
+                  defaultValue: "Inactive Budgets",
+                })}
               </h2>
               <BudgetPaginationWrapper
                 budgets={inactiveBudgets}
@@ -349,18 +378,28 @@ export default function BudgetsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("budgets.page.confirmTitle", {
+                defaultValue: "Are you absolutely sure?",
+              })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete the selected budget.
+              {t("budgets.page.confirmDescription", {
+                defaultValue: "This will delete the selected budget.",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t("dialogs.common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete Budget
+              {t("budgets.page.confirmDelete", {
+                defaultValue: "Delete Budget",
+              })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

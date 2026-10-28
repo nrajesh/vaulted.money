@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { usePayeeManagement } from "@/hooks/usePayeeManagement";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -15,9 +16,25 @@ import { filterAccounts } from "@/utils/nlp-search";
 import { GroupedEntityTable } from "@/components/management/GroupedEntityTable";
 
 const AccountsPage = () => {
+  const { t } = useTranslation();
   const { accounts, isLoadingAccounts, invalidateAllData } = useTransactions();
   const { formatCurrency } = useCurrency();
   const managementProps = usePayeeManagement(true);
+
+  // Account types are stored in English; show them in the app language.
+  const typeLabel = (type: string) => {
+    const keys: Record<string, [string, string]> = {
+      Checking: ["checking", "Checking"],
+      Savings: ["savings", "Savings"],
+      "Credit Card": ["creditCard", "Credit Card"],
+      Investment: ["investment", "Investment"],
+      Other: ["other", "Other"],
+    };
+    const known = keys[type];
+    return known
+      ? t(`management.accountTypes.${known[0]}`, { defaultValue: known[1] })
+      : type;
+  };
 
   // Sort accounts by type for grouping
   const sortedAccounts = React.useMemo(() => {
@@ -32,7 +49,9 @@ const AccountsPage = () => {
 
   const columns: ColumnDefinition<Payee>[] = [
     {
-      header: "Account Name",
+      header: t("management.columns.accountName", {
+        defaultValue: "Account Name",
+      }),
       accessor: "name",
       cellRenderer: (item) => (
         <div
@@ -43,21 +62,36 @@ const AccountsPage = () => {
         </div>
       ),
     },
-    { header: "Type", accessor: (item) => item.type || "Checking" }, // Default for legacy data
-    { header: "Currency", accessor: "currency" },
     {
-      header: "Starting Balance",
+      header: t("management.columns.type", { defaultValue: "Type" }),
+      accessor: (item) => typeLabel(item.type || "Checking"),
+    }, // Default for legacy data
+    {
+      header: t("management.columns.currency", { defaultValue: "Currency" }),
+      accessor: "currency",
+    },
+    {
+      header: t("management.columns.startingBalance", {
+        defaultValue: "Starting Balance",
+      }),
       accessor: (item) =>
         formatCurrency(item.starting_balance || 0, item.currency || undefined),
     },
     {
-      header: "Running Balance",
+      header: t("management.columns.runningBalance", {
+        defaultValue: "Running Balance",
+      }),
       accessor: (item) =>
         formatCurrency(item.running_balance || 0, item.currency || undefined),
     },
-    { header: "Remarks", accessor: "remarks" },
     {
-      header: "Transactions",
+      header: t("management.columns.remarks", { defaultValue: "Remarks" }),
+      accessor: "remarks",
+    },
+    {
+      header: t("management.columns.transactions", {
+        defaultValue: "Transactions",
+      }),
       accessor: "totalTransactions",
       cellRenderer: (item) => (
         <span
@@ -73,10 +107,18 @@ const AccountsPage = () => {
   return (
     <div className="tour-accounts-list">
       <EntityManagementPage<Payee>
-        title="Accounts"
-        subtitle="Manage your bank accounts and credit cards"
-        entityName="Account"
-        entityNamePlural="accounts"
+        title={t("management.entities.account.title", {
+          defaultValue: "Accounts",
+        })}
+        subtitle={t("management.entities.account.subtitle", {
+          defaultValue: "Manage your bank accounts and credit cards",
+        })}
+        entityName={t("management.entities.account.singular", {
+          defaultValue: "Account",
+        })}
+        entityNamePlural={t("management.entities.account.plural", {
+          defaultValue: "accounts",
+        })}
         data={sortedAccounts}
         isLoading={isLoadingAccounts}
         columns={columns}
@@ -97,6 +139,7 @@ const AccountsPage = () => {
         }
         TableComponent={GroupedEntityTable}
         groupBy="type"
+        groupLabel={typeLabel}
         disablePagination={true}
       />
     </div>

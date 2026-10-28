@@ -154,9 +154,15 @@ const LedgerEntryPage = () => {
 
     try {
       setOperationProgress({
-        title: "Importing CSV",
-        description: "Creating ledger...",
-        stage: "Creating ledger...",
+        title: t("ledgerEntry.progress.importingCsv", {
+          defaultValue: "Importing CSV",
+        }),
+        description: t("ledgerEntry.progress.creatingLedger", {
+          defaultValue: "Creating ledger...",
+        }),
+        stage: t("ledgerEntry.progress.creatingLedger", {
+          defaultValue: "Creating ledger...",
+        }),
         progress: 0,
         totalStages: 100,
       });
@@ -179,16 +185,26 @@ const LedgerEntryPage = () => {
       );
 
       if (transactions.length === 0) {
-        showError("No valid transactions found after parsing.");
+        showError(
+          t("ledgerEntry.toasts.noValidTransactions", {
+            defaultValue: "No valid transactions found after parsing.",
+          }),
+        );
         setOperationProgress(null);
         return;
       }
 
       // Step A: Payees/Accounts
       setOperationProgress({
-        title: "Importing CSV",
-        description: "Setting up accounts...",
-        stage: "Setting up accounts...",
+        title: t("ledgerEntry.progress.importingCsv", {
+          defaultValue: "Importing CSV",
+        }),
+        description: t("ledgerEntry.progress.settingUpAccounts", {
+          defaultValue: "Setting up accounts...",
+        }),
+        stage: t("ledgerEntry.progress.settingUpAccounts", {
+          defaultValue: "Setting up accounts...",
+        }),
         progress: 15,
         totalStages: 100,
       });
@@ -205,9 +221,15 @@ const LedgerEntryPage = () => {
       }
 
       setOperationProgress({
-        title: "Importing CSV",
-        description: "Setting up vendors...",
-        stage: "Setting up vendors...",
+        title: t("ledgerEntry.progress.importingCsv", {
+          defaultValue: "Importing CSV",
+        }),
+        description: t("ledgerEntry.progress.settingUpVendors", {
+          defaultValue: "Setting up vendors...",
+        }),
+        stage: t("ledgerEntry.progress.settingUpVendors", {
+          defaultValue: "Setting up vendors...",
+        }),
         progress: 40,
         totalStages: 100,
       });
@@ -221,9 +243,15 @@ const LedgerEntryPage = () => {
 
       // Step B: Categories
       setOperationProgress({
-        title: "Importing CSV",
-        description: "Setting up categories...",
-        stage: "Setting up categories...",
+        title: t("ledgerEntry.progress.importingCsv", {
+          defaultValue: "Importing CSV",
+        }),
+        description: t("ledgerEntry.progress.settingUpCategories", {
+          defaultValue: "Setting up categories...",
+        }),
+        stage: t("ledgerEntry.progress.settingUpCategories", {
+          defaultValue: "Setting up categories...",
+        }),
         progress: 60,
         totalStages: 100,
       });
@@ -237,9 +265,15 @@ const LedgerEntryPage = () => {
 
       // Step C: Insert Transactions
       setOperationProgress({
-        title: "Importing CSV",
-        description: "Inserting transactions...",
-        stage: "Inserting transactions...",
+        title: t("ledgerEntry.progress.importingCsv", {
+          defaultValue: "Importing CSV",
+        }),
+        description: t("ledgerEntry.progress.insertingTransactions", {
+          defaultValue: "Inserting transactions...",
+        }),
+        stage: t("ledgerEntry.progress.insertingTransactions", {
+          defaultValue: "Inserting transactions...",
+        }),
         progress: 80,
         totalStages: 100,
       });
@@ -262,20 +296,33 @@ const LedgerEntryPage = () => {
       await dataProvider.addMultipleTransactions(transactionsToInsert);
 
       setOperationProgress({
-        title: "Importing CSV",
-        description: "Import complete!",
+        title: t("ledgerEntry.progress.importingCsv", {
+          defaultValue: "Importing CSV",
+        }),
+        description: t("ledgerEntry.progress.importComplete", {
+          defaultValue: "Import complete!",
+        }),
         stage: "Complete",
         progress: 100,
         totalStages: 100,
       });
 
       showSuccess(
-        `Imported ${transactionsToInsert.length} transactions into new ledger "${newLedgerDetails.name}".`,
+        t("ledgerEntry.toasts.csvImported", {
+          count: transactionsToInsert.length,
+          name: newLedgerDetails.name,
+          defaultValue:
+            'Imported {{count}} transactions into new ledger "{{name}}".',
+        }),
       );
       await refreshLedgers();
     } catch (e) {
       console.error(e);
-      showError("Failed to import CSV data.");
+      showError(
+        t("ledgerEntry.toasts.csvFailed", {
+          defaultValue: "Failed to import CSV data.",
+        }),
+      );
     } finally {
       setTimeout(() => setOperationProgress(null), 500);
       setIsMappingDialogOpen(false);
@@ -304,8 +351,12 @@ const LedgerEntryPage = () => {
         } else {
           // Assume plain text
           setOperationProgress({
-            title: "Importing Data",
-            description: "Importing backup data...",
+            title: t("ledgerEntry.progress.importingData", {
+              defaultValue: "Importing Data",
+            }),
+            description: t("ledgerEntry.progress.importingBackup", {
+              defaultValue: "Importing backup data...",
+            }),
             stage: "Importing...",
             progress: 50,
             totalStages: 100,
@@ -314,14 +365,22 @@ const LedgerEntryPage = () => {
           await dataProvider.importData(unwrapBackupEnvelope(parsed));
 
           setOperationProgress({
-            title: "Importing Data",
-            description: "Import complete!",
+            title: t("ledgerEntry.progress.importingData", {
+              defaultValue: "Importing Data",
+            }),
+            description: t("ledgerEntry.progress.importComplete", {
+              defaultValue: "Import complete!",
+            }),
             stage: "Complete",
             progress: 100,
             totalStages: 100,
           });
 
-          showSuccess("Data imported successfully!");
+          showSuccess(
+            t("ledgerEntry.toasts.dataImported", {
+              defaultValue: "Data imported successfully!",
+            }),
+          );
 
           // Instant refresh instead of reload
           await refreshLedgers();
@@ -329,7 +388,11 @@ const LedgerEntryPage = () => {
         }
       } catch {
         setOperationProgress(null);
-        showError("Invalid file format.");
+        showError(
+          t("ledgerEntry.toasts.invalidFile", {
+            defaultValue: "Invalid file format.",
+          }),
+        );
       }
     };
     reader.readAsText(file);
@@ -341,8 +404,12 @@ const LedgerEntryPage = () => {
     if (!tempImportFile) return;
     try {
       setOperationProgress({
-        title: "Importing Encrypted Data",
-        description: "Decrypting backup...",
+        title: t("ledgerEntry.progress.importingEncrypted", {
+          defaultValue: "Importing Encrypted Data",
+        }),
+        description: t("ledgerEntry.progress.decrypting", {
+          defaultValue: "Decrypting backup...",
+        }),
         stage: "Decrypting...",
         progress: 25,
         totalStages: 100,
@@ -352,8 +419,12 @@ const LedgerEntryPage = () => {
       const data = unwrapBackupEnvelope(JSON.parse(decryptedParams));
 
       setOperationProgress({
-        title: "Importing Encrypted Data",
-        description: "Importing data...",
+        title: t("ledgerEntry.progress.importingEncrypted", {
+          defaultValue: "Importing Encrypted Data",
+        }),
+        description: t("ledgerEntry.progress.importingData2", {
+          defaultValue: "Importing data...",
+        }),
         stage: "Importing...",
         progress: 50,
         totalStages: 100,
@@ -362,14 +433,22 @@ const LedgerEntryPage = () => {
       await dataProvider.importData(data);
 
       setOperationProgress({
-        title: "Importing Encrypted Data",
-        description: "Import complete!",
+        title: t("ledgerEntry.progress.importingEncrypted", {
+          defaultValue: "Importing Encrypted Data",
+        }),
+        description: t("ledgerEntry.progress.importComplete", {
+          defaultValue: "Import complete!",
+        }),
         stage: "Complete",
         progress: 100,
         totalStages: 100,
       });
 
-      showSuccess("Encrypted data imported successfully!");
+      showSuccess(
+        t("ledgerEntry.toasts.encryptedImported", {
+          defaultValue: "Encrypted data imported successfully!",
+        }),
+      );
       setTempImportFile(null);
 
       // Instant refresh instead of reload
@@ -377,8 +456,18 @@ const LedgerEntryPage = () => {
       setTimeout(() => setOperationProgress(null), 500);
     } catch (e) {
       setOperationProgress(null);
-      const message = e instanceof Error ? e.message : "Unknown error";
-      showError(`Import failed: ${message}`);
+      const message =
+        e instanceof Error
+          ? e.message
+          : t("ledgerEntry.toasts.unknownError", {
+              defaultValue: "Unknown error",
+            });
+      showError(
+        t("ledgerEntry.toasts.importFailed", {
+          message,
+          defaultValue: "Import failed: {{message}}",
+        }),
+      );
     }
   };
 
@@ -423,14 +512,27 @@ const LedgerEntryPage = () => {
         }
         setSelectedLedgers(new Set());
         setIsSelectionMode(false);
-        showSuccess(`Deleted ${selectedLedgers.size} ledgers.`);
+        showSuccess(
+          t("ledgerEntry.toasts.deletedMany", {
+            count: selectedLedgers.size,
+            defaultValue: "Deleted {{count}} ledgers.",
+          }),
+        );
       } else if (ledgerToDelete) {
         await deleteLedger(ledgerToDelete);
-        showSuccess("Ledger deleted.");
+        showSuccess(
+          t("ledgerEntry.toasts.deletedOne", {
+            defaultValue: "Ledger deleted.",
+          }),
+        );
       }
     } catch (error) {
       console.error(error); // Keep minimal error logging
-      showError("Failed to delete ledger.");
+      showError(
+        t("ledgerEntry.toasts.deleteFailed", {
+          defaultValue: "Failed to delete ledger.",
+        }),
+      );
     }
     setIsDeleteAlertOpen(false);
     setLedgerToDelete(null);
@@ -567,10 +669,16 @@ const LedgerEntryPage = () => {
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                aria-label="More actions"
+                aria-label={t("ledgerEntry.moreActions", {
+                  defaultValue: "More actions",
+                })}
               >
                 <MoreHorizontal className="h-5 w-5 text-slate-600 dark:text-gray-300" />
-                <span className="sr-only">More actions</span>
+                <span className="sr-only">
+                  {t("ledgerEntry.moreActions", {
+                    defaultValue: "More actions",
+                  })}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -617,7 +725,9 @@ const LedgerEntryPage = () => {
                 ) : (
                   <Moon className="h-5 w-5" />
                 )}
-                {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
+                {resolvedTheme === "dark"
+                  ? t("ledgerEntry.lightMode", { defaultValue: "Light mode" })
+                  : t("ledgerEntry.darkMode", { defaultValue: "Dark mode" })}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -647,7 +757,9 @@ const LedgerEntryPage = () => {
               nameClassName={isHomepageMobilePreview ? "text-5xl" : undefined}
             />
             <p className="app-page-subtitle mx-auto max-w-xl">
-              Select a budget ledger to continue.
+              {t("ledgerEntry.subtitle", {
+                defaultValue: "Select a budget ledger to continue.",
+              })}
             </p>
           </div>
 
@@ -655,7 +767,9 @@ const LedgerEntryPage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search ledgers..."
+                placeholder={t("ledgerEntry.searchPlaceholder", {
+                  defaultValue: "Search ledgers...",
+                })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-11 rounded-xl border-slate-200 bg-background/70 pl-10 pr-11 dark:border-slate-700"
@@ -666,7 +780,9 @@ const LedgerEntryPage = () => {
                   size="icon"
                   className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2 rounded-full"
                   onClick={() => setSearchTerm("")}
-                  aria-label="Clear search"
+                  aria-label={t("ledgerEntry.clearSearch", {
+                    defaultValue: "Clear search",
+                  })}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -680,12 +796,19 @@ const LedgerEntryPage = () => {
                 onClick={toggleSelectionMode}
                 className="rounded-full"
               >
-                {isSelectionMode ? "Done managing" : "Manage"}
+                {isSelectionMode
+                  ? t("ledgerEntry.doneManaging", {
+                      defaultValue: "Done managing",
+                    })
+                  : t("ledgerEntry.manage", { defaultValue: "Manage" })}
               </Button>
               {isSelectionMode ? (
                 <>
                   <span className="text-sm font-medium text-muted-foreground">
-                    {selectedLedgers.size} selected
+                    {t("ledgerEntry.selectedCount", {
+                      count: selectedLedgers.size,
+                      defaultValue: "{{count}} selected",
+                    })}
                   </span>
                   <Button
                     variant="destructive"
@@ -695,12 +818,16 @@ const LedgerEntryPage = () => {
                     className="rounded-full"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Delete selected
+                    {t("ledgerEntry.deleteSelected", {
+                      defaultValue: "Delete selected",
+                    })}
                   </Button>
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Tap a ledger to open it.
+                  {t("ledgerEntry.tapToOpen", {
+                    defaultValue: "Tap a ledger to open it.",
+                  })}
                 </p>
               )}
             </div>
@@ -730,7 +857,11 @@ const LedgerEntryPage = () => {
             )}
           >
             {filteredLedgers.length === 0 && ledgers.length > 0 && (
-              <p>No ledgers match your search.</p>
+              <p>
+                {t("ledgerEntry.noMatch", {
+                  defaultValue: "No ledgers match your search.",
+                })}
+              </p>
             )}
 
             {filteredLedgers.map((ledger) => {
@@ -754,7 +885,10 @@ const LedgerEntryPage = () => {
                           onClick={(event) => event.stopPropagation()}
                         >
                           <Checkbox
-                            aria-label={`Select ledger ${ledger.name}`}
+                            aria-label={t("ledgerEntry.selectLedger", {
+                              name: ledger.name,
+                              defaultValue: "Select ledger {{name}}",
+                            })}
                             checked={isSelected}
                             onCheckedChange={(checked) =>
                               handleToggleSelect(ledger.id, checked as boolean)
@@ -795,7 +929,9 @@ const LedgerEntryPage = () => {
                                 onClick={(event) =>
                                   handleDeleteClick(ledger.id, event)
                                 }
-                                title="Delete Ledger"
+                                title={t("ledgerEntry.deleteLedger", {
+                                  defaultValue: "Delete Ledger",
+                                })}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -809,7 +945,9 @@ const LedgerEntryPage = () => {
                         <div className="mt-4 flex items-end justify-between gap-3">
                           <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700/80 dark:text-emerald-300/80">
-                              Last opened
+                              {t("ledgerEntry.lastOpened", {
+                                defaultValue: "Last opened",
+                              })}
                             </p>
                             <p className="mt-1 text-sm text-muted-foreground">
                               {formatLastAccessed(ledger.last_accessed)}
@@ -817,7 +955,13 @@ const LedgerEntryPage = () => {
                           </div>
                           {isSelectionMode && (
                             <span className="text-sm font-medium text-muted-foreground">
-                              {isSelected ? "Selected" : "Tap to select"}
+                              {isSelected
+                                ? t("ledgerEntry.selected", {
+                                    defaultValue: "Selected",
+                                  })
+                                : t("ledgerEntry.tapToSelect", {
+                                    defaultValue: "Tap to select",
+                                  })}
                             </span>
                           )}
                         </div>
@@ -843,10 +987,15 @@ const LedgerEntryPage = () => {
                 </div>
                 <div className="min-w-0 text-left">
                   <p className="text-base font-semibold text-foreground">
-                    Create new ledger
+                    {t("ledgerEntry.createTitle", {
+                      defaultValue: "Create new ledger",
+                    })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Separate personal, family, or business budgets cleanly.
+                    {t("ledgerEntry.createHint", {
+                      defaultValue:
+                        "Separate personal, family, or business budgets cleanly.",
+                    })}
                   </p>
                 </div>
               </ThemedCardContent>
@@ -855,10 +1004,16 @@ const LedgerEntryPage = () => {
 
           <div className="tour-import-backup rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/40">
             <div className="mb-3">
-              <h2 className="text-base font-semibold">Import and setup</h2>
+              <h2 className="text-base font-semibold">
+                {t("ledgerEntry.setup.title", {
+                  defaultValue: "Import and setup",
+                })}
+              </h2>
               <p className="text-sm text-muted-foreground">
-                Bring in a backup, start from CSV, or load demo data for
-                testing.
+                {t("ledgerEntry.setup.subtitle", {
+                  defaultValue:
+                    "Bring in a backup, start from CSV, or load demo data for testing.",
+                })}
               </p>
             </div>
 
@@ -870,9 +1025,15 @@ const LedgerEntryPage = () => {
               >
                 <Upload className="mt-0.5 h-5 w-5" />
                 <span className="min-w-0">
-                  <span className="block font-semibold">Import backup</span>
+                  <span className="block font-semibold">
+                    {t("ledgerEntry.setup.importBackup", {
+                      defaultValue: "Import backup",
+                    })}
+                  </span>
                   <span className="block text-xs text-muted-foreground">
-                    Restore a JSON or encrypted export.
+                    {t("ledgerEntry.setup.importBackupHint", {
+                      defaultValue: "Restore a JSON or encrypted export.",
+                    })}
                   </span>
                 </span>
               </Button>
@@ -885,10 +1046,15 @@ const LedgerEntryPage = () => {
                 <FileText className="mt-0.5 h-5 w-5" />
                 <span className="min-w-0">
                   <span className="block font-semibold">
-                    Import transactions CSV
+                    {t("ledgerEntry.setup.importCsv", {
+                      defaultValue: "Import transactions CSV",
+                    })}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    Map columns with a mobile-friendly import flow.
+                    {t("ledgerEntry.setup.importCsvHint", {
+                      defaultValue:
+                        "Map columns with a mobile-friendly import flow.",
+                    })}
                   </span>
                 </span>
               </Button>
@@ -908,7 +1074,9 @@ const LedgerEntryPage = () => {
                 <RotateCcw className="mt-0.5 h-5 w-5" />
                 <span className="min-w-0">
                   <span className="block font-semibold">
-                    Generate demo data
+                    {t("ledgerEntry.setup.demo", {
+                      defaultValue: "Generate demo data",
+                    })}
                   </span>
                   <span
                     className={cn(
@@ -919,8 +1087,14 @@ const LedgerEntryPage = () => {
                     )}
                   >
                     {ledgers.length === 0
-                      ? "Populate the app quickly when you want sample ledgers."
-                      : "Replaces all existing data with sample ledgers."}
+                      ? t("ledgerEntry.setup.demoHintEmpty", {
+                          defaultValue:
+                            "Populate the app quickly when you want sample ledgers.",
+                        })
+                      : t("ledgerEntry.setup.demoHintReplace", {
+                          defaultValue:
+                            "Replaces all existing data with sample ledgers.",
+                        })}
                   </span>
                 </span>
               </Button>
@@ -941,7 +1115,7 @@ const LedgerEntryPage = () => {
         isOpen={isNewLedgerDialogOpen}
         onOpenChange={setIsNewLedgerDialogOpen}
         onConfirm={handleLedgerDetailsConfirmed}
-        submitLabel="Next"
+        submitLabel={t("ledgerEntry.next", { defaultValue: "Next" })}
       />
 
       {/* CSV Mapping Dialog */}
@@ -961,31 +1135,53 @@ const LedgerEntryPage = () => {
         isOpen={isImportPasswordOpen}
         onOpenChange={setIsImportPasswordOpen}
         onConfirm={handleImportEncryptedParams}
-        title="Decrypt Backup"
-        description="This file is encrypted. Please enter the password to restore your data."
-        confirmText="Decrypt & Import"
+        title={t("ledgerEntry.decrypt.title", {
+          defaultValue: "Decrypt Backup",
+        })}
+        description={t("ledgerEntry.decrypt.description", {
+          defaultValue:
+            "This file is encrypted. Please enter the password to restore your data.",
+        })}
+        confirmText={t("ledgerEntry.decrypt.confirm", {
+          defaultValue: "Decrypt & Import",
+        })}
       />
 
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("ledgerEntry.delete.title", { defaultValue: "Are you sure?" })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {isMassDelete
-                ? `This will permanently delete ${selectedLedgers.size} ledgers and all their data (transactions, budgets, settings).`
-                : "This will permanently delete this ledger and all its data (transactions, budgets, settings)."}
+                ? t("ledgerEntry.delete.many", {
+                    count: selectedLedgers.size,
+                    defaultValue:
+                      "This will permanently delete {{count}} ledgers and all their data (transactions, budgets, settings).",
+                  })
+                : t("ledgerEntry.delete.one", {
+                    defaultValue:
+                      "This will permanently delete this ledger and all its data (transactions, budgets, settings).",
+                  })}
               <br />
               <br />
-              This action cannot be undone.
+              {t("ledgerEntry.delete.irreversible", {
+                defaultValue: "This action cannot be undone.",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t("dialogs.common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete Permanently
+              {t("ledgerEntry.delete.confirm", {
+                defaultValue: "Delete Permanently",
+              })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -996,9 +1192,16 @@ const LedgerEntryPage = () => {
         isOpen={isGenerateConfirmOpen}
         onOpenChange={setIsGenerateConfirmOpen}
         onConfirm={handleGenerateDemoData}
-        title="Generate new demo data?"
-        description="This will clear ALL existing data (ledgers, transactions, budgets) and generate new diverse demo data. This action cannot be undone."
-        confirmText="Generate Data"
+        title={t("ledgerEntry.demoDialog.title", {
+          defaultValue: "Generate new demo data?",
+        })}
+        description={t("ledgerEntry.demoDialog.description", {
+          defaultValue:
+            "This will clear ALL existing data (ledgers, transactions, budgets) and generate new diverse demo data. This action cannot be undone.",
+        })}
+        confirmText={t("ledgerEntry.demoDialog.confirm", {
+          defaultValue: "Generate Data",
+        })}
       />
 
       <GlobalProgressDialog />

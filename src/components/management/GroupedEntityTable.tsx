@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import * as React from "react";
 import {
   Table,
@@ -50,6 +51,8 @@ interface GroupedEntityTableProps<T extends { id: string; name: string }> {
   isUpdating: boolean;
   isDeletable?: (item: T) => boolean;
   groupBy?: keyof T;
+  /** Display text for a group heading; defaults to the raw value. */
+  groupLabel?: (value: string) => string;
 }
 
 const ITEMS_PER_GROUP_PAGE = 5;
@@ -66,7 +69,14 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
   isUpdating,
   isDeletable = () => true,
   groupBy,
+  groupLabel,
 }: GroupedEntityTableProps<T>) => {
+  const { t } = useTranslation();
+  // "Uncategorized" is the internal key for items without a group value.
+  const translateGroupKey = (key: string) =>
+    key === "Uncategorized"
+      ? t("management.status.uncategorized", { defaultValue: "Uncategorized" })
+      : key;
   const [expandedGroups, setExpandedGroups] = React.useState<
     Record<string, boolean>
   >({});
@@ -128,10 +138,16 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
       {/* Mobile View */}
       <div className="block md:hidden space-y-4">
         {isLoading ? (
-          <div className="text-center p-4">Loading...</div>
+          <div className="text-center p-4">
+            {t("management.status.loadingShort", {
+              defaultValue: "Loading...",
+            })}
+          </div>
         ) : groupKeys.length === 0 ? (
           <div className="text-center p-8 border rounded-lg text-muted-foreground bg-card">
-            No items found.
+            {t("management.status.noItems", {
+              defaultValue: "No items found.",
+            })}
           </div>
         ) : (
           groupKeys.map((groupKey) => {
@@ -163,7 +179,11 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                     ) : (
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span>{groupKey}</span>
+                    <span>
+                      {groupLabel
+                        ? groupLabel(groupKey)
+                        : translateGroupKey(groupKey)}
+                    </span>
                   </div>
                   <span className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded border shadow-sm">
                     {groupItems.length}
@@ -189,7 +209,10 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                   onCheckedChange={(checked) =>
                                     handleRowSelect(item.id, Boolean(checked))
                                   }
-                                  aria-label="Select card"
+                                  aria-label={t(
+                                    "management.actions.selectCard",
+                                    { defaultValue: "Select card" },
+                                  )}
                                   disabled={!isDeletable(item)}
                                   className="mt-1 flex-shrink-0"
                                 />
@@ -235,7 +258,13 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                       className="h-9 w-9"
                                       onClick={() => handleEditClick(item)}
                                       disabled={!isDeletable(item)}
-                                      aria-label={`Edit ${item.name}`}
+                                      aria-label={t(
+                                        "management.actions.editName",
+                                        {
+                                          name: item.name,
+                                          defaultValue: "Edit {{name}}",
+                                        },
+                                      )}
                                     >
                                       <Edit className="h-3.5 w-3.5" />
                                     </Button>
@@ -245,7 +274,13 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                       className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                                       onClick={() => handleDeleteClick(item)}
                                       disabled={!isDeletable(item)}
-                                      aria-label={`Delete ${item.name}`}
+                                      aria-label={t(
+                                        "management.actions.deleteName",
+                                        {
+                                          name: item.name,
+                                          defaultValue: "Delete {{name}}",
+                                        },
+                                      )}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
@@ -266,8 +301,12 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                             }
                           >
                             {selectedRows.includes(item.id)
-                              ? "Deselect"
-                              : "Select"}
+                              ? t("management.actions.deselect", {
+                                  defaultValue: "Deselect",
+                                })
+                              : t("management.actions.select", {
+                                  defaultValue: "Select",
+                                })}
                           </ContextMenuItem>
                           <ContextMenuSeparator />
                           <ContextMenuItem
@@ -275,7 +314,10 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                             onClick={() => handleEditClick(item)}
                             disabled={!isDeletable(item)}
                           >
-                            <Edit className="h-4 w-4 mr-2" /> Edit
+                            <Edit className="h-4 w-4 mr-2" />{" "}
+                            {t("management.actions.edit", {
+                              defaultValue: "Edit",
+                            })}
                           </ContextMenuItem>
                           <ContextMenuItem
                             inset
@@ -283,7 +325,10 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                             onClick={() => handleDeleteClick(item)}
                             disabled={!isDeletable(item)}
                           >
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            <Trash2 className="h-4 w-4 mr-2" />{" "}
+                            {t("management.actions.delete", {
+                              defaultValue: "Delete",
+                            })}
                           </ContextMenuItem>
                         </ContextMenuContent>
                       </ContextMenu>
@@ -301,10 +346,17 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                           disabled={currentPage === 1}
                           className="h-7 px-2"
                         >
-                          <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                          <ChevronLeft className="h-4 w-4 mr-1" />{" "}
+                          {t("management.status.prev", {
+                            defaultValue: "Prev",
+                          })}
                         </Button>
                         <span className="text-[11px] text-muted-foreground">
-                          Page {currentPage} of {totalPages}
+                          {t("management.status.page", {
+                            page: currentPage,
+                            total: totalPages,
+                            defaultValue: "Page {{page}} of {{total}}",
+                          })}
                         </span>
                         <Button
                           variant="outline"
@@ -319,7 +371,10 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                           disabled={currentPage === totalPages}
                           className="h-7 px-2"
                         >
-                          Next <ChevronRightIcon className="h-4 w-4 ml-1" />
+                          {t("management.status.next", {
+                            defaultValue: "Next",
+                          })}{" "}
+                          <ChevronRightIcon className="h-4 w-4 ml-1" />
                         </Button>
                       </div>
                     )}
@@ -351,7 +406,9 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                       handleRowSelect(selectableIds.join(","), !!checked);
                     }
                   }}
-                  aria-label="Select all"
+                  aria-label={t("management.actions.selectAll", {
+                    defaultValue: "Select all",
+                  })}
                 />
               </TableHead>
               {columns.map((col) => (
@@ -363,7 +420,7 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                 </TableHead>
               ))}
               <TableHead className="text-right text-slate-800 dark:text-slate-200 font-semibold">
-                Actions
+                {t("management.columns.actions", { defaultValue: "Actions" })}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -371,7 +428,9 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length + 2} className="text-center">
-                  Loading...
+                  {t("management.status.loadingShort", {
+                    defaultValue: "Loading...",
+                  })}
                 </TableCell>
               </TableRow>
             ) : groupKeys.length === 0 ? (
@@ -380,7 +439,9 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                   colSpan={columns.length + 2}
                   className="text-center py-4 text-muted-foreground"
                 >
-                  No items found.
+                  {t("management.status.noItems", {
+                    defaultValue: "No items found.",
+                  })}
                 </TableCell>
               </TableRow>
             ) : (
@@ -414,9 +475,16 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                           ) : (
                             <ChevronRight className="h-4 w-4" />
                           )}
-                          <span>{groupKey}</span>
+                          <span>
+                            {groupLabel
+                              ? groupLabel(groupKey)
+                              : translateGroupKey(groupKey)}
+                          </span>
                           <span className="text-xs text-muted-foreground font-normal ml-2">
-                            ({groupItems.length} accounts)
+                            {t("management.status.groupCount", {
+                              count: groupItems.length,
+                              defaultValue: "({{count}} accounts)",
+                            })}
                           </span>
                         </div>
                       </TableCell>
@@ -438,7 +506,10 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                     onCheckedChange={(checked) =>
                                       handleRowSelect(item.id, Boolean(checked))
                                     }
-                                    aria-label="Select row"
+                                    aria-label={t(
+                                      "management.actions.selectRow",
+                                      { defaultValue: "Select row" },
+                                    )}
                                     disabled={!isDeletable(item)}
                                   />
                                 </TableCell>
@@ -473,12 +544,19 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                               handleEditClick(item)
                                             }
                                             disabled={!isDeletable(item)}
-                                            aria-label="Edit"
+                                            aria-label={t(
+                                              "management.actions.edit",
+                                              { defaultValue: "Edit" },
+                                            )}
                                           >
                                             <Edit className="h-4 w-4" />
                                           </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent>Edit</TooltipContent>
+                                        <TooltipContent>
+                                          {t("management.actions.edit", {
+                                            defaultValue: "Edit",
+                                          })}
+                                        </TooltipContent>
                                       </Tooltip>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
@@ -489,12 +567,19 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                               handleDeleteClick(item)
                                             }
                                             disabled={!isDeletable(item)}
-                                            aria-label="Delete"
+                                            aria-label={t(
+                                              "management.actions.delete",
+                                              { defaultValue: "Delete" },
+                                            )}
                                           >
                                             <Trash2 className="h-4 w-4 text-destructive" />
                                           </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent>Delete</TooltipContent>
+                                        <TooltipContent>
+                                          {t("management.actions.delete", {
+                                            defaultValue: "Delete",
+                                          })}
+                                        </TooltipContent>
                                       </Tooltip>
                                     </>
                                   )}
@@ -512,8 +597,12 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                 }
                               >
                                 {selectedRows.includes(item.id)
-                                  ? "Deselect"
-                                  : "Select"}
+                                  ? t("management.actions.deselect", {
+                                      defaultValue: "Deselect",
+                                    })
+                                  : t("management.actions.select", {
+                                      defaultValue: "Select",
+                                    })}
                               </ContextMenuItem>
                               <ContextMenuSeparator />
                               <ContextMenuItem
@@ -521,7 +610,10 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                 onClick={() => handleEditClick(item)}
                                 disabled={!isDeletable(item)}
                               >
-                                <Edit className="h-4 w-4 mr-2" /> Edit
+                                <Edit className="h-4 w-4 mr-2" />{" "}
+                                {t("management.actions.edit", {
+                                  defaultValue: "Edit",
+                                })}
                               </ContextMenuItem>
                               <ContextMenuItem
                                 inset
@@ -529,7 +621,10 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                 onClick={() => handleDeleteClick(item)}
                                 disabled={!isDeletable(item)}
                               >
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                <Trash2 className="h-4 w-4 mr-2" />{" "}
+                                {t("management.actions.delete", {
+                                  defaultValue: "Delete",
+                                })}
                               </ContextMenuItem>
                             </ContextMenuContent>
                           </ContextMenu>
@@ -555,10 +650,17 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                   disabled={currentPage === 1}
                                   className="h-7 px-2"
                                 >
-                                  <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                                  <ChevronLeft className="h-4 w-4 mr-1" />{" "}
+                                  {t("management.status.prev", {
+                                    defaultValue: "Prev",
+                                  })}
                                 </Button>
                                 <span className="text-xs text-muted-foreground">
-                                  Page {currentPage} of {totalPages}
+                                  {t("management.status.page", {
+                                    page: currentPage,
+                                    total: totalPages,
+                                    defaultValue: "Page {{page}} of {{total}}",
+                                  })}
                                 </span>
                                 <Button
                                   variant="outline"
@@ -573,7 +675,9 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                   disabled={currentPage === totalPages}
                                   className="h-7 px-2"
                                 >
-                                  Next{" "}
+                                  {t("management.status.next", {
+                                    defaultValue: "Next",
+                                  })}{" "}
                                   <ChevronRightIcon className="h-4 w-4 ml-1" />
                                 </Button>
                               </div>

@@ -1,5 +1,6 @@
 import type { Resource } from "i18next";
 import { homeTranslations } from "./homeTranslations";
+import { applyAreaTranslations } from "./areas";
 
 export const builtInLanguageOptions = [
   {
@@ -2195,6 +2196,8 @@ for (const [lang, homeKeys] of Object.entries(homeTranslations)) {
     (bundle.translation as Record<string, unknown>).home = homeKeys;
   }
 }
+
+applyAreaTranslations(resources);
 
 export const supportedLanguages = ["en", "es", "zh", "nl", "ta"] as const;
 export type SupportedLanguage = string;
