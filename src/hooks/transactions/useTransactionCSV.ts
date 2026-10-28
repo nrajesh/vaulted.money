@@ -23,7 +23,6 @@ export const useTransactionCSV = () => {
     refetchVendors,
     refetchAccounts,
     accountCurrencyMap,
-    detectAndLinkTransfers,
     setOperationProgress,
   } = useTransactions();
   const { activeLedger } = useLedger();
@@ -177,13 +176,10 @@ export const useTransactionCSV = () => {
             `${transactionsToInsert.length} transactions imported successfully!`,
           );
 
-          // Auto-detect transfers in the background
-          const linkedCount = await detectAndLinkTransfers();
-          if (linkedCount > 0) {
-            showSuccess(
-              `Automatically identified and linked ${linkedCount} transfer pairs.`,
-            );
-          }
+          // Transfers are never linked automatically; the user reviews them.
+          showSuccess(
+            "Use Detect Transfers to review possible transfer pairs in the imported data.",
+          );
 
           setOperationProgress({
             title: "Importing CSV",
@@ -220,7 +216,6 @@ export const useTransactionCSV = () => {
       refetchAccounts,
       accountCurrencyMap,
       dataProvider,
-      detectAndLinkTransfers,
       setOperationProgress,
     ],
   );

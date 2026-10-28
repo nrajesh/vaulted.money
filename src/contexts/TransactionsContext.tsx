@@ -124,8 +124,15 @@ interface TransactionsContextType {
   deleteScheduledTransaction: (id: string) => Promise<void>;
   deleteMultipleScheduledTransactions: (ids: string[]) => Promise<void>;
 
-  /** Scans for potential transfers and links them */
-  detectAndLinkTransfers: (batch?: Transaction[]) => Promise<number>;
+  /**
+   * Finds pairs that look like the two legs of a transfer. Nothing is changed:
+   * the user reviews the suggestions and links the ones that are real.
+   */
+  findTransferSuggestions: (
+    batch?: Transaction[],
+  ) => [Transaction, Transaction][];
+  /** Links the given pairs as transfers; returns how many were linked. */
+  linkTransferPairs: (pairs: [Transaction, Transaction][]) => Promise<number>;
   /** Unlinks a transfer pair using the transfer ID */
   unlinkTransaction: (transferId: string) => Promise<void>;
   /** Manually links two transactions as a transfer */
@@ -1285,24 +1292,28 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
     return duplicatesToDelete.length;
   }, [transactions, deleteMultipleTransactions]);
 
-  const detectAndLinkTransfers = React.useCallback(
-    async (batch?: Transaction[]) => {
+  const findTransferSuggestions = React.useCallback(
+    (batch?: Transaction[]) => {
       const listToScan = batch || transactions;
-      if (listToScan.length < 2) return 0;
-
+      if (listToScan.length < 2) return [];
       // Shared with the Local API; see src/utils/transactionMaintenance.ts.
-      const pairsLinked = findTransferPairs(listToScan);
-      for (const [t1, t2] of pairsLinked) {
+      return findTransferPairs(listToScan);
+    },
+    [transactions],
+  );
+
+  const linkTransferPairs = React.useCallback(
+    async (pairs: [Transaction, Transaction][]) => {
+      for (const [t1, t2] of pairs) {
         await dataProvider.linkTransactionsAsTransfer(t1.id, t2.id);
       }
-
-      if (pairsLinked.length > 0) {
+      if (pairs.length > 0) {
         await invalidateAllData();
         triggerExport();
       }
-      return pairsLinked.length;
+      return pairs.length;
     },
-    [transactions, dataProvider, invalidateAllData, triggerExport],
+    [dataProvider, invalidateAllData, triggerExport],
   );
 
   const unlinkTransaction = React.useCallback(
@@ -1630,7 +1641,8 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
     if (transactions.length !== lastCount) {
       syncEntities().then(async () => {
         localStorage.setItem(syncDoneKey, transactions.length.toString());
-        await detectAndLinkTransfers();
+        // Transfer pairs are only suggested (Transactions > Detect Transfers),
+        // never linked here: a purchase and its refund look like a transfer.
         refetchTransactions();
         refetchCategories();
         refetchSubCategories();
@@ -1647,7 +1659,6 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
     ledgerId,
     refetchCategories,
     refetchSubCategories,
-    detectAndLinkTransfers,
     refetchTransactions,
     refetchVendors,
     refetchAccounts,
@@ -1708,7 +1719,8 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
       deleteScheduledTransaction,
       unlinkScheduledTransaction,
       deleteMultipleScheduledTransactions,
-      detectAndLinkTransfers,
+      findTransferSuggestions,
+      linkTransferPairs,
       unlinkTransaction,
       linkTransactions,
       deleteBudget,
@@ -1748,7 +1760,8 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
       updateScheduledTransaction,
       deleteScheduledTransaction,
       deleteMultipleScheduledTransactions,
-      detectAndLinkTransfers,
+      findTransferSuggestions,
+      linkTransferPairs,
       unlinkTransaction,
       linkTransactions,
       // dependencies added for exhaustive-deps
