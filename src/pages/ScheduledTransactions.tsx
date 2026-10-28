@@ -164,7 +164,11 @@ const ScheduledTransactionsPage = () => {
       await deleteScheduledTransaction(id);
     } catch (error) {
       console.error("Failed to delete scheduled transaction:", error);
-      toast.error("Failed to delete scheduled transaction");
+      toast.error(
+        t("scheduled.page.deleteFailed", {
+          defaultValue: "Failed to delete scheduled transaction",
+        }),
+      );
     }
   };
 
@@ -174,7 +178,11 @@ const ScheduledTransactionsPage = () => {
       await deleteMultipleScheduledTransactions(ids);
     } catch (error) {
       console.error("Failed to bulk delete scheduled transactions:", error);
-      toast.error("Failed to delete scheduled transactions");
+      toast.error(
+        t("scheduled.page.bulkDeleteFailed", {
+          defaultValue: "Failed to delete scheduled transactions",
+        }),
+      );
     }
   };
 
@@ -203,7 +211,11 @@ const ScheduledTransactionsPage = () => {
         sub_category: st.sub_category,
         amount: st.amount,
         currency: st.currency,
-        remarks: st.remarks || "Processed from schedule",
+        remarks:
+          st.remarks ||
+          t("scheduled.page.processedRemark", {
+            defaultValue: "Processed from schedule",
+          }),
         is_scheduled_origin: true,
         user_id: st.user_id,
         // recurrence_id: st.id
@@ -219,10 +231,18 @@ const ScheduledTransactionsPage = () => {
         date: nextDate.toISOString(),
       });
 
-      toast.success("Transaction processed and schedule advanced!");
+      toast.success(
+        t("scheduled.page.processed", {
+          defaultValue: "Transaction processed and schedule advanced!",
+        }),
+      );
     } catch (e) {
       console.error("Process Today Error", e);
-      toast.error("Failed to process transaction.");
+      toast.error(
+        t("scheduled.page.processFailed", {
+          defaultValue: "Failed to process transaction.",
+        }),
+      );
     }
   };
 
@@ -254,15 +274,27 @@ const ScheduledTransactionsPage = () => {
 
       if (editingTransaction) {
         await updateScheduledTransaction({ ...editingTransaction, ...payload });
-        toast.success("Scheduled transaction updated");
+        toast.success(
+          t("scheduled.page.updated", {
+            defaultValue: "Scheduled transaction updated",
+          }),
+        );
       } else {
         await addScheduledTransaction(payload);
-        toast.success("Scheduled transaction created");
+        toast.success(
+          t("scheduled.page.created", {
+            defaultValue: "Scheduled transaction created",
+          }),
+        );
       }
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Failed to save scheduled transaction:", error);
-      toast.error("Failed to save scheduled transaction");
+      toast.error(
+        t("scheduled.page.saveFailed", {
+          defaultValue: "Failed to save scheduled transaction",
+        }),
+      );
     } finally {
       setIsSubmitting(false);
     }

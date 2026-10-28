@@ -210,4 +210,49 @@ describe("calculateGoalProgress", () => {
     const result = calculateGoalProgress(budget, txs);
     expect(result.accumulatedAmount).toBe(100);
   });
+
+  describe("withdrawals", () => {
+    const accountGoal = makeBudget({
+      budget_scope: "account",
+      budget_scope_name: "Savings Account",
+      target_amount: 1000,
+    });
+    const deposit = (id: string, amount: number) =>
+      makeTx({ id, amount, date: "2026-02-01T00:00:00.000Z" });
+
+    it("reduce the progress made", () => {
+      const result = calculateGoalProgress(
+        accountGoal,
+        [deposit("d1", 600), deposit("d2", 200), deposit("w1", -300)],
+        [],
+      );
+      expect(result.accumulatedAmount).toBe(500);
+      expect(result.progressPercentage).toBe(50);
+    });
+
+    it("never push progress below zero", () => {
+      const result = calculateGoalProgress(
+        accountGoal,
+        [deposit("d1", 100), deposit("w1", -450)],
+        [],
+      );
+      expect(result.accumulatedAmount).toBe(0);
+      expect(result.progressPercentage).toBe(0);
+    });
+
+    it("can put a goal that was on track behind schedule", () => {
+      const goal = makeBudget({
+        ...accountGoal,
+        start_date: "2026-01-01T00:00:00.000Z",
+        target_date: "2026-12-31T00:00:00.000Z",
+      });
+      const now = new Date("2026-07-01T00:00:00.000Z"); // ~50% of the way
+      const saved = [deposit("d1", 700)];
+      expect(calculateGoalProgress(goal, saved, [], now).isOnTrack).toBe(true);
+      const withdrawn = [...saved, deposit("w1", -500)];
+      expect(calculateGoalProgress(goal, withdrawn, [], now).isOnTrack).toBe(
+        false,
+      );
+    });
+  });
 });

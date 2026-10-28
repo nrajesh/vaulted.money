@@ -15,6 +15,7 @@ import { useDataProvider } from "@/context/DataProviderContext";
 import { useLedger } from "@/contexts/LedgerContext";
 import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useTranslation } from "react-i18next";
 import { ScheduledTransaction } from "@/types/dataProvider";
 import { detectRecurringPatterns } from "@/utils/smartScheduler";
 
@@ -38,6 +39,7 @@ export function SmartScheduleDialog({
   const { transactions, scheduledTransactions } = useTransactions();
   const dataProvider = useDataProvider();
   const { activeLedger } = useLedger();
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const [suggestions, setSuggestions] = useState<SuggestedSchedule[]>([]);
@@ -123,8 +125,12 @@ export function SmartScheduleDialog({
 
     if (selectedItems.length === 0) {
       toast({
-        title: "No items selected",
-        description: "Please select at least one transaction to schedule.",
+        title: t("scheduled.smart.noneSelected.title", {
+          defaultValue: "No items selected",
+        }),
+        description: t("scheduled.smart.noneSelected.description", {
+          defaultValue: "Please select at least one transaction to schedule.",
+        }),
         variant: "destructive",
       });
       setIsSaving(false);
@@ -133,7 +139,12 @@ export function SmartScheduleDialog({
 
     try {
       const userId = activeLedger?.id;
-      if (!userId) throw new Error("No active ledger selected");
+      if (!userId)
+        throw new Error(
+          t("scheduled.smart.noLedger", {
+            defaultValue: "No active ledger selected",
+          }),
+        );
 
       let createdCount = 0;
       let skippedCount = 0;
@@ -167,15 +178,28 @@ export function SmartScheduleDialog({
       const parts: string[] = [];
       if (createdCount > 0)
         parts.push(
-          `Scheduled ${createdCount} recurring transaction${createdCount !== 1 ? "s" : ""}.`,
+          t("scheduled.smart.created", {
+            count: createdCount,
+            defaultValue: "Scheduled {{count}} recurring transaction(s).",
+          }),
         );
       if (skippedCount > 0)
         parts.push(
-          `Skipped ${skippedCount} duplicate${skippedCount !== 1 ? "s" : ""}.`,
+          t("scheduled.smart.skipped", {
+            count: skippedCount,
+            defaultValue: "Skipped {{count}} duplicate(s).",
+          }),
         );
 
       toast({
-        title: createdCount > 0 ? "Schedules created" : "No new schedules",
+        title:
+          createdCount > 0
+            ? t("scheduled.smart.toastCreated", {
+                defaultValue: "Schedules created",
+              })
+            : t("scheduled.smart.toastNone", {
+                defaultValue: "No new schedules",
+              }),
         description: parts.join(" "),
       });
       // Await onSave so the context refreshes before dialog closes
@@ -184,7 +208,9 @@ export function SmartScheduleDialog({
     } catch (error: unknown) {
       console.error(error);
       toast({
-        title: "Error creating schedules",
+        title: t("scheduled.smart.errorTitle", {
+          defaultValue: "Error creating schedules",
+        }),
         description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
@@ -267,11 +293,15 @@ export function SmartScheduleDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-blue-500" />
-            Smart Schedule Creation
+            {t("scheduled.smart.title", {
+              defaultValue: "Smart Schedule Creation",
+            })}
           </DialogTitle>
           <DialogDescription>
-            We detected these potential recurring transactions. Review suggested
-            amounts and select which ones to schedule.
+            {t("scheduled.smart.description", {
+              defaultValue:
+                "We detected these potential recurring transactions. Review suggested amounts and select which ones to schedule.",
+            })}
           </DialogDescription>
         </DialogHeader>
 
@@ -279,7 +309,9 @@ export function SmartScheduleDialog({
           <div className="flex flex-col items-center justify-center py-10 space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">
-              Analyzing patterns...
+              {t("scheduled.smart.analyzing", {
+                defaultValue: "Analyzing patterns...",
+              })}
             </p>
           </div>
         ) : (
@@ -288,7 +320,9 @@ export function SmartScheduleDialog({
               <div className="grid grid-cols-12 gap-4 p-4 font-medium text-sm bg-muted/50 border-b items-center">
                 <div className="col-span-1 flex justify-center">
                   <Checkbox
-                    aria-label="Select all suggestions"
+                    aria-label={t("scheduled.smart.selectAll", {
+                      defaultValue: "Select all suggestions",
+                    })}
                     checked={
                       suggestions.length > 0 &&
                       suggestions.every((s) => s.isSelected)
@@ -298,15 +332,29 @@ export function SmartScheduleDialog({
                     }
                   />
                 </div>
-                <div className="col-span-2">Frequency</div>
-                <div className="col-span-4">Payee / Account</div>
-                <div className="col-span-3">Category</div>
-                <div className="col-span-2 text-right">Amount</div>
+                <div className="col-span-2">
+                  {t("scheduled.smart.frequency", {
+                    defaultValue: "Frequency",
+                  })}
+                </div>
+                <div className="col-span-4">
+                  {t("scheduled.smart.payee", {
+                    defaultValue: "Payee / Account",
+                  })}
+                </div>
+                <div className="col-span-3">
+                  {t("scheduled.smart.category", { defaultValue: "Category" })}
+                </div>
+                <div className="col-span-2 text-right">
+                  {t("scheduled.smart.amount", { defaultValue: "Amount" })}
+                </div>
               </div>
               <div className="max-h-[400px] overflow-y-auto">
                 {suggestions.length === 0 ? (
                   <div className="p-8 text-center text-muted-foreground">
-                    No recurring patterns detected.
+                    {t("scheduled.smart.none", {
+                      defaultValue: "No recurring patterns detected.",
+                    })}
                   </div>
                 ) : (
                   suggestions.map((item, idx) => (
@@ -316,7 +364,10 @@ export function SmartScheduleDialog({
                     >
                       <div className="col-span-1 flex flex-col items-center justify-center gap-1">
                         <Checkbox
-                          aria-label={`Select suggestion ${idx + 1}`}
+                          aria-label={t("scheduled.smart.selectOne", {
+                            number: idx + 1,
+                            defaultValue: "Select suggestion {{number}}",
+                          })}
                           checked={item.isSelected}
                           onCheckedChange={() => toggleSelection(idx)}
                         />
@@ -326,8 +377,12 @@ export function SmartScheduleDialog({
                             className="text-muted-foreground hover:text-primary transition-colors"
                             title={
                               item.isPaired
-                                ? "Unlink transaction"
-                                : "Link transaction"
+                                ? t("scheduled.smart.unlink", {
+                                    defaultValue: "Unlink transaction",
+                                  })
+                                : t("scheduled.smart.link", {
+                                    defaultValue: "Link transaction",
+                                  })
                             }
                           >
                             {item.isPaired ? (
@@ -422,7 +477,7 @@ export function SmartScheduleDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
+            {t("scheduled.smart.cancel", { defaultValue: "Cancel" })}
           </Button>
           <Button
             onClick={handleCreateSchedules}
@@ -431,7 +486,10 @@ export function SmartScheduleDialog({
             }
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create {suggestions.filter((s) => s.isSelected).length} Schedules
+            {t("scheduled.smart.create", {
+              count: suggestions.filter((s) => s.isSelected).length,
+              defaultValue: "Create {{count}} Schedules",
+            })}
           </Button>
         </DialogFooter>
       </DialogContent>

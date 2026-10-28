@@ -80,7 +80,12 @@ const SettingsPage = () => {
         console.error("Failed to update ledger currency:", error);
       }
     }
-    showSuccess(`Default currency set to ${value}.`);
+    showSuccess(
+      t("settings.page.currencySet", {
+        currency: value,
+        defaultValue: "Default currency set to {{currency}}.",
+      }),
+    );
   };
 
   const handleFutureMonthsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,16 +107,24 @@ const SettingsPage = () => {
       await dataProvider.setDefaultAIProvider(providerId);
     }
     await refreshAiConfig();
-    showSuccess("AI Provider preference updated.");
+    showSuccess(
+      t("settings.ai.preferenceUpdated", {
+        defaultValue: "AI Provider preference updated.",
+      }),
+    );
   };
 
   return (
     <div className="page-container">
       <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
         <div>
-          <h1 className="app-gradient-title app-page-title">Ledger</h1>
+          <h1 className="app-gradient-title app-page-title">
+            {t("settings.page.title", { defaultValue: "Ledger" })}
+          </h1>
           <p className="app-page-subtitle">
-            Manage application preferences and data
+            {t("settings.page.subtitle", {
+              defaultValue: "Manage application preferences and data",
+            })}
           </p>
         </div>
       </div>
@@ -205,13 +218,19 @@ const SettingsPage = () => {
           <ThemedCardContent>
             <div className="flex items-center space-x-2">
               <Input
-                aria-label="Future transaction months"
+                aria-label={t("settings.page.futureMonthsLabel", {
+                  defaultValue: "Future transaction months",
+                })}
                 type="number"
                 value={futureMonths}
                 onChange={handleFutureMonthsChange}
                 onBlur={() =>
                   showSuccess(
-                    `Future transaction view set to ${futureMonths} months.`,
+                    t("settings.page.futureMonthsSet", {
+                      months: futureMonths,
+                      defaultValue:
+                        "Future transaction view set to {{months}} months.",
+                    }),
                   )
                 }
                 min="0"
@@ -231,17 +250,23 @@ const SettingsPage = () => {
               <div>
                 <ThemedCardTitle className="flex items-center gap-2">
                   <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                  AI Integrations (BYOK)
+                  {t("settings.ai.title", {
+                    defaultValue: "AI Integrations (BYOK)",
+                  })}
                 </ThemedCardTitle>
                 <ThemedCardDescription>
-                  Manage your AI model providers. Keys are stored locally in
-                  your browser.
+                  {t("settings.ai.description", {
+                    defaultValue:
+                      "Manage your AI model providers. Keys are stored locally in your browser.",
+                  })}
                 </ThemedCardDescription>
                 <Link
                   to="/privacy"
                   className="mt-2 inline-flex text-xs text-indigo-600 hover:underline"
                 >
-                  Review privacy policy →
+                  {t("settings.ai.privacy", {
+                    defaultValue: "Review privacy policy →",
+                  })}
                 </Link>
               </div>
               <Button
@@ -252,7 +277,9 @@ const SettingsPage = () => {
               >
                 <Link to="/ai-providers" className="flex items-center gap-2">
                   <Brain className="h-4 w-4" />
-                  Manage Providers
+                  {t("settings.ai.manageProviders", {
+                    defaultValue: "Manage Providers",
+                  })}
                 </Link>
               </Button>
             </div>
@@ -260,19 +287,34 @@ const SettingsPage = () => {
           <ThemedCardContent>
             <div className="space-y-6 max-w-xl">
               <div className="space-y-2">
-                <Label>Default AI Provider</Label>
+                <Label>
+                  {t("settings.ai.defaultProvider", {
+                    defaultValue: "Default AI Provider",
+                  })}
+                </Label>
                 <Select
                   value={aiConfig.provider?.id || "NONE"}
                   onValueChange={handleProviderChange}
                 >
                   <SelectTrigger className="w-full sm:w-[300px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100">
-                    <SelectValue placeholder="Select an AI Provider" />
+                    <SelectValue
+                      placeholder={t("settings.ai.selectProvider", {
+                        defaultValue: "Select an AI Provider",
+                      })}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="NONE">None (Disabled)</SelectItem>
+                    <SelectItem value="NONE">
+                      {t("settings.ai.none", {
+                        defaultValue: "None (Disabled)",
+                      })}
+                    </SelectItem>
                     {providers.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.name} ({p.model || "None"})
+                        {p.name} (
+                        {p.model ||
+                          t("settings.ai.noModel", { defaultValue: "None" })}
+                        )
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -281,7 +323,9 @@ const SettingsPage = () => {
                   to="/ai-providers"
                   className="sm:hidden text-xs text-indigo-600 hover:underline block mt-1"
                 >
-                  Manage Providers →
+                  {t("settings.ai.manageProvidersLink", {
+                    defaultValue: "Manage Providers →",
+                  })}
                 </Link>
               </div>
 
@@ -289,26 +333,38 @@ const SettingsPage = () => {
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-2">
                     <Label htmlFor="ai-api-key">
-                      API Key for {aiConfig.provider.name}
+                      {t("settings.ai.apiKeyFor", {
+                        name: aiConfig.provider.name,
+                        defaultValue: "API Key for {{name}}",
+                      })}
                     </Label>
                     <Input
                       id="ai-api-key"
                       type="password"
-                      placeholder={`Enter your ${aiConfig.provider.name} API key`}
+                      placeholder={t("settings.ai.apiKeyPlaceholder", {
+                        name: aiConfig.provider.name,
+                        defaultValue: "Enter your {{name}} API key",
+                      })}
                       value={aiConfig.apiKey}
                       onChange={(e) =>
                         saveAiConfig(aiConfig.provider!.id, e.target.value)
                       }
                       onBlur={() => {
                         if (aiConfig.apiKey)
-                          showSuccess("API Key saved locally.");
+                          showSuccess(
+                            t("settings.ai.keySaved", {
+                              defaultValue: "API Key saved locally.",
+                            }),
+                          );
                       }}
                       className="w-full bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                     />
                     <p className="text-xs text-muted-foreground">
                       {aiConfig.provider.type === "OPENAI" && (
                         <span>
-                          Get your key:{" "}
+                          {t("settings.ai.getKey", {
+                            defaultValue: "Get your key:",
+                          })}{" "}
                           <a
                             href="https://platform.openai.com/api-keys"
                             target="_blank"
@@ -321,7 +377,9 @@ const SettingsPage = () => {
                       )}
                       {aiConfig.provider.type === "GEMINI" && (
                         <span>
-                          Get your key:{" "}
+                          {t("settings.ai.getKey", {
+                            defaultValue: "Get your key:",
+                          })}{" "}
                           <a
                             href="https://aistudio.google.com/app/apikey"
                             target="_blank"
@@ -334,7 +392,9 @@ const SettingsPage = () => {
                       )}
                       {aiConfig.provider.type === "ANTHROPIC" && (
                         <span>
-                          Get your key:{" "}
+                          {t("settings.ai.getKey", {
+                            defaultValue: "Get your key:",
+                          })}{" "}
                           <a
                             href="https://console.anthropic.com/settings/keys"
                             target="_blank"
@@ -347,7 +407,9 @@ const SettingsPage = () => {
                       )}
                       {aiConfig.provider.type === "MISTRAL" && (
                         <span>
-                          Get your key:{" "}
+                          {t("settings.ai.getKey", {
+                            defaultValue: "Get your key:",
+                          })}{" "}
                           <a
                             href="https://console.mistral.ai/api-keys/"
                             target="_blank"
@@ -360,7 +422,9 @@ const SettingsPage = () => {
                       )}
                       {aiConfig.provider.type === "PERPLEXITY" && (
                         <span>
-                          Get your key:{" "}
+                          {t("settings.ai.getKey", {
+                            defaultValue: "Get your key:",
+                          })}{" "}
                           <a
                             href="https://www.perplexity.ai/settings/api"
                             target="_blank"
@@ -379,11 +443,18 @@ const SettingsPage = () => {
                     <AlertDescription className="text-xs font-mono">
                       <div className="grid grid-cols-[80px_1fr] gap-x-2">
                         <span className="opacity-60 uppercase font-bold">
-                          Model
+                          {t("settings.ai.model", { defaultValue: "Model" })}
                         </span>
-                        <span>{aiConfig.provider.model || "(None)"}</span>
+                        <span>
+                          {aiConfig.provider.model ||
+                            t("settings.ai.noModelParen", {
+                              defaultValue: "(None)",
+                            })}
+                        </span>
                         <span className="opacity-60 uppercase font-bold">
-                          Endpoint
+                          {t("settings.ai.endpoint", {
+                            defaultValue: "Endpoint",
+                          })}
                         </span>
                         <span className="truncate">
                           {aiConfig.provider.baseUrl}
@@ -396,8 +467,10 @@ const SettingsPage = () => {
                 <Alert className="bg-slate-50 dark:bg-slate-900/50">
                   <Info className="h-4 w-4" />
                   <AlertDescription className="text-sm">
-                    Select a provider from the list or add a custom one in the
-                    management module to enable AI-powered features.
+                    {t("settings.ai.selectHint", {
+                      defaultValue:
+                        "Select a provider from the list or add a custom one in the management module to enable AI-powered features.",
+                    })}
                   </AlertDescription>
                 </Alert>
               )}
@@ -410,14 +483,22 @@ const SettingsPage = () => {
           <ThemedCardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <ThemedCardTitle>Cross-Device Continuity</ThemedCardTitle>
+                <ThemedCardTitle>
+                  {t("settings.sync.title", {
+                    defaultValue: "Cross-Device Continuity",
+                  })}
+                </ThemedCardTitle>
                 <ThemedCardDescription>
-                  Keep your data in sync across devices by choosing a shared
-                  location.
+                  {t("settings.sync.description", {
+                    defaultValue:
+                      "Keep your data in sync across devices by choosing a shared location.",
+                  })}
                 </ThemedCardDescription>
               </div>
               <Switch
-                aria-label="Automatically sync across devices"
+                aria-label={t("settings.sync.toggle", {
+                  defaultValue: "Automatically sync across devices",
+                })}
                 checked={syncConfig.config.autoSyncEnabled}
                 onCheckedChange={(checked) =>
                   syncConfig.toggleAutoSync(checked)
@@ -430,17 +511,25 @@ const SettingsPage = () => {
               <div className="space-y-4">
                 <Alert className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300">
                   <Info className="h-4 w-4" />
-                  <AlertTitle>Recommendation</AlertTitle>
+                  <AlertTitle>
+                    {t("settings.sync.recommendationTitle", {
+                      defaultValue: "Recommendation",
+                    })}
+                  </AlertTitle>
                   <AlertDescription>
-                    To ensure seamless continuity, select a folder synced by a
-                    cloud provider like iCloud, Google Drive, or Dropbox. Any
-                    local folder works, but won't sync automatically to other
-                    devices.
+                    {t("settings.sync.recommendation", {
+                      defaultValue:
+                        "To ensure seamless continuity, select a folder synced by a cloud provider like iCloud, Google Drive, or Dropbox. Any local folder works, but won't sync automatically to other devices.",
+                    })}
                   </AlertDescription>
                 </Alert>
 
                 <div className="space-y-2 max-w-xl">
-                  <Label>Sync Location</Label>
+                  <Label>
+                    {t("settings.sync.location", {
+                      defaultValue: "Sync Location",
+                    })}
+                  </Label>
                   <div className="flex gap-2">
                     <Button
                       variant={
@@ -450,7 +539,11 @@ const SettingsPage = () => {
                       }
                       onClick={async () => {
                         if (await syncConfig.selectFolder()) {
-                          showSuccess("Sync folder location updated.");
+                          showSuccess(
+                            t("settings.sync.folderUpdated", {
+                              defaultValue: "Sync folder location updated.",
+                            }),
+                          );
                         }
                       }}
                       className="flex-1 justify-start font-normal"
@@ -465,7 +558,9 @@ const SettingsPage = () => {
                                 syncConfig.config
                                   .syncDirectoryHandle as FileSystemDirectoryHandle
                               ).name
-                          : "Select Folder"}
+                          : t("settings.sync.selectFolder", {
+                              defaultValue: "Select Folder",
+                            })}
                       </span>
                     </Button>
 
@@ -474,13 +569,19 @@ const SettingsPage = () => {
                         variant="destructive"
                         onClick={async () => {
                           if (await syncConfig.requestPermission()) {
-                            showSuccess("Access restored to sync folder.");
+                            showSuccess(
+                              t("settings.sync.accessRestored", {
+                                defaultValue: "Access restored to sync folder.",
+                              }),
+                            );
                           }
                         }}
                         className="animate-pulse"
                       >
                         <ShieldAlert className="mr-2 h-4 w-4" />
-                        Grant Access
+                        {t("settings.sync.grantAccess", {
+                          defaultValue: "Grant Access",
+                        })}
                       </Button>
                     )}
                   </div>
@@ -498,7 +599,7 @@ const SettingsPage = () => {
           <ThemedCardHeader>
             <ThemedCardTitle className="flex items-center gap-2">
               <Info className="h-5 w-5 text-muted-foreground" />
-              About
+              {t("settings.about.title", { defaultValue: "About" })}
             </ThemedCardTitle>
           </ThemedCardHeader>
           <ThemedCardContent>
@@ -508,7 +609,9 @@ const SettingsPage = () => {
                 className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm hover:bg-accent transition-colors"
               >
                 <Scale className="h-4 w-4 text-muted-foreground" />
-                Open Source Licenses
+                {t("settings.about.licenses", {
+                  defaultValue: "Open Source Licenses",
+                })}
               </Link>
               {!Capacitor.isNativePlatform() && (
                 <Link
@@ -516,7 +619,9 @@ const SettingsPage = () => {
                   className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm hover:bg-accent transition-colors"
                 >
                   <Heart className="h-4 w-4 text-pink-500" />
-                  Support Development
+                  {t("settings.about.support", {
+                    defaultValue: "Support Development",
+                  })}
                 </Link>
               )}
             </div>

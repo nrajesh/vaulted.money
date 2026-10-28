@@ -2014,7 +2014,7 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Ledger 3: Offshore (4 years, rental property in INR, remittances in EUR)   */
+/* Ledger 3: Offshore (4 years, rental property in INR, remitted to from EUR)   */
 /* -------------------------------------------------------------------------- */
 
 const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
@@ -2029,7 +2029,7 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       currency: "INR",
       type: "Checking",
       startingBalance: 180000,
-      remarks: "Rent in, upkeep out",
+      remarks: "Rent and remittances in, upkeep and family support out",
     },
     {
       name: OSAVE,
@@ -2043,7 +2043,7 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       currency: "EUR",
       type: "Checking",
       startingBalance: 1500,
-      remarks: "Where remittances arrive",
+      remarks: "Where the euros are earned and remitted from",
     },
   ];
   const sim = new Sim("offshore", now, start, rng, accounts, clock);
@@ -2102,17 +2102,64 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
     from: addMonthsClamped(start, 3, 20),
     remarks: "Property tax – annual (5% early-bird discount)",
   });
+  // Money flows from the euro side to India: a quarterly EUR → INR remittance
+  // (a few euros are lost to the transfer fee), which covers family support.
   sim.recurring({
     key: "remit",
-    account: FLAT,
-    vendor: HUB,
+    account: HUB,
+    vendor: FLAT,
     category: "Transfer",
-    amount: () => -75000,
+    amount: () => -850,
     frequency: "3m",
     from: addMonthsClamped(start, 3, 10),
     dayOfMonth: 10,
-    remarks: "Quarterly remittance ₹ → €",
-    transferTo: { account: HUB, amountIn: (out, d) => round2(out / fx(d) - 6) },
+    remarks: "Quarterly remittance € → ₹",
+    transferTo: {
+      account: FLAT,
+      amountIn: (out, d) => round2((out - 6) * fx(d)),
+    },
+  });
+  sim.recurring({
+    key: "hub-income",
+    account: HUB,
+    vendor: "Brightwell GmbH",
+    category: "Income",
+    subCategory: "Salary",
+    amount: (d) =>
+      round2(
+        540 *
+          (1 +
+            0.03 *
+              Math.floor((d.getTime() - start.getTime()) / (365 * DAY_MS))),
+      ),
+    frequency: "Monthly",
+    from: addMonthsClamped(start, 0, 27),
+    dayOfMonth: 27,
+    remarks: "Share of salary set aside for India",
+  });
+  sim.recurring({
+    key: "family",
+    account: FLAT,
+    vendor: "Family – Mumbai",
+    category: "Family",
+    subCategory: "Support",
+    amount: (d) => -round2(24000 * sim.inflation(d)),
+    frequency: "Monthly",
+    from: addMonthsClamped(start, 0, 7),
+    dayOfMonth: 7,
+    remarks: "Monthly support for parents 🙏",
+  });
+  sim.recurring({
+    key: "fd-save",
+    account: FLAT,
+    vendor: OSAVE,
+    category: "Transfer",
+    amount: () => -20000,
+    frequency: "Monthly",
+    from: addMonthsClamped(start, 1, 8),
+    dayOfMonth: 8,
+    remarks: "Rent surplus into the FD ladder",
+    transferTo: { account: OSAVE, amountIn: (out) => out },
   });
   sim.recurring({
     key: "fd-interest",
@@ -2241,7 +2288,8 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
     },
     accounts,
     categories: {
-      Income: ["Rental", "Interest", "Deposit Refund"],
+      Income: ["Rental", "Interest", "Salary", "Deposit Refund"],
+      Family: ["Support"],
       Housing: ["Maintenance", "Repairs", "Brokerage"],
       Utilities: ["Electricity"],
       Legal: ["Taxes", "Advisory"],
@@ -2323,6 +2371,7 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   const start = monthsAgo(now, 3, 1 + Math.floor(rng() * 4));
   const BANK = "Business Checking";
   const TAX = "Tax Reserve";
+  const EQUIP = "Equipment Fund";
   const CARD = "Business Card";
   const accounts: DemoAccount[] = [
     {
@@ -2338,6 +2387,13 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       type: "Savings",
       startingBalance: 0,
       remarks: "25% of every invoice, untouchable",
+    },
+    {
+      name: EQUIP,
+      currency: "USD",
+      type: "Savings",
+      startingBalance: 0,
+      remarks: "Saving for the next laptop 💻",
     },
     {
       name: CARD,
@@ -2359,6 +2415,18 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   ] as const;
   let invoiceNo = 0;
   let lastYear = start.getFullYear();
+  sim.recurring({
+    key: "equip",
+    account: BANK,
+    vendor: EQUIP,
+    category: "Transfer",
+    amount: () => -450,
+    frequency: "Monthly",
+    from: addMonthsClamped(start, 6, 2),
+    dayOfMonth: 2,
+    remarks: "New laptop fund 💻",
+    transferTo: { account: EQUIP, amountIn: (out) => out },
+  });
   sim.recurring({
     key: "retainer",
     account: BANK,
@@ -2696,9 +2764,9 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
         is_active: true,
       },
       {
-        category_name: BANK,
+        category_name: EQUIP,
         budget_scope: "account",
-        budget_scope_name: BANK,
+        budget_scope_name: EQUIP,
         target_amount: 3500,
         currency: "USD",
         start_date: addMonthsClamped(now, -4).toISOString(),

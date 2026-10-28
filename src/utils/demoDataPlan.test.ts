@@ -161,6 +161,20 @@ describe("demo plan: scenarios", () => {
     expect(budgets.some((b) => b.currency === "INR")).toBe(true);
   });
 
+  it("puts every savings goal on an account that is only paid into", () => {
+    // Goal progress nets deposits against withdrawals, so a goal on a spending
+    // account would sit at zero.
+    for (const plan of plans) {
+      for (const goal of plan.budgets.filter((b) => b.is_goal)) {
+        expect(goal.budget_scope, goal.category_name).toBe("account");
+        const withdrawals = plan.transactions.filter(
+          (t) => t.account === goal.budget_scope_name && t.amount < 0,
+        );
+        expect(withdrawals.length, goal.category_name).toBe(0);
+      }
+    }
+  });
+
   it("only budgets things that exist", () => {
     for (const plan of plans) {
       const accounts = new Set(plan.accounts.map((a) => a.name));

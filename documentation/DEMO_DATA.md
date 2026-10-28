@@ -12,7 +12,7 @@
 |---|---|---|---|
 | Home Budget | ~5 | EUR | Two salaries with yearly raises, a rent contract that ends and a mortgage that starts, a credit card paid in full each month (the payment equals last month's card spending), cash withdrawals, a USD brokerage fed by an EUR→USD transfer, a GBP pension account, summer trips, December gifts, a returned jacket, refunds |
 | Child Budget | ~3 | EUR | Weekly allowance, saving for a console, birthday money, chores, a savings goal |
-| Offshore | ~4 | EUR + INR | A rented flat in INR, a two-month vacancy, quarterly INR→EUR remittances with a different amount on each leg, fixed-deposit interest, property tax |
+| Offshore | ~4 | EUR + INR | A rented flat in INR, a two-month vacancy, quarterly EUR→INR remittances with a different amount on each leg, fixed-deposit interest, property tax |
 | Freelance Studio | ~3 | USD | Irregular client invoices (some paid late), a retainer, quarterly "set aside 25%" transfers and estimated tax, an owner's draw, a chargeback, a business card |
 
 ## Features each part is there to show

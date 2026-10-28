@@ -5,6 +5,13 @@ import { shell } from "./shell";
 import { feedback } from "./feedback";
 import { transactionsTable } from "./transactionsTable";
 import { budgets } from "./budgets";
+import { scheduledScreens } from "./scheduledScreens";
+import { settingsScreen } from "./settingsScreen";
+import { dataManagementScreen } from "./dataManagementScreen";
+import { backupScreen } from "./backupScreen";
+import { csvImportScreen } from "./csvImportScreen";
+import { budgetDialogs } from "./budgetDialogs";
+import { aiProviderScreens } from "./aiProviderScreens";
 import { mergeMissing } from "./merge";
 import type { AreaLanguage, AreaTranslations } from "./types";
 
@@ -17,6 +24,13 @@ export const areaTranslations: AreaTranslations[] = [
   feedback,
   transactionsTable,
   budgets,
+  scheduledScreens,
+  settingsScreen,
+  dataManagementScreen,
+  backupScreen,
+  csvImportScreen,
+  budgetDialogs,
+  aiProviderScreens,
 ];
 
 /**
