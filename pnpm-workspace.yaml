@@ -31,7 +31,7 @@ overrides:
   "brace-expansion@<=5.0.11": ">=5.0.12"
   "uuid@<11.1.1": ">=11.1.1"
   "@humanfs/node": ">=0.16.8"
-  joi: ">=18.2.5"
+  joi: ">=18.3.1"
   jose: ">=4.15.5"
   node-forge: ">=1.4.0"
   # 6.16.1 fixes GHSA-6pq8-jhm2-2vcw. Pinned because 6.16.2 and 6.17.0 were
