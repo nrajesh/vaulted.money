@@ -81,9 +81,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.1.0",
-    "@capacitor/cli": "^8.1.0",
-    "@capacitor/ios": "^8.1.0",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "4.3.3",
     "@tailwindcss/typography": "^0.5.15",
