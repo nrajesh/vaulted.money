@@ -15,10 +15,11 @@
  *   VM_TOKEN_FILE  file holding the access token (default ~/.vaulted-token)
  *   VM_TOKEN       the token itself (overrides the file)
  *   VM_BASE_URL    default http://127.0.0.1:47821/api/v1
+ *   VM_EXPORT_DIR  where large downloads are saved (default ~/vaulted-exports)
  */
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== ""));
@@ -35,10 +36,15 @@ export const PERIODS = ["this_month", "last_month", "last_7_days", "last_30_days
  * today's date and are unreliable at date arithmetic, so the server does it
  * and reports exactly which dates it used.
  */
-export function resolvePeriod({ period, from, to } = {}, now = new Date()) {
+export function resolvePeriod({ period, from, to, days } = {}, now = new Date()) {
   if (from || to) return { label: "custom", from: from ?? "0000-01-01", to: to ?? ymd(now) };
   const y = now.getFullYear(), m = now.getMonth();
   const daysAgo = (n) => ymd(new Date(y, m, now.getDate() - n));
+  if (days !== undefined && days !== null) {
+    // "last 2 days" = today and yesterday, the same convention as last_7_days.
+    if (!Number.isInteger(days) || days < 1 || days > 3650) throw new Error(`\`days\` must be a whole number from 1 to 3650, got ${days}.`);
+    return { label: `last_${days}_days`, from: daysAgo(days - 1), to: ymd(now) };
+  }
   switch (period ?? "last_30_days") {
     case "this_month": return { label: "this_month", from: ymd(new Date(y, m, 1)), to: ymd(now) };
     case "last_month": return { label: "last_month", from: ymd(new Date(y, m - 1, 1)), to: ymd(new Date(y, m, 0)) };
@@ -157,7 +163,25 @@ export function scoreOperation(queryWords, { method, path, summary, tags }) {
   return score;
 }
 
-export function createServer({ baseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
+/** Responses longer than this are saved to a file instead of passing through the chat. */
+export const INLINE_LIMIT = 20000;
+/** POST endpoints that only read (they are POST so that a password is not put in the URL). */
+const READ_ONLY_POSTS = [/^\/backups\/export$/];
+
+export function createServer({
+  baseUrl,
+  token,
+  getToken,
+  now = () => new Date(),
+  fetchImpl = fetch,
+  readFile = (p) => readFileSync(p, "utf8"),
+  exportDir = join(homedir(), "vaulted-exports"),
+  // Owner-only: exports can hold the whole ledger.
+  writeFile = (p, data) => {
+    mkdirSync(exportDir, { recursive: true, mode: 0o700 });
+    writeFileSync(p, data, { mode: 0o600 });
+  },
+}) {
   let ledgers, spec;
   const api = async (method, path, { query, body } = {}) => {
     const url = new URL(baseUrl.replace(/\/$/, "") + path);
@@ -166,8 +190,29 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
     const raw = await res.text();
     let json;
     try { json = raw ? JSON.parse(raw) : null; } catch { json = undefined; }
-    return { ok: res.ok, status: res.status, json, raw };
+    return { ok: res.ok, status: res.status, json, raw, disposition: res.headers?.get?.("content-disposition") ?? "" };
   };
+  /**
+   * Hand a successful response to the model. Small ones pass straight through.
+   * A large export (CSV, backup) would be cut off or flood a small model's
+   * context, so it is written to a file and the model gets the path, the size
+   * and a short preview.
+   */
+  function deliver(r) {
+    const isJson = r.json !== undefined && r.json !== null;
+    const isDownload = /attachment/i.test(r.disposition);
+    if (r.raw.length <= INLINE_LIMIT || (isJson && !isDownload)) return text(isJson ? r.json : r.raw);
+    const suggested = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(r.disposition)?.[1] ?? "export.txt";
+    const safeName = basename(decodeURIComponent(suggested)).replace(/[^\w.-]+/g, "_") || "export.txt";
+    const stamp = now().toISOString().replace(/[-:]/g, "").replace(/\..*$/, "").replace("T", "-");
+    const file = join(exportDir, `${stamp}-${safeName}`);
+    try {
+      writeFile(file, r.raw);
+    } catch (e) {
+      return fail(`The response is ${r.raw.length} characters, too large to show, and it could not be saved to ${file}: ${e instanceof Error ? e.message : e}`);
+    }
+    return text({ saved_to: file, characters: r.raw.length, preview: r.raw.slice(0, 1500), note: "Too large to show here, so it was saved on this computer only. Open that file to see all of it. It may contain your financial data: delete it when you are done." });
+  }
   const apiError = (r) => fail(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 300)}${r.json?.error?.details ? " " + JSON.stringify(r.json.error.details) : ""}`);
 
   async function fetchLedgers() {
@@ -196,6 +241,7 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
 
   const ledgerProp = { ledger: { type: "string", description: "Ledger name or id. Optional when there is only one ledger." } };
   const PERIOD_PROP = { type: "string", enum: PERIODS, description: "Named period; the server works out the dates" };
+  const DAYS_PROP = { type: "number", description: "The last N days including today (2 = today and yesterday). Use for 'last 2 days', 'past 10 days'; the server works out the dates." };
   const read = { readOnlyHint: true, openWorldHint: false };
 
   const tools = [
@@ -216,8 +262,8 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
     },
     {
       name: "spending_summary",
-      description: "Where the money goes: totals plus top categories, vendors and accounts, and a time series. Prefer `period` over dates. Default: last_30_days. The result states the exact dates used and today's date. Use for 'where is my money going', 'how much did I spend', 'compare months'.",
-      inputSchema: { type: "object", properties: { ...ledgerProp, period: PERIOD_PROP, from: { type: "string", description: "YYYY-MM-DD; only if no named period fits" }, to: { type: "string", description: "YYYY-MM-DD" }, group_by: { type: "string", enum: ["day", "week", "month"] }, top: { type: "number", description: "Rows per breakdown (default 8)" } } },
+      description: "Where the money goes: totals plus top categories, vendors and accounts, and a time series. Prefer `period` or `days` over dates. Default: last_30_days. The result states the exact dates used and today's date. Use for 'where is my money going', 'how much did I spend', 'compare months'.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, period: PERIOD_PROP, days: DAYS_PROP, from: { type: "string", description: "YYYY-MM-DD; only if no named period fits" }, to: { type: "string", description: "YYYY-MM-DD" }, group_by: { type: "string", enum: ["day", "week", "month"] }, top: { type: "number", description: "Rows per breakdown (default 8)" } } },
       annotations: read,
       async run(a) {
         const l = await resolveLedger(a.ledger);
@@ -233,12 +279,13 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
     {
       name: "find_transactions",
       description: "Look up transactions. Negative amounts are expenses. Use for 'what did I spend at X', 'biggest expenses', 'show uncategorised'. Returns total matches and up to `limit` rows (default 20).",
-      inputSchema: { type: "object", properties: { ...ledgerProp, period: { ...PERIOD_PROP, description: "Optional: limit to a named period. Omit for all dates." }, search: { type: "string", description: "Free text" }, vendor: { type: "string" }, category: { type: "string" }, sub_category: { type: "string" }, account: { type: "string" }, type: { type: "string", enum: ["income", "expense"] }, min_amount: { type: "number" }, max_amount: { type: "number" }, from: { type: "string" }, to: { type: "string" }, exclude_transfers: { type: "boolean" }, limit: { type: "number" }, offset: { type: "number" } } },
+      inputSchema: { type: "object", properties: { ...ledgerProp, period: { ...PERIOD_PROP, description: "Optional: limit to a named period. Omit for all dates." }, days: DAYS_PROP, search: { type: "string", description: "Free text" }, vendor: { type: "string" }, category: { type: "string" }, sub_category: { type: "string" }, account: { type: "string" }, type: { type: "string", enum: ["income", "expense"] }, min_amount: { type: "number" }, max_amount: { type: "number" }, from: { type: "string" }, to: { type: "string" }, exclude_transfers: { type: "boolean" }, limit: { type: "number" }, offset: { type: "number" } } },
       annotations: read,
       async run(a) {
         const l = await resolveLedger(a.ledger);
-        const { ledger: _ledger, period, ...query } = a;
-        const range = period ? resolvePeriod({ period }, now()) : undefined;
+        const { ledger: _ledger, period, days, ...query } = a;
+        // Explicit from/to win; otherwise `days`, then the named period.
+        const range = !query.from && !query.to && (days !== undefined || period) ? resolvePeriod({ period, days }, now()) : undefined;
         if (range) Object.assign(query, { from: range.from, to: range.to });
         query.limit = Math.min(query.limit ?? 20, 100);
         const r = await api("GET", `/ledgers/${l.id}/transactions`, { query });
@@ -300,9 +347,10 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
         let path = a.path.replace(/^\/?api\/v1/, "").replace(/^(?!\/)/, "/");
         if (path.includes("{ledgerId}")) path = path.replaceAll("{ledgerId}", (await resolveLedger(a.ledger)).id);
         const method = a.method.toUpperCase();
-        if (method === "GET") {
-          const r = await api("GET", path, { query: a.query });
-          return r.ok ? text(r.json ?? r.raw.slice(0, 20000)) : apiError(r);
+        // A POST that only reads (an encrypted backup export) needs no preview.
+        if (method === "GET" || (method === "POST" && READ_ONLY_POSTS.some((p) => p.test(path)))) {
+          const r = await api(method, path, { query: a.query, body: method === "GET" ? undefined : (a.body ?? {}) });
+          return r.ok ? deliver(r) : apiError(r);
         }
         let body = a.body;
         if (!a.confirm) {
@@ -319,7 +367,7 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
         // Confirmed: deletion endpoints that demand an explicit flag get it.
         if (/cleanup|cleanup-duplicates/.test(path)) body = { confirm_delete: true, ...(body ?? {}) };
         const r = await api(method, path, { query: a.query, body });
-        return r.ok ? text(r.status === 204 ? { deleted: true } : (r.json ?? r.raw.slice(0, 20000))) : apiError(r);
+        return r.ok ? (r.status === 204 ? text({ deleted: true }) : deliver(r)) : apiError(r);
       },
     },
     {

@@ -11,6 +11,8 @@ import { createServer, normalizeBankCsv, parseCsv, resolvePeriod } from "./serve
  * The MCP tools against the real HTTP server, router and Dexie (only the
  * Electron IPC hop is replaced by a direct call), as an agent would use them.
  */
+// The backup builder reads this build-time constant (see src/api/api.test.ts).
+(globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ = "test";
 const TOKEN = "m".repeat(43);
 const dataProvider = new LocalDataProvider();
 
@@ -18,6 +20,7 @@ describe("MCP server tools", () => {
   let api: ApiServer;
   let mcp: ReturnType<typeof createServer>;
   let files: Record<string, string>;
+  let saved: Record<string, string>;
   let base: string;
   const post = (path: string, body: unknown) =>
     fetch(base + path, { method: "POST", headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -34,10 +37,15 @@ describe("MCP server tools", () => {
     const port = 20000 + Math.floor(Math.random() * 20000);
     await api.start(port, TOKEN);
     files = {};
+    saved = {};
     base = `http://127.0.0.1:${port}/api/v1`;
     mcp = createServer({
       baseUrl: base,
       token: TOKEN,
+      exportDir: "/exports",
+      writeFile: (path: string, data: string) => {
+        saved[path] = data;
+      },
       readFile: (p: string) => {
         if (!(p in files)) throw new Error("ENOENT");
         return files[p];
@@ -130,6 +138,53 @@ describe("MCP server tools", () => {
     expect(preview.json).toMatchObject({ preview: true, result: { dry_run: true } });
   });
 
+  it("filters transactions to the last N days, reporting the dates used", async () => {
+    const day = (offset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() - offset);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    for (const [offset, vendor] of [[0, "Today"], [1, "Yesterday"], [2, "TwoDaysAgo"]] as const) {
+      await run("add_transaction", { date: day(offset), amount: -5, account: "Checking", vendor, category: "Food" });
+    }
+    const found = await run("find_transactions", { days: 2 });
+    expect(found.json.period).toMatchObject({ label: "last_2_days", from: day(1), to: day(0) });
+    expect(found.json.transactions.map((t: { vendor: string }) => t.vendor).sort()).toEqual(["Today", "Yesterday"]);
+    const summary = await run("spending_summary", { days: 2 });
+    expect(summary.json.period).toMatchObject({ from: day(1), to: day(0) });
+    // Through the protocol a bad value comes back as an error result.
+    const bad = await mcp.handle({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "find_transactions", arguments: { days: 0 } } });
+    expect(bad.result.isError).toBe(true);
+    expect(bad.result.content[0].text).toMatch(/whole number/);
+  });
+
+  it("saves a large export to a file instead of cutting it off", async () => {
+    const rows = Array.from({ length: 300 }, (_, i) => ({ date: "2026-09-02", amount: -(i + 1), account: "Checking", vendor: `Shop ${i}`, category: "Food", remarks: "x".repeat(60) }));
+    const ledger = (await run("list_ledgers")).json[0].id as string;
+    expect((await post(`/ledgers/${ledger}/transactions/bulk`, { transactions: rows })).ok).toBe(true);
+    const result = await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/transactions/export" });
+    expect(result.json.saved_to).toMatch(/^\/exports\/\d{8}-\d{6}-.+\.csv$/);
+    expect(result.json.characters).toBeGreaterThan(20000);
+    // Nothing is lost: the file holds every row, the chat only a short preview.
+    const content = saved[result.json.saved_to];
+    expect(content).toHaveLength(result.json.characters);
+    expect(content.split("\n").filter((l: string) => l.includes("Shop ")).length).toBe(300);
+    expect(result.json.preview.length).toBeLessThanOrEqual(1500);
+  });
+
+  it("returns a small export inline without writing a file", async () => {
+    await run("add_transaction", { date: "2026-09-02", amount: -5, account: "Checking", vendor: "Kiosk", category: "Food" });
+    const small = await mcp.call("call_api", { method: "GET", path: "/ledgers/{ledgerId}/transactions/export" });
+    expect(small.content[0].text).toContain("Kiosk");
+    expect(saved).toEqual({});
+  });
+
+  it("runs the read-only backup export without a preview", async () => {
+    const result = await run("call_api", { method: "POST", path: "/backups/export", body: {} });
+    expect(result.json.preview).toBeUndefined();
+    expect(JSON.stringify(result.json)).toContain("Home");
+  });
+
   it("finds the rest of the API with search_api", async () => {
     const hits = (await run("search_api", { query: "merge vendors" })).json;
     expect(hits[0]).toMatchObject({ method: "POST", path: "/ledgers/{ledgerId}/vendors/merge" });
@@ -168,5 +223,14 @@ describe("periods", () => {
     expect(resolvePeriod({ period: "last_year" }, now)).toMatchObject({ from: "2025-01-01", to: "2025-12-31" });
     expect(resolvePeriod({ from: "2026-02-01" }, now)).toMatchObject({ label: "custom", from: "2026-02-01", to: "2026-10-05" });
     expect(() => resolvePeriod({ period: "yesterday" }, now)).toThrow(/Unknown period/);
+  });
+
+  it("resolves the last N days, today included", () => {
+    expect(resolvePeriod({ days: 1 }, now)).toEqual({ label: "last_1_days", from: "2026-10-05", to: "2026-10-05" });
+    expect(resolvePeriod({ days: 2 }, now)).toEqual({ label: "last_2_days", from: "2026-10-04", to: "2026-10-05" });
+    expect(resolvePeriod({ days: 10 }, now)).toMatchObject({ from: "2026-09-26", to: "2026-10-05" });
+    // Explicit dates win over `days`.
+    expect(resolvePeriod({ days: 2, from: "2026-01-01" }, now)).toMatchObject({ label: "custom", from: "2026-01-01" });
+    for (const bad of [0, -3, 1.5, 4000]) expect(() => resolvePeriod({ days: bad }, now)).toThrow(/whole number/);
   });
 });

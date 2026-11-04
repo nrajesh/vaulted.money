@@ -13,8 +13,8 @@ A model re-reads every tool definition on every turn. The API has ~99 operations
 | Tool | Use it for | Changes data? |
 |---|---|---|
 | `list_ledgers` | What exists: ledgers, accounts, balances | no |
-| `spending_summary` | "Where is my money going?", totals, top categories/vendors/accounts, trend. Takes a named `period` (`last_30_days` by default, `this_month`, `last_month`, `last_7_days`, `last_90_days`, `this_year`, `last_year`) and reports the exact dates it used | no |
-| `find_transactions` | Look-ups: by text, vendor, category, account, amount range, `period` or dates | no |
+| `spending_summary` | "Where is my money going?", totals, top categories/vendors/accounts, trend. Takes a named `period` (`last_30_days` by default, `this_month`, `last_month`, `last_7_days`, `last_90_days`, `this_year`, `last_year`) or `days` (the last N days, e.g. 2 = today and yesterday) and reports the exact dates it used | no |
+| `find_transactions` | Look-ups: by text, vendor, category, account, amount range, `period`, `days` or dates | no |
 | `budgets_and_insights` | "Am I over budget?", biggest changes vs the previous 30 days | no |
 | `search_api` | Find any other endpoint by keyword (reports, recurring, vendors, backups, maintenance…) with its parameters | no |
 | `call_api` | Call what `search_api` found. **GET runs; anything else previews until `confirm: true`** | yes, gated |
@@ -31,7 +31,11 @@ A model re-reads every tool definition on every turn. The API has ~99 operations
 
 ## Dates
 
-Models don't know today's date and are unreliable at date arithmetic, so asking the same question twice could silently cover different date ranges. The server works the dates out itself from a named `period`, and every answer states `today` and the exact `from`/`to` it used. If two answers disagree, compare those fields first.
+Models don't know today's date and are unreliable at date arithmetic, so asking the same question twice could silently cover different date ranges. The server works the dates out itself from a named `period` or a number of `days`, and every answer states `today` and the exact `from`/`to` it used. If two answers disagree, compare those fields first. Explicit `from`/`to` win over `days`, and `days` wins over `period`. "Last 2 days" means today and yesterday.
+
+## Large exports
+
+A CSV export or backup can be far bigger than a model should read. When a download from `call_api` is longer than 20,000 characters, the server saves the complete file instead of cutting it off, and replies with the path, the size and a short preview. Files go to `~/vaulted-exports` (change it with `VM_EXPORT_DIR`), readable by your user only, with a timestamp in the name so nothing is overwritten. They are plain files on your computer and may contain your financial data, so delete them when you are done. Smaller exports come back in the chat as before. `POST /backups/export` only reads, so it runs without a preview.
 
 ## Setup
 
@@ -79,3 +83,5 @@ On the Ledgers screen choose *Generate demo data*, then ask:
 ## Tests
 
 `mcp/server.test.ts` runs every tool against the real HTTP server, router and database (only Electron's IPC hop is replaced), as part of `pnpm test`.
+
+`mcp/coverage.test.ts` keeps the MCP in step with the API: every operation in the generated OpenAPI spec must have a summary and be findable with `search_api` from it. `call_api` can send any request, so this is about discoverability. If it fails, give the new route a more distinctive `summary`.
