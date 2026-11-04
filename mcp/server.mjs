@@ -132,6 +132,31 @@ function describeBody(schema) {
   return Object.fromEntries(Object.entries(props).map(([k, v]) => [k + (required.has(k) ? "*" : ""), v.enum ? v.enum.join("|") : Array.isArray(v.type) ? v.type.join("|") : (v.type ?? "any")]));
 }
 
+// --- search_api ranking -----------------------------------------------------
+// Whole-word matching (with a crude plural stem), not substring matching:
+// "Delete a budget" must not match everything that contains the letter "a".
+const SEARCH_STOPWORDS = new Set(["a", "an", "the", "of", "to", "in", "on", "one", "and", "or", "with", "by", "is", "for", "all", "it", "its", "as", "at", "from", "my", "me"]);
+// Verbs people use for an operation, mapped to the HTTP method that does it.
+const VERB_TO_METHOD = { get: "get", list: "get", show: "get", read: "get", fetch: "get", find: "get", create: "post", add: "post", new: "post", update: "patch", edit: "patch", rename: "patch", change: "patch", delete: "delete", remove: "delete" };
+const searchStem = (word) => word.replace(/ies$/, "y").replace(/s$/, "");
+const searchTokens = (text) => (text ?? "").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(searchStem);
+
+/** Score one operation against the query words. Summary words count most, then path and tags, then a matching verb. */
+export function scoreOperation(queryWords, { method, path, summary, tags }) {
+  const summaryTokens = new Set(searchTokens(summary));
+  const pathTokens = new Set(searchTokens(path.replace(/\{[^}]*\}/g, " ")));
+  const tagTokens = new Set(searchTokens((tags ?? []).join(" ")));
+  let score = 0;
+  for (const word of queryWords) {
+    const stem = searchStem(word);
+    if (summaryTokens.has(stem)) score += 2;
+    if (pathTokens.has(stem)) score += 1;
+    if (tagTokens.has(stem)) score += 1;
+    if (VERB_TO_METHOD[word] === method.toLowerCase()) score += 1;
+  }
+  return score;
+}
+
 export function createServer({ baseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
   let ledgers, spec;
   const api = async (method, path, { query, body } = {}) => {
@@ -249,16 +274,16 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
       annotations: read,
       async run(a) {
         const s = await loadSpec();
-        const words = a.query.toLowerCase().split(/\s+/).filter(Boolean);
+        const words = a.query.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w && !SEARCH_STOPWORDS.has(w));
         const hits = [];
         for (const [path, ops] of Object.entries(s.paths)) {
           for (const [method, op] of Object.entries(ops)) {
-            const hay = `${method} ${path} ${op.summary ?? ""} ${(op.tags ?? []).join(" ")}`.toLowerCase();
-            const score = words.reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
+            const score = scoreOperation(words, { method, path, summary: op.summary, tags: op.tags });
             if (score) hits.push({ score, method: method.toUpperCase(), path, op });
           }
         }
-        hits.sort((x, y) => y.score - x.score);
+        // Ties go to the shorter path: "get a budget" should beat deeper routes.
+        hits.sort((x, y) => y.score - x.score || x.path.length - y.path.length);
         return text(hits.slice(0, 6).map(({ method, path, op }) => clean({
           method, path, summary: op.summary,
           query: Object.fromEntries((op.parameters ?? []).filter((p) => p.in === "query").map((p) => [p.name, p.description ?? ""])) ,
