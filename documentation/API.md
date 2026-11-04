@@ -22,7 +22,7 @@ curl -H "Authorization: Bearer $VM_TOKEN" $VM            # list every endpoint
 
 `GET /api/v1` returns the full, current route table, and `GET /api/v1/openapi.json` an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) description generated from the code (request bodies included), so they are always the authoritative reference.
 
-Want a local AI agent (LM Studio, Claude Code) to use it? See the [MCP server](../mcp/README.md): eight small tools instead of 99, with previews before anything changes.
+Want a local AI agent (LM Studio, Claude Code) to use it? See the [MCP server](../mcp/README.md): twelve small tools instead of about 100, with previews before anything changes.
 
 Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every endpoint. Building your own app or scripts? See the [API cookbook](API_COOKBOOK.md) and the machine-readable spec at `GET /api/v1/openapi.json`.
 
@@ -119,6 +119,8 @@ Under `/ledgers/{ledgerId}/budgets`. Responses include the computed `spent_amoun
 - `frequency`: `Monthly` (default), `Quarterly`, `Yearly`, `One-time`, or a duration such as `3m`.
 
 `GET/PATCH/DELETE /{budgetId}`.
+
+`GET /history?periods=6` shows which budgets you keep missing: for every active recurring budget (monthly, quarterly or yearly) it returns `spent` against the target for each of the last `periods` periods (1-24, default 6), oldest first, with `over_by` and `missed`, plus a `summary` (`periods_counted`, `periods_missed`, `miss_rate_pct`, `average_spent`, `worst_overspend`). Periods before the budget's start date are left out, and the period still running is shown with `in_progress: true` but not counted. Savings goals and switched-off budgets are not listed; one-time and custom-range budgets are listed under `skipped` with the reason. Spending is calculated exactly as for `spent_amount`.
 
 ### Currencies
 | | |

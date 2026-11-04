@@ -55,6 +55,28 @@ beforeAll(async () => {
 }, 240_000);
 
 describe("demo data in the real app", () => {
+  it("has budget history to ask about, with missed and skipped budgets", async () => {
+    const history = await json<{
+      data: {
+        name: string;
+        periods: { in_progress: boolean }[];
+        summary: { periods_counted: number; periods_missed: number };
+      }[];
+      skipped: { name: string }[];
+    }>(call("GET", `/ledgers/${home}/budgets/history`));
+    const byName = new Map(history.data.map((b) => [b.name, b]));
+    // The two long-running monthly budgets have several finished months.
+    for (const name of ["Groceries", "Dining Out / Restaurants"]) {
+      const budget = byName.get(name)!;
+      expect(budget.summary.periods_counted, name).toBeGreaterThanOrEqual(4);
+      expect(budget.periods.at(-1)!.in_progress, name).toBe(true);
+    }
+    // At least one budget is missed in a finished month.
+    expect(history.data.some((b) => b.summary.periods_missed > 0)).toBe(true);
+    // The one-time trip budget is not a repeating period.
+    expect(history.skipped.map((b) => b.name)).toContain("Travel");
+  });
+
   it("creates all four ledgers with their accounts", async () => {
     expect(ledgers.map((l) => l.name).sort()).toEqual(
       ["Child Budget", "Freelance Studio", "Home Budget", "Offshore"].sort(),

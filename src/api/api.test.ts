@@ -724,6 +724,120 @@ describe("budgets", () => {
         .status,
     ).toBe(204);
   });
+
+  it("reports spent versus target for past periods and which were missed", async () => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    const now = new Date();
+    // The 15th stays inside its month in any time zone.
+    const dayInMonth = (monthsAgo: number) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 15);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-15`;
+    };
+    // This month and three before it, against a target of 50.
+    const spendByMonthsAgo = [30, 60, 50, 80];
+    for (const [monthsAgo, amount] of spendByMonthsAgo.entries()) {
+      await ok(
+        call("POST", `${base}/transactions`, {
+          date: dayInMonth(monthsAgo),
+          amount: -amount,
+          account: "Bank",
+          vendor: "Shop",
+          category: "Food",
+        }),
+        201,
+      );
+    }
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    await ok(
+      call("POST", `${base}/budgets`, {
+        category: "Food",
+        target_amount: 50,
+        start_date: threeMonthsAgo.toISOString(),
+      }),
+      201,
+    );
+    await ok(
+      call("POST", `${base}/budgets`, {
+        category: "Food",
+        target_amount: 10,
+        frequency: "One-time",
+      }),
+      201,
+    );
+
+    interface HistoryResponse {
+      periods_requested: number;
+      data: {
+        name: string;
+        target_amount: number;
+        periods: {
+          period_start: string;
+          spent: number;
+          over_by: number;
+          missed: boolean;
+          in_progress: boolean;
+        }[];
+        summary: Record<string, number | null>;
+      }[];
+      skipped: { reason: string }[];
+    }
+    const history = await ok<HistoryResponse>(
+      call("GET", `${base}/budgets/history`, undefined, { periods: "6" }),
+    );
+    expect(history.periods_requested).toBe(6);
+    // The one-time budget is reported as skipped, not as a recurring one.
+    expect(history.skipped).toHaveLength(1);
+    expect(history.skipped[0].reason).toMatch(/one date range/);
+    expect(history.data).toHaveLength(1);
+
+    const [food] = history.data;
+    expect(food.name).toBe("Food");
+    // Only the four months since the budget started, oldest first.
+    expect(food.periods.map((p) => p.spent)).toEqual([80, 50, 60, 30]);
+    expect(food.periods.map((p) => p.missed)).toEqual([
+      true,
+      false,
+      true,
+      false,
+    ]);
+    expect(food.periods.map((p) => p.over_by)).toEqual([30, 0, 10, 0]);
+    expect(food.periods.map((p) => p.in_progress)).toEqual([
+      false,
+      false,
+      false,
+      true,
+    ]);
+    // The month still running is not counted: 3 finished, 2 of them missed.
+    expect(food.summary).toMatchObject({
+      periods_counted: 3,
+      periods_missed: 2,
+      miss_rate_pct: 66.67,
+      average_spent: 63.33,
+      worst_overspend: 30,
+    });
+  });
+
+  it("rejects a history window that is out of range or for an unknown ledger", async () => {
+    const ledger = await createLedger();
+    for (const periods of ["0", "25", "abc"]) {
+      expect(
+        (
+          await call(
+            "GET",
+            `/ledgers/${ledger.id}/budgets/history`,
+            undefined,
+            {
+              periods,
+            },
+          )
+        ).status,
+      ).toBe(400);
+    }
+    expect((await call("GET", "/ledgers/nope/budgets/history")).status).toBe(
+      404,
+    );
+  });
 });
 
 describe("settings: currencies, languages, AI providers", () => {

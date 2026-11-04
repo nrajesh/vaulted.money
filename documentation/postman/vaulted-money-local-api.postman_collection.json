@@ -7027,6 +7027,69 @@
           ]
         },
         {
+          "name": "Budget history",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Reports the window and has data and skipped lists\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.periods_requested).to.equal(3);",
+                  "    pm.expect(json.data).to.be.an(\"array\");",
+                  "    pm.expect(json.skipped).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Each budget lists its periods, ending with the one in progress\", () => {",
+                  "    const budgets = pm.response.json().data;",
+                  "    pm.expect(budgets).to.have.length.above(0);",
+                  "    budgets.forEach(budget => {",
+                  "        pm.expect(budget.periods).to.be.an(\"array\").and.to.have.length.above(0);",
+                  "        const last = budget.periods[budget.periods.length - 1];",
+                  "        pm.expect(last.in_progress).to.equal(true);",
+                  "        pm.expect(last.spent).to.be.a(\"number\");",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"The running period is not counted in the summary\", () => {",
+                  "    pm.response.json().data.forEach(budget => {",
+                  "        const finished = budget.periods.filter(p => !p.in_progress).length;",
+                  "        pm.expect(budget.summary.periods_counted).to.equal(finished);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/budgets/history?periods=3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "budgets",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "periods",
+                  "value": "3"
+                }
+              ]
+            },
+            "description": "Spent versus target for each past period of every active recurring budget, oldest first, so you can see which budgets are regularly missed. `periods` (1-24, default 6) is how far back to look. Periods before a budget's start date are left out, and the period still running is shown but not counted. Savings goals and switched-off budgets are not listed; one-time and custom-range budgets are listed under `skipped`."
+          },
+          "response": []
+        },
+        {
           "name": "Update budget",
           "event": [
             {

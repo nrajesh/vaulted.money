@@ -6,9 +6,9 @@ Lets a local AI agent (LM Studio, Claude Code, any MCP client) read and change y
 - **Separate process.** It calls the Local API over HTTP, so the **desktop app must be running** with *Settings → Local API* on. The window may be closed to the tray; quitting the app stops the API. (Your data lives inside the app, so the server cannot read it without the app.)
 - **Local-first.** Everything stays on `127.0.0.1`. The token is read from a file, never shown to the model.
 
-## Why eight tools, not 99
+## Why twelve tools, not 100
 
-A model re-reads every tool definition on every turn. The API has ~99 operations (≈105 kB of spec), which makes small and local models slow. These eight definitions total ≈5.6 kB, return trimmed, pre-aggregated answers, and still reach every endpoint.
+A model re-reads every tool definition on every turn. The API has about 100 operations (≈105 kB of spec), which makes small and local models slow. These twelve definitions total ≈9.5 kB (a test keeps them under 13 kB), return trimmed, pre-aggregated answers, and still reach every endpoint.
 
 | Tool | Use it for | Changes data? |
 |---|---|---|
@@ -20,6 +20,10 @@ A model re-reads every tool definition on every turn. The API has ~99 operations
 | `call_api` | Call what `search_api` found. **GET runs; anything else previews until `confirm: true`** | yes, gated |
 | `add_transaction` | Add one transaction (negative = expense). Returns the id | yes |
 | `import_csv` | Import a bank CSV **from a file path** (columns mapped automatically). **Previews by default**; `dry_run: false` imports | yes, gated |
+| `add_transactions` | Add many at once (up to 1000) from a pasted statement, receipt list or PDF the model has read. **Previews by default**: flags new accounts (often a typo), new categories and likely duplicates; `dry_run: false` adds, `skip_duplicates: true` leaves out rows already recorded. Returns the ids so it can be undone | yes, gated |
+| `find_entity` | Everything a name could mean (account, vendor, category, sub-category, budget, recurring transaction), ignoring case and accents. Reports `ambiguous` so the model asks "the budget or the account?" before deleting or renaming | no |
+| `budget_history` | "Which budgets do I keep missing?": spent against target for each past month, quarter or year, with the misses counted. The running period is shown but not counted | no |
+| `payoff_projection` | "Can I pay off this loan in two years?": months to payoff and interest for the current payment (and an optional extra), the payment needed to clear it in time, and what the ledger leaves over each month. The balance and rate come from you (they are not stored). The maths is done here, not by the model | no |
 
 ### Changing data safely
 
@@ -79,6 +83,9 @@ On the Ledgers screen choose *Generate demo data*, then ask:
 - "Add a €12.50 coffee at Cafe Central on my checking account, category Food." → `add_transaction`
 - "Import /Users/me/Downloads/statement.csv into Checking, preview first." → `import_csv`
 - "Merge the vendors Starbucks and STARBUCKS." → `search_api`, then `call_api` (preview, then confirm)
+- "Which budgets do I keep missing?" → `budget_history` (the demo's Home Budget has months of history, with Dining Out and Groceries often over)
+- "Delete abc." → `find_entity` first, so it can ask whether you mean the budget, the account or the category
+- "I owe 12,000 at 6.5%, paying 450 a month. Can I clear it in two years?" → `payoff_projection`
 
 ## Tests
 
