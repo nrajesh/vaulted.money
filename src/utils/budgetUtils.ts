@@ -10,28 +10,16 @@ import {
 } from "date-fns";
 
 /**
- * Calculates the total spent amount for a specific budget based on its rules.
- *
- * @param budget The budget to calculate spending for.
- * @param transactions List of ALL transactions (or at least those in the potential time range).
- * @param accounts List of all accounts (to resolve types).
- * @param vendors List of all vendors (to map transaction account names to account IDs).
- * @param convertCurrency Function to convert currency.
- * @param targetCurrency The currency to express the result in (usually budget.currency).
+ * The period a budget is measured over, around `now`: the calendar month,
+ * quarter or year for recurring budgets, or the budget's own dates for
+ * one-time and custom ones.
  */
-export function calculateBudgetSpent(
+export function getBudgetPeriod(
   budget: Budget,
-  transactions: Transaction[],
-  accounts: Account[],
-  vendors: Vendor[],
-  convertCurrency: (amount: number, from: string, to: string) => number,
-  targetCurrency: string,
-): number {
-  // 1. Determine Time Range
+  now: Date = new Date(),
+): { startDate: Date; endDate: Date } {
   let startDate: Date;
   let endDate: Date;
-
-  const now = new Date();
   const freq = budget.frequency as string; // Handle legacy/dirty data types freely
 
   // Handle different frequencies
@@ -54,6 +42,32 @@ export function calculateBudgetSpent(
     startDate = parseISO(budget.start_date);
     endDate = budget.end_date ? parseISO(budget.end_date) : endOfDay(now);
   }
+  return { startDate, endDate };
+}
+
+/**
+ * Calculates the total spent amount for a specific budget based on its rules.
+ *
+ * @param budget The budget to calculate spending for.
+ * @param transactions List of ALL transactions (or at least those in the potential time range).
+ * @param accounts List of all accounts (to resolve types).
+ * @param vendors List of all vendors (to map transaction account names to account IDs).
+ * @param convertCurrency Function to convert currency.
+ * @param targetCurrency The currency to express the result in (usually budget.currency).
+ * @param asOf A date inside the period to measure. Defaults to today, which is
+ *   what the UI shows; pass an earlier date to measure a past period.
+ */
+export function calculateBudgetSpent(
+  budget: Budget,
+  transactions: Transaction[],
+  accounts: Account[],
+  vendors: Vendor[],
+  convertCurrency: (amount: number, from: string, to: string) => number,
+  targetCurrency: string,
+  asOf: Date = new Date(),
+): number {
+  // 1. Determine Time Range
+  const { startDate, endDate } = getBudgetPeriod(budget, asOf);
 
   // Optimize: Pre-calculate Account Type Map if valid account scope
   let allowedAccountTypes: Set<string> | null = null;

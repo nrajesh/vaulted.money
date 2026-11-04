@@ -8,17 +8,18 @@
  * with Settings -> Local API switched on (the window may be closed to the tray).
  *
  * Why so few tools: every tool definition is re-read by the model on every
- * turn, so a model with 99 tools is slow. Six read tools cover most questions
- * and return trimmed, pre-aggregated answers; `search_api` + `call_api` reach
- * every other endpoint without loading its schema up front.
+ * turn, so a model with ~100 tools is slow. A dozen curated tools cover the
+ * common questions and return trimmed, pre-aggregated answers; `search_api` +
+ * `call_api` reach every other endpoint without loading its schema up front.
  *
  *   VM_TOKEN_FILE  file holding the access token (default ~/.vaulted-token)
  *   VM_TOKEN       the token itself (overrides the file)
  *   VM_BASE_URL    default http://127.0.0.1:47821/api/v1
+ *   VM_EXPORT_DIR  where large downloads are saved (default ~/vaulted-exports)
  */
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== ""));
@@ -35,10 +36,15 @@ export const PERIODS = ["this_month", "last_month", "last_7_days", "last_30_days
  * today's date and are unreliable at date arithmetic, so the server does it
  * and reports exactly which dates it used.
  */
-export function resolvePeriod({ period, from, to } = {}, now = new Date()) {
+export function resolvePeriod({ period, from, to, days } = {}, now = new Date()) {
   if (from || to) return { label: "custom", from: from ?? "0000-01-01", to: to ?? ymd(now) };
   const y = now.getFullYear(), m = now.getMonth();
   const daysAgo = (n) => ymd(new Date(y, m, now.getDate() - n));
+  if (days !== undefined && days !== null) {
+    // "last 2 days" = today and yesterday, the same convention as last_7_days.
+    if (!Number.isInteger(days) || days < 1 || days > 3650) throw new Error(`\`days\` must be a whole number from 1 to 3650, got ${days}.`);
+    return { label: `last_${days}_days`, from: daysAgo(days - 1), to: ymd(now) };
+  }
   switch (period ?? "last_30_days") {
     case "this_month": return { label: "this_month", from: ymd(new Date(y, m, 1)), to: ymd(now) };
     case "last_month": return { label: "last_month", from: ymd(new Date(y, m - 1, 1)), to: ymd(new Date(y, m, 0)) };
@@ -132,7 +138,91 @@ function describeBody(schema) {
   return Object.fromEntries(Object.entries(props).map(([k, v]) => [k + (required.has(k) ? "*" : ""), v.enum ? v.enum.join("|") : Array.isArray(v.type) ? v.type.join("|") : (v.type ?? "any")]));
 }
 
-export function createServer({ baseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
+// --- search_api ranking -----------------------------------------------------
+// Whole-word matching (with a crude plural stem), not substring matching:
+// "Delete a budget" must not match everything that contains the letter "a".
+const SEARCH_STOPWORDS = new Set(["a", "an", "the", "of", "to", "in", "on", "one", "and", "or", "with", "by", "is", "for", "all", "it", "its", "as", "at", "from", "my", "me"]);
+// Verbs people use for an operation, mapped to the HTTP method that does it.
+const VERB_TO_METHOD = { get: "get", list: "get", show: "get", read: "get", fetch: "get", find: "get", create: "post", add: "post", new: "post", update: "patch", edit: "patch", rename: "patch", change: "patch", delete: "delete", remove: "delete" };
+const searchStem = (word) => word.replace(/ies$/, "y").replace(/s$/, "");
+const searchTokens = (text) => (text ?? "").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(searchStem);
+
+/** Score one operation against the query words. Summary words count most, then path and tags, then a matching verb. */
+export function scoreOperation(queryWords, { method, path, summary, tags }) {
+  const summaryTokens = new Set(searchTokens(summary));
+  const pathTokens = new Set(searchTokens(path.replace(/\{[^}]*\}/g, " ")));
+  const tagTokens = new Set(searchTokens((tags ?? []).join(" ")));
+  let score = 0;
+  for (const word of queryWords) {
+    const stem = searchStem(word);
+    if (summaryTokens.has(stem)) score += 2;
+    if (pathTokens.has(stem)) score += 1;
+    if (tagTokens.has(stem)) score += 1;
+    if (VERB_TO_METHOD[word] === method.toLowerCase()) score += 1;
+  }
+  return score;
+}
+
+// --- helpers for find_entity, add_transactions and payoff_projection ---------
+/** Compare names the way a person would: ignoring case, accents and extra spaces. */
+export const normName = (s) => String(s ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+/** A real calendar day written YYYY-MM-DD (rejects 2026-02-30). */
+export const isCalendarDay = (s) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && new Date(`${s}T00:00:00Z`).toISOString().slice(0, 10) === s;
+const cents = (n) => Math.round(n * 100) / 100;
+
+/**
+ * Month-by-month loan payoff, rounded to the cent each month like a lender
+ * does. Models are unreliable at this arithmetic, so it is done here.
+ * Returns `never: true` when the payment does not even cover the interest.
+ */
+export function projectPayoff({ balance, annualRatePct, monthlyPayment }, now = new Date()) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  if (balance <= 0) return { never: false, months: 0, total_interest: 0, total_paid: 0, payoff_month: ymd(now).slice(0, 7) };
+  if (!(monthlyPayment > balance * monthlyRate)) return { never: true, months: null, monthly_interest_at_start: cents(balance * monthlyRate) };
+  let remaining = balance, interest = 0, months = 0;
+  while (remaining > 0.004 && months < 1200) {
+    const accrued = cents(remaining * monthlyRate);
+    interest += accrued;
+    remaining = cents(remaining + accrued - Math.min(monthlyPayment, remaining + accrued));
+    months++;
+  }
+  if (remaining > 0.004) return { never: true, months: null, monthly_interest_at_start: cents(balance * monthlyRate) };
+  const end = new Date(now.getFullYear(), now.getMonth() + months, 1);
+  return { never: false, months, total_interest: cents(interest), total_paid: cents(balance + interest), payoff_month: `${end.getFullYear()}-${pad2(end.getMonth() + 1)}` };
+}
+
+/** The smallest monthly payment (to the cent) that clears the loan within `months`. */
+export function requiredPayment({ balance, annualRatePct, months }) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  let payment = Math.ceil((monthlyRate === 0 ? balance / months : (balance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months))) * 100) / 100;
+  // Rounding each month can leave a few cents over: step up until it clears in time.
+  for (let i = 0; i < 100; i++) {
+    const result = projectPayoff({ balance, annualRatePct, monthlyPayment: payment });
+    if (!result.never && result.months <= months) break;
+    payment = cents(payment + 0.01);
+  }
+  return payment;
+}
+
+/** Responses longer than this are saved to a file instead of passing through the chat. */
+export const INLINE_LIMIT = 20000;
+/** POST endpoints that only read (they are POST so that a password is not put in the URL). */
+const READ_ONLY_POSTS = [/^\/backups\/export$/];
+
+export function createServer({
+  baseUrl,
+  token,
+  getToken,
+  now = () => new Date(),
+  fetchImpl = fetch,
+  readFile = (p) => readFileSync(p, "utf8"),
+  exportDir = join(homedir(), "vaulted-exports"),
+  // Owner-only: exports can hold the whole ledger.
+  writeFile = (p, data) => {
+    mkdirSync(exportDir, { recursive: true, mode: 0o700 });
+    writeFileSync(p, data, { mode: 0o600 });
+  },
+}) {
   let ledgers, spec;
   const api = async (method, path, { query, body } = {}) => {
     const url = new URL(baseUrl.replace(/\/$/, "") + path);
@@ -141,8 +231,29 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
     const raw = await res.text();
     let json;
     try { json = raw ? JSON.parse(raw) : null; } catch { json = undefined; }
-    return { ok: res.ok, status: res.status, json, raw };
+    return { ok: res.ok, status: res.status, json, raw, disposition: res.headers?.get?.("content-disposition") ?? "" };
   };
+  /**
+   * Hand a successful response to the model. Small ones pass straight through.
+   * A large export (CSV, backup) would be cut off or flood a small model's
+   * context, so it is written to a file and the model gets the path, the size
+   * and a short preview.
+   */
+  function deliver(r) {
+    const isJson = r.json !== undefined && r.json !== null;
+    const isDownload = /attachment/i.test(r.disposition);
+    if (r.raw.length <= INLINE_LIMIT || (isJson && !isDownload)) return text(isJson ? r.json : r.raw);
+    const suggested = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(r.disposition)?.[1] ?? "export.txt";
+    const safeName = basename(decodeURIComponent(suggested)).replace(/[^\w.-]+/g, "_") || "export.txt";
+    const stamp = now().toISOString().replace(/[-:]/g, "").replace(/\..*$/, "").replace("T", "-");
+    const file = join(exportDir, `${stamp}-${safeName}`);
+    try {
+      writeFile(file, r.raw);
+    } catch (e) {
+      return fail(`The response is ${r.raw.length} characters, too large to show, and it could not be saved to ${file}: ${e instanceof Error ? e.message : e}`);
+    }
+    return text({ saved_to: file, characters: r.raw.length, preview: r.raw.slice(0, 1500), note: "Too large to show here, so it was saved on this computer only. Open that file to see all of it. It may contain your financial data: delete it when you are done." });
+  }
   const apiError = (r) => fail(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 300)}${r.json?.error?.details ? " " + JSON.stringify(r.json.error.details) : ""}`);
 
   async function fetchLedgers() {
@@ -171,6 +282,7 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
 
   const ledgerProp = { ledger: { type: "string", description: "Ledger name or id. Optional when there is only one ledger." } };
   const PERIOD_PROP = { type: "string", enum: PERIODS, description: "Named period; the server works out the dates" };
+  const DAYS_PROP = { type: "number", description: "The last N days including today (2 = today and yesterday). Use for 'last 2 days', 'past 10 days'; the server works out the dates." };
   const read = { readOnlyHint: true, openWorldHint: false };
 
   const tools = [
@@ -191,8 +303,8 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
     },
     {
       name: "spending_summary",
-      description: "Where the money goes: totals plus top categories, vendors and accounts, and a time series. Prefer `period` over dates. Default: last_30_days. The result states the exact dates used and today's date. Use for 'where is my money going', 'how much did I spend', 'compare months'.",
-      inputSchema: { type: "object", properties: { ...ledgerProp, period: PERIOD_PROP, from: { type: "string", description: "YYYY-MM-DD; only if no named period fits" }, to: { type: "string", description: "YYYY-MM-DD" }, group_by: { type: "string", enum: ["day", "week", "month"] }, top: { type: "number", description: "Rows per breakdown (default 8)" } } },
+      description: "Where the money goes: totals plus top categories, vendors and accounts, and a time series. Prefer `period` or `days` over dates. Default: last_30_days. The result states the exact dates used and today's date. Use for 'where is my money going', 'how much did I spend', 'compare months'.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, period: PERIOD_PROP, days: DAYS_PROP, from: { type: "string", description: "YYYY-MM-DD; only if no named period fits" }, to: { type: "string", description: "YYYY-MM-DD" }, group_by: { type: "string", enum: ["day", "week", "month"] }, top: { type: "number", description: "Rows per breakdown (default 8)" } } },
       annotations: read,
       async run(a) {
         const l = await resolveLedger(a.ledger);
@@ -208,12 +320,13 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
     {
       name: "find_transactions",
       description: "Look up transactions. Negative amounts are expenses. Use for 'what did I spend at X', 'biggest expenses', 'show uncategorised'. Returns total matches and up to `limit` rows (default 20).",
-      inputSchema: { type: "object", properties: { ...ledgerProp, period: { ...PERIOD_PROP, description: "Optional: limit to a named period. Omit for all dates." }, search: { type: "string", description: "Free text" }, vendor: { type: "string" }, category: { type: "string" }, sub_category: { type: "string" }, account: { type: "string" }, type: { type: "string", enum: ["income", "expense"] }, min_amount: { type: "number" }, max_amount: { type: "number" }, from: { type: "string" }, to: { type: "string" }, exclude_transfers: { type: "boolean" }, limit: { type: "number" }, offset: { type: "number" } } },
+      inputSchema: { type: "object", properties: { ...ledgerProp, period: { ...PERIOD_PROP, description: "Optional: limit to a named period. Omit for all dates." }, days: DAYS_PROP, search: { type: "string", description: "Free text" }, vendor: { type: "string" }, category: { type: "string" }, sub_category: { type: "string" }, account: { type: "string" }, type: { type: "string", enum: ["income", "expense"] }, min_amount: { type: "number" }, max_amount: { type: "number" }, from: { type: "string" }, to: { type: "string" }, exclude_transfers: { type: "boolean" }, limit: { type: "number" }, offset: { type: "number" } } },
       annotations: read,
       async run(a) {
         const l = await resolveLedger(a.ledger);
-        const { ledger: _ledger, period, ...query } = a;
-        const range = period ? resolvePeriod({ period }, now()) : undefined;
+        const { ledger: _ledger, period, days, ...query } = a;
+        // Explicit from/to win; otherwise `days`, then the named period.
+        const range = !query.from && !query.to && (days !== undefined || period) ? resolvePeriod({ period, days }, now()) : undefined;
         if (range) Object.assign(query, { from: range.from, to: range.to });
         query.limit = Math.min(query.limit ?? 20, 100);
         const r = await api("GET", `/ledgers/${l.id}/transactions`, { query });
@@ -249,16 +362,16 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
       annotations: read,
       async run(a) {
         const s = await loadSpec();
-        const words = a.query.toLowerCase().split(/\s+/).filter(Boolean);
+        const words = a.query.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w && !SEARCH_STOPWORDS.has(w));
         const hits = [];
         for (const [path, ops] of Object.entries(s.paths)) {
           for (const [method, op] of Object.entries(ops)) {
-            const hay = `${method} ${path} ${op.summary ?? ""} ${(op.tags ?? []).join(" ")}`.toLowerCase();
-            const score = words.reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
+            const score = scoreOperation(words, { method, path, summary: op.summary, tags: op.tags });
             if (score) hits.push({ score, method: method.toUpperCase(), path, op });
           }
         }
-        hits.sort((x, y) => y.score - x.score);
+        // Ties go to the shorter path: "get a budget" should beat deeper routes.
+        hits.sort((x, y) => y.score - x.score || x.path.length - y.path.length);
         return text(hits.slice(0, 6).map(({ method, path, op }) => clean({
           method, path, summary: op.summary,
           query: Object.fromEntries((op.parameters ?? []).filter((p) => p.in === "query").map((p) => [p.name, p.description ?? ""])) ,
@@ -275,9 +388,10 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
         let path = a.path.replace(/^\/?api\/v1/, "").replace(/^(?!\/)/, "/");
         if (path.includes("{ledgerId}")) path = path.replaceAll("{ledgerId}", (await resolveLedger(a.ledger)).id);
         const method = a.method.toUpperCase();
-        if (method === "GET") {
-          const r = await api("GET", path, { query: a.query });
-          return r.ok ? text(r.json ?? r.raw.slice(0, 20000)) : apiError(r);
+        // A POST that only reads (an encrypted backup export) needs no preview.
+        if (method === "GET" || (method === "POST" && READ_ONLY_POSTS.some((p) => p.test(path)))) {
+          const r = await api(method, path, { query: a.query, body: method === "GET" ? undefined : (a.body ?? {}) });
+          return r.ok ? deliver(r) : apiError(r);
         }
         let body = a.body;
         if (!a.confirm) {
@@ -294,7 +408,7 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
         // Confirmed: deletion endpoints that demand an explicit flag get it.
         if (/cleanup|cleanup-duplicates/.test(path)) body = { confirm_delete: true, ...(body ?? {}) };
         const r = await api(method, path, { query: a.query, body });
-        return r.ok ? text(r.status === 204 ? { deleted: true } : (r.json ?? r.raw.slice(0, 20000))) : apiError(r);
+        return r.ok ? (r.status === 204 ? text({ deleted: true }) : deliver(r)) : apiError(r);
       },
     },
     {
@@ -326,6 +440,159 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
         const r = await api("POST", `/ledgers/${l.id}/transactions/import`, { body: { csv: n.csv, dry_run: dry } });
         if (!r.ok) return apiError(r);
         return text({ ledger: l.name, dry_run: dry, rows_in_file: n.rows, column_mapping: n.mapped, result: dry ? { rows: r.json.rows, preview: r.json.preview, note: "Nothing imported yet. Repeat with dry_run:false to import." } : r.json });
+      },
+    },
+    {
+      name: "find_entity",
+      description: "Look up a name across accounts, vendors, categories, sub-categories, budgets and recurring transactions. Call it BEFORE deleting, renaming or merging something the user named, so you know whether the name means more than one thing. If `ambiguous` is true, ask the user which one they mean.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, query: { type: "string", description: "The name or part of it" } }, required: ["query"] },
+      annotations: read,
+      async run(a) {
+        const l = await resolveLedger(a.ledger);
+        const wanted = normName(a.query);
+        if (!wanted) return fail("Give a name to look for.");
+        const get = async (path) => (await api("GET", `/ledgers/${l.id}/${path}`)).json?.data ?? [];
+        const [accounts, vendors, categories, budgets, recurring] = await Promise.all([get("accounts"), get("vendors"), get("categories"), get("budgets"), get("scheduled-transactions")]);
+        const found = [];
+        const consider = (type, name, details) => {
+          const n = normName(name);
+          if (n && n.includes(wanted)) found.push({ exact: n === wanted, match: clean({ type, name, ...details }) });
+        };
+        for (const x of accounts) consider("account", x.name, { id: x.id, account_type: x.type, currency: x.currency, balance: round(x.balance ?? 0) });
+        for (const x of vendors) consider("vendor", x.name, { id: x.id });
+        for (const c of categories) {
+          consider("category", c.name, { id: c.id, sub_categories: c.sub_categories?.length });
+          for (const s of c.sub_categories ?? []) consider("sub_category", s.name, { id: s.id, in_category: c.name, category_id: c.id });
+        }
+        for (const b of budgets) consider("budget", b.budget_scope && b.budget_scope !== "category" ? (b.budget_scope_name || b.category_name) : (b.sub_category_name ? `${b.category_name} / ${b.sub_category_name}` : b.category_name), { id: b.id, scope: b.budget_scope ?? "category", target: b.target_amount, frequency: b.frequency, goal: b.is_goal || undefined });
+        for (const r of recurring) consider("recurring_transaction", r.vendor, { id: r.id, amount: r.amount, frequency: r.frequency, account: r.account, next: r.date?.slice(0, 10) });
+        found.sort((x, y) => Number(y.exact) - Number(x.exact));
+        const exact = found.filter((f) => f.exact);
+        const kinds = [...new Set(exact.map((f) => f.match.type))];
+        const ambiguous = exact.length > 1 || (exact.length === 0 && found.length > 1);
+        return text({
+          ledger: l.name,
+          query: a.query,
+          matches: found.slice(0, 25).map((f) => ({ ...f.match, exact: f.exact || undefined })),
+          ambiguous,
+          note: ambiguous
+            ? `${exact.length > 1 ? `The name matches ${kinds.join(" and ")} exactly` : "Several things partly match"}. Ask the user which one they mean before changing anything.`
+            : found.length ? "One match." : "Nothing matches. Check the spelling, or try a shorter part of the name.",
+        });
+      },
+    },
+    {
+      name: "add_transactions",
+      description: "Add many transactions at once (up to 1000), for a pasted statement, a receipt list or a PDF you have read. Rows: {date YYYY-MM-DD, amount (negative = expense), account, vendor, category, sub_category?, remarks?, currency?}. The default is a PREVIEW that flags new accounts (often a typo), new categories and likely duplicates of what is already there; repeat with dry_run false to add.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, transactions: { type: "array", items: { type: "object", properties: { date: { type: "string" }, amount: { type: "number" }, account: { type: "string" }, vendor: { type: "string" }, category: { type: "string" }, sub_category: { type: "string" }, remarks: { type: "string" }, currency: { type: "string" } }, required: ["date", "amount", "account", "vendor"] } }, dry_run: { type: "boolean", description: "Default true" }, skip_duplicates: { type: "boolean", description: "Leave out rows that look like ones already recorded" } }, required: ["transactions"] },
+      annotations: { destructiveHint: false, openWorldHint: false },
+      async run(a) {
+        const l = await resolveLedger(a.ledger);
+        const input = a.transactions;
+        if (!Array.isArray(input) || !input.length) return fail("`transactions` must be a non-empty list.");
+        if (input.length > 1000) return fail(`${input.length} rows is more than the 1000 allowed in one call. Split it into batches.`);
+        const problems = [];
+        const rows = input.map((row, i) => {
+          const at = `Row ${i + 1}`;
+          const text_ = (v) => (typeof v === "string" ? v.trim() : v);
+          const r = clean({ date: text_(row.date), amount: row.amount, account: text_(row.account), vendor: text_(row.vendor), category: text_(row.category) ?? "", sub_category: text_(row.sub_category), remarks: text_(row.remarks), currency: text_(row.currency)?.toUpperCase?.() });
+          if (!isCalendarDay(r.date)) problems.push(`${at}: date "${row.date}" is not a real YYYY-MM-DD day.`);
+          if (typeof r.amount !== "number" || !Number.isFinite(r.amount) || r.amount === 0) problems.push(`${at}: amount must be a non-zero number.`);
+          if (!r.account) problems.push(`${at}: account is missing.`);
+          if (!r.vendor) problems.push(`${at}: vendor is missing.`);
+          if (r.currency && !/^[A-Z]{3}$/.test(r.currency)) problems.push(`${at}: currency "${row.currency}" is not a 3-letter code.`);
+          return { ...r, category: r.category ?? "" };
+        });
+        if (problems.length) return fail(`Nothing was added. ${problems.length} problem(s):\n${problems.slice(0, 10).join("\n")}${problems.length > 10 ? `\n...and ${problems.length - 10} more` : ""}`);
+
+        // Compare with what is already there, so a typo does not quietly create a new account.
+        const dates = rows.map((r) => r.date).sort();
+        const get = async (path, query) => (await api("GET", `/ledgers/${l.id}/${path}`, { query })).json?.data ?? [];
+        const [accounts, vendors, categories, existing] = await Promise.all([get("accounts"), get("vendors"), get("categories"), get("transactions", { from: dates[0], to: dates.at(-1), limit: 1000 })]);
+        const known = (list) => new Set(list.map((x) => normName(x.name)));
+        const knownAccounts = known(accounts), knownVendors = known(vendors), knownCategories = known(categories);
+        const unseen = (field, set) => [...new Map(rows.filter((r) => r[field] && !set.has(normName(r[field]))).map((r) => [normName(r[field]), r[field]])).values()];
+        const key = (r) => `${String(r.date).slice(0, 10)}|${normName(r.account)}|${normName(r.vendor)}|${cents(r.amount)}`;
+        const seen = new Set(existing.map(key));
+        const duplicates = rows.filter((r) => seen.has(key(r)));
+        const toAdd = a.skip_duplicates ? rows.filter((r) => !seen.has(key(r))) : rows;
+
+        const dry = a.dry_run !== false;
+        if (dry) {
+          const newVendors = unseen("vendor", knownVendors);
+          return text({
+            ledger: l.name, dry_run: true, rows: rows.length, date_range: { from: dates[0], to: dates.at(-1) },
+            total_income: cents(rows.filter((r) => r.amount > 0).reduce((s, r) => s + r.amount, 0)),
+            total_expenses: cents(-rows.filter((r) => r.amount < 0).reduce((s, r) => s + r.amount, 0)),
+            new_accounts: unseen("account", knownAccounts), new_categories: unseen("category", knownCategories),
+            new_vendors: { count: newVendors.length, examples: newVendors.slice(0, 10) },
+            possible_duplicates: { count: duplicates.length, examples: duplicates.slice(0, 5), checked_against: existing.length },
+            sample: rows.slice(0, 5),
+            note: "Nothing added yet. Show the user new_accounts (a likely typo if the account already exists under another spelling) and possible_duplicates, then repeat with dry_run:false. Use skip_duplicates:true to leave out the duplicates.",
+          });
+        }
+        if (!toAdd.length) return text({ ledger: l.name, dry_run: false, added: 0, note: "Every row looked like a duplicate, so nothing was added." });
+        const r = await api("POST", `/ledgers/${l.id}/transactions/bulk`, { body: { transactions: toAdd } });
+        if (!r.ok) return apiError(r);
+        const ids = (r.json?.data ?? []).map((t) => t.id);
+        return text({ ledger: l.name, dry_run: false, added: r.json?.count ?? ids.length, skipped_duplicates: a.skip_duplicates ? duplicates.length : 0, ids: ids.slice(0, 100), ids_not_shown: Math.max(0, ids.length - 100) || undefined, undo: "Each can be removed with call_api DELETE /ledgers/{ledgerId}/transactions/{id}." });
+      },
+    },
+    {
+      name: "budget_history",
+      description: "Which budgets you keep missing: spent against target for each past month, quarter or year, with how many were missed. Use for 'which budgets am I regularly over', 'did I stick to my budget'. The running period is shown but not counted.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, periods: { type: "number", description: "How many periods back, 1-24 (default 6)" } } },
+      annotations: read,
+      async run(a) {
+        const l = await resolveLedger(a.ledger);
+        const r = await api("GET", `/ledgers/${l.id}/budgets/history`, { query: { periods: a.periods ?? 6 } });
+        if (!r.ok) return apiError(r);
+        const budgets = r.json.data.map((b) => ({
+          name: b.name, scope: b.scope, frequency: b.frequency, currency: b.currency, target: b.target_amount, ...b.summary,
+          periods: b.periods.map((p) => clean({ start: p.period_start, spent: p.spent, missed: p.missed || undefined, running: p.in_progress || undefined })),
+        }));
+        return text({
+          ledger: l.name, today: r.json.as_of, periods_requested: r.json.periods_requested, budgets,
+          regularly_missed: budgets.filter((b) => b.periods_counted >= 3 && b.miss_rate_pct >= 50).map((b) => b.name),
+          not_measured: r.json.skipped.map((s) => `${s.name}: ${s.reason}`),
+        });
+      },
+    },
+    {
+      name: "payoff_projection",
+      description: "Can a loan be paid off in time? Computes months to payoff and interest for the current payment, with any extra, and the payment needed to clear it within `target_months`, next to what the ledger shows is left over each month. Needs the balance and interest rate from the user (they are not stored). Use for 'can I pay this off in two years'.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, balance: { type: "number", description: "Amount still owed" }, annual_rate_pct: { type: "number", description: "Yearly interest rate in percent, e.g. 6.5" }, monthly_payment: { type: "number", description: "What is paid each month now" }, extra_monthly: { type: "number", description: "Optional extra to try each month" }, target_months: { type: "number", description: "Payoff goal in months (default 24)" }, include_capacity: { type: "boolean", description: "Also read the last year's income and spending from the ledger (default true)" } }, required: ["balance", "annual_rate_pct", "monthly_payment"] },
+      annotations: read,
+      async run(a) {
+        const num = (v, name, min, max) => { if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) throw new Error(`\`${name}\` must be a number from ${min} to ${max}.`); return v; };
+        const balance = num(a.balance, "balance", 0.01, 1e9), rate = num(a.annual_rate_pct, "annual_rate_pct", 0, 100), payment = num(a.monthly_payment, "monthly_payment", 0.01, 1e9);
+        const extra = a.extra_monthly === undefined ? 0 : num(a.extra_monthly, "extra_monthly", 0, 1e9);
+        const target = a.target_months === undefined ? 24 : num(a.target_months, "target_months", 1, 600);
+        const at = now();
+        const scenario = (monthlyPayment) => projectPayoff({ balance, annualRatePct: rate, monthlyPayment }, at);
+        const needed = requiredPayment({ balance, annualRatePct: rate, months: Math.round(target) });
+        const out = { today: ymd(at), inputs: { balance, annual_rate_pct: rate, monthly_payment: payment }, current_payment: { monthly_payment: payment, ...scenario(payment) } };
+        if (extra > 0) out.with_extra = { monthly_payment: cents(payment + extra), extra, ...scenario(payment + extra) };
+        out.to_clear_in_target = { target_months: Math.round(target), monthly_payment_needed: needed, extra_needed_per_month: cents(Math.max(0, needed - payment)), ...scenario(needed) };
+        if (a.include_capacity !== false) {
+          try {
+            const l = await resolveLedger(a.ledger);
+            const range = resolvePeriod({ days: 365 }, at);
+            const r = await api("GET", `/ledgers/${l.id}/analytics`, { query: { from: range.from, to: range.to, group_by: "month" } });
+            if (!r.ok) throw new Error(`API ${r.status}`);
+            const months = r.json.series?.length ?? 0;
+            if (!months) out.ledger_capacity = { ledger: l.name, note: "No income or spending in the last year to base this on." };
+            else {
+              const net = cents(r.json.totals.net / months);
+              out.ledger_capacity = { ledger: l.name, period: range, currency: r.json.currency, months_with_data: months, average_monthly_income: cents(r.json.totals.income / months), average_monthly_expenses: cents(r.json.totals.expenses / months), average_monthly_net: net, note: "Income minus expenses, transfers excluded, averaged over the months that have data. Repayments recorded as expenses are already taken out of this; repayments recorded as transfers are not." };
+              out.to_clear_in_target.affordable_from_average_net = out.to_clear_in_target.extra_needed_per_month <= Math.max(0, net);
+            }
+          } catch (e) {
+            out.ledger_capacity = { unavailable: e instanceof Error ? e.message : String(e) };
+          }
+        }
+        out.assumptions = "Fixed rate, payments made on time every month, no fees or rate changes. The balance and payments are taken to be in the ledger's currency. An estimate, not financial advice.";
+        return text(out);
       },
     },
   ];

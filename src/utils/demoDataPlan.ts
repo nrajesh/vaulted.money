@@ -1535,6 +1535,12 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
     now.getMonth(),
     1,
   ).toISOString();
+  // Started months ago, so "which budgets do I keep missing?" has history.
+  const sixMonthsAgo = new Date(
+    now.getFullYear(),
+    now.getMonth() - 6,
+    1,
+  ).toISOString();
   const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
   const quarterStart = new Date(
     now.getFullYear(),
@@ -1546,7 +1552,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       category_name: "Groceries",
       target_amount: 650,
       currency: "EUR",
-      start_date: monthStart,
+      start_date: sixMonthsAgo,
       end_date: null,
       frequency: "Monthly",
       is_active: true,
@@ -1556,7 +1562,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       sub_category_name: "Restaurants",
       target_amount: 200,
       currency: "EUR",
-      start_date: monthStart,
+      start_date: sixMonthsAgo,
       end_date: null,
       frequency: "Monthly",
       is_active: true,
