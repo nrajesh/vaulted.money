@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/generate-acknowledgments.mjs && tsc --noEmit && vite build",
+    "mcpb:pack": "node scripts/build-mcpb.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview",
