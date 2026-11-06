@@ -5,7 +5,7 @@ Vaulted Money's desktop app can expose its data over a local HTTP API, so script
 - **Desktop (Electron) only.** The web and mobile builds have no process that can listen on a socket.
 - **Off by default.** Turn it on in **Settings → Local API**.
 - **The app must be running.** Closing the window only hides it, so the API keeps working until you quit the app.
-- **Local-first.** The server binds to `127.0.0.1` and is never reachable from the network. No data leaves the device.
+- **Local-first.** The server binds to `127.0.0.1` and is never reachable from the network. The API itself sends nothing off the device, but an AI agent you connect to it sends what it reads to its AI provider (Anthropic, for Claude). A local model keeps everything on the device.
 
 ## Quick start
 

@@ -5,7 +5,7 @@ import { LocalDataProvider } from "@/providers/LocalDataProvider";
 import { handleApiRequest } from "@/api/handleRequest";
 import type { ApiRequest } from "@/api/http";
 // @ts-expect-error plain ESM module without types
-import { appConfigCandidates, createServer, exportFolder, loadConnection, looksLikeHeader, normalizeBankCsv, parseCsv, projectPayoff, requiredPayment, resolvePeriod } from "./server.mjs";
+import { appConfigCandidates, createServer, exportFolder, loadConnection, normalizeBankCsv, parseCsv, projectPayoff, requiredPayment, resolvePeriod } from "./server.mjs";
 import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, linkSync, mkdtempSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -127,28 +127,41 @@ describe("MCP server tools", () => {
     files["/tmp/odd.csv"] = "foo,bar\n1,2\n";
     const bad = await run("import_csv", { path: "/tmp/odd.csv", account: "Checking" });
     expect(bad.isError).toBe(true);
-    // One message for all the missing columns, naming the columns that are there.
-    expect(bad.text).toBe("No column found for Date, Vendor or Amount. Columns in the file: foo, bar");
+    // One message for all the missing columns, listing the names that would be accepted.
+    expect(bad.text).toBe(
+      "The first line has 2 columns; none is named Date, Vendor or Amount. Accepted names (any case) for " +
+        "Date: date, booking date, transaction date, posted, posting date, value date; " +
+        "Vendor: vendor, payee, description, merchant, name, counterparty, details; Amount: amount, value, sum.",
+    );
     files["/tmp/no-amount.csv"] = "Date,Description,Balance\n2026-09-05,Cafe,10\n";
-    expect((await run("import_csv", { path: "/tmp/no-amount.csv", account: "Checking" })).text).toBe("No column found for Amount. Columns in the file: Date, Description, Balance");
+    expect((await run("import_csv", { path: "/tmp/no-amount.csv", account: "Checking" })).text).toBe(
+      "The first line has 3 columns; none is named Amount. Accepted names (any case) for Amount: amount, value, sum.",
+    );
   });
 
-  it("does not repeat a first line that is not column names", async () => {
-    // FAKE secrets: a file that is not a bank statement must not leak its first line.
-    files["/tmp/secrets.txt"] = "aws_key=AKIAFAKE,password=hunter2\nmore\n";
-    for (const delimiter of [undefined, ",", "|"]) {
-      const r = await run("import_csv", { path: "/tmp/secrets.txt", account: "Checking", delimiter });
-      expect(r.isError).toBe(true);
-      expect(r.text).not.toMatch(/AKIAFAKE|hunter2|aws_key|password/);
-      expect(r.text).toMatch(/columns?, and none is named Date, Vendor or Amount/);
+  it("never repeats text from the file, even when it looks like column names", async () => {
+    // FAKE secrets only. Each first line could be mistaken for a header.
+    const firstLines = [
+      "ghp_aB3dE6gH9jK2mN5pQ8sT1vW4yZ7bC0eF3hJ6",
+      "AKIAIOSFODNN7EXAMPLE,wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+      "hunter2, AKIA1234",
+      "dGhpc2lzYXNlY3JldGtleQ==",
+      "my bank password is Tr0ub4dor",
+      "pin ١٢٣٤٥٦٧٨",
+      "key＝secretvalue",
+      "aws_key=AKIAFAKE,password=hunter2",
+      "Card 4111111111111111,Note: call me",
+    ];
+    for (const [i, line] of firstLines.entries()) {
+      files[`/tmp/secret-${i}.txt`] = `${line}\nmore\n`;
+      for (const delimiter of [undefined, ",", "|"]) {
+        const r = await run("import_csv", { path: `/tmp/secret-${i}.txt`, account: "Checking", delimiter });
+        expect(r.isError).toBe(true);
+        expect(r.text).toMatch(/^The first line has \d+ columns?; none is named Date, Vendor or Amount\. Accepted names/);
+        for (const cell of line.split(/[,|]/).map((c) => c.trim()).filter(Boolean)) expect(r.text).not.toContain(cell);
+        expect(r.text).not.toMatch(/ghp_|AKIA|hunter2|Tr0ub4dor|secretvalue|١٢٣|4111|call me|dGhpc2/);
+      }
     }
-    files["/tmp/numbers.csv"] = "Card 4111111111111111,Note: call me\n1,2\n";
-    const numbers = await run("import_csv", { path: "/tmp/numbers.csv", account: "Checking" });
-    expect(numbers.text).not.toMatch(/4111|call me/);
-    expect(looksLikeHeader(["Booking Date", "Description", "Amount"])).toBe(true);
-    expect(looksLikeHeader(["token: abc"])).toBe(false);
-    expect(looksLikeHeader(["x".repeat(41)])).toBe(false);
-    expect(looksLikeHeader(Array.from({ length: 21 }, (_, i) => `c${i}`))).toBe(false);
   });
 
   it("only accepts a known delimiter", async () => {
@@ -312,12 +325,28 @@ describe("MCP server tools", () => {
       expect(stillPreview.json).toMatchObject({ preview: true, executed: false });
     }
     expect((await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/accounts" })).json.data).toHaveLength(1);
-    // Nor can ".." in the path reach a different endpoint from the one shown.
-    for (const sneaky of ["/ledgers/{ledgerId}/accounts/../../..", "/ledgers/%2e%2e/x", "/ledgers/{ledgerId}/.%2E/accounts"]) {
-      const r = await run("call_api", { method: "DELETE", path: sneaky, confirm: true });
-      expect(r.isError).toBe(true);
-      expect(r.text).toMatch(/\.\./);
+    // Nor can a path reach a different endpoint from the one shown: dot
+    // segments in any spelling, and tabs or newlines the URL parser would drop.
+    const sneakyPaths = [
+      "/ledgers/{ledgerId}/accounts/../../..", "/ledgers/%2e%2e/x", "/ledgers/{ledgerId}/.%2E/accounts", "/../x", "..",
+      "/ledgers/{ledgerId}/.\t./x", "/ledgers/{ledgerId}/.\n./x", "/ledgers/{ledgerId}/.\r./x", "/ledgers/{ledgerId}/./accounts", "/ledgers\\..\\x",
+    ];
+    for (const sneaky of sneakyPaths) {
+      for (const method of ["DELETE", "GET"]) {
+        const r = await run("call_api", { method, path: sneaky, confirm: true });
+        expect(r.isError, `${method} ${JSON.stringify(sneaky)}`).toBe(true);
+        expect(r.text).toMatch(/control characters|segments/);
+      }
     }
+    expect((await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/accounts" })).json.data).toHaveLength(1);
+    // Backstop in every request: the URL that runs must be exactly the path asked for
+    // (here the parser would turn the backslash into a slash).
+    const rewritten = await mcp.handle({ jsonrpc: "2.0", id: 7, method: "tools/call", params: { name: "call_api", arguments: { method: "GET", path: "/ledgers\\{ledgerId}" } } });
+    expect(rewritten.result.isError).toBe(true);
+    expect(rewritten.result.content[0].text).toMatch(/not a plain API path/);
+    // A ".." inside the query string is only a value, so it is allowed.
+    const query = await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/transactions?search=.." });
+    expect(query.isError).toBe(false);
 
     const done = await run("call_api", { method: "DELETE", path, confirm: true });
     expect(done.json).toEqual({ deleted: true });
@@ -728,12 +757,14 @@ describe("saving large exports", () => {
     expect(readFileSync(victim, "utf8")).toBe("ORIGINAL");
   });
 
-  it("tightens an existing folder of the user's to 0700, and refuses a symlinked folder or the home folder", async () => {
+  it("leaves an existing folder's permissions alone, and refuses a symlinked folder or the home folder", async () => {
     const open = join(home, "open");
     mkdirSync(open);
     chmodSync(open, 0o755);
-    expect((await download(serverFor({ VM_EXPORT_DIR: open }))).isError).toBe(false);
-    expect(mode(open)).toBe(0o700);
+    const saved = await download(serverFor({ VM_EXPORT_DIR: open }));
+    expect(saved.isError).toBe(false);
+    expect(mode(open)).toBe(0o755);
+    expect(mode(saved.json.saved_to)).toBe(0o600);
 
     const elsewhere = join(home, "elsewhere");
     mkdirSync(elsewhere);
@@ -743,9 +774,16 @@ describe("saving large exports", () => {
     expect(linked.text).toMatch(/symbolic link/);
     expect(readdirSync(elsewhere)).toEqual([]);
 
-    const atHome = await download(serverFor({ VM_EXPORT_DIR: "~" }));
-    expect(atHome.isError).toBe(true);
-    expect(atHome.text).toMatch(/home folder/);
+    // The home folder is recognised by identity, however it is spelled.
+    const spellings = ["~", `${home}/`, `${home}/./`, join(home, "open", "..")];
+    const upper = home.toUpperCase();
+    if (upper !== home && existsSync(upper)) spellings.push(upper); // case-insensitive filesystem
+    for (const spelling of spellings) {
+      const atHome = await download(serverFor({ VM_EXPORT_DIR: spelling }));
+      expect(atHome.isError).toBe(true);
+      expect(atHome.text).toMatch(/home folder/);
+    }
+    expect(readdirSync(home).sort()).toEqual(["elsewhere", "linked", "open"]);
   });
 
   it.skipIf(typeof process.getuid !== "function" || process.getuid() === 0)("refuses a folder that belongs to someone else", async () => {

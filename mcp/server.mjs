@@ -24,7 +24,7 @@
  *   VM_EXPORT_DIR  where large downloads are saved (default ~/vaulted-exports;
  *                  a relative path or ~/... is taken from the home folder)
  */
-import { chmodSync, lstatSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, extname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -107,22 +107,6 @@ function toAppDate(raw) {
   if (m) return `${m[1].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[3]}`;
   return s;
 }
-/**
- * True when the first line looks like column names rather than data. Only
- * then are the names repeated back to the model: a file that is not a bank
- * statement (keys, passwords, notes) must not have its first line echoed.
- */
-export function looksLikeHeader(header) {
-  if (!header.length || header.length > 20) return false;
-  return header.every((cell) => {
-    const name = cell.trim();
-    return name.length <= 40 && !/[=:]/.test(name) && !/\d{5,}/.test(name);
-  });
-}
-/** Column names for an error message, on one line. Call only when looksLikeHeader(header). */
-function safeColumnList(header) {
-  return header.map((h) => h.replace(/\s+/g, " ").trim()).join(", ");
-}
 const DELIMITERS = [",", ";", "\t", "|"];
 const CSV_EXTENSIONS = [".csv", ".tsv", ".txt"];
 /** Resolve symlinks and the true on-disk spelling when the file exists; otherwise just make the path absolute. */
@@ -168,10 +152,11 @@ export function normalizeBankCsv(input, { account, currency, delimiter } = {}) {
   const problems = [];
   const missing = ["Date", "Vendor", "Amount"].filter((need) => index[need] === undefined);
   if (missing.length) {
+    // Never repeat the file's own text: if this is not a bank statement, its
+    // first line could be a password or a key. Say what would be accepted instead.
     const names = missing.length === 1 ? missing[0] : `${missing.slice(0, -1).join(", ")} or ${missing.at(-1)}`;
-    problems.push(looksLikeHeader(header)
-      ? `No column found for ${names}. Columns in the file: ${safeColumnList(header)}`
-      : `The first line has ${header.length} ${header.length === 1 ? "column" : "columns"}, and none is named ${names}. Is this a bank statement export?`);
+    const accepted = missing.map((need) => `${need}: ${ALIASES[need].join(", ")}`).join("; ");
+    problems.push(`The first line has ${header.length} ${header.length === 1 ? "column" : "columns"}; none is named ${names}. Accepted names (any case) for ${accepted}.`);
   }
   if (index.Account === undefined && !account) problems.push("The file has no account column: pass `account`.");
   if (problems.length) return { problems };
@@ -272,22 +257,27 @@ export function exportFolder(env, home) {
 
 /**
  * Save an export without ever replacing or following an existing file, and
- * return the path written. The folder must be a real folder owned by this user
- * (not a symlink, not the home folder itself) and is made private (0700). The
- * file is created owner-only with O_EXCL ("wx"), which also fails on a planted
- * symlink; if the name is taken, -1, -2, ... is added.
+ * return the path written. The folder must be a real folder owned by this user,
+ * not a symlink and not the home folder itself. A missing folder is created
+ * owner-only (0700); an existing one keeps its permissions. The file is created
+ * owner-only (0600) with O_EXCL ("wx"), which also fails on a planted symlink;
+ * if the name is taken, -1, -2, ... is added.
  */
 export function writeExportFile(dir, fileName, data, { home = homedir(), uid = process.getuid?.() } = {}) {
-  if (resolve(dir) === resolve(home)) throw new Error("the export folder is your home folder; set VM_EXPORT_DIR to a folder of its own");
-  mkdirSync(dir, { recursive: true, mode: 0o700 });
-  const folder = lstatSync(dir);
+  let folder;
+  try { folder = lstatSync(dir); } catch (e) {
+    if (e?.code !== "ENOENT") throw e;
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    folder = lstatSync(dir);
+  }
   if (folder.isSymbolicLink()) throw new Error("the export folder is a symbolic link");
   if (!folder.isDirectory()) throw new Error("the export folder is not a folder");
+  // Compare by identity, not by spelling: "~/", "~/." and a case variant are all home.
+  let homeInfo;
+  try { homeInfo = statSync(home); } catch { /* no home folder to protect */ }
+  if (homeInfo && folder.dev === homeInfo.dev && folder.ino === homeInfo.ino) throw new Error("the export folder is your home folder; set VM_EXPORT_DIR to a folder of its own");
   // uid is unavailable on Windows, where the user's profile folder is private already.
-  if (uid !== undefined) {
-    if (folder.uid !== uid) throw new Error("the export folder belongs to another user");
-    if (folder.mode & 0o077) chmodSync(dir, 0o700);
-  }
+  if (uid !== undefined && folder.uid !== uid) throw new Error("the export folder belongs to another user");
   const dot = fileName.lastIndexOf(".");
   const stem = dot > 0 ? fileName.slice(0, dot) : fileName;
   const extension = dot > 0 ? fileName.slice(dot) : "";
@@ -326,7 +316,14 @@ export function createServer({
     // Look the connection up once, outside the fetch's try: a missing or
     // switched-off config must be reported as that, not as "not running".
     const connection = getConnection ? getConnection() : { baseUrl: getBaseUrl ? getBaseUrl() : baseUrl, token: getToken ? getToken() : token };
-    const url = new URL(connection.baseUrl.replace(/\/$/, "") + path);
+    const base = connection.baseUrl.replace(/\/$/, "");
+    const url = new URL(base + path);
+    // The endpoint that runs must be exactly the one asked for: no segment
+    // resolved away, no character dropped. The parser only adds %-encoding, so
+    // comparing the decoded forms ignores that and catches everything else.
+    const decoded = (value) => { try { return decodeURIComponent(value); } catch { return value; } };
+    const intended = new URL(base).pathname.replace(/\/$/, "") + path.split(/[?#]/)[0];
+    if (decoded(url.pathname) !== decoded(intended)) throw new Error("That path is not a plain API path (it has \"..\", \".\", a backslash or control characters).");
     for (const [k, v] of Object.entries(clean(query ?? {}))) url.searchParams.set(k, String(v));
     let res;
     try {
@@ -495,8 +492,11 @@ export function createServer({
       annotations: { destructiveHint: true, openWorldHint: false },
       async run(a) {
         if (typeof a.path !== "string" || typeof a.method !== "string") return fail("Give `method` and `path`.");
-        // URL parsing would resolve ".." (also written %2e%2e) and reach a different endpoint than the one previewed.
-        if (a.path.split(/[/\\?#]/).some((segment) => /^(\.|%2e){2}$/i.test(segment))) return fail("The path must not contain \"..\" segments.");
+        // URL parsing drops tabs and newlines and resolves ".." (also written
+        // %2e%2e), which could reach a different endpoint than the one previewed.
+        // A ".." in the query string is just a value, so only the path part is checked.
+        if (/[\u0000-\u001F\u007F]/.test(a.path)) return fail("The path must not contain control characters.");
+        if (a.path.split(/[?#]/)[0].split(/[/\\]/).some((segment) => /^(\.|%2e){1,2}$/i.test(segment))) return fail("The path must not contain \".\" or \"..\" segments.");
         let path = a.path.replace(/^\/?api\/v1/, "").replace(/^(?!\/)/, "/");
         if (path.includes("{ledgerId}")) path = path.replaceAll("{ledgerId}", (await resolveLedger(a.ledger)).id);
         const method = a.method.toUpperCase();
@@ -540,7 +540,7 @@ export function createServer({
     },
     {
       name: "import_csv",
-      description: "Import a bank/statement CSV from a file on this computer. Columns are mapped automatically (date, description/payee, amount, ...). The default is a PREVIEW (dry_run true); repeat with dry_run false to import. The whole file is not sent to the chat: only column names and a short preview of rows come back.",
+      description: "Import a bank/statement CSV from a file on this computer. Columns are mapped automatically (date, description/payee, amount, ...). The default is a PREVIEW (dry_run true); repeat with dry_run false to import. The whole file is not sent to the chat: only the matched column mapping and a short preview of rows come back.",
       inputSchema: { type: "object", properties: { ...ledgerProp, path: { type: "string", description: "Absolute path to the .csv file" }, account: { type: "string", description: "Account name, if the file has no account column" }, currency: { type: "string" }, delimiter: { type: "string", enum: DELIMITERS, description: "Optional: , ; tab or |. Detected automatically if omitted." }, dry_run: { type: "boolean", description: "Default true" } }, required: ["path"] },
       annotations: { destructiveHint: false, openWorldHint: false },
       async run(a) {

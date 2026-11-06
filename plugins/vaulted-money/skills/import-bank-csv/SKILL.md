@@ -5,7 +5,7 @@ description: Use when the user wants to import a bank statement or CSV file into
 
 # Import a bank CSV
 
-The local server reads the file itself, so it never needs to be pasted into the chat. Only the column names and a short preview of rows come back to you.
+The local server reads the file itself, so it never needs to be pasted into the chat. Only the matched column mapping and a short preview of rows come back to you. If columns are missing, the reply lists the names it accepts, never text from the file.
 
 1. Ask for the full file path and which account it belongs to. Use `list_ledgers` to confirm the account name.
 2. Suggest taking a backup first if this is real data (`search_api` for "backup", then `call_api`).
