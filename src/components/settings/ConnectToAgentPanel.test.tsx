@@ -120,11 +120,16 @@ describe("ConnectToAgentPanel", () => {
       "true",
     );
     expect(
-      screen.getByRole("link", { name: "Download the Claude add-on" }),
+      screen.getByRole("link", {
+        name: /Download vaulted-money\.mcpb from the latest release/,
+      }),
     ).toHaveAttribute(
       "href",
       "https://github.com/nrajesh/vaulted.money/releases/latest",
     );
+    expect(
+      screen.getByRole("link", { name: /opens in a new tab/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Claude asks you to confirm/)).toBeInTheDocument();
     expect(screen.getByText(/Keep Vaulted Money open/)).toBeInTheDocument();
     expect(screen.getByText(/No extra software/)).toBeInTheDocument();
@@ -139,12 +144,25 @@ describe("ConnectToAgentPanel", () => {
     expect(screen.getByText(/Edit mcp\.json/)).toBeInTheDocument();
     expect(screen.getByText(/Choose a model that can use tools/)).toBeVisible();
     expect(screen.getByText(/Requires Node 18/)).toBeInTheDocument();
-    expect(screen.getByText(/stays on this device/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Your questions and data stay on this computer when the model runs here.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Download/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Copy step 1" })).toBeNull();
 
     selectChoice(/Claude Code/);
-    expect(screen.getByText("Open Claude Code.")).toBeInTheDocument();
+    expect(screen.getByText("In the Claude app")).toBeInTheDocument();
+    expect(screen.getByText("In a terminal")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Open Settings, then Customize, then Plugins/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Add from a repository/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Open Discover, find Vaulted Money/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("No commands needed.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy step 1" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Copy step 2" })).toBeVisible();
     expect(screen.getByText(/Needs Node 18/)).toBeInTheDocument();
@@ -184,6 +202,27 @@ describe("ConnectToAgentPanel", () => {
       expect(text).not.toContain(TOKEN);
     }
     expect(container.innerHTML).not.toContain(TOKEN);
+  });
+
+  it("copies the repository name for the Claude app route and announces copies", async () => {
+    renderPanel();
+    selectChoice(/Claude Code/);
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Copy repository name" }),
+    );
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith("nrajesh/vaulted.money"),
+    );
+    await waitFor(() => expect(status).toHaveTextContent("Copied"));
+  });
+
+  it("keeps the privacy claims accurate", () => {
+    renderPanel();
+    expect(screen.getByText("Keeps data on your device")).toBeInTheDocument();
+    expect(screen.queryByText(/Nothing leaves/)).toBeNull();
+    expect(screen.queryByText("Most private")).toBeNull();
   });
 
   it("marks step 1 done only when enabled", () => {

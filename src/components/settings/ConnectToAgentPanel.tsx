@@ -19,6 +19,7 @@ import type { ApiServerStatus } from "@/utils/electron";
 import { showError } from "@/utils/toast";
 
 const RELEASES_URL = "https://github.com/nrajesh/vaulted.money/releases/latest";
+const CLAUDE_CODE_REPOSITORY = "nrajesh/vaulted.money";
 const CLAUDE_CODE_STEP_ONE = "/plugin marketplace add nrajesh/vaulted.money";
 const CLAUDE_CODE_STEP_TWO = "/plugin install vaulted-money@vaulted-money";
 const EXAMPLE_QUESTIONS = [
@@ -64,7 +65,7 @@ const CopyButton = ({
   </Button>
 );
 
-type CopyTarget = "local" | "step1" | "step2" | "ask0" | "ask1";
+type CopyTarget = "local" | "repo" | "step1" | "step2" | "ask0" | "ask1";
 type Choice = "claude-app" | "local" | "claude-code";
 
 /**
@@ -171,7 +172,7 @@ const ConnectToAgentPanel = ({
   ) => (
     <TabsTrigger
       value={value}
-      className="h-auto flex-col items-start gap-1 whitespace-normal border p-3 text-left data-[state=active]:border-primary data-[state=active]:ring-1 data-[state=active]:ring-primary"
+      className="h-auto flex-col items-start gap-1 whitespace-normal border p-3 text-left focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:border-primary data-[state=active]:ring-1 data-[state=active]:ring-primary"
     >
       <span className="flex w-full items-center gap-2 text-sm font-semibold">
         {icon}
@@ -226,6 +227,12 @@ const ConnectToAgentPanel = ({
           defaultValue:
             "Chat with an AI about your money manager in three quick steps.",
         })}
+      </p>
+
+      <p role="status" className="sr-only">
+        {copied
+          ? t("settings.agent.copiedStatus", { defaultValue: "Copied" })
+          : ""}
       </p>
 
       <ol
@@ -304,7 +311,7 @@ const ConnectToAgentPanel = ({
               <MessageCircle className="h-4 w-4" aria-hidden="true" />,
               t("settings.agent.appTitle", { defaultValue: "The Claude app" }),
               t("settings.agent.appBlurb", {
-                defaultValue: "Easiest. Chat in the Claude desktop app.",
+                defaultValue: "Chat in the Claude desktop app.",
               }),
               t("settings.agent.appBadge", { defaultValue: "Easiest" }),
             )}
@@ -316,9 +323,11 @@ const ConnectToAgentPanel = ({
               }),
               t("settings.agent.localBlurb", {
                 defaultValue:
-                  "Nothing leaves this device. Works with LM Studio.",
+                  "Your questions and data stay on this computer when the model runs here (for example LM Studio).",
               }),
-              t("settings.agent.localBadge", { defaultValue: "Most private" }),
+              t("settings.agent.localBadge", {
+                defaultValue: "Keeps data on your device",
+              }),
             )}
             {choiceCard(
               "claude-code",
@@ -326,7 +335,7 @@ const ConnectToAgentPanel = ({
               t("settings.agent.codeTitle", { defaultValue: "Claude Code" }),
               t("settings.agent.codeBlurb", {
                 defaultValue:
-                  "For people who already use Claude Code in a terminal or in the Claude app's Code tab.",
+                  "For people who already use Claude Code, in the Claude app or in a terminal.",
               }),
               null,
             )}
@@ -336,16 +345,28 @@ const ConnectToAgentPanel = ({
             <ol className="space-y-3">
               {step(
                 1,
-                <Button asChild size="sm">
+                <Button asChild size="sm" className="h-auto whitespace-normal">
                   <a
                     href={RELEASES_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-                    {t("settings.agent.download", {
-                      defaultValue: "Download the Claude add-on",
-                    })}
+                    <Download
+                      className="mr-2 h-4 w-4 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span>
+                      {t("settings.agent.download", {
+                        defaultValue:
+                          "Download vaulted-money.mcpb from the latest release",
+                      })}
+                      <span className="sr-only">
+                        {" "}
+                        {t("settings.agent.newTab", {
+                          defaultValue: "(opens in a new tab)",
+                        })}
+                      </span>
+                    </span>
                   </a>
                 </Button>,
               )}
@@ -407,29 +428,84 @@ const ConnectToAgentPanel = ({
             </p>
             {privacyLine(
               t("settings.agent.localPrivacyLine", {
-                defaultValue: "Everything stays on this device.",
+                defaultValue:
+                  "Your questions and data stay on this computer when the model runs here.",
               }),
             )}
           </TabsContent>
 
-          <TabsContent value="claude-code" className="space-y-3">
-            <ol className="space-y-3">
-              {step(
-                1,
-                t("settings.agent.codeOpen", {
-                  defaultValue: "Open Claude Code.",
-                }),
-              )}
-              {step(
-                2,
-                <>
-                  <span>
-                    {t("settings.agent.codeType", {
-                      defaultValue: "Type these one after the other:",
-                    })}
-                  </span>
-                  <div className="flex w-full flex-wrap items-center gap-2">
-                    <code className="rounded bg-muted px-2 py-1 text-xs">
+          <TabsContent value="claude-code" className="space-y-4">
+            <div className="space-y-2">
+              <h5 className="text-sm font-medium">
+                {t("settings.agent.routeApp", {
+                  defaultValue: "In the Claude app",
+                })}
+              </h5>
+              <p className="text-xs text-muted-foreground">
+                {t("settings.agent.routeAppNote", {
+                  defaultValue: "No commands needed.",
+                })}
+              </p>
+              <ol className="space-y-3">
+                {step(
+                  1,
+                  t("settings.agent.appRoute1", {
+                    defaultValue:
+                      "Open Settings, then Customize, then Plugins.",
+                  }),
+                )}
+                {step(
+                  2,
+                  t("settings.agent.appRoute2", {
+                    defaultValue:
+                      "Click Add, then Add marketplace, then Add from a repository.",
+                  }),
+                )}
+                {step(
+                  3,
+                  <>
+                    <span>
+                      {t("settings.agent.appRoute3", {
+                        defaultValue: "Paste this, then click Sync:",
+                      })}
+                    </span>
+                    <code className="break-all rounded bg-muted px-2 py-1 text-xs">
+                      {CLAUDE_CODE_REPOSITORY}
+                    </code>
+                    {copyButton(
+                      "repo",
+                      CLAUDE_CODE_REPOSITORY,
+                      t("settings.agent.copyRepository", {
+                        defaultValue: "Copy repository name",
+                      }),
+                    )}
+                  </>,
+                )}
+                {step(
+                  4,
+                  t("settings.agent.appRoute4", {
+                    defaultValue:
+                      "Open Discover, find Vaulted Money and click the + button.",
+                  }),
+                )}
+              </ol>
+            </div>
+            <div className="space-y-2">
+              <h5 className="text-sm font-medium">
+                {t("settings.agent.routeTerminal", {
+                  defaultValue: "In a terminal",
+                })}
+              </h5>
+              <p className="text-xs text-muted-foreground">
+                {t("settings.agent.codeNode", {
+                  defaultValue: "Needs Node 18 or newer.",
+                })}
+              </p>
+              <ol className="space-y-3">
+                {step(
+                  1,
+                  <>
+                    <code className="break-all rounded bg-muted px-2 py-1 text-xs">
                       {CLAUDE_CODE_STEP_ONE}
                     </code>
                     {copyButton(
@@ -439,9 +515,12 @@ const ConnectToAgentPanel = ({
                         defaultValue: "Copy step 1",
                       }),
                     )}
-                  </div>
-                  <div className="flex w-full flex-wrap items-center gap-2">
-                    <code className="rounded bg-muted px-2 py-1 text-xs">
+                  </>,
+                )}
+                {step(
+                  2,
+                  <>
+                    <code className="break-all rounded bg-muted px-2 py-1 text-xs">
                       {CLAUDE_CODE_STEP_TWO}
                     </code>
                     {copyButton(
@@ -451,16 +530,10 @@ const ConnectToAgentPanel = ({
                         defaultValue: "Copy step 2",
                       }),
                     )}
-                  </div>
-                </>,
-              )}
-              {step(
-                3,
-                t("settings.agent.codeNode", {
-                  defaultValue: "Needs Node 18 or newer.",
-                }),
-              )}
-            </ol>
+                  </>,
+                )}
+              </ol>
+            </div>
             {privacyLine(
               t("settings.agent.codePrivacy", {
                 defaultValue: "What Claude reads is sent to Anthropic.",

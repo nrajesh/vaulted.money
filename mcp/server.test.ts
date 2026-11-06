@@ -176,21 +176,40 @@ describe("MCP server tools", () => {
         // Case-insensitive filesystem: the variant is the same file.
         const r = await go(variant);
         expect(r.isError).toBe(true);
+        expect(r.text).toMatch(/not a bank statement/);
         expect(r.text).not.toContain("FAKE-TOKEN");
       }
       const hard = join(dir, "hard.txt");
       linkSync(fakeTokenFile, hard);
       const h = await go(hard);
       expect(h.isError).toBe(true);
+      expect(h.text).toMatch(/not a bank statement/);
       expect(h.text).not.toContain("FAKE-TOKEN");
       const soft = join(dir, "soft.txt");
       symlinkSync(fakeTokenFile, soft);
-      expect((await go(soft)).isError).toBe(true);
+      const sl = await go(soft);
+      expect(sl.isError).toBe(true);
+      expect(sl.text).toMatch(/not a bank statement/);
       const normal = join(dir, "bank.csv");
       writeFileSync(normal, "Date,Description,Amount\n2026-09-05,Cafe,-4\n");
       expect((await go(normal)).isError).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("folds case on macOS and Windows even when neither file exists", async () => {
+    for (const platform of ["darwin", "win32"]) {
+      const guarded = createServer({
+        baseUrl: base,
+        token: TOKEN,
+        platform,
+        env: { VM_CONFIG_FILE: "/nonexistent-vm/none.json", VM_TOKEN_FILE: "/nonexistent-vm/Token.txt" },
+        readFile: () => "FAKE-TOKEN",
+      });
+      const r = await guarded.call("import_csv", { path: "/nonexistent-vm/token.txt", account: "Checking" });
+      expect(r.isError).toBe(true);
+      expect(r.content[0].text).toMatch(/not a bank statement/);
     }
   });
 
