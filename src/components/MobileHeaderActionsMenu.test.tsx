@@ -92,6 +92,18 @@ describe("agent entry points without the desktop bridge", () => {
     ).toBeNull();
   });
 
+  it("hides the desktop header button on an older desktop build without the API bridge", () => {
+    win.electron = { selectFolder: () => Promise.resolve(null) };
+    render(
+      <MemoryRouter>
+        <ConnectAgentHeaderButton t={translate} />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.queryByRole("link", { name: "Connect an AI agent" }),
+    ).toBeNull();
+  });
+
   it("shows the desktop header button with the bridge", () => {
     win.electron = { getApiConfig: () => Promise.resolve({}) };
     render(
