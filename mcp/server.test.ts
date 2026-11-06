@@ -5,7 +5,10 @@ import { LocalDataProvider } from "@/providers/LocalDataProvider";
 import { handleApiRequest } from "@/api/handleRequest";
 import type { ApiRequest } from "@/api/http";
 // @ts-expect-error plain ESM module without types
-import { createServer, normalizeBankCsv, parseCsv, resolvePeriod } from "./server.mjs";
+import { appConfigCandidates, createServer, loadConnection, normalizeBankCsv, parseCsv, resolvePeriod } from "./server.mjs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 /**
  * The MCP tools against the real HTTP server, router and Dexie (only the
@@ -168,5 +171,88 @@ describe("periods", () => {
     expect(resolvePeriod({ period: "last_year" }, now)).toMatchObject({ from: "2025-01-01", to: "2025-12-31" });
     expect(resolvePeriod({ from: "2026-02-01" }, now)).toMatchObject({ label: "custom", from: "2026-02-01", to: "2026-10-05" });
     expect(() => resolvePeriod({ period: "yesterday" }, now)).toThrow(/Unknown period/);
+  });
+});
+
+describe("MCP connection discovery", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "vm-conn-"));
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+  const write = (name: string, content: string) => {
+    const file = join(dir, name);
+    writeFileSync(file, content);
+    return file;
+  };
+  const config = (extra: Record<string, unknown> = {}) =>
+    write("api-config.json", JSON.stringify({ enabled: true, port: 51234, token: "cfg-token", ...extra }));
+  const nowhere = join(tmpdir(), "vm-does-not-exist-token");
+
+  it("reads token and port from the app config", () => {
+    const VM_CONFIG_FILE = config();
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE: nowhere }, "linux", dir)).toEqual({
+      token: "cfg-token",
+      baseUrl: "http://127.0.0.1:51234/api/v1",
+    });
+  });
+
+  it("follows a changed port", () => {
+    const VM_CONFIG_FILE = config();
+    const env = { VM_CONFIG_FILE, VM_TOKEN_FILE: nowhere };
+    expect(loadConnection(env, "linux", dir).baseUrl).toContain(":51234/");
+    config({ port: 60000 });
+    expect(loadConnection(env, "linux", dir).baseUrl).toContain(":60000/");
+  });
+
+  it("prefers the VM_TOKEN env over the config", () => {
+    const VM_CONFIG_FILE = config();
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN: "env-token", VM_BASE_URL: "http://x/api/v1" }, "linux", dir)).toEqual({
+      token: "env-token",
+      baseUrl: "http://x/api/v1",
+    });
+  });
+
+  it("prefers the token file over the config", () => {
+    const VM_CONFIG_FILE = config();
+    const VM_TOKEN_FILE = write("tok", "file-token\n");
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE }, "linux", dir)).toEqual({
+      token: "file-token",
+      baseUrl: "http://127.0.0.1:47821/api/v1",
+    });
+  });
+
+  it("says the Local API is off when the config is disabled", () => {
+    const VM_CONFIG_FILE = config({ enabled: false });
+    expect(() => loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE: nowhere }, "linux", dir)).toThrow(
+      "Vaulted Money's Local API is off. Open the app, go to Settings → Local API and switch it on.",
+    );
+  });
+
+  it.each([
+    ["missing", () => join(dir, "nope.json")],
+    ["empty", () => write("empty.json", "")],
+    ["invalid JSON", () => write("bad.json", "{not json")],
+  ])("says it could not find the app for a %s config", (_label, make) => {
+    expect(() => loadConnection({ VM_CONFIG_FILE: make(), VM_TOKEN_FILE: nowhere }, "linux", dir)).toThrow(
+      "Could not find Vaulted Money. Open the desktop app once, or set VM_TOKEN.",
+    );
+  });
+
+  it("lists the config candidates per platform", () => {
+    const home = "/Users/Jane Doe";
+    expect(appConfigCandidates({}, "darwin", home)).toEqual([
+      "/Users/Jane Doe/Library/Application Support/Vaulted Money/api-config.json",
+      "/Users/Jane Doe/Library/Application Support/vite_react_shadcn_ts/api-config.json",
+    ]);
+    expect(appConfigCandidates({ APPDATA: "C:\\Users\\Jane Doe\\AppData\\Roaming" }, "win32", "C:\\Users\\Jane Doe")).toEqual([
+      join("C:\\Users\\Jane Doe\\AppData\\Roaming", "Vaulted Money", "api-config.json"),
+      join("C:\\Users\\Jane Doe\\AppData\\Roaming", "vite_react_shadcn_ts", "api-config.json"),
+    ]);
+    expect(appConfigCandidates({ XDG_CONFIG_HOME: "/x/cfg" }, "linux", home)).toEqual([
+      "/x/cfg/Vaulted Money/api-config.json",
+      "/x/cfg/vite_react_shadcn_ts/api-config.json",
+    ]);
+    expect(appConfigCandidates({}, "linux", home)[0]).toBe("/Users/Jane Doe/.config/Vaulted Money/api-config.json");
   });
 });

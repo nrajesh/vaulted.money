@@ -15,6 +15,9 @@
  *   VM_TOKEN_FILE  file holding the access token (default ~/.vaulted-token)
  *   VM_TOKEN       the token itself (overrides the file)
  *   VM_BASE_URL    default http://127.0.0.1:47821/api/v1
+ *   VM_CONFIG_FILE an api-config.json to read instead of the desktop app's own
+ *
+ * With none of these set, the token and port come from the app's api-config.json.
  */
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -132,10 +135,10 @@ function describeBody(schema) {
   return Object.fromEntries(Object.entries(props).map(([k, v]) => [k + (required.has(k) ? "*" : ""), v.enum ? v.enum.join("|") : Array.isArray(v.type) ? v.type.join("|") : (v.type ?? "any")]));
 }
 
-export function createServer({ baseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
+export function createServer({ baseUrl, getBaseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
   let ledgers, spec;
   const api = async (method, path, { query, body } = {}) => {
-    const url = new URL(baseUrl.replace(/\/$/, "") + path);
+    const url = new URL((getBaseUrl ? getBaseUrl() : baseUrl).replace(/\/$/, "") + path);
     for (const [k, v] of Object.entries(clean(query ?? {}))) url.searchParams.set(k, String(v));
     const res = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${getToken ? getToken() : token}`, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
     const raw = await res.text();
@@ -147,7 +150,7 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
 
   async function fetchLedgers() {
     const r = await api("GET", "/ledgers");
-    if (!r.ok) throw new Error(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 200)}${r.status === 401 ? " (check the token in ~/.vaulted-token matches Settings -> Local API)" : ""}`);
+    if (!r.ok) throw new Error(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 200)}${r.status === 401 ? " (the token no longer matches Settings -> Local API; reconnect or restart the app)" : ""}`);
     if (!r.json.data.length) throw new Error("There are no ledgers yet.");
     return r.json.data;
   }
@@ -352,17 +355,51 @@ export function createServer({ baseUrl, token, getToken, now = () => new Date(),
   return { tools: publicTools, handle, call: (name, args) => byName.get(name).run(args ?? {}) };
 }
 
-/** Read the token from VM_TOKEN or the token file. */
+const DEFAULT_BASE_URL = "http://127.0.0.1:47821/api/v1";
+// Electron's userData folder: the product name when packaged, the package name in dev.
+const APP_FOLDER_NAMES = ["Vaulted Money", "vite_react_shadcn_ts"];
+
+/** Where the desktop app keeps api-config.json (token, port, enabled), most likely first. */
+export function appConfigCandidates(env = process.env, platform = process.platform, home = homedir()) {
+  const root = platform === "darwin" ? join(home, "Library", "Application Support")
+    : platform === "win32" ? (env.APPDATA || join(home, "AppData", "Roaming"))
+    : (env.XDG_CONFIG_HOME || join(home, ".config"));
+  return APP_FOLDER_NAMES.map((name) => join(root, name, "api-config.json"));
+}
+
+/**
+ * Find the token and base URL: VM_TOKEN, then the token file, then the desktop
+ * app's own api-config.json. Re-read per request so a new token or port needs no restart.
+ */
+export function loadConnection(env = process.env, platform = process.platform, home = homedir()) {
+  const baseUrl = env.VM_BASE_URL ?? DEFAULT_BASE_URL;
+  if (env.VM_TOKEN) return { token: env.VM_TOKEN.trim(), baseUrl };
+  try {
+    const fromFile = readFileSync(env.VM_TOKEN_FILE ?? join(home, ".vaulted-token"), "utf8").trim();
+    if (fromFile) return { token: fromFile, baseUrl };
+  } catch { /* fall through to the app's config */ }
+  const candidates = env.VM_CONFIG_FILE ? [env.VM_CONFIG_FILE] : appConfigCandidates(env, platform, home);
+  for (const file of candidates) {
+    let config;
+    try { config = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
+    if (!config || typeof config !== "object") continue;
+    if (config.enabled === false) throw new Error("Vaulted Money's Local API is off. Open the app, go to Settings \u2192 Local API and switch it on.");
+    if (typeof config.token === "string" && config.token) {
+      return { token: config.token, baseUrl: env.VM_BASE_URL ?? (Number.isInteger(config.port) ? `http://127.0.0.1:${config.port}/api/v1` : DEFAULT_BASE_URL) };
+    }
+  }
+  throw new Error("Could not find Vaulted Money. Open the desktop app once, or set VM_TOKEN.");
+}
+
+/** Read the token (kept for callers that only need the token). */
 export function loadToken(env = process.env) {
-  if (env.VM_TOKEN) return env.VM_TOKEN.trim();
-  const file = env.VM_TOKEN_FILE ?? join(homedir(), ".vaulted-token");
-  try { return readFileSync(file, "utf8").trim(); } catch { throw new Error(`No token: set VM_TOKEN, or save the token from Settings -> Local API in ${file}`); }
+  return loadConnection(env).token;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   // The token is re-read on every request, so regenerating it in Settings only
   // needs the new value saved to the token file (no restart).
-  const server = createServer({ baseUrl: process.env.VM_BASE_URL ?? "http://127.0.0.1:47821/api/v1", getToken: () => loadToken() });
+  const server = createServer({ getBaseUrl: () => loadConnection().baseUrl, getToken: () => loadConnection().token });
   let buffer = "";
   process.stdin.setEncoding("utf8");
   process.stdin.on("data", (chunk) => {
