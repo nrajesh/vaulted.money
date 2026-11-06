@@ -115,7 +115,7 @@ Beyond basic data entry the API covers the app's clean-up tools (detect transfer
 
 You can let an AI agent such as Claude read your money manager and help with it, for example "Where is my money going this month?" or "Import this bank statement". The desktop app must be running (closing the window only hides it). Setup is one switch.
 
-1. Open **Settings → Local API → Connect to agent** and switch on **Allow agents to connect**. The app tells agents how to find it, so there is no token to copy.
+1. Open **Settings → Local API → Connect an AI agent** (opens the Connect to agent page) and switch on **Allow agents to connect**. The app tells agents how to find it, so there is no token to copy.
 2. Then pick your agent:
 
 - **Claude Desktop:** download `vaulted-money.mcpb` from the [Releases page](https://github.com/nrajesh/vaulted.money/releases), double-click it and confirm the install. Nothing else is needed, not even Node.js.

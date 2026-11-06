@@ -35,7 +35,7 @@ Models don't know today's date and are unreliable at date arithmetic, so asking 
 
 ## Setup
 
-1. In the desktop app: _Settings → Local API → Connect to agent_ → switch on **Allow agents to connect**. The server finds the app's own config (token and port), so there is no token to copy.
+1. In the desktop app: _Settings → Local API → Connect an AI agent_ (opens the Connect to agent page) → switch on **Allow agents to connect**. The server finds the app's own config (token and port), so there is no token to copy.
 2. Connect your agent:
    - **Claude Desktop:** download `vaulted-money.mcpb` from the GitHub Releases page and double-click it. No Node.js needed.
    - **Claude Code:** `/plugin marketplace add nrajesh/vaulted.money` then `/plugin install vaulted-money@vaulted-money`.

@@ -12,7 +12,7 @@ Ask Claude about your money. Claude talks to the Vaulted Money desktop app on yo
 ## Before you start
 
 1. Install the Vaulted Money desktop app and open it.
-2. Go to **Settings → Local API → Connect to agent** and switch on **Allow agents to connect**.
+2. Go to **Settings → Local API → Connect an AI agent** (opens the Connect to agent page) and switch on **Allow agents to connect**.
 3. You need [Node.js](https://nodejs.org/) 18 or newer. (The Claude Desktop bundle does not need it.)
 
 ## Install
