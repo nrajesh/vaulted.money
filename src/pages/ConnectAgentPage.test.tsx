@@ -42,6 +42,16 @@ describe("ConnectAgentPage", () => {
     ).toHaveAttribute("href", "/settings");
   });
 
+  it("links back to AI Integrations for categorising with your own API key", () => {
+    renderPage();
+    expect(
+      screen.getByText(/Looking for AI categorisation with your own API key\?/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "See AI Integrations in Settings." }),
+    ).toHaveAttribute("href", "/settings");
+  });
+
   it("explains an older desktop build without the API bridge", () => {
     win.electron = { selectFolder: () => Promise.resolve(null) };
     renderPage();

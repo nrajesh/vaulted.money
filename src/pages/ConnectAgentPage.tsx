@@ -84,6 +84,17 @@ const ConnectAgentPage = () => {
               "Let an AI agent such as Claude read and update your money manager. The connection to the app stays on this computer. What an agent reads is sent to its AI provider (Anthropic, for Claude). A local model keeps everything on this device.",
           })}
         </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("settings.agent.byokNote", {
+            defaultValue:
+              "Looking for AI categorisation with your own API key?",
+          })}{" "}
+          <Link to="/settings" className="underline">
+            {t("settings.agent.byokLink", {
+              defaultValue: "See AI Integrations in Settings.",
+            })}
+          </Link>
+        </p>
         <Link
           to="/settings"
           className="mt-2 inline-flex items-center gap-1 text-sm underline"
