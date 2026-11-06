@@ -139,14 +139,14 @@ describe("ConnectToAgentPanel", () => {
 
   it("shows each choice's own steps and hides the others", () => {
     renderPanel();
-    selectChoice(/private model/);
+    selectChoice(/A private model/);
     expect(screen.getByRole("button", { name: "Copy setup" })).toBeVisible();
     expect(screen.getByText(/Edit mcp\.json/)).toBeInTheDocument();
     expect(screen.getByText(/Choose a model that can use tools/)).toBeVisible();
     expect(screen.getByText(/Requires Node 18/)).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Your questions and data stay on this computer when the model runs here.",
+        "Your questions and data stay on this computer when the model runs here (for example LM Studio).",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Download/ })).toBeNull();
@@ -178,7 +178,7 @@ describe("ConnectToAgentPanel", () => {
         onDisconnect={vi.fn()}
       />,
     );
-    selectChoice(/private model/);
+    selectChoice(/A private model/);
     fireEvent.click(screen.getByRole("button", { name: "Copy setup" }));
     selectChoice(/Claude Code/);
     fireEvent.click(screen.getByRole("button", { name: "Copy step 1" }));
@@ -240,11 +240,16 @@ describe("ConnectToAgentPanel", () => {
 
   it("keeps the privacy claims accurate", () => {
     renderPanel();
-    expect(screen.getByText("Keeps data on your device")).toBeInTheDocument();
-    selectChoice(/private model/);
+    // The card face stays short; the full privacy sentence lives in the steps.
+    expect(screen.getByText("Stays on your device")).toBeInTheDocument();
+    expect(
+      screen.getByText("Runs on your computer, for example in LM Studio."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/stay on this computer/)).toBeNull();
+    selectChoice(/A private model/);
     expect(
       screen.getByText(
-        "Your questions and data stay on this computer when the model runs here.",
+        "Your questions and data stay on this computer when the model runs here (for example LM Studio).",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Nothing leaves/)).toBeNull();
@@ -276,7 +281,7 @@ describe("ConnectToAgentPanel", () => {
     const app = screen.getByRole("tab", { name: /The Claude app/ });
     app.focus();
     fireEvent.keyDown(app, { key: "ArrowRight" });
-    const local = screen.getByRole("tab", { name: /private model/ });
+    const local = screen.getByRole("tab", { name: /A private model/ });
     await waitFor(() => expect(local).toHaveAttribute("aria-selected", "true"));
     expect(screen.getByRole("button", { name: "Copy setup" })).toBeVisible();
     fireEvent.keyDown(local, { key: "ArrowRight" });

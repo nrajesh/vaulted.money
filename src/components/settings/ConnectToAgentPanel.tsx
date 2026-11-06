@@ -320,14 +320,14 @@ const ConnectToAgentPanel = ({
               "local",
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />,
               t("settings.agent.localTitle", {
-                defaultValue: "A private model on this computer",
+                defaultValue: "A private model",
               }),
               t("settings.agent.localBlurb", {
                 defaultValue:
-                  "Your questions and data stay on this computer when the model runs here (for example LM Studio).",
+                  "Runs on your computer, for example in LM Studio.",
               }),
               t("settings.agent.localBadge", {
-                defaultValue: "Keeps data on your device",
+                defaultValue: "Stays on your device",
               }),
             )}
             {choiceCard(
@@ -430,7 +430,7 @@ const ConnectToAgentPanel = ({
             {privacyLine(
               t("settings.agent.localPrivacyLine", {
                 defaultValue:
-                  "Your questions and data stay on this computer when the model runs here.",
+                  "Your questions and data stay on this computer when the model runs here (for example LM Studio).",
               }),
             )}
           </TabsContent>
