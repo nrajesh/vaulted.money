@@ -1,16 +1,30 @@
 import * as React from "react";
-import { Bot, Check, Copy } from "lucide-react";
+import {
+  Bot,
+  Check,
+  Copy,
+  Download,
+  MessageCircle,
+  ShieldCheck,
+  Terminal,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ApiServerStatus } from "@/utils/electron";
 import { showError } from "@/utils/toast";
 
 const RELEASES_URL = "https://github.com/nrajesh/vaulted.money/releases/latest";
-const CLAUDE_CODE_COMMANDS =
-  "/plugin marketplace add nrajesh/vaulted.money\n/plugin install vaulted-money@vaulted-money";
+const CLAUDE_CODE_STEP_ONE = "/plugin marketplace add nrajesh/vaulted.money";
+const CLAUDE_CODE_STEP_TWO = "/plugin install vaulted-money@vaulted-money";
+const EXAMPLE_QUESTIONS = [
+  "Where is my money going this month?",
+  "Am I over budget anywhere?",
+];
 
 interface ConnectToAgentPanelProps {
   status: ApiServerStatus;
@@ -21,7 +35,37 @@ interface ConnectToAgentPanelProps {
   onDisconnect: () => void;
 }
 
-type CopyTarget = "desktop" | "code" | "local";
+/** A labelled copy button that shows a tick after a successful copy. */
+const CopyButton = ({
+  label,
+  variant,
+  isCopied,
+  onCopy,
+}: {
+  label: string;
+  variant: "default" | "outline";
+  isCopied: boolean;
+  onCopy: () => void;
+}) => (
+  <Button
+    type="button"
+    variant={variant}
+    size="sm"
+    className="shrink-0"
+    aria-label={label}
+    onClick={onCopy}
+  >
+    {isCopied ? (
+      <Check className="mr-2 h-4 w-4" />
+    ) : (
+      <Copy className="mr-2 h-4 w-4" />
+    )}
+    {label}
+  </Button>
+);
+
+type CopyTarget = "local" | "step1" | "step2" | "ask0" | "ask1";
+type Choice = "claude-app" | "local" | "claude-code";
 
 /**
  * Lets the user connect an AI agent to the Local API. Status is owned by the
@@ -36,16 +80,22 @@ const ConnectToAgentPanel = ({
   onDisconnect,
 }: ConnectToAgentPanelProps) => {
   const { t } = useTranslation();
-  const [copied, setCopied] = React.useState<CopyTarget | null>(null);
-  const copiedTimer = React.useRef<number | null>(null);
-  React.useEffect(
-    () => () => {
-      if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
-    },
-    [],
-  );
+  // `serial` restarts the reset timer when the same button is copied twice.
+  const [copiedState, setCopiedState] = React.useState<{
+    target: CopyTarget;
+    serial: number;
+  } | null>(null);
+  const copied = copiedState?.target ?? null;
+  // One timer per copy; the cleanup also covers unmount and a later copy.
+  React.useEffect(() => {
+    if (!copiedState) return;
+    const timer = window.setTimeout(() => setCopiedState(null), 1500);
+    return () => window.clearTimeout(timer);
+  }, [copiedState]);
   const Heading = `h${headingLevel}` as const;
   const [confirming, setConfirming] = React.useState(false);
+  const [choice, setChoice] = React.useState<Choice>("claude-app");
+  const SubHeading = headingLevel === 2 ? "h3" : "h4";
 
   const localModelSnippet = JSON.stringify(
     {
@@ -61,7 +111,7 @@ const ConnectToAgentPanel = ({
     try {
       await navigator.clipboard.writeText(value);
     } catch {
-      setCopied(null);
+      setCopiedState(null);
       showError(
         t("settings.agent.copyFailed", {
           defaultValue: "Could not copy to the clipboard.",
@@ -69,34 +119,87 @@ const ConnectToAgentPanel = ({
       );
       return;
     }
-    setCopied(target);
-    // One shared timer so a later copy is not cleared by an earlier one.
-    if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
-    copiedTimer.current = window.setTimeout(() => setCopied(null), 1500);
+    setCopiedState((previous) => ({
+      target,
+      serial: (previous?.serial ?? 0) + 1,
+    }));
   };
 
   const ready = status.enabled && status.running;
 
-  const copyButton = (target: CopyTarget, value: string, label: string) => (
-    <Button
-      type="button"
-      variant="outline"
-      size="icon"
-      aria-label={label}
-      onClick={() => copy(target, value)}
-    >
-      {copied === target ? (
-        <Check className="h-4 w-4" />
-      ) : (
-        <Copy className="h-4 w-4" />
-      )}
-    </Button>
+  const copyButton = (
+    target: CopyTarget,
+    value: string,
+    label: string,
+    variant: "default" | "outline" = "outline",
+  ) => (
+    <CopyButton
+      label={label}
+      variant={variant}
+      isCopied={copied === target}
+      onCopy={() => copy(target, value)}
+    />
   );
+
+  const step = (n: number, children: React.ReactNode) => (
+    <li className="flex items-start gap-3 text-sm">
+      <span
+        aria-hidden="true"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium"
+      >
+        {n}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 pt-0.5">
+        {children}
+      </div>
+    </li>
+  );
+
+  const privacyLine = (text: string) => (
+    <p className="flex items-start gap-2 text-xs text-muted-foreground">
+      <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {text}
+    </p>
+  );
+
+  const choiceCard = (
+    value: Choice,
+    icon: React.ReactNode,
+    title: string,
+    explanation: string,
+    badge: string | null,
+  ) => (
+    <TabsTrigger
+      value={value}
+      className="h-auto flex-col items-start gap-1 whitespace-normal border p-3 text-left data-[state=active]:border-primary data-[state=active]:ring-1 data-[state=active]:ring-primary"
+    >
+      <span className="flex w-full items-center gap-2 text-sm font-semibold">
+        {icon}
+        {title}
+      </span>
+      <span className="text-xs font-normal text-muted-foreground">
+        {explanation}
+      </span>
+      {badge && (
+        <Badge variant="secondary" className="mt-1">
+          {badge}
+        </Badge>
+      )}
+    </TabsTrigger>
+  );
+
+  const stepTitles = [
+    t("settings.agent.step1", { defaultValue: "Switch on" }),
+    t("settings.agent.step2", {
+      defaultValue: "Pick how you chat with your money",
+    }),
+    t("settings.agent.step3", { defaultValue: "Ask your first question" }),
+  ];
 
   return (
     <section
       aria-labelledby="connect-agent-title"
-      className="space-y-4 rounded-md border p-4"
+      className="space-y-5 rounded-md border p-4"
     >
       <div className="flex items-center justify-between gap-4">
         <Heading
@@ -121,98 +224,276 @@ const ConnectToAgentPanel = ({
       <p className="text-sm text-muted-foreground">
         {t("settings.agent.description", {
           defaultValue:
-            "Let an AI agent read and update your money manager through the Local API. Turn it on, then copy the setup for your agent.",
+            "Chat with an AI about your money manager in three quick steps.",
         })}
       </p>
 
-      <div className="flex items-center justify-between gap-4">
-        <Label htmlFor="agent-enabled">
-          {t("settings.agent.enable", {
-            defaultValue: "Allow agents to connect",
-          })}
-        </Label>
-        <Switch
-          id="agent-enabled"
-          checked={status.enabled}
-          onCheckedChange={(checked) => {
-            onToggle(checked);
-          }}
-        />
-      </div>
-      <p className="-mt-2 text-xs text-muted-foreground">
-        {t("settings.agent.enableHint", {
-          defaultValue:
-            "This also turns the Local API on or off for scripts, not only agents.",
-        })}
-      </p>
-
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium">
-          {t("settings.agent.desktopTitle", { defaultValue: "Claude Desktop" })}
-        </h4>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm">
-            <a
-              href={RELEASES_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
+      <ol
+        aria-label={t("settings.agent.steps", { defaultValue: "Steps" })}
+        className="grid gap-2 text-sm sm:grid-cols-3"
+      >
+        {stepTitles.map((title, index) => {
+          const done = index === 0 && status.enabled;
+          return (
+            <li
+              key={title}
+              className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2"
             >
-              {t("settings.agent.download", {
-                defaultValue: "Download the .mcpb bundle",
-              })}
-            </a>{" "}
-            {t("settings.agent.doubleClick", {
-              defaultValue: "from the latest release, then double-click it.",
+              <span
+                aria-hidden="true"
+                className={
+                  done
+                    ? "flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-600 text-white"
+                    : "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs"
+                }
+              >
+                {done ? <Check className="h-3 w-3" /> : index + 1}
+              </span>
+              <span>
+                {title}
+                {done && (
+                  <span className="sr-only">
+                    {" "}
+                    {t("settings.agent.done", { defaultValue: "(done)" })}
+                  </span>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="agent-enabled">
+            {t("settings.agent.enable", {
+              defaultValue: "Allow agents to connect",
             })}
-          </p>
-          {copyButton(
-            "desktop",
-            RELEASES_URL,
-            t("settings.agent.copyDesktop", {
-              defaultValue: "Copy Claude Desktop download link",
-            }),
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium">
-          {t("settings.agent.codeTitle", { defaultValue: "Claude Code" })}
-        </h4>
-        <div className="flex items-start justify-between gap-2">
-          <pre className="overflow-x-auto rounded bg-muted p-2 text-xs">
-            {CLAUDE_CODE_COMMANDS}
-          </pre>
-          {copyButton(
-            "code",
-            CLAUDE_CODE_COMMANDS,
-            t("settings.agent.copyCode", {
-              defaultValue: "Copy Claude Code commands",
-            }),
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium">
-          {t("settings.agent.localTitle", { defaultValue: "Local model" })}
-        </h4>
-        <div className="flex items-start justify-between gap-2">
-          <pre className="overflow-x-auto rounded bg-muted p-2 text-xs">
-            {localModelSnippet}
-          </pre>
-          {copyButton(
-            "local",
-            localModelSnippet,
-            t("settings.agent.copyLocal", {
-              defaultValue: "Copy local model configuration",
-            }),
-          )}
+          </Label>
+          <Switch
+            id="agent-enabled"
+            checked={status.enabled}
+            onCheckedChange={(checked) => {
+              onToggle(checked);
+            }}
+          />
         </div>
         <p className="text-xs text-muted-foreground">
-          {t("settings.agent.nodeNote", {
-            defaultValue: "Requires Node 18 or newer.",
+          {t("settings.agent.enableHint", {
+            defaultValue:
+              "This also turns the Local API on or off for scripts, not only agents.",
+          })}
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <SubHeading className="text-sm font-semibold">
+          {t("settings.agent.chooseTitle", {
+            defaultValue: "How do you want to chat?",
+          })}
+        </SubHeading>
+        <Tabs value={choice} onValueChange={(v) => setChoice(v as Choice)}>
+          <TabsList
+            aria-label={t("settings.agent.chooseTitle", {
+              defaultValue: "How do you want to chat?",
+            })}
+            className="grid h-auto w-full items-stretch gap-2 bg-transparent p-0 sm:grid-cols-3"
+          >
+            {choiceCard(
+              "claude-app",
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />,
+              t("settings.agent.appTitle", { defaultValue: "The Claude app" }),
+              t("settings.agent.appBlurb", {
+                defaultValue: "Easiest. Chat in the Claude desktop app.",
+              }),
+              t("settings.agent.appBadge", { defaultValue: "Easiest" }),
+            )}
+            {choiceCard(
+              "local",
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />,
+              t("settings.agent.localTitle", {
+                defaultValue: "A private model on this computer",
+              }),
+              t("settings.agent.localBlurb", {
+                defaultValue:
+                  "Nothing leaves this device. Works with LM Studio.",
+              }),
+              t("settings.agent.localBadge", { defaultValue: "Most private" }),
+            )}
+            {choiceCard(
+              "claude-code",
+              <Terminal className="h-4 w-4" aria-hidden="true" />,
+              t("settings.agent.codeTitle", { defaultValue: "Claude Code" }),
+              t("settings.agent.codeBlurb", {
+                defaultValue:
+                  "For people who already use Claude Code in a terminal or in the Claude app's Code tab.",
+              }),
+              null,
+            )}
+          </TabsList>
+
+          <TabsContent value="claude-app" className="space-y-3">
+            <ol className="space-y-3">
+              {step(
+                1,
+                <Button asChild size="sm">
+                  <a
+                    href={RELEASES_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t("settings.agent.download", {
+                      defaultValue: "Download the Claude add-on",
+                    })}
+                  </a>
+                </Button>,
+              )}
+              {step(
+                2,
+                t("settings.agent.appOpen", {
+                  defaultValue:
+                    "Open the downloaded file. Claude asks you to confirm.",
+                }),
+              )}
+              {step(
+                3,
+                t("settings.agent.appKeepOpen", {
+                  defaultValue: "Keep Vaulted Money open.",
+                }),
+              )}
+            </ol>
+            <p className="text-xs text-muted-foreground">
+              {t("settings.agent.appNoExtra", {
+                defaultValue: "No extra software needed.",
+              })}
+            </p>
+            {privacyLine(
+              t("settings.agent.appPrivacy", {
+                defaultValue: "What Claude reads is sent to Anthropic.",
+              }),
+            )}
+          </TabsContent>
+
+          <TabsContent value="local" className="space-y-3">
+            <ol className="space-y-3">
+              {step(
+                1,
+                copyButton(
+                  "local",
+                  localModelSnippet,
+                  t("settings.agent.copySetup", { defaultValue: "Copy setup" }),
+                  "default",
+                ),
+              )}
+              {step(
+                2,
+                t("settings.agent.localOpen", {
+                  defaultValue:
+                    "In LM Studio open Program, then Install, then Edit mcp.json, and paste.",
+                }),
+              )}
+              {step(
+                3,
+                t("settings.agent.localModel", {
+                  defaultValue: "Choose a model that can use tools.",
+                }),
+              )}
+            </ol>
+            <p className="text-xs text-muted-foreground">
+              {t("settings.agent.nodeNote", {
+                defaultValue: "Requires Node 18 or newer.",
+              })}
+            </p>
+            {privacyLine(
+              t("settings.agent.localPrivacyLine", {
+                defaultValue: "Everything stays on this device.",
+              }),
+            )}
+          </TabsContent>
+
+          <TabsContent value="claude-code" className="space-y-3">
+            <ol className="space-y-3">
+              {step(
+                1,
+                t("settings.agent.codeOpen", {
+                  defaultValue: "Open Claude Code.",
+                }),
+              )}
+              {step(
+                2,
+                <>
+                  <span>
+                    {t("settings.agent.codeType", {
+                      defaultValue: "Type these one after the other:",
+                    })}
+                  </span>
+                  <div className="flex w-full flex-wrap items-center gap-2">
+                    <code className="rounded bg-muted px-2 py-1 text-xs">
+                      {CLAUDE_CODE_STEP_ONE}
+                    </code>
+                    {copyButton(
+                      "step1",
+                      CLAUDE_CODE_STEP_ONE,
+                      t("settings.agent.copyStep1", {
+                        defaultValue: "Copy step 1",
+                      }),
+                    )}
+                  </div>
+                  <div className="flex w-full flex-wrap items-center gap-2">
+                    <code className="rounded bg-muted px-2 py-1 text-xs">
+                      {CLAUDE_CODE_STEP_TWO}
+                    </code>
+                    {copyButton(
+                      "step2",
+                      CLAUDE_CODE_STEP_TWO,
+                      t("settings.agent.copyStep2", {
+                        defaultValue: "Copy step 2",
+                      }),
+                    )}
+                  </div>
+                </>,
+              )}
+              {step(
+                3,
+                t("settings.agent.codeNode", {
+                  defaultValue: "Needs Node 18 or newer.",
+                }),
+              )}
+            </ol>
+            {privacyLine(
+              t("settings.agent.codePrivacy", {
+                defaultValue: "What Claude reads is sent to Anthropic.",
+              }),
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <div className="space-y-2">
+        <SubHeading className="text-sm font-semibold">
+          {t("settings.agent.askTitle", {
+            defaultValue: "Ask your first question",
+          })}
+        </SubHeading>
+        <ul className="space-y-2">
+          {EXAMPLE_QUESTIONS.map((question, index) => (
+            <li key={question} className="flex flex-wrap items-center gap-2">
+              <span className="text-sm">&ldquo;{question}&rdquo;</span>
+              {copyButton(
+                index === 0 ? "ask0" : "ask1",
+                question,
+                t("settings.agent.copyQuestion", {
+                  defaultValue: "Copy question",
+                }) + ` ${index + 1}`,
+              )}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground">
+          {t("settings.agent.demoTip", {
+            defaultValue:
+              "Tip: try it with demo data first (Ledgers, then Generate demo data). It replaces your current data, so only use it on a fresh start.",
           })}
         </p>
       </div>

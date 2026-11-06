@@ -39,7 +39,7 @@ Models don't know today's date and are unreliable at date arithmetic, so asking 
 2. Connect your agent:
    - **Claude Desktop:** download `vaulted-money.mcpb` from the GitHub Releases page and double-click it. No Node.js needed.
    - **Claude Code:** `/plugin marketplace add nrajesh/vaulted.money` then `/plugin install vaulted-money@vaulted-money`.
-   - **Local model (LM Studio):** use _Copy local model configuration_ in the panel and paste it into `mcp.json`. Use a model with tool-calling support.
+   - **Local model (LM Studio):** use _Copy setup_ under **A private model on this computer** and paste it into `mcp.json`. Use a model with tool-calling support.
 
 Node.js 18 or newer is needed for the plugin and local-model routes. The server is started by the client when needed. It looks up the token on every request, so a new token or port is picked up without a restart. _Disconnect everything_ switches the Local API off and replaces the token, so every agent gets "Local API is off" until you switch it on again; after that they reconnect on their own, with no copy-paste. Only the desktop app has to be running.
 

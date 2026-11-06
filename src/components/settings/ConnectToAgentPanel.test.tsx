@@ -55,6 +55,9 @@ describe("ConnectToAgentPanel", () => {
     return handlers;
   };
 
+  const selectChoice = (name: RegExp) =>
+    fireEvent.mouseDown(screen.getByRole("tab", { name }), { button: 0 });
+
   it("shows Off and never renders the token when the API is off", () => {
     const { container } = render(
       <ConnectToAgentPanel
@@ -89,9 +92,8 @@ describe("ConnectToAgentPanel", () => {
   it("shows an error and no copied state when the clipboard rejects", async () => {
     writeText.mockRejectedValueOnce(new Error("denied"));
     renderPanel();
-    const button = screen.getByRole("button", {
-      name: "Copy Claude Code commands",
-    });
+    selectChoice(/Claude Code/);
+    const button = screen.getByRole("button", { name: "Copy step 1" });
     fireEvent.click(button);
     await waitFor(() => expect(showError).toHaveBeenCalledTimes(1));
     expect(button.querySelector(".lucide-check")).toBeNull();
@@ -101,9 +103,8 @@ describe("ConnectToAgentPanel", () => {
     vi.useFakeTimers();
     try {
       renderPanel();
-      fireEvent.click(
-        screen.getByRole("button", { name: "Copy Claude Code commands" }),
-      );
+      selectChoice(/Claude Code/);
+      fireEvent.click(screen.getByRole("button", { name: "Copy step 1" }));
       await vi.advanceTimersByTimeAsync(0);
       cleanup();
       expect(vi.getTimerCount()).toBe(0);
@@ -112,38 +113,114 @@ describe("ConnectToAgentPanel", () => {
     }
   });
 
-  it("copies exact snippets and never the token", async () => {
-    renderPanel(makeStatus({ enabled: true, running: true }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Copy Claude Code commands" }),
+  it("defaults to the Claude app and shows only its steps", () => {
+    renderPanel();
+    expect(screen.getByRole("tab", { name: /The Claude app/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Copy local model configuration" }),
+    expect(
+      screen.getByRole("link", { name: "Download the Claude add-on" }),
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/nrajesh/vaulted.money/releases/latest",
     );
-    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2));
-    const [code, local] = writeText.mock.calls.map((c) => c[0] as string);
-    expect(code).toBe(
-      "/plugin marketplace add nrajesh/vaulted.money\n/plugin install vaulted-money@vaulted-money",
+    expect(screen.getByText(/Claude asks you to confirm/)).toBeInTheDocument();
+    expect(screen.getByText(/Keep Vaulted Money open/)).toBeInTheDocument();
+    expect(screen.getByText(/No extra software/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copy setup" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Copy step 1" })).toBeNull();
+  });
+
+  it("shows each choice's own steps and hides the others", () => {
+    renderPanel();
+    selectChoice(/private model/);
+    expect(screen.getByRole("button", { name: "Copy setup" })).toBeVisible();
+    expect(screen.getByText(/Edit mcp\.json/)).toBeInTheDocument();
+    expect(screen.getByText(/Choose a model that can use tools/)).toBeVisible();
+    expect(screen.getByText(/Requires Node 18/)).toBeInTheDocument();
+    expect(screen.getByText(/stays on this device/)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Download/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Copy step 1" })).toBeNull();
+
+    selectChoice(/Claude Code/);
+    expect(screen.getByText("Open Claude Code.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy step 1" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Copy step 2" })).toBeVisible();
+    expect(screen.getByText(/Needs Node 18/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copy setup" })).toBeNull();
+  });
+
+  it("copies exact text for every button and never the token", async () => {
+    const { container } = render(
+      <ConnectToAgentPanel
+        status={makeStatus({ enabled: true, running: true })}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        onDisconnect={vi.fn()}
+      />,
+    );
+    selectChoice(/private model/);
+    fireEvent.click(screen.getByRole("button", { name: "Copy setup" }));
+    selectChoice(/Claude Code/);
+    fireEvent.click(screen.getByRole("button", { name: "Copy step 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy step 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy question 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy question 2" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(5));
+    const [local, one, two, ask1, ask2] = writeText.mock.calls.map(
+      (c) => c[0] as string,
     );
     expect(JSON.parse(local)).toEqual({
       mcpServers: {
         "vaulted-money": { command: "node", args: [SERVER_PATH] },
       },
     });
-    expect(local).toContain(SERVER_PATH);
+    expect(one).toBe("/plugin marketplace add nrajesh/vaulted.money");
+    expect(two).toBe("/plugin install vaulted-money@vaulted-money");
+    expect(ask1).toBe("Where is my money going this month?");
+    expect(ask2).toBe("Am I over budget anywhere?");
     for (const [text] of writeText.mock.calls) {
       expect(text).not.toContain(TOKEN);
     }
+    expect(container.innerHTML).not.toContain(TOKEN);
   });
 
-  it("links to the latest release for Claude Desktop", () => {
-    renderPanel();
-    const link = screen.getByRole("link", { name: /download/i });
-    expect(link).toHaveAttribute(
-      "href",
-      "https://github.com/nrajesh/vaulted.money/releases/latest",
+  it("marks step 1 done only when enabled", () => {
+    const { unmount } = render(
+      <ConnectToAgentPanel
+        status={makeStatus({ enabled: false })}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        onDisconnect={vi.fn()}
+      />,
     );
-    expect(screen.getByText(/double-click/i)).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Steps" }).textContent).not.toMatch(
+      /\(done\)/,
+    );
+    unmount();
+    renderPanel(makeStatus({ enabled: true, running: true }));
+    const strip = screen.getByRole("list", { name: "Steps" });
+    expect(strip.textContent).toMatch(/Switch on\s*\(done\)/);
+    expect(strip.textContent).toMatch(/Pick how you chat with your money/);
+    expect(strip.textContent).toMatch(/Ask your first question/);
+  });
+
+  it("lets the keyboard move between the choices", async () => {
+    renderPanel();
+    const app = screen.getByRole("tab", { name: /The Claude app/ });
+    app.focus();
+    fireEvent.keyDown(app, { key: "ArrowRight" });
+    const local = screen.getByRole("tab", { name: /private model/ });
+    await waitFor(() => expect(local).toHaveAttribute("aria-selected", "true"));
+    expect(screen.getByRole("button", { name: "Copy setup" })).toBeVisible();
+    fireEvent.keyDown(local, { key: "ArrowRight" });
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /Claude Code/ })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
   });
 
   it("states the privacy facts plainly", () => {
@@ -151,7 +228,6 @@ describe("ConnectToAgentPanel", () => {
     expect(screen.getByText(/sent to the AI provider/i)).toBeInTheDocument();
     expect(screen.getByText(/local model/i, { selector: "p" })).toBeTruthy();
     expect(screen.getByText(/claude\.ai website/i)).toBeInTheDocument();
-    expect(screen.getByText(/Node 18/)).toBeInTheDocument();
   });
 
   it("asks for confirmation before disconnecting", () => {
@@ -167,11 +243,8 @@ describe("ConnectToAgentPanel", () => {
     expect(onDisconnect).toHaveBeenCalledTimes(1);
   });
 
-  it("names the download link by its visible text and explains the switch", () => {
+  it("explains the switch", () => {
     renderPanel();
-    expect(
-      screen.getByRole("link", { name: "Download the .mcpb bundle" }),
-    ).toBeInTheDocument();
     expect(screen.getByText(/also turns the Local API/i)).toBeInTheDocument();
   });
 
