@@ -1,0 +1,10 @@
+{
+  "name": "vaulted-money",
+  "version": "0.1.0",
+  "description": "Ask Claude where your money goes, check budgets and import bank CSVs. Works with the Vaulted Money desktop app. Your data stays on your computer, apart from what Claude reads to answer you.",
+  "author": { "name": "nrajesh" },
+  "homepage": "https://github.com/nrajesh/vaulted.money",
+  "repository": "https://github.com/nrajesh/vaulted.money",
+  "license": "MIT",
+  "keywords": ["finance", "budget", "local-first", "privacy", "mcp"]
+}

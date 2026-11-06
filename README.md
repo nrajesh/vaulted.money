@@ -1,6 +1,6 @@
 # Vaulted Money
 
-_A private, local-first money tracker for people who want to understand where their money goes without sending their financial life to somebody else's server._
+_A private, local-first money manager for people who want to understand where their money goes without sending their financial life to somebody else's server._
 
 ![Vaulted Money add transaction flow](documentation/readme/add-transaction-flow.gif)
 
@@ -133,4 +133,4 @@ Vaulted Money stores financial data in your browser or local app storage. Nothin
 
 Vaulted Money is released under the [MIT License](LICENSE).
 
-Made for calmer, more private money tracking.
+Made for calmer, more private money management.
