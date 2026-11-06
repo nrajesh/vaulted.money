@@ -111,6 +111,27 @@ curl -H "$AUTH" -H "Content-Type: application/json" -X POST -OJ $VM/backups/expo
 
 Beyond basic data entry the API covers the app's clean-up tools (detect transfers, remove duplicates, categorize, reconcile balances, merge and clean up accounts/vendors/categories), CSV import and export, settings, and an OpenAPI description at `GET $VM/openapi.json` for generating your own client. The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md); [recipes for scripts, month-end routines and building your own interface](documentation/API_COOKBOOK.md) are in the cookbook. To try it from Postman, import the [ready-made collection](documentation/postman/README.md).
 
+## Use with an AI agent
+
+You can let an AI agent such as Claude read your money manager and help with it, for example "Where is my money going this month?" or "Import this bank statement". The desktop app must be running (closing the window only hides it). Setup is one switch.
+
+1. Open **Settings → Local API → Connect to agent** and switch on **Allow agents to connect**. The app tells agents how to find it, so there is no token to copy.
+2. Then pick your agent:
+
+- **Claude Desktop:** download `vaulted-money.mcpb` from the [Releases page](https://github.com/nrajesh/vaulted.money/releases), double-click it and confirm the install. Nothing else is needed, not even Node.js.
+- **Claude Code:** run these two commands inside Claude Code. This needs [Node.js](https://nodejs.org/) 18 or newer.
+
+  ```
+  /plugin marketplace add nrajesh/vaulted.money
+  /plugin install vaulted-money@vaulted-money
+  ```
+
+- **A local model (for example LM Studio):** use **Copy local model configuration** in the panel and paste it into the app's `mcp.json`. Choose a model that supports tool calling. Needs Node.js 18 or newer.
+
+**Privacy, honestly.** The plugin and the server upload nothing. But when you ask a question, whatever the agent reads to answer it, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude). Only ask about data you are happy to share that way. A local model keeps everything on your device. The claude.ai website is not supported, because it cannot reach software on your computer.
+
+**Staying safe.** Keep your agent's approval prompts switched on for adding, deleting and importing. Deletions need an explicit confirmation, and it is wise to make a backup before you let an agent work on real data. **Disconnect everything** in the same panel creates a new token and cuts off every connected agent. More detail is in the [MCP server guide](mcp/README.md).
+
 ## Support the Project
 
 Vaulted Money is free and open-source under the MIT license. If you find it useful and want to support development, you have several options:
@@ -127,7 +148,7 @@ The same app is free to build from source, regardless of which channel you choos
 
 ## Privacy In One Paragraph
 
-Vaulted Money stores financial data in your browser or local app storage. Nothing is sent to a Vaulted Money server because there is no Vaulted Money server. If you enable optional AI categorization, only the data needed for that action is sent to the provider you configure with your own API key. Because the app is local-first, backups are your responsibility.
+Vaulted Money stores financial data in your browser or local app storage. Nothing is sent to a Vaulted Money server because there is no Vaulted Money server. If you enable optional AI categorization, only the data needed for that action is sent to the provider you configure with your own API key. If you connect an AI agent, what the agent reads is sent to that agent's provider (see [Use with an AI agent](#use-with-an-ai-agent)). Because the app is local-first, backups are your responsibility.
 
 ## License
 
