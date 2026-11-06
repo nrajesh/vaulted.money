@@ -130,6 +130,15 @@ describe("stageMcpb", () => {
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
       }
+    // RGBA (decodePng asserts colour type 6) with transparent corners.
+    const alphaAt = (x: number, y: number) => pixels[(y * width + x) * 4 + 3];
+    const corners = [
+      alphaAt(0, 0),
+      alphaAt(width - 1, 0),
+      alphaAt(0, height - 1),
+      alphaAt(width - 1, height - 1),
+    ];
+    expect(corners.some((alpha) => alpha === 0)).toBe(true);
     expect((maxX - minX + 1) / width).toBeGreaterThanOrEqual(0.7);
   });
 });

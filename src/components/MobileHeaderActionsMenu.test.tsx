@@ -1,8 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { MobileHeaderActionsMenu } from "./Layout";
+import { ConnectAgentHeaderButton, MobileHeaderActionsMenu } from "./Layout";
+
+const win = window as unknown as { electron?: unknown };
+const translate = ((_key: string, options?: { defaultValue?: string }) =>
+  options?.defaultValue ?? _key) as never;
 
 const renderMenu = () =>
   render(
@@ -23,6 +27,13 @@ const renderMenu = () =>
   );
 
 describe("MobileHeaderActionsMenu", () => {
+  beforeEach(() => {
+    win.electron = { getApiConfig: () => Promise.resolve({}) };
+  });
+  afterEach(() => {
+    delete win.electron;
+  });
+
   it("offers Connect an AI agent between Home and Dark mode", async () => {
     renderMenu();
     await userEvent.click(screen.getByRole("button", { name: "More actions" }));
@@ -45,5 +56,51 @@ describe("MobileHeaderActionsMenu", () => {
       screen.getByRole("menuitem", { name: "Connect an AI agent" }),
     );
     expect(screen.queryByRole("menuitem")).toBeNull();
+  });
+});
+
+describe("agent entry points without the desktop bridge", () => {
+  afterEach(() => {
+    delete win.electron;
+  });
+
+  it("hides the menu item on web and mobile", async () => {
+    renderMenu();
+    await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(
+      screen.queryByRole("menuitem", { name: /Connect an AI agent/ }),
+    ).toBeNull();
+  });
+
+  it("hides the menu item on an older desktop build without the API bridge", async () => {
+    win.electron = { selectFolder: () => Promise.resolve(null) };
+    renderMenu();
+    await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(
+      screen.queryByRole("menuitem", { name: /Connect an AI agent/ }),
+    ).toBeNull();
+  });
+
+  it("hides the desktop header button", () => {
+    render(
+      <MemoryRouter>
+        <ConnectAgentHeaderButton t={translate} />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.queryByRole("link", { name: "Connect an AI agent" }),
+    ).toBeNull();
+  });
+
+  it("shows the desktop header button with the bridge", () => {
+    win.electron = { getApiConfig: () => Promise.resolve({}) };
+    render(
+      <MemoryRouter>
+        <ConnectAgentHeaderButton t={translate} />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole("link", { name: "Connect an AI agent" }),
+    ).toHaveAttribute("href", "/connect-agent");
   });
 });

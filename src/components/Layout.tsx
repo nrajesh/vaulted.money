@@ -41,6 +41,7 @@ import {
   Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getElectronAPI } from "@/utils/electron";
 import {
   Collapsible,
   CollapsibleContent,
@@ -339,6 +340,39 @@ type MobileHeaderActionsMenuProps = {
   isHomepageMobilePreview?: boolean;
 };
 
+/**
+ * Connecting an agent needs the desktop Local API, so entry points only show
+ * when the Electron bridge exposes it (same guard as useLocalApi).
+ */
+const hasAgentBridge = () =>
+  typeof getElectronAPI()?.getApiConfig === "function";
+
+/** Desktop header icon button to /connect-agent. Exported for tests. */
+export const ConnectAgentHeaderButton = ({
+  t,
+}: {
+  t: ReturnType<typeof useTranslation>["t"];
+}) => {
+  if (!hasAgentBridge()) return null;
+  const label = t("layout.nav.connectAgent", {
+    defaultValue: "Connect an AI agent",
+  });
+  return (
+    <Button
+      asChild
+      variant="ghost"
+      size="icon"
+      className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+    >
+      <Link to="/connect-agent" aria-label={label}>
+        <Bot className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+        <span className="sr-only">{label}</span>
+      </Link>
+    </Button>
+  );
+};
+
+// Exported only so tests can render the menu without the whole Layout.
 export const MobileHeaderActionsMenu = ({
   displayName,
   hasTourForCurrentRoute,
@@ -390,14 +424,16 @@ export const MobileHeaderActionsMenu = ({
             </Link>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem asChild className={actionItemClassName}>
-          <Link to="/connect-agent">
-            <Bot className="h-5 w-5" />
-            {t("layout.nav.connectAgent", {
-              defaultValue: "Connect an AI agent",
-            })}
-          </Link>
-        </DropdownMenuItem>
+        {hasAgentBridge() && (
+          <DropdownMenuItem asChild className={actionItemClassName}>
+            <Link to="/connect-agent">
+              <Bot className="h-5 w-5" />
+              {t("layout.nav.connectAgent", {
+                defaultValue: "Connect an AI agent",
+              })}
+            </Link>
+          </DropdownMenuItem>
+        )}
         {hasTourForCurrentRoute && (
           <DropdownMenuItem onClick={startTour} className={actionItemClassName}>
             <HelpCircle className="h-5 w-5" />
@@ -886,6 +922,7 @@ const Layout = () => {
               </Button>
             )}
             <LanguageSwitcher showLanguageSettings />
+            <ConnectAgentHeaderButton t={t} />
             {hasTourForCurrentRoute && (
               <Button
                 variant="ghost"
