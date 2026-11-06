@@ -1,6 +1,6 @@
 # Vaulted Money MCP server
 
-Lets a local AI agent (LM Studio, Claude Code, any MCP client) read and change your Vaulted Money data through the desktop app's [Local API](../documentation/API.md).
+Lets an AI agent or model runner on this computer (for example LM Studio with a local model, or Claude Code, which sends what it reads to Anthropic; any MCP client works) read and change your Vaulted Money data through the desktop app's [Local API](../documentation/API.md).
 
 - **One file, no dependencies** (`server.mjs`, Node 18+). Nothing to install.
 - **Separate process.** It calls the Local API over HTTP, so the **desktop app must be running** with _Settings → Local API_ on. The window may be closed to the tray; quitting the app stops the API. (Your data lives inside the app, so the server cannot read it without the app.)
