@@ -107,10 +107,10 @@
 - Test: `scripts/build-mcpb.test.ts`
 
 **Interfaces:**
-- Produces: `mcpb/manifest.json` with `manifest_version`, `name: "vaulted-money"`, `display_name: "Vaulted Money"`, `version`, a plain-English `description` (money manager; privacy note), `author`, `server: { type: "node", entry_point: "server/index.js", mcp_config: { command: "node", args: ["${__dirname}/server/index.js"] } }`, `compatibility.platforms: ["darwin","win32","linux"]`, and `tools` listing the eight tools. No `user_config` (the server finds the app itself).
-- Produces: `stageMcpb(outDir: string): void` exported from `scripts/build-mcpb.mjs`; it copies `mcp/server.mjs` to `<outDir>/server/index.js` and `mcpb/manifest.json` to `<outDir>/manifest.json`. The script then runs `npx @anthropic-ai/mcpb pack <outDir> release/vaulted-money.mcpb`. No second copy of the server is committed.
+- Produces: `mcpb/manifest.json` with `manifest_version`, `name: "vaulted-money"`, `display_name: "Vaulted Money"`, `version`, a plain-English `description` (money manager; privacy note), `author`, `server: { type: "node", entry_point: "server/index.mjs", mcp_config: { command: "node", args: ["${__dirname}/server/index.mjs"] } }`, `compatibility.platforms: ["darwin","win32","linux"]`, and `tools` listing the eight tools. No `user_config` (the server finds the app itself).
+- Produces: `stageMcpb(outDir: string): void` exported from `scripts/build-mcpb.mjs`; it copies `mcp/server.mjs` to `<outDir>/server/index.mjs` and `mcpb/manifest.json` to `<outDir>/manifest.json`. The script then runs `npx @anthropic-ai/mcpb pack <outDir> release/vaulted-money.mcpb`. No second copy of the server is committed.
 
-- [ ] **Step 1: Write failing test**: `stageMcpb` into a temp dir produces `manifest.json` and `server/index.js` identical to `mcp/server.mjs`; the manifest's `entry_point` exists in the staged folder; the manifest lists exactly the tool names `createServer(...).tools` exposes.
+- [ ] **Step 1: Write failing test**: `stageMcpb` into a temp dir produces `manifest.json` and `server/index.mjs` identical to `mcp/server.mjs`; the manifest's `entry_point` exists in the staged folder; the manifest lists exactly the tool names `createServer(...).tools` exposes.
 - [ ] **Step 2: Run** the test → FAIL.
 - [ ] **Step 3: Implement** manifest, `stageMcpb` and the pack command.
 - [ ] **Step 4: Run** the test → PASS; run `pnpm mcpb:pack` and `npx @anthropic-ai/mcpb validate mcpb/manifest.json` → valid, and `release/vaulted-money.mcpb` exists.
