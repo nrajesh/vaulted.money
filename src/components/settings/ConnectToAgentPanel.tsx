@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { ApiServerStatus } from "@/utils/electron";
+import { showError } from "@/utils/toast";
 
 const RELEASES_URL = "https://github.com/nrajesh/vaulted.money/releases/latest";
 const CLAUDE_CODE_COMMANDS =
@@ -14,7 +15,7 @@ const CLAUDE_CODE_COMMANDS =
 interface ConnectToAgentPanelProps {
   status: ApiServerStatus;
   serverPath: string;
-  onEnable: () => void;
+  onToggle: (enabled: boolean) => void;
   onDisconnect: () => void;
 }
 
@@ -28,11 +29,18 @@ type CopyTarget = "desktop" | "code" | "local";
 const ConnectToAgentPanel = ({
   status,
   serverPath,
-  onEnable,
+  onToggle,
   onDisconnect,
 }: ConnectToAgentPanelProps) => {
   const { t } = useTranslation();
   const [copied, setCopied] = React.useState<CopyTarget | null>(null);
+  const copiedTimer = React.useRef<number | null>(null);
+  React.useEffect(
+    () => () => {
+      if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+    },
+    [],
+  );
   const [confirming, setConfirming] = React.useState(false);
 
   const localModelSnippet = JSON.stringify(
@@ -46,9 +54,21 @@ const ConnectToAgentPanel = ({
   );
 
   const copy = async (target: CopyTarget, value: string) => {
-    await navigator.clipboard.writeText(value);
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      setCopied(null);
+      showError(
+        t("settings.agent.copyFailed", {
+          defaultValue: "Could not copy to the clipboard.",
+        }),
+      );
+      return;
+    }
     setCopied(target);
-    window.setTimeout(() => setCopied(null), 1500);
+    // One shared timer so a later copy is not cleared by an earlier one.
+    if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+    copiedTimer.current = window.setTimeout(() => setCopied(null), 1500);
   };
 
   const ready = status.enabled && status.running;
@@ -111,7 +131,7 @@ const ConnectToAgentPanel = ({
           id="agent-enabled"
           checked={status.enabled}
           onCheckedChange={(checked) => {
-            if (checked) onEnable();
+            onToggle(checked);
           }}
         />
       </div>

@@ -1,7 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import ConnectToAgentPanel from "./ConnectToAgentPanel";
 import type { ApiServerStatus } from "@/utils/electron";
+
+vi.mock("@/utils/toast", () => ({
+  showError: vi.fn(),
+  showSuccess: vi.fn(),
+}));
+import { showError } from "@/utils/toast";
 
 const TOKEN = "secret-token-abc123";
 const SERVER_PATH = "/Applications/Vaulted Money/mcp/server.mjs";
@@ -20,6 +32,7 @@ describe("ConnectToAgentPanel", () => {
 
   beforeEach(() => {
     writeText.mockClear();
+    vi.mocked(showError).mockClear();
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText },
       configurable: true,
@@ -29,13 +42,13 @@ describe("ConnectToAgentPanel", () => {
 
   const renderPanel = (
     status = makeStatus(),
-    handlers = { onEnable: vi.fn(), onDisconnect: vi.fn() },
+    handlers = { onToggle: vi.fn(), onDisconnect: vi.fn() },
   ) => {
     render(
       <ConnectToAgentPanel
         status={status}
         serverPath={SERVER_PATH}
-        onEnable={handlers.onEnable}
+        onToggle={handlers.onToggle}
         onDisconnect={handlers.onDisconnect}
       />,
     );
@@ -47,7 +60,7 @@ describe("ConnectToAgentPanel", () => {
       <ConnectToAgentPanel
         status={makeStatus()}
         serverPath={SERVER_PATH}
-        onEnable={vi.fn()}
+        onToggle={vi.fn()}
         onDisconnect={vi.fn()}
       />,
     );
@@ -61,10 +74,42 @@ describe("ConnectToAgentPanel", () => {
     expect(screen.getByText("Ready")).toBeInTheDocument();
   });
 
-  it("calls onEnable when the switch is turned on", () => {
-    const { onEnable } = renderPanel();
+  it("calls onToggle(true) when the switch is turned on", () => {
+    const { onToggle } = renderPanel();
     fireEvent.click(screen.getByRole("switch"));
-    expect(onEnable).toHaveBeenCalledTimes(1);
+    expect(onToggle).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it("calls onToggle(false) when the switch is turned off", () => {
+    const { onToggle } = renderPanel(makeStatus({ enabled: true }));
+    fireEvent.click(screen.getByRole("switch"));
+    expect(onToggle).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it("shows an error and no copied state when the clipboard rejects", async () => {
+    writeText.mockRejectedValueOnce(new Error("denied"));
+    renderPanel();
+    const button = screen.getByRole("button", {
+      name: "Copy Claude Code commands",
+    });
+    fireEvent.click(button);
+    await waitFor(() => expect(showError).toHaveBeenCalledTimes(1));
+    expect(button.querySelector(".lucide-check")).toBeNull();
+  });
+
+  it("leaves no timer behind after unmount", async () => {
+    vi.useFakeTimers();
+    try {
+      renderPanel();
+      fireEvent.click(
+        screen.getByRole("button", { name: "Copy Claude Code commands" }),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+      cleanup();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("copies exact snippets and never the token", async () => {

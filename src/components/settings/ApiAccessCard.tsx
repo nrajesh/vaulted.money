@@ -85,6 +85,14 @@ const ApiAccessCard = () => {
     else showSuccess(successMessage);
   };
 
+  const toggleEnabled = (enabled: boolean) =>
+    apply(
+      { enabled },
+      enabled
+        ? t("settings.api.started", { defaultValue: "API enabled" })
+        : t("settings.api.stopped", { defaultValue: "API disabled" }),
+    );
+
   const copy = async (what: "token" | "url", value: string) => {
     await navigator.clipboard.writeText(value);
     setCopied(what);
@@ -123,14 +131,7 @@ const ApiAccessCard = () => {
           <Switch
             id="api-enabled"
             checked={status.enabled}
-            onCheckedChange={(enabled) =>
-              apply(
-                { enabled },
-                enabled
-                  ? t("settings.api.started", { defaultValue: "API enabled" })
-                  : t("settings.api.stopped", { defaultValue: "API disabled" }),
-              )
-            }
+            onCheckedChange={toggleEnabled}
           />
         </div>
 
@@ -258,12 +259,7 @@ const ApiAccessCard = () => {
           <ConnectToAgentPanel
             status={status}
             serverPath={serverPath}
-            onEnable={() =>
-              apply(
-                { enabled: true },
-                t("settings.api.started", { defaultValue: "API enabled" }),
-              )
-            }
+            onToggle={toggleEnabled}
             onDisconnect={regenerate}
           />
         )}
