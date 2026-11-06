@@ -9,7 +9,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -97,6 +97,7 @@ const ConnectToAgentPanel = ({
   const [confirming, setConfirming] = React.useState(false);
   const [choice, setChoice] = React.useState<Choice>("claude-app");
   const SubHeading = headingLevel === 2 ? "h3" : "h4";
+  const RouteHeading = headingLevel === 2 ? "h4" : "h5";
 
   const localModelSnippet = JSON.stringify(
     {
@@ -436,11 +437,11 @@ const ConnectToAgentPanel = ({
 
           <TabsContent value="claude-code" className="space-y-4">
             <div className="space-y-2">
-              <h5 className="text-sm font-medium">
+              <RouteHeading className="text-sm font-medium">
                 {t("settings.agent.routeApp", {
                   defaultValue: "In the Claude app",
                 })}
-              </h5>
+              </RouteHeading>
               <p className="text-xs text-muted-foreground">
                 {t("settings.agent.routeAppNote", {
                   defaultValue: "No commands needed.",
@@ -491,11 +492,11 @@ const ConnectToAgentPanel = ({
               </ol>
             </div>
             <div className="space-y-2">
-              <h5 className="text-sm font-medium">
+              <RouteHeading className="text-sm font-medium">
                 {t("settings.agent.routeTerminal", {
                   defaultValue: "In a terminal",
                 })}
-              </h5>
+              </RouteHeading>
               <p className="text-xs text-muted-foreground">
                 {t("settings.agent.codeNode", {
                   defaultValue: "Needs Node 18 or newer.",
@@ -572,9 +573,9 @@ const ConnectToAgentPanel = ({
       </div>
 
       <Alert>
-        <AlertTitle>
+        <SubHeading className="mb-1 font-medium leading-none tracking-tight">
           {t("settings.agent.privacyTitle", { defaultValue: "Privacy" })}
-        </AlertTitle>
+        </SubHeading>
         <AlertDescription className="space-y-1">
           <p>
             {t("settings.agent.privacyCloud", {

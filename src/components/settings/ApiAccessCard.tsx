@@ -109,7 +109,7 @@ const ApiAccessCard = () => {
         <ThemedCardDescription>
           {t("settings.api.description", {
             defaultValue:
-              "Let scripts and tools on this computer manage your data over HTTP. Nothing leaves your device: the API only listens on 127.0.0.1.",
+              "Let scripts and tools on this computer manage your data over HTTP. The API only listens on 127.0.0.1, so only apps on this computer can reach it. If you connect an AI agent, what it reads is sent to that agent's provider.",
           })}
         </ThemedCardDescription>
       </ThemedCardHeader>

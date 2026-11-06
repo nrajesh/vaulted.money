@@ -208,7 +208,7 @@ describe("ConnectToAgentPanel", () => {
     renderPanel();
     selectChoice(/Claude Code/);
     const status = screen.getByRole("status");
-    expect(status).toHaveTextContent("");
+    expect(writeText).not.toHaveBeenCalled();
     fireEvent.click(
       screen.getByRole("button", { name: "Copy repository name" }),
     );
@@ -218,9 +218,35 @@ describe("ConnectToAgentPanel", () => {
     await waitFor(() => expect(status).toHaveTextContent("Copied"));
   });
 
+  it("keeps heading levels in order at both heading levels", () => {
+    const props = {
+      status: makeStatus(),
+      serverPath: SERVER_PATH,
+      onToggle: vi.fn(),
+      onDisconnect: vi.fn(),
+    };
+    const levels = () => {
+      selectChoice(/Claude Code/);
+      return screen
+        .getAllByRole("heading")
+        .map((h) => Number(h.tagName.slice(1)));
+    };
+    const { unmount } = render(<ConnectToAgentPanel {...props} />);
+    expect(levels()).toEqual([3, 4, 5, 5, 4, 4]);
+    unmount();
+    render(<ConnectToAgentPanel {...props} headingLevel={2} />);
+    expect(levels()).toEqual([2, 3, 4, 4, 3, 3]);
+  });
+
   it("keeps the privacy claims accurate", () => {
     renderPanel();
     expect(screen.getByText("Keeps data on your device")).toBeInTheDocument();
+    selectChoice(/private model/);
+    expect(
+      screen.getByText(
+        "Your questions and data stay on this computer when the model runs here.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/Nothing leaves/)).toBeNull();
     expect(screen.queryByText("Most private")).toBeNull();
   });
