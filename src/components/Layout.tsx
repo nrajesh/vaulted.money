@@ -38,6 +38,7 @@ import {
   HelpCircle,
   LogOut,
   MoreHorizontal,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -338,7 +339,7 @@ type MobileHeaderActionsMenuProps = {
   isHomepageMobilePreview?: boolean;
 };
 
-const MobileHeaderActionsMenu = ({
+export const MobileHeaderActionsMenu = ({
   displayName,
   hasTourForCurrentRoute,
   logout,
@@ -389,6 +390,14 @@ const MobileHeaderActionsMenu = ({
             </Link>
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem asChild className={actionItemClassName}>
+          <Link to="/connect-agent">
+            <Bot className="h-5 w-5" />
+            {t("layout.nav.connectAgent", {
+              defaultValue: "Connect an AI agent",
+            })}
+          </Link>
+        </DropdownMenuItem>
         {hasTourForCurrentRoute && (
           <DropdownMenuItem onClick={startTour} className={actionItemClassName}>
             <HelpCircle className="h-5 w-5" />
