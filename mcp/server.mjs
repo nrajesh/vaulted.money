@@ -368,16 +368,12 @@ export function appConfigCandidates(env = process.env, platform = process.platfo
 }
 
 /**
- * Find the token and base URL: VM_TOKEN, then the token file, then the desktop
- * app's own api-config.json. Re-read per request so a new token or port needs no restart.
+ * Find the token and base URL: VM_TOKEN, then the desktop app's own
+ * api-config.json, then the token file as a fallback. Re-read per request so a new token or port needs no restart.
  */
 export function loadConnection(env = process.env, platform = process.platform, home = homedir()) {
   const baseUrl = env.VM_BASE_URL ?? DEFAULT_BASE_URL;
   if (env.VM_TOKEN) return { token: env.VM_TOKEN.trim(), baseUrl };
-  try {
-    const fromFile = readFileSync(env.VM_TOKEN_FILE ?? join(home, ".vaulted-token"), "utf8").trim();
-    if (fromFile) return { token: fromFile, baseUrl };
-  } catch { /* fall through to the app's config */ }
   const candidates = env.VM_CONFIG_FILE ? [env.VM_CONFIG_FILE] : appConfigCandidates(env, platform, home);
   for (const file of candidates) {
     let config;
@@ -388,6 +384,10 @@ export function loadConnection(env = process.env, platform = process.platform, h
       return { token: config.token, baseUrl: env.VM_BASE_URL ?? (Number.isInteger(config.port) ? `http://127.0.0.1:${config.port}/api/v1` : DEFAULT_BASE_URL) };
     }
   }
+  try {
+    const fromFile = readFileSync(env.VM_TOKEN_FILE ?? join(home, ".vaulted-token"), "utf8").trim();
+    if (fromFile) return { token: fromFile, baseUrl };
+  } catch { /* no token file either */ }
   throw new Error("Could not find Vaulted Money. Open the desktop app once, or set VM_TOKEN.");
 }
 
@@ -397,8 +397,8 @@ export function loadToken(env = process.env) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  // The token is re-read on every request, so regenerating it in Settings only
-  // needs the new value saved to the token file (no restart).
+  // The connection is re-read on every request, so a regenerated token or a
+  // changed port in the app's config is picked up without a restart.
   const server = createServer({ getBaseUrl: () => loadConnection().baseUrl, getToken: () => loadConnection().token });
   let buffer = "";
   process.stdin.setEncoding("utf8");

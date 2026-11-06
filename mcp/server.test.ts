@@ -213,13 +213,33 @@ describe("MCP connection discovery", () => {
     });
   });
 
-  it("prefers the token file over the config", () => {
+  it("prefers the config over a token file with a different token and port", () => {
     const VM_CONFIG_FILE = config();
     const VM_TOKEN_FILE = write("tok", "file-token\n");
     expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE }, "linux", dir)).toEqual({
+      token: "cfg-token",
+      baseUrl: "http://127.0.0.1:51234/api/v1",
+    });
+  });
+
+  it("falls back to the token file when no config exists", () => {
+    const VM_TOKEN_FILE = write("tok", "file-token\n");
+    expect(loadConnection({ VM_CONFIG_FILE: join(dir, "nope.json"), VM_TOKEN_FILE }, "linux", dir)).toEqual({
       token: "file-token",
       baseUrl: "http://127.0.0.1:47821/api/v1",
     });
+  });
+
+  it("prefers VM_TOKEN over both the config and the token file", () => {
+    const VM_CONFIG_FILE = config();
+    const VM_TOKEN_FILE = write("tok", "file-token");
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE, VM_TOKEN: "env-token" }, "linux", dir).token).toBe("env-token");
+  });
+
+  it("says the Local API is off even when a token file exists", () => {
+    const VM_CONFIG_FILE = config({ enabled: false });
+    const VM_TOKEN_FILE = write("tok", "file-token");
+    expect(() => loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE }, "linux", dir)).toThrow("Local API is off");
   });
 
   it("says the Local API is off when the config is disabled", () => {
