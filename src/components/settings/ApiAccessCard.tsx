@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import ConnectToAgentPanel from "@/components/settings/ConnectToAgentPanel";
 import { getElectronAPI, type ApiServerStatus } from "@/utils/electron";
 import { showError, showSuccess } from "@/utils/toast";
 
@@ -32,12 +33,20 @@ const ApiAccessCard = () => {
   const [portInput, setPortInput] = React.useState("");
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState<"token" | "url" | null>(null);
+  // Null when the desktop build predates getConnectInfo: the panel is hidden.
+  const [serverPath, setServerPath] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     electron?.getApiConfig().then((next) => {
       setStatus(next);
       setPortInput(String(next.port));
     });
+    if (typeof electron?.getConnectInfo === "function") {
+      electron
+        .getConnectInfo()
+        .then((info) => setServerPath(info.serverPath))
+        .catch(() => setServerPath(null));
+    }
   }, [electron]);
 
   if (!electron) {
@@ -243,6 +252,20 @@ const ApiAccessCard = () => {
               </AlertDescription>
             </Alert>
           </>
+        )}
+
+        {serverPath && (
+          <ConnectToAgentPanel
+            status={status}
+            serverPath={serverPath}
+            onEnable={() =>
+              apply(
+                { enabled: true },
+                t("settings.api.started", { defaultValue: "API enabled" }),
+              )
+            }
+            onDisconnect={regenerate}
+          />
         )}
       </ThemedCardContent>
     </ThemedCard>

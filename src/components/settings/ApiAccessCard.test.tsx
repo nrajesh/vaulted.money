@@ -23,3 +23,38 @@ describe("ApiAccessCard", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("ApiAccessCard connect panel", () => {
+  const status = {
+    enabled: false,
+    port: 4317,
+    token: "tok",
+    running: false,
+    url: "http://127.0.0.1:4317",
+  };
+  const bridge = (extra: object) => ({
+    getApiConfig: () => Promise.resolve(status),
+    setApiConfig: () => Promise.resolve(status),
+    regenerateApiToken: () => Promise.resolve(status),
+    ...extra,
+  });
+
+  afterEach(() => {
+    delete win.electron;
+  });
+
+  it("shows the panel when getConnectInfo exists", async () => {
+    win.electron = bridge({
+      getConnectInfo: () => Promise.resolve({ serverPath: "/x/server.mjs" }),
+    });
+    render(<ApiAccessCard />);
+    expect(await screen.findByText("Connect to agent")).toBeInTheDocument();
+  });
+
+  it("hides the panel on a build without getConnectInfo", async () => {
+    win.electron = bridge({});
+    render(<ApiAccessCard />);
+    await screen.findByText("Enable local API");
+    expect(screen.queryByText("Connect to agent")).not.toBeInTheDocument();
+  });
+});
