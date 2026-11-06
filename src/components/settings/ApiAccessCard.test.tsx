@@ -103,4 +103,14 @@ describe("ApiAccessCard", () => {
     fireEvent.click(screen.getByLabelText("Generate new token"));
     await waitFor(() => expect(regenerateApiToken).toHaveBeenCalledTimes(1));
   });
+
+  it("shows a plain error when the status cannot be read", async () => {
+    win.electron = bridge({
+      getApiConfig: () => Promise.reject(new Error("boom")),
+    });
+    renderCard();
+    expect(
+      await screen.findByText(/Could not read the Local API status/i),
+    ).toBeInTheDocument();
+  });
 });

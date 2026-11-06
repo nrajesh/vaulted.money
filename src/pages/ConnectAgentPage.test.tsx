@@ -103,4 +103,49 @@ describe("ConnectAgentPage", () => {
       setApiConfig.mock.invocationCallOrder[0],
     );
   });
+
+  it("never shows the outdated message while connection details load", async () => {
+    let resolveInfo: (v: { serverPath: string }) => void = () => {};
+    win.electron = bridge({
+      getConnectInfo: () =>
+        new Promise((resolve) => {
+          resolveInfo = resolve;
+        }),
+    });
+    renderPage();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.queryByText(/cannot connect agents yet/i)).toBeNull();
+    expect(screen.queryByLabelText("Allow agents to connect")).toBeNull();
+    resolveInfo({ serverPath: "/x/server.mjs" });
+    expect(
+      await screen.findByLabelText("Allow agents to connect"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/cannot connect agents yet/i)).toBeNull();
+  });
+
+  it("shows a plain error when getConnectInfo rejects", async () => {
+    win.electron = bridge({
+      getConnectInfo: () => Promise.reject(new Error("boom")),
+    });
+    renderPage();
+    expect(
+      await screen.findByText(/Could not read the connection details/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/cannot connect agents yet/i)).toBeNull();
+  });
+
+  it("shows a plain error when getApiConfig rejects", async () => {
+    win.electron = bridge({
+      getApiConfig: () => Promise.reject(new Error("boom")),
+    });
+    renderPage();
+    expect(
+      await screen.findByText(/Could not read the Local API status/i),
+    ).toBeInTheDocument();
+  });
+
+  it("states honestly what is sent to the AI provider", () => {
+    renderPage();
+    expect(screen.getByText(/sent to its AI provider/i)).toBeInTheDocument();
+  });
 });

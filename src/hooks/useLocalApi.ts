@@ -25,16 +25,24 @@ export const useLocalApi = () => {
   // Null when the desktop build predates getConnectInfo.
   const [serverPath, setServerPath] = React.useState<string | null>(null);
 
+  const connectSupported = typeof electron?.getConnectInfo === "function";
+  // Set when reading the status or the connection details fails.
+  const [loadFailed, setLoadFailed] = React.useState(false);
+  const [connectFailed, setConnectFailed] = React.useState(false);
+
   React.useEffect(() => {
-    electron?.getApiConfig().then((next) => {
-      setStatus(next);
-      setPortInput(String(next.port));
-    });
+    electron
+      ?.getApiConfig()
+      .then((next) => {
+        setStatus(next);
+        setPortInput(String(next.port));
+      })
+      .catch(() => setLoadFailed(true));
     if (typeof electron?.getConnectInfo === "function") {
       electron
         .getConnectInfo()
         .then((info) => setServerPath(info.serverPath))
-        .catch(() => setServerPath(null));
+        .catch(() => setConnectFailed(true));
     }
   }, [electron]);
 
@@ -93,6 +101,9 @@ export const useLocalApi = () => {
     portInput,
     setPortInput,
     serverPath,
+    connectSupported,
+    loadFailed,
+    connectFailed,
     apply,
     toggleEnabled,
     regenerate,

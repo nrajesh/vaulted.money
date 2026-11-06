@@ -183,4 +183,21 @@ describe("ConnectToAgentPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onDisconnect).not.toHaveBeenCalled();
   });
+
+  it("renders its title at the requested heading level", () => {
+    const props = {
+      status: makeStatus(),
+      serverPath: SERVER_PATH,
+      onToggle: vi.fn(),
+      onDisconnect: vi.fn(),
+    };
+    const { rerender } = render(<ConnectToAgentPanel {...props} />);
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Connect to agent" }),
+    ).toBeInTheDocument();
+    rerender(<ConnectToAgentPanel {...props} headingLevel={2} />);
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Connect to agent" }),
+    ).toBeInTheDocument();
+  });
 });

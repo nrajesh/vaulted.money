@@ -15,6 +15,9 @@ const ConnectAgentPage = () => {
     supported,
     status,
     serverPath,
+    connectSupported,
+    loadFailed,
+    connectFailed,
     toggleEnabled,
     disconnectEverything,
   } = useLocalApi();
@@ -34,16 +37,21 @@ const ConnectAgentPage = () => {
             })}
       </p>
     );
-  } else if (status && serverPath) {
+  } else if (loadFailed || connectFailed) {
     body = (
-      <ConnectToAgentPanel
-        status={status}
-        serverPath={serverPath}
-        onToggle={toggleEnabled}
-        onDisconnect={disconnectEverything}
-      />
+      <p role="alert" className="text-sm text-destructive">
+        {loadFailed
+          ? t("settings.api.loadFailed", {
+              defaultValue:
+                "Could not read the Local API status. Restart the app and try again.",
+            })
+          : t("settings.agent.connectFailed", {
+              defaultValue:
+                "Could not read the connection details. Restart the app and try again.",
+            })}
+      </p>
     );
-  } else if (status) {
+  } else if (!connectSupported) {
     body = (
       <p className="text-sm text-muted-foreground">
         {t("settings.agent.outdatedDesktop", {
@@ -51,6 +59,16 @@ const ConnectAgentPage = () => {
             "This desktop build cannot connect agents yet. Update or rebuild the desktop app to use it.",
         })}
       </p>
+    );
+  } else if (status && serverPath) {
+    body = (
+      <ConnectToAgentPanel
+        status={status}
+        serverPath={serverPath}
+        headingLevel={2}
+        onToggle={toggleEnabled}
+        onDisconnect={disconnectEverything}
+      />
     );
   }
 
@@ -63,7 +81,7 @@ const ConnectAgentPage = () => {
         <p className="app-page-subtitle">
           {t("settings.agent.pageIntro", {
             defaultValue:
-              "Let an AI agent such as Claude read and update your money manager. Everything stays on this computer until you choose an agent that runs in the cloud.",
+              "Let an AI agent such as Claude read and update your money manager. The connection to the app stays on this computer. What an agent reads is sent to its AI provider (Anthropic, for Claude). A local model keeps everything on this device.",
           })}
         </p>
         <Link

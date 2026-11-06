@@ -44,6 +44,7 @@ const ApiAccessCard = () => {
     apply,
     toggleEnabled,
     regenerate,
+    loadFailed,
   } = useLocalApi();
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState<"token" | "url" | null>(null);
@@ -67,6 +68,24 @@ const ApiAccessCard = () => {
                   defaultValue:
                     "The Local API is available in the desktop app only. The web and mobile apps cannot host a local server.",
                 })}
+          </ThemedCardDescription>
+        </ThemedCardHeader>
+      </ThemedCard>
+    );
+  }
+  if (loadFailed) {
+    return (
+      <ThemedCard className="md:col-span-2 lg:col-span-3">
+        <ThemedCardHeader>
+          <ThemedCardTitle className="flex items-center gap-2">
+            <Plug className="h-5 w-5 text-muted-foreground" />
+            {t("settings.api.title", { defaultValue: "Local API" })}
+          </ThemedCardTitle>
+          <ThemedCardDescription role="alert">
+            {t("settings.api.loadFailed", {
+              defaultValue:
+                "Could not read the Local API status. Restart the app and try again.",
+            })}
           </ThemedCardDescription>
         </ThemedCardHeader>
       </ThemedCard>
@@ -123,12 +142,7 @@ const ApiAccessCard = () => {
         {status.enabled && (
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <CollapsibleTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="px-2"
-                aria-expanded={advancedOpen}
-              >
+              <Button type="button" variant="ghost" className="px-2">
                 <ChevronRight
                   className={`mr-1 h-4 w-4 transition-transform ${advancedOpen ? "rotate-90" : ""}`}
                 />

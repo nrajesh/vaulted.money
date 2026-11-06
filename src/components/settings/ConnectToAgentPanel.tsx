@@ -15,6 +15,8 @@ const CLAUDE_CODE_COMMANDS =
 interface ConnectToAgentPanelProps {
   status: ApiServerStatus;
   serverPath: string;
+  /** Heading level of the panel title; use 2 when the page has an h1. */
+  headingLevel?: 2 | 3;
   onToggle: (enabled: boolean) => void;
   onDisconnect: () => void;
 }
@@ -29,6 +31,7 @@ type CopyTarget = "desktop" | "code" | "local";
 const ConnectToAgentPanel = ({
   status,
   serverPath,
+  headingLevel = 3,
   onToggle,
   onDisconnect,
 }: ConnectToAgentPanelProps) => {
@@ -41,6 +44,7 @@ const ConnectToAgentPanel = ({
     },
     [],
   );
+  const Heading = `h${headingLevel}` as const;
   const [confirming, setConfirming] = React.useState(false);
 
   const localModelSnippet = JSON.stringify(
@@ -95,13 +99,13 @@ const ConnectToAgentPanel = ({
       className="space-y-4 rounded-md border p-4"
     >
       <div className="flex items-center justify-between gap-4">
-        <h3
+        <Heading
           id="connect-agent-title"
           className="flex items-center gap-2 text-base font-semibold"
         >
           <Bot className="h-5 w-5 text-muted-foreground" />
           {t("settings.agent.title", { defaultValue: "Connect to agent" })}
-        </h3>
+        </Heading>
         <span
           className={
             ready
