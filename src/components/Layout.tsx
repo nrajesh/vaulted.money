@@ -347,6 +347,34 @@ type MobileHeaderActionsMenuProps = {
 const hasAgentBridge = () =>
   typeof getElectronAPI()?.getApiConfig === "function";
 
+/**
+ * Sidebar entry for the agent page, shown only with the desktop bridge.
+ * Exported for tests. Must be rendered inside SidebarProvider.
+ */
+export const ConnectAgentSidebarItem = ({
+  isActive,
+  t,
+}: {
+  isActive: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) => {
+  if (!hasAgentBridge()) return null;
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive}>
+        <Link to="/connect-agent">
+          <Bot />
+          <span>
+            {t("layout.nav.connectAgentShort", {
+              defaultValue: "Connect agent",
+            })}
+          </span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+};
+
 /** Desktop header icon button to /connect-agent. Exported for tests. */
 export const ConnectAgentHeaderButton = ({
   t,
@@ -703,6 +731,10 @@ const Layout = () => {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <ConnectAgentSidebarItem
+                isActive={location.pathname === "/connect-agent"}
+                t={t}
+              />
             </SidebarMenu>
           </SidebarGroup>
           <SidebarGroup>
