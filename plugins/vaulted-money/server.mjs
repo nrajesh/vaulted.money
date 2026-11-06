@@ -19,7 +19,7 @@
  *
  * With none of these set, the token and port come from the app's api-config.json.
  */
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -104,9 +104,24 @@ function safeColumnList(header) {
 }
 const DELIMITERS = [",", ";", "\t", "|"];
 const CSV_EXTENSIONS = [".csv", ".tsv", ".txt"];
-/** Resolve symlinks when the file exists; otherwise just make the path absolute. */
+/** Resolve symlinks and the true on-disk spelling when the file exists; otherwise just make the path absolute. */
 function realOrResolved(p) {
-  try { return realpathSync(p); } catch { return resolve(p); }
+  try { return realpathSync.native(p); } catch { return resolve(p); }
+}
+function fileIdentity(p) {
+  try { const s = statSync(p); return `${s.dev}:${s.ino}`; } catch { return undefined; }
+}
+/**
+ * True when `path` is one of the protected files. Compares the real path (case
+ * folded on macOS and Windows, whose filesystems ignore case) and, as a second
+ * check, the file identity (device + inode), which also catches hard links.
+ */
+function isProtectedFile(path, files, platform) {
+  const fold = (p) => (platform === "darwin" || platform === "win32" ? p.toLowerCase() : p);
+  const target = fold(realOrResolved(path));
+  if (files.some((f) => fold(f) === target)) return true;
+  const id = fileIdentity(path);
+  return id !== undefined && files.some((f) => fileIdentity(f) === id);
 }
 /** Files import_csv must never read: the app's own config files and the token file. */
 function protectedFiles(env, platform, home) {
@@ -344,7 +359,7 @@ export function createServer({ baseUrl, getBaseUrl, token, getToken, now = () =>
       annotations: { destructiveHint: false, openWorldHint: false },
       async run(a) {
         if (a.delimiter !== undefined && !DELIMITERS.includes(a.delimiter)) return fail("The delimiter must be one of: comma, semicolon, tab or | (pipe).");
-        if (typeof a.path === "string" && protectedFiles(env, platform, home).includes(realOrResolved(a.path))) return fail("I can't import that file: it is not a bank statement. Pick your bank's CSV export instead.");
+        if (typeof a.path === "string" && isProtectedFile(a.path, protectedFiles(env, platform, home), platform)) return fail("I can't import that file: it is not a bank statement. Pick your bank's CSV export instead.");
         if (typeof a.path !== "string" || !CSV_EXTENSIONS.includes(extname(a.path).toLowerCase())) return fail("I can only import bank statement files ending in .csv, .tsv or .txt.");
         const l = await resolveLedger(a.ledger);
         let input;

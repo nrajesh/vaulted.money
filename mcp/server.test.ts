@@ -6,7 +6,7 @@ import { handleApiRequest } from "@/api/handleRequest";
 import type { ApiRequest } from "@/api/http";
 // @ts-expect-error plain ESM module without types
 import { appConfigCandidates, createServer, loadConnection, normalizeBankCsv, parseCsv, resolvePeriod } from "./server.mjs";
-import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, linkSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -151,6 +151,44 @@ describe("MCP server tools", () => {
       expect((await go("/tmp/notes.json")).text).toMatch(/\.csv/);
       files["/tmp/UPPER.CSV"] = "Date,Description,Amount\n2026-09-05,Cafe,-4\n";
       expect((await go("/tmp/UPPER.CSV")).isError).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a protected file reached by case variant, hard link or symlink", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "vm-guard-"));
+    try {
+      const fakeTokenFile = join(dir, "token.txt");
+      writeFileSync(fakeTokenFile, "FAKE-TOKEN");
+      const guarded = createServer({
+        baseUrl: base,
+        token: TOKEN,
+        env: { VM_CONFIG_FILE: join(dir, "none.json"), VM_TOKEN_FILE: fakeTokenFile },
+        readFile: (p: string) => readFileSync(p, "utf8"),
+      });
+      const go = async (path: string) => {
+        const r = await guarded.call("import_csv", { path, account: "Checking" });
+        return { isError: !!r.isError, text: r.content[0].text as string };
+      };
+      const variant = join(dir, "Token.txt");
+      if (existsSync(variant)) {
+        // Case-insensitive filesystem: the variant is the same file.
+        const r = await go(variant);
+        expect(r.isError).toBe(true);
+        expect(r.text).not.toContain("FAKE-TOKEN");
+      }
+      const hard = join(dir, "hard.txt");
+      linkSync(fakeTokenFile, hard);
+      const h = await go(hard);
+      expect(h.isError).toBe(true);
+      expect(h.text).not.toContain("FAKE-TOKEN");
+      const soft = join(dir, "soft.txt");
+      symlinkSync(fakeTokenFile, soft);
+      expect((await go(soft)).isError).toBe(true);
+      const normal = join(dir, "bank.csv");
+      writeFileSync(normal, "Date,Description,Amount\n2026-09-05,Cafe,-4\n");
+      expect((await go(normal)).isError).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
