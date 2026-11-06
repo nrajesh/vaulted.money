@@ -424,6 +424,12 @@ export const MobileHeaderActionsMenu = ({
             </Link>
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem asChild className={actionItemClassName}>
+          <Link to="/settings">
+            <BookOpen className="h-5 w-5" />
+            {t("layout.nav.settings", { defaultValue: "Settings" })}
+          </Link>
+        </DropdownMenuItem>
         {hasAgentBridge() && (
           <DropdownMenuItem asChild className={actionItemClassName}>
             <Link to="/connect-agent">

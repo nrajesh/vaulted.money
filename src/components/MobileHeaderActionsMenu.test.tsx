@@ -40,6 +40,7 @@ describe("MobileHeaderActionsMenu", () => {
     const items = screen.getAllByRole("menuitem").map((i) => i.textContent);
     expect(items).toEqual([
       "Home",
+      "Settings",
       "Connect an AI agent",
       "Dark mode",
       "Log out",
@@ -64,9 +65,16 @@ describe("agent entry points without the desktop bridge", () => {
     delete win.electron;
   });
 
-  it("hides the menu item on web and mobile", async () => {
+  it("hides the menu item on web and mobile, keeping Settings", async () => {
     renderMenu();
     await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(
+      screen.getAllByRole("menuitem").map((item) => item.textContent),
+    ).toEqual(["Home", "Settings", "Dark mode", "Log out"]);
+    expect(screen.getByRole("menuitem", { name: "Settings" })).toHaveAttribute(
+      "href",
+      "/settings",
+    );
     expect(
       screen.queryByRole("menuitem", { name: /Connect an AI agent/ }),
     ).toBeNull();
