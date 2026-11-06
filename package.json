@@ -130,6 +130,12 @@
       "dist/**/*",
       "dist-electron/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "mcp/server.mjs",
+        "to": "mcp/server.mjs"
+      }
+    ],
     "mac": {
       "target": "dmg"
     },

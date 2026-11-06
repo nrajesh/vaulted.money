@@ -30,8 +30,15 @@ describe("electron preload", () => {
       "setApiConfig",
       "regenerateApiToken",
       "joinPath",
+      "getConnectInfo",
     ]) {
       expect(source).toContain(name);
     }
+  });
+
+  it("asks main for the MCP server path without passing arguments", () => {
+    expect(source).toMatch(
+      /getConnectInfo:\s*\(\)\s*=>\s*ipcRenderer\.invoke\("api:get-connect-info"\)/,
+    );
   });
 });
