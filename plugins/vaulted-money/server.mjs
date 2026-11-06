@@ -19,9 +19,9 @@
  *
  * With none of these set, the token and port come from the app's api-config.json.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { extname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== ""));
@@ -97,6 +97,23 @@ function toAppDate(raw) {
   if (m) return `${m[1].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[3]}`;
   return s;
 }
+/** Column names for an error message: one line, each name capped, at most 20 names. */
+function safeColumnList(header) {
+  const names = header.slice(0, 20).map((h) => h.replace(/\s+/g, " ").trim().slice(0, 40));
+  return names.join(", ") + (header.length > 20 ? ", ..." : "");
+}
+const DELIMITERS = [",", ";", "\t", "|"];
+const CSV_EXTENSIONS = [".csv", ".tsv", ".txt"];
+/** Resolve symlinks when the file exists; otherwise just make the path absolute. */
+function realOrResolved(p) {
+  try { return realpathSync(p); } catch { return resolve(p); }
+}
+/** Files import_csv must never read: the app's own config files and the token file. */
+function protectedFiles(env, platform, home) {
+  const files = [...appConfigCandidates(env, platform, home), ...(env.VM_CONFIG_FILE ? [env.VM_CONFIG_FILE] : [])];
+  files.push(env.VM_TOKEN_FILE ?? join(home, ".vaulted-token"));
+  return files.map(realOrResolved);
+}
 /**
  * Reshape a bank CSV into the app's import format (the one the Import CSV
  * button and the API use). Returns { csv, rows, mapped, problems }.
@@ -113,7 +130,7 @@ export function normalizeBankCsv(input, { account, currency, delimiter } = {}) {
     if (at >= 0) index[target] = at;
   }
   const problems = [];
-  for (const need of ["Date", "Vendor", "Amount"]) if (index[need] === undefined) problems.push(`No column found for ${need}. Columns in the file: ${header.join(", ")}`);
+  for (const need of ["Date", "Vendor", "Amount"]) if (index[need] === undefined) problems.push(`No column found for ${need}. Columns in the file: ${safeColumnList(header)}`);
   if (index.Account === undefined && !account) problems.push("The file has no account column: pass `account`.");
   if (problems.length) return { problems };
   const out = ["Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date"];
@@ -135,12 +152,18 @@ function describeBody(schema) {
   return Object.fromEntries(Object.entries(props).map(([k, v]) => [k + (required.has(k) ? "*" : ""), v.enum ? v.enum.join("|") : Array.isArray(v.type) ? v.type.join("|") : (v.type ?? "any")]));
 }
 
-export function createServer({ baseUrl, getBaseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8") }) {
+export function createServer({ baseUrl, getBaseUrl, token, getToken, now = () => new Date(), fetchImpl = fetch, readFile = (p) => readFileSync(p, "utf8"), env = process.env, platform = process.platform, home = homedir() }) {
   let ledgers, spec;
   const api = async (method, path, { query, body } = {}) => {
     const url = new URL((getBaseUrl ? getBaseUrl() : baseUrl).replace(/\/$/, "") + path);
     for (const [k, v] of Object.entries(clean(query ?? {}))) url.searchParams.set(k, String(v));
-    const res = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${getToken ? getToken() : token}`, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    let res;
+    try {
+      res = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${getToken ? getToken() : token}`, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    } catch {
+      // Connection refused or reset: the desktop app is not running.
+      throw new Error("Vaulted Money is not running. Open the desktop app (it can stay in the tray) and try again.");
+    }
     const raw = await res.text();
     let json;
     try { json = raw ? JSON.parse(raw) : null; } catch { json = undefined; }
@@ -317,9 +340,12 @@ export function createServer({ baseUrl, getBaseUrl, token, getToken, now = () =>
     {
       name: "import_csv",
       description: "Import a bank/statement CSV from a file on this computer. Columns are mapped automatically (date, description/payee, amount, ...). The default is a PREVIEW (dry_run true); repeat with dry_run false to import. The file's contents never pass through the chat.",
-      inputSchema: { type: "object", properties: { ...ledgerProp, path: { type: "string", description: "Absolute path to the .csv file" }, account: { type: "string", description: "Account name, if the file has no account column" }, currency: { type: "string" }, delimiter: { type: "string" }, dry_run: { type: "boolean", description: "Default true" } }, required: ["path"] },
+      inputSchema: { type: "object", properties: { ...ledgerProp, path: { type: "string", description: "Absolute path to the .csv file" }, account: { type: "string", description: "Account name, if the file has no account column" }, currency: { type: "string" }, delimiter: { type: "string", enum: DELIMITERS, description: "Optional: , ; tab or |. Detected automatically if omitted." }, dry_run: { type: "boolean", description: "Default true" } }, required: ["path"] },
       annotations: { destructiveHint: false, openWorldHint: false },
       async run(a) {
+        if (a.delimiter !== undefined && !DELIMITERS.includes(a.delimiter)) return fail("The delimiter must be one of: comma, semicolon, tab or | (pipe).");
+        if (typeof a.path === "string" && protectedFiles(env, platform, home).includes(realOrResolved(a.path))) return fail("I can't import that file: it is not a bank statement. Pick your bank's CSV export instead.");
+        if (typeof a.path !== "string" || !CSV_EXTENSIONS.includes(extname(a.path).toLowerCase())) return fail("I can only import bank statement files ending in .csv, .tsv or .txt.");
         const l = await resolveLedger(a.ledger);
         let input;
         try { input = readFile(a.path); } catch (e) { return fail(`Cannot read ${a.path}: ${e.message}`); }
@@ -356,7 +382,7 @@ export function createServer({ baseUrl, getBaseUrl, token, getToken, now = () =>
 }
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:47821/api/v1";
-// Electron's userData folder: the product name when packaged, the package name in dev.
+// Electron's userData folder: the app can use either name (product name or package name), so both are tried.
 const APP_FOLDER_NAMES = ["Vaulted Money", "vite_react_shadcn_ts"];
 
 /** Where the desktop app keeps api-config.json (token, port, enabled), most likely first. */

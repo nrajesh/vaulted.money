@@ -6,7 +6,7 @@ import { handleApiRequest } from "@/api/handleRequest";
 import type { ApiRequest } from "@/api/http";
 // @ts-expect-error plain ESM module without types
 import { appConfigCandidates, createServer, loadConnection, normalizeBankCsv, parseCsv, resolvePeriod } from "./server.mjs";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -111,6 +111,72 @@ describe("MCP server tools", () => {
     const bad = await run("import_csv", { path: "/tmp/odd.csv", account: "Checking" });
     expect(bad.isError).toBe(true);
     expect(bad.text).toContain("No column found for Date");
+  });
+
+  it("only accepts a known delimiter", async () => {
+    files["/tmp/bank.csv"] = "Date,Description,Amount\n2026-09-05,Cafe,-4\n";
+    const bad = await run("import_csv", { path: "/tmp/bank.csv", account: "Checking", delimiter: "\n" });
+    expect(bad.isError).toBe(true);
+    expect(bad.text).toMatch(/delimiter/i);
+    expect((await run("import_csv", { path: "/tmp/bank.csv", account: "Checking", delimiter: "," })).isError).toBe(false);
+  });
+
+  it("refuses the app's config file, the token file and other file types", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "vm-guard-"));
+    try {
+      const fakeConfig = join(dir, "api-config.json");
+      const fakeTokenFile = join(dir, "token.txt");
+      writeFileSync(fakeConfig, '{"token":"FAKE-TOKEN"}');
+      writeFileSync(fakeTokenFile, "FAKE-TOKEN");
+      const guarded = createServer({
+        baseUrl: base,
+        token: TOKEN,
+        env: { VM_CONFIG_FILE: fakeConfig, VM_TOKEN_FILE: fakeTokenFile },
+        readFile: (p: string) => files[p] ?? "Date,Description,Amount\n",
+      });
+      const go = async (path: string) => {
+        const r = await guarded.call("import_csv", { path, account: "Checking" });
+        return { isError: !!r.isError, text: r.content[0].text as string };
+      };
+      for (const path of [fakeConfig, fakeTokenFile]) {
+        const r = await go(path);
+        expect(r.isError).toBe(true);
+        expect(r.text).toMatch(/can't import|cannot import|not a bank/i);
+        expect(r.text).not.toContain("FAKE-TOKEN");
+      }
+      // A symlink to a protected file is refused too.
+      const link = join(dir, "link.csv");
+      symlinkSync(fakeConfig, link);
+      expect((await go(link)).isError).toBe(true);
+      expect((await go("/tmp/notes.json")).text).toMatch(/\.csv/);
+      files["/tmp/UPPER.CSV"] = "Date,Description,Amount\n2026-09-05,Cafe,-4\n";
+      expect((await go("/tmp/UPPER.CSV")).isError).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("echoes only a short, single-line list of column names", async () => {
+    const names = Array.from({ length: 40 }, (_, i) => `col${i}${"x".repeat(80)}`);
+    files["/tmp/wide.csv"] = names.join(",") + "\n1,2\n";
+    const r = await run("import_csv", { path: "/tmp/wide.csv", account: "Checking" });
+    expect(r.isError).toBe(true);
+    expect(r.text).not.toContain("\n");
+    expect(r.text).not.toContain("x".repeat(41));
+    expect(r.text).not.toContain("col25");
+  });
+
+  it("says plainly when the app is not running", async () => {
+    const offline = createServer({
+      baseUrl: base,
+      token: TOKEN,
+      fetchImpl: () => Promise.reject(new TypeError("fetch failed")),
+    });
+    const r = await offline.call("list_ledgers", {}).catch((e: Error) => ({ isError: true, content: [{ text: e.message }] }));
+    expect(r.isError).toBe(true);
+    expect(r.content[0].text).toBe("Vaulted Money is not running. Open the desktop app (it can stay in the tray) and try again.");
+    const viaProtocol = await offline.handle({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "list_ledgers", arguments: {} } });
+    expect(viaProtocol.result.content[0].text).toContain("is not running");
   });
 
   it("previews destructive calls and only runs them when confirmed", async () => {
