@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 export const BudgetStatusCard = () => {
@@ -16,6 +17,7 @@ export const BudgetStatusCard = () => {
     dailyTrends,
   } = useBudgetStatus();
   const { formatCurrency } = useCurrency();
+  const { t } = useTranslation();
 
   const isOverBudget = percentage > 100;
   const remaining = totalBudget - totalSpent;
@@ -38,10 +40,13 @@ export const BudgetStatusCard = () => {
           <PlusCircle className="w-6 h-6 text-indigo-500" />
         </div>
         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          No Budgets Set
+          {t("dashboard.budgetStatus.none", { defaultValue: "No Budgets Set" })}
         </h3>
         <p className="text-xs text-slate-500 mt-1 mb-4 max-w-[200px]">
-          Set up spending limits to track your financial goals.
+          {t("dashboard.budgetStatus.noneHint", {
+            defaultValue:
+              "Set up spending limits to track your financial goals.",
+          })}
         </p>
         <Link to="/budgets">
           <Button
@@ -49,7 +54,9 @@ export const BudgetStatusCard = () => {
             variant="outline"
             className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950"
           >
-            Create Budget
+            {t("dashboard.budgetStatus.create", {
+              defaultValue: "Create Budget",
+            })}
           </Button>
         </Link>
       </div>
@@ -71,16 +78,23 @@ export const BudgetStatusCard = () => {
         <div className="flex justify-between items-start mb-2">
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Budget Status
+              {t("dashboard.budgetStatus.title", {
+                defaultValue: "Budget Status",
+              })}
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Monthly spending vs limits
+              {t("dashboard.budgetStatus.subtitle", {
+                defaultValue: "Monthly spending vs limits",
+              })}
             </p>
           </div>
           <div
             className={`text-xs font-bold px-2 py-1 rounded-full ${isOverBudget ? "bg-rose-100 text-rose-600" : "bg-blue-100 text-blue-600"}`}
           >
-            {percentage.toFixed(0)}% Used
+            {t("dashboard.budgetStatus.used", {
+              percent: percentage.toFixed(0),
+              defaultValue: "{{percent}}% Used",
+            })}
           </div>
         </div>
 
@@ -97,8 +111,14 @@ export const BudgetStatusCard = () => {
             className={`text-xs font-medium mt-1 ${remaining < 0 ? "text-rose-500" : "text-emerald-500"}`}
           >
             {remaining < 0
-              ? `${formatCurrency(Math.abs(remaining))} over budget`
-              : `${formatCurrency(remaining)} remaining`}
+              ? t("dashboard.budgetStatus.over", {
+                  amount: formatCurrency(Math.abs(remaining)),
+                  defaultValue: "{{amount}} over budget",
+                })
+              : t("dashboard.budgetStatus.remaining", {
+                  amount: formatCurrency(remaining),
+                  defaultValue: "{{amount}} remaining",
+                })}
           </p>
         </div>
 
@@ -123,12 +143,18 @@ export const BudgetStatusCard = () => {
                           <div className="font-bold mb-1">{data.fullDate}</div>
                           {data.replenishment > 0 && (
                             <div className="text-emerald-400">
-                              +{formatCurrency(data.replenishment)} Added
+                              {t("dashboard.budgetStatus.added", {
+                                amount: formatCurrency(data.replenishment),
+                                defaultValue: "+{{amount}} Added",
+                              })}
                             </div>
                           )}
                           {data.spending > 0 && (
                             <div className="text-rose-400">
-                              -{formatCurrency(data.spending)} Spent
+                              {t("dashboard.budgetStatus.spent", {
+                                amount: formatCurrency(data.spending),
+                                defaultValue: "-{{amount}} Spent",
+                              })}
                             </div>
                           )}
                         </div>

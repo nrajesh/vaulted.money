@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { isTransfer } from "@/utils/runway";
 import {
   Card,
   CardContent,
@@ -42,6 +44,11 @@ export const StackedCategoryChart = ({
 }: StackedCategoryChartProps) => {
   const { formatCurrency, convertBetweenCurrencies, selectedCurrency } =
     useCurrency();
+  const { t: translate } = useTranslation();
+  const uncategorizedLabel = translate(
+    "dashboard.spendingByCategory.uncategorized",
+    { defaultValue: "Uncategorized" },
+  );
 
   const { data, subCategories } = useMemo(() => {
     // 1. Group by Category -> SubCategory -> Amount
@@ -50,6 +57,8 @@ export const StackedCategoryChart = ({
     transactions.forEach((t) => {
       // Only expenses for this chart usually? Reference image says "Spending by Category"
       if (t.amount >= 0) return;
+      // Moving money between your own accounts is not spending.
+      if (isTransfer(t)) return;
 
       const amount = Math.abs(
         convertBetweenCurrencies(
@@ -58,7 +67,7 @@ export const StackedCategoryChart = ({
           selectedCurrency,
         ),
       );
-      const catName = t.category || "Uncategorized";
+      const catName = t.category || uncategorizedLabel;
       const subCatName = t.sub_category || "Other"; // Or maybe 'General'
 
       if (!categoryMap.has(catName)) {
@@ -104,14 +113,25 @@ export const StackedCategoryChart = ({
     });
 
     return { data: topCategories, subCategories: Array.from(presentSubCats) };
-  }, [transactions, convertBetweenCurrencies, selectedCurrency]);
+  }, [
+    transactions,
+    convertBetweenCurrencies,
+    selectedCurrency,
+    uncategorizedLabel,
+  ]);
 
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Spending by Category</CardTitle>
+        <CardTitle>
+          {translate("dashboard.spendingByCategory.title", {
+            defaultValue: "Spending by Category",
+          })}
+        </CardTitle>
         <CardDescription>
-          Top spending categories broken down by sub-category
+          {translate("dashboard.spendingByCategory.description", {
+            defaultValue: "Top spending categories broken down by sub-category",
+          })}
         </CardDescription>
       </CardHeader>
       <CardContent>

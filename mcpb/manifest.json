@@ -55,6 +55,22 @@
     {
       "name": "import_csv",
       "description": "Import a bank CSV file into a ledger."
+    },
+    {
+      "name": "find_entity",
+      "description": "Look up everything a name could mean before changing it."
+    },
+    {
+      "name": "add_transactions",
+      "description": "Add many transactions at once, with a preview first."
+    },
+    {
+      "name": "budget_history",
+      "description": "Show which budgets were missed in past months."
+    },
+    {
+      "name": "payoff_projection",
+      "description": "Work out how long a loan takes to pay off."
     }
   ],
   "compatibility": {

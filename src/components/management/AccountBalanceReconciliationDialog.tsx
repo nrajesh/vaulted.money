@@ -160,6 +160,7 @@ const AccountBalanceReconciliationDialog: React.FC<
               <TableRow>
                 <TableHead className="w-[50px]">
                   <Checkbox
+                    aria-label="Select all accounts"
                     checked={
                       rows.length > 0 && selectedIds.length === rows.length
                     }
@@ -179,6 +180,7 @@ const AccountBalanceReconciliationDialog: React.FC<
                 <TableRow key={row.id}>
                   <TableCell>
                     <Checkbox
+                      aria-label={`Select ${row.name}`}
                       checked={selectedIds.includes(row.id)}
                       onCheckedChange={() => handleToggleSelect(row.id)}
                     />

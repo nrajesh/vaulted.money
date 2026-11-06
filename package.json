@@ -30,7 +30,7 @@
     "release:local": "cross-env ELECTRON_BUILDER_CACHE=.cache/electron-builder pnpm run electron:build && pnpm run android:build:apk && pnpm run ios:build:simulator"
   },
   "dependencies": {
-    "@capacitor/core": "^8.5.3",
+    "@capacitor/core": "^8.6.0",
     "@capacitor/filesystem": "^8.1.5",
     "@capawesome/capacitor-file-picker": "^8.1.1",
     "@hookform/resolvers": "^6.0.0",
@@ -58,7 +58,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^4.4.0",
     "dexie": "^4.4.6",
-    "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.5.2",
     "i18next": "^26.0.3",
     "idb-keyval": "^6.2.2",
     "jspdf": "^4.2.1",
@@ -82,9 +82,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.1.0",
-    "@capacitor/cli": "^8.1.0",
-    "@capacitor/ios": "^8.1.0",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "4.3.3",
     "@tailwindcss/typography": "^0.5.15",
@@ -101,7 +101,7 @@
     "autoprefixer": "^10.4.20",
     "concurrently": "^10.0.1",
     "cross-env": "^10.1.0",
-    "electron": "^42.3.3",
+    "electron": "^45.1.0",
     "electron-builder": "^26.8.1",
     "eslint": "^10.0.3",
     "eslint-plugin-react-hooks": "^7.0.1",

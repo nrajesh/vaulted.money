@@ -7,7 +7,7 @@ Ask Claude about your money. Claude talks to the Vaulted Money desktop app on yo
 - **Spending review**: where your money went, top categories and vendors.
 - **Budget check**: what is over, what is left.
 - **Import bank CSV**: preview first, import only when you say yes.
-- Eight tools behind the scenes for finding transactions, adding one, and reaching any other part of the app.
+- Twelve tools behind the scenes for finding transactions, adding one or many, checking budget history, working out a loan payoff, and reaching any other part of the app.
 
 ## Before you start
 

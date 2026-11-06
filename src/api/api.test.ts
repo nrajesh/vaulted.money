@@ -724,6 +724,120 @@ describe("budgets", () => {
         .status,
     ).toBe(204);
   });
+
+  it("reports spent versus target for past periods and which were missed", async () => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    const now = new Date();
+    // The 15th stays inside its month in any time zone.
+    const dayInMonth = (monthsAgo: number) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 15);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-15`;
+    };
+    // This month and three before it, against a target of 50.
+    const spendByMonthsAgo = [30, 60, 50, 80];
+    for (const [monthsAgo, amount] of spendByMonthsAgo.entries()) {
+      await ok(
+        call("POST", `${base}/transactions`, {
+          date: dayInMonth(monthsAgo),
+          amount: -amount,
+          account: "Bank",
+          vendor: "Shop",
+          category: "Food",
+        }),
+        201,
+      );
+    }
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    await ok(
+      call("POST", `${base}/budgets`, {
+        category: "Food",
+        target_amount: 50,
+        start_date: threeMonthsAgo.toISOString(),
+      }),
+      201,
+    );
+    await ok(
+      call("POST", `${base}/budgets`, {
+        category: "Food",
+        target_amount: 10,
+        frequency: "One-time",
+      }),
+      201,
+    );
+
+    interface HistoryResponse {
+      periods_requested: number;
+      data: {
+        name: string;
+        target_amount: number;
+        periods: {
+          period_start: string;
+          spent: number;
+          over_by: number;
+          missed: boolean;
+          in_progress: boolean;
+        }[];
+        summary: Record<string, number | null>;
+      }[];
+      skipped: { reason: string }[];
+    }
+    const history = await ok<HistoryResponse>(
+      call("GET", `${base}/budgets/history`, undefined, { periods: "6" }),
+    );
+    expect(history.periods_requested).toBe(6);
+    // The one-time budget is reported as skipped, not as a recurring one.
+    expect(history.skipped).toHaveLength(1);
+    expect(history.skipped[0].reason).toMatch(/one date range/);
+    expect(history.data).toHaveLength(1);
+
+    const [food] = history.data;
+    expect(food.name).toBe("Food");
+    // Only the four months since the budget started, oldest first.
+    expect(food.periods.map((p) => p.spent)).toEqual([80, 50, 60, 30]);
+    expect(food.periods.map((p) => p.missed)).toEqual([
+      true,
+      false,
+      true,
+      false,
+    ]);
+    expect(food.periods.map((p) => p.over_by)).toEqual([30, 0, 10, 0]);
+    expect(food.periods.map((p) => p.in_progress)).toEqual([
+      false,
+      false,
+      false,
+      true,
+    ]);
+    // The month still running is not counted: 3 finished, 2 of them missed.
+    expect(food.summary).toMatchObject({
+      periods_counted: 3,
+      periods_missed: 2,
+      miss_rate_pct: 66.67,
+      average_spent: 63.33,
+      worst_overspend: 30,
+    });
+  });
+
+  it("rejects a history window that is out of range or for an unknown ledger", async () => {
+    const ledger = await createLedger();
+    for (const periods of ["0", "25", "abc"]) {
+      expect(
+        (
+          await call(
+            "GET",
+            `/ledgers/${ledger.id}/budgets/history`,
+            undefined,
+            {
+              periods,
+            },
+          )
+        ).status,
+      ).toBe(400);
+    }
+    expect((await call("GET", "/ledgers/nope/budgets/history")).status).toBe(
+      404,
+    );
+  });
 });
 
 describe("settings: currencies, languages, AI providers", () => {
@@ -1686,5 +1800,238 @@ describe("OpenAPI document", () => {
       spec.paths["/ledgers/{ledgerId}/accounts/reconcile"].post.requestBody,
     ).toBeDefined();
     expect(Object.keys(spec.paths).length).toBeGreaterThan(50);
+  });
+});
+
+describe("input hardening", () => {
+  beforeEach(clearAll);
+
+  const transaction = {
+    date: "2026-03-01",
+    amount: -10,
+    account: "Checking",
+    vendor: "Shop",
+    category: "Food",
+  };
+
+  it.each(["2026-02-30", "2026-13-01", "1", "03/04/2026", "garbage"])(
+    "rejects %s as a date instead of storing it verbatim",
+    async (date) => {
+      const ledger = await createLedger();
+      const res = await call("POST", `/ledgers/${ledger.id}/transactions`, {
+        ...transaction,
+        date,
+      });
+      expect(res.status).toBe(400);
+      const list = await ok<{ total: number }>(
+        call("GET", `/ledgers/${ledger.id}/transactions`),
+      );
+      expect(list.total).toBe(0);
+    },
+  );
+
+  it("still accepts plain dates and full timestamps", async () => {
+    const ledger = await createLedger();
+    for (const date of ["2026-02-28", "2024-02-29", "2026-03-01T10:30:00Z"]) {
+      await ok(
+        call("POST", `/ledgers/${ledger.id}/transactions`, {
+          ...transaction,
+          date,
+        }),
+        201,
+      );
+    }
+  });
+
+  it("rejects a garbage from/to filter instead of silently matching nothing", async () => {
+    const ledger = await createLedger();
+    const res = await call(
+      "GET",
+      `/ledgers/${ledger.id}/transactions`,
+      undefined,
+      { from: "garbage" },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it.each(["0d", "00w", "0m", "0y"])(
+    "rejects the zero-length frequency %s, which would hang the scheduler",
+    async (frequency) => {
+      const ledger = await createLedger();
+      const res = await call(
+        "POST",
+        `/ledgers/${ledger.id}/scheduled-transactions`,
+        { ...transaction, frequency },
+      );
+      expect(res.status).toBe(400);
+    },
+  );
+
+  it("accepts positive custom frequencies", async () => {
+    const ledger = await createLedger();
+    for (const frequency of ["1d", "2w", "10m", "3y"]) {
+      await ok(
+        call("POST", `/ledgers/${ledger.id}/scheduled-transactions`, {
+          ...transaction,
+          frequency,
+        }),
+        201,
+      );
+    }
+  });
+
+  it("rejects a schedule or budget that ends before it starts", async () => {
+    const ledger = await createLedger();
+    const schedule = await call(
+      "POST",
+      `/ledgers/${ledger.id}/scheduled-transactions`,
+      {
+        ...transaction,
+        date: "2026-04-01",
+        frequency: "Monthly",
+        end_date: "2020-01-01",
+      },
+    );
+    expect(schedule.status).toBe(400);
+
+    await call("POST", `/ledgers/${ledger.id}/transactions`, transaction);
+    const budget = await call("POST", `/ledgers/${ledger.id}/budgets`, {
+      category: "Food",
+      target_amount: 100,
+      start_date: "2026-05-01",
+      end_date: "2026-01-01",
+    });
+    expect(budget.status).toBe(400);
+  });
+
+  it("normalises currency codes and rejects malformed ones", async () => {
+    const ledger = await createLedger();
+    const lower = await ok<{ currency: string }>(
+      call("POST", `/ledgers/${ledger.id}/accounts`, {
+        name: "Euro account",
+        currency: "eur",
+      }),
+      201,
+    );
+    expect(lower.currency).toBe("EUR");
+    for (const currency of ["NOPE", "E1", ""]) {
+      const res = await call("POST", "/ledgers", {
+        name: `Bad ${currency}`,
+        currency,
+      });
+      expect(res.status).toBe(400);
+    }
+  });
+});
+
+describe("transfer legs", () => {
+  beforeEach(clearAll);
+
+  const setup = async (secondCurrency = "USD") => {
+    const ledger = await createLedger();
+    const base = `/ledgers/${ledger.id}`;
+    await ok(
+      call("POST", `${base}/accounts`, { name: "Checking", currency: "USD" }),
+      201,
+    );
+    await ok(
+      call("POST", `${base}/accounts`, {
+        name: "Savings",
+        currency: secondCurrency,
+      }),
+      201,
+    );
+    return base;
+  };
+
+  const transfer = (base: string, extra: object = {}) =>
+    ok<{
+      outgoing: { id: string; transfer_id: string };
+      incoming: { id: string };
+    }>(
+      call("POST", `${base}/transactions/transfer`, {
+        from_account: "Checking",
+        to_account: "Savings",
+        amount: 40,
+        date: "2026-03-03",
+        ...extra,
+      }),
+      201,
+    );
+
+  it("mirrors an edit of one leg onto the other, swapping account and vendor", async () => {
+    const base = await setup();
+    const t = await transfer(base);
+    await ok(
+      call("PATCH", `${base}/transactions/${t.outgoing.id}`, {
+        amount: -75,
+        date: "2026-03-05",
+        remarks: "rent top-up",
+      }),
+    );
+    const other = await ok<Entity>(
+      call("GET", `${base}/transactions/${t.incoming.id}`),
+    );
+    expect(other).toMatchObject({
+      amount: 75,
+      date: "2026-03-05",
+      remarks: "rent top-up",
+      account: "Savings",
+      vendor: "Checking",
+    });
+  });
+
+  it("leaves the other leg's amount alone when the currencies differ", async () => {
+    const base = await setup("EUR");
+    const t = await transfer(base, { to_amount: 37 });
+    await ok(
+      call("PATCH", `${base}/transactions/${t.outgoing.id}`, { amount: -50 }),
+    );
+    const other = await ok<Entity>(
+      call("GET", `${base}/transactions/${t.incoming.id}`),
+    );
+    expect(other.amount).toBe(37);
+  });
+
+  it("deletes both legs when one is deleted", async () => {
+    const base = await setup();
+    const t = await transfer(base);
+    await ok(call("DELETE", `${base}/transactions/${t.incoming.id}`), 204);
+    const list = await ok<{ total: number }>(
+      call("GET", `${base}/transactions`),
+    );
+    expect(list.total).toBe(0);
+  });
+
+  it("still deletes a plain transaction on its own", async () => {
+    const base = await setup();
+    await transfer(base);
+    const lone = await ok<Entity>(
+      call("POST", `${base}/transactions`, {
+        date: "2026-03-04",
+        amount: -5,
+        account: "Checking",
+        vendor: "Cafe",
+        category: "Food",
+      }),
+      201,
+    );
+    await ok(call("DELETE", `${base}/transactions/${lone.id}`), 204);
+    const list = await ok<{ total: number }>(
+      call("GET", `${base}/transactions`),
+    );
+    expect(list.total).toBe(2);
+  });
+
+  it("rejects a to_amount that unbalances a same-currency transfer", async () => {
+    const base = await setup();
+    const res = await call("POST", `${base}/transactions/transfer`, {
+      from_account: "Checking",
+      to_account: "Savings",
+      amount: 10,
+      to_amount: 5,
+      date: "2026-03-03",
+    });
+    expect(res.status).toBe(400);
   });
 });

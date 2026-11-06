@@ -194,10 +194,27 @@ Checklist:
 4. **Docs** – update `documentation/API.md` (and the README "Using the Local API" section if the quick start changes).
 5. **Verify** – run `pnpm test:coverage`. `src/api/postmanCoverage.test.ts` fails if a route has no Postman request or a request points at a route that no longer exists, and `src/api/postmanRun.test.ts` runs the whole collection with Newman against the real server code and fails on any failed assertion. If response shapes changed, refresh the saved examples (see `documentation/postman/README.md`).
 6. **OpenAPI** – `GET /openapi.json` is generated from the route table. Give new routes a `body` (their zod schema) and `query` descriptions so the spec stays complete.
+7. **MCP server** – `mcp/` reaches every route through `search_api` and `call_api`, so a new route needs no new tool, but an agent can only use it if `search_api` finds it. Give every route a distinctive `summary` (not just "Get one"); `mcp/coverage.test.ts` fails if a route has none or `search_api` cannot find it from it. If you change a response shape that a curated tool in `mcp/server.mjs` reads (analytics, insights, budgets, transactions, accounts), update that tool and `mcp/README.md` too.
 
 Conventions for new endpoints: operations that change many records take `dry_run` and report what they would do; deletions require `confirm_delete: true`; AI or network calls are opt-in per request. Where the app has a button for something, reuse its logic (extract it to a shared util, as `src/utils/transactionMaintenance.ts` does) instead of re-implementing it, and say which button it mirrors in the route summary.
 
 Never expose secrets (AI API keys, backup password hashes) through the API, and keep destructive operations behind an explicit confirmation flag.
+
+---
+
+## Translations
+
+User-visible text goes through `t("key", { defaultValue })` and every key is added for all five languages in `src/i18n/areas/` (see `documentation/I18N.md`). `src/i18n/coverageGuard.test.ts` fails if a key is undefined or if a file gains hard-coded English. Never build sentences by concatenation, and format dates with `formatDisplayDate`.
+
+---
+
+## Demo data
+
+"Generate demo data" is the app's shop window. Its content lives in `src/utils/demoDataPlan.ts` (see `documentation/DEMO_DATA.md`).
+
+- **When you add or change a user-visible feature, give the demo a scenario that uses it** and assert it in `src/utils/demoDataPlan.test.ts` or `src/api/demoData.test.ts`.
+- **Never hard-code a date or year** in demo data. Derive everything from the `now` the plan is given; the tests run it with several different "today" values.
+- Keep it deterministic for a seed, and keep balances believable (no overdrawn cash accounts, cards within their limit).
 
 ---
 

@@ -9,6 +9,9 @@ export const normalizeName = (name: string): string =>
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
+    // "McDonald's" and "McDonalds" are the same name: drop apostrophes rather
+    // than turning them into a word break.
+    .replace(/['’`]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 

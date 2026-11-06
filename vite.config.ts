@@ -45,15 +45,9 @@ export default defineConfig(() => ({
     },
   },
   build: {
-    chunkSizeWarningLimit: 2000,
-    rollupOptions: {
-      output: {
-        manualChunks(id: string) {
-          if (id.includes("node_modules")) {
-            return "vendor";
-          }
-        },
-      },
-    },
+    // Library code is split along the app's lazy routes by the bundler. A
+    // single forced "vendor" chunk made every first visit download all of it,
+    // including the PDF export and the homepage animations.
+    chunkSizeWarningLimit: 600,
   },
 }));

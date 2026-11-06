@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -108,6 +109,7 @@ const TransactionRow = React.memo(
     toast: ReturnType<typeof useToast>["toast"]; // `useToast` return type.
     isValidTransfer: boolean;
   }) => {
+    const { t } = useTranslation();
     const isFuture = useMemo(() => {
       const txnDate = new Date(transaction.date);
       txnDate.setHours(0, 0, 0, 0);
@@ -136,9 +138,11 @@ const TransactionRow = React.memo(
           {isFormerAccount && (
             <span
               className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1 rounded font-normal not-italic"
-              title="This account has been deleted"
+              title={t("transactionsTable.formerTitle", {
+                defaultValue: "This account has been deleted",
+              })}
             >
-              Former
+              {t("transactionsTable.former", { defaultValue: "Former" })}
             </span>
           )}
         </span>
@@ -163,14 +167,26 @@ const TransactionRow = React.memo(
             >
               <div className="flex flex-col items-center justify-center gap-1">
                 <Checkbox
+                  aria-label={t("transactionsTable.selectTransaction", {
+                    name:
+                      transaction.vendor ||
+                      t("transactionsTable.noPayee", {
+                        defaultValue: "No Payee",
+                      }),
+                    defaultValue: "Select transaction: {{name}}",
+                  })}
                   checked={isSelected}
                   onCheckedChange={() => onToggleSelect(transaction.id)}
                 />
                 {transaction.transfer_id && isValidTransfer && (
                   <button
                     className="h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 group/link transition-colors ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    title="Unlink Transfer"
-                    aria-label="Unlink Transfer"
+                    title={t("transactionsTable.unlink", {
+                      defaultValue: "Unlink Transfer",
+                    })}
+                    aria-label={t("transactionsTable.unlink", {
+                      defaultValue: "Unlink Transfer",
+                    })}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (onUnlinkTransaction && transaction.transfer_id)
@@ -188,8 +204,12 @@ const TransactionRow = React.memo(
                 {transaction.is_scheduled_origin && (
                   <button
                     type="button"
-                    title="Go to Scheduled Transaction"
-                    aria-label="Go to Scheduled Transaction"
+                    title={t("transactionsTable.goToSchedule", {
+                      defaultValue: "Go to Scheduled Transaction",
+                    })}
+                    aria-label={t("transactionsTable.goToSchedule", {
+                      defaultValue: "Go to Scheduled Transaction",
+                    })}
                     className="hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full p-1 transition-colors ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -197,9 +217,16 @@ const TransactionRow = React.memo(
                         navigate(`/scheduled?id=${transaction.recurrence_id}`);
                       } else {
                         toast({
-                          title: "Reference Missing",
-                          description:
-                            "Could not find the original scheduled transaction.",
+                          title: t("transactionsTable.referenceMissing.title", {
+                            defaultValue: "Reference Missing",
+                          }),
+                          description: t(
+                            "transactionsTable.referenceMissing.description",
+                            {
+                              defaultValue:
+                                "Could not find the original scheduled transaction.",
+                            },
+                          ),
                           variant: "destructive",
                         });
                       }
@@ -237,7 +264,9 @@ const TransactionRow = React.memo(
         </ContextMenuTrigger>
         <ContextMenuContent className="w-64">
           <ContextMenuItem inset onClick={() => onToggleSelect(transaction.id)}>
-            {isSelected ? "Deselect" : "Select"}
+            {isSelected
+              ? t("management.actions.deselect", { defaultValue: "Deselect" })
+              : t("management.actions.select", { defaultValue: "Select" })}
           </ContextMenuItem>
           <ContextMenuSeparator />
           {!transaction.is_projected && (
@@ -248,7 +277,8 @@ const TransactionRow = React.memo(
                   onRowDoubleClick && onRowDoubleClick(transaction, e)
                 }
               >
-                <Pencil className="h-4 w-4 mr-2" /> Edit
+                <Pencil className="h-4 w-4 mr-2" />{" "}
+                {t("management.actions.edit", { defaultValue: "Edit" })}
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
@@ -261,7 +291,11 @@ const TransactionRow = React.memo(
             }
           >
             <CalendarClock className="h-4 w-4 mr-2" />{" "}
-            {transaction.recurrence_id ? "Edit Schedule" : "Schedule"}
+            {transaction.recurrence_id
+              ? t("transactionsTable.editSchedule", {
+                  defaultValue: "Edit Schedule",
+                })
+              : t("transactionsTable.schedule", { defaultValue: "Schedule" })}
           </ContextMenuItem>
           <ContextMenuItem
             inset
@@ -279,14 +313,16 @@ const TransactionRow = React.memo(
               });
             }}
           >
-            <Copy className="h-4 w-4 mr-2" /> Duplicate
+            <Copy className="h-4 w-4 mr-2" />{" "}
+            {t("transactionsTable.duplicate", { defaultValue: "Duplicate" })}
           </ContextMenuItem>
           <ContextMenuItem
             inset
             className="text-red-600"
             onClick={() => onDeleteTransactions([{ id: transaction.id }])}
           >
-            <Trash className="h-4 w-4 mr-2" /> Delete
+            <Trash className="h-4 w-4 mr-2" />{" "}
+            {t("management.actions.delete", { defaultValue: "Delete" })}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -339,6 +375,7 @@ const TransactionMobileCard = React.memo(
     toast: ReturnType<typeof useToast>["toast"];
     isValidTransfer: boolean;
   }) => {
+    const { t } = useTranslation();
     const isFuture = useMemo(() => {
       const txnDate = new Date(transaction.date);
       txnDate.setHours(0, 0, 0, 0);
@@ -371,6 +408,14 @@ const TransactionMobileCard = React.memo(
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <Checkbox
+                  aria-label={t("transactionsTable.selectTransaction", {
+                    name:
+                      transaction.vendor ||
+                      t("transactionsTable.noPayee", {
+                        defaultValue: "No Payee",
+                      }),
+                    defaultValue: "Select transaction: {{name}}",
+                  })}
                   checked={isSelected}
                   onCheckedChange={() => onToggleSelect(transaction.id)}
                   onClick={(e) => e.stopPropagation()}
@@ -379,13 +424,20 @@ const TransactionMobileCard = React.memo(
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex min-w-0 items-center gap-2">
                     <div className="truncate text-base font-bold leading-tight">
-                      {transaction.vendor || "No Payee"}
+                      {transaction.vendor ||
+                        t("transactionsTable.noPayee", {
+                          defaultValue: "No Payee",
+                        })}
                     </div>
                     {transaction.transfer_id && isValidTransfer && (
                       <button
                         className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 transition-colors hover:bg-red-100 dark:bg-blue-900/30 dark:hover:bg-red-900/30"
-                        title="Unlink Transfer"
-                        aria-label="Unlink Transfer"
+                        title={t("transactionsTable.unlink", {
+                          defaultValue: "Unlink Transfer",
+                        })}
+                        aria-label={t("transactionsTable.unlink", {
+                          defaultValue: "Unlink Transfer",
+                        })}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onUnlinkTransaction && transaction.transfer_id)
@@ -410,7 +462,9 @@ const TransactionMobileCard = React.memo(
                     </span>
                     {!accountCurrencyMap?.has(transaction.account) && (
                       <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-1 rounded uppercase font-medium">
-                        Former
+                        {t("transactionsTable.former", {
+                          defaultValue: "Former",
+                        })}
                       </span>
                     )}
                   </div>
@@ -448,13 +502,26 @@ const TransactionMobileCard = React.memo(
                         navigate(`/scheduled?id=${transaction.recurrence_id}`);
                       } else {
                         toast({
-                          title: "Reference Missing",
-                          description:
-                            "Could not find the original scheduled transaction.",
+                          title: t("transactionsTable.referenceMissing.title", {
+                            defaultValue: "Reference Missing",
+                          }),
+                          description: t(
+                            "transactionsTable.referenceMissing.description",
+                            {
+                              defaultValue:
+                                "Could not find the original scheduled transaction.",
+                            },
+                          ),
                           variant: "destructive",
                         });
                       }
                     }}
+                    title={t("transactionsTable.goToSchedule", {
+                      defaultValue: "Go to Scheduled Transaction",
+                    })}
+                    aria-label={t("transactionsTable.goToSchedule", {
+                      defaultValue: "Go to Scheduled Transaction",
+                    })}
                     className="rounded-full bg-blue-100 p-1.5 dark:bg-blue-900/30"
                   >
                     <CalendarClock className="h-3.5 w-3.5 text-blue-500" />
@@ -466,7 +533,9 @@ const TransactionMobileCard = React.memo(
         </ContextMenuTrigger>
         <ContextMenuContent className="w-64">
           <ContextMenuItem inset onClick={() => onToggleSelect(transaction.id)}>
-            {isSelected ? "Deselect" : "Select"}
+            {isSelected
+              ? t("management.actions.deselect", { defaultValue: "Deselect" })
+              : t("management.actions.select", { defaultValue: "Select" })}
           </ContextMenuItem>
           <ContextMenuSeparator />
           {!transaction.is_projected && (
@@ -477,7 +546,8 @@ const TransactionMobileCard = React.memo(
                   onRowDoubleClick && onRowDoubleClick(transaction, e)
                 }
               >
-                <Pencil className="h-4 w-4 mr-2" /> Edit
+                <Pencil className="h-4 w-4 mr-2" />{" "}
+                {t("management.actions.edit", { defaultValue: "Edit" })}
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
@@ -490,7 +560,11 @@ const TransactionMobileCard = React.memo(
             }
           >
             <CalendarClock className="h-4 w-4 mr-2" />{" "}
-            {transaction.recurrence_id ? "Edit Schedule" : "Schedule"}
+            {transaction.recurrence_id
+              ? t("transactionsTable.editSchedule", {
+                  defaultValue: "Edit Schedule",
+                })
+              : t("transactionsTable.schedule", { defaultValue: "Schedule" })}
           </ContextMenuItem>
           <ContextMenuItem
             inset
@@ -507,14 +581,16 @@ const TransactionMobileCard = React.memo(
               });
             }}
           >
-            <Copy className="h-4 w-4 mr-2" /> Duplicate
+            <Copy className="h-4 w-4 mr-2" />{" "}
+            {t("transactionsTable.duplicate", { defaultValue: "Duplicate" })}
           </ContextMenuItem>
           <ContextMenuItem
             inset
             className="text-red-600"
             onClick={() => onDeleteTransactions([{ id: transaction.id }])}
           >
-            <Trash className="h-4 w-4 mr-2" /> Delete
+            <Trash className="h-4 w-4 mr-2" />{" "}
+            {t("management.actions.delete", { defaultValue: "Delete" })}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -535,6 +611,7 @@ const TransactionTable = ({
   onLinkTransactions,
   accountCurrencyMap,
 }: TransactionTableProps) => {
+  const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { selectedCurrency } = useCurrency();
@@ -653,8 +730,13 @@ const TransactionTable = ({
     });
     setSelectedIds(new Set());
     toast({
-      title: "Duplicated",
-      description: `${toDuplicate.length} transactions duplicated.`,
+      title: t("transactionsTable.duplicated.title", {
+        defaultValue: "Duplicated",
+      }),
+      description: t("transactionsTable.duplicated.description", {
+        count: toDuplicate.length,
+        defaultValue: "{{count}} transactions duplicated.",
+      }),
     });
   };
 
@@ -695,7 +777,10 @@ const TransactionTable = ({
         <div className="flex min-h-12 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2">
             <span className="min-w-0 px-1 text-sm font-medium">
-              {numSelected} selected
+              {t("management.status.selected", {
+                count: numSelected,
+                defaultValue: "{{count}} selected",
+              })}
             </span>
             <div className="h-4 w-px bg-border" />
             <Button
@@ -704,11 +789,19 @@ const TransactionTable = ({
               onClick={() => setSelectedIds(new Set())}
               disabled={numSelected === 0}
               className="h-10 w-10 p-0 disabled:pointer-events-none disabled:opacity-45 sm:h-9 sm:w-auto sm:px-3"
-              title="Clear selection"
+              title={t("management.actions.clearSelection", {
+                defaultValue: "Clear selection",
+              })}
             >
               <X className="h-4 w-4" />
-              <span className="sr-only">Clear selection</span>
-              <span className="hidden sm:inline sm:ml-1">Clear</span>
+              <span className="sr-only">
+                {t("management.actions.clearSelection", {
+                  defaultValue: "Clear selection",
+                })}
+              </span>
+              <span className="hidden sm:inline sm:ml-1">
+                {t("management.actions.clear", { defaultValue: "Clear" })}
+              </span>
             </Button>
           </div>
 
@@ -719,11 +812,19 @@ const TransactionTable = ({
               onClick={handleBulkDelete}
               disabled={numSelected === 0}
               className="h-10 w-10 p-0 disabled:pointer-events-none disabled:border disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 sm:h-9 sm:w-auto sm:px-3"
-              title="Delete selected"
+              title={t("management.actions.deleteSelected", {
+                defaultValue: "Delete selected",
+              })}
             >
               <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete selected</span>
-              <span className="hidden sm:inline sm:ml-1">Delete</span>
+              <span className="sr-only">
+                {t("management.actions.deleteSelected", {
+                  defaultValue: "Delete selected",
+                })}
+              </span>
+              <span className="hidden sm:inline sm:ml-1">
+                {t("management.actions.delete", { defaultValue: "Delete" })}
+              </span>
             </Button>
             <Button
               size="sm"
@@ -731,11 +832,21 @@ const TransactionTable = ({
               onClick={handleBulkDuplicate}
               disabled={numSelected === 0}
               className="h-10 w-10 p-0 disabled:pointer-events-none disabled:opacity-45 sm:h-9 sm:w-auto sm:px-3"
-              title="Duplicate selected"
+              title={t("transactionsTable.duplicateSelected", {
+                defaultValue: "Duplicate selected",
+              })}
             >
               <Copy className="h-4 w-4" />
-              <span className="sr-only">Duplicate selected</span>
-              <span className="hidden sm:inline sm:ml-1">Duplicate</span>
+              <span className="sr-only">
+                {t("transactionsTable.duplicateSelected", {
+                  defaultValue: "Duplicate selected",
+                })}
+              </span>
+              <span className="hidden sm:inline sm:ml-1">
+                {t("transactionsTable.duplicate", {
+                  defaultValue: "Duplicate",
+                })}
+              </span>
             </Button>
             <Button
               size="sm"
@@ -743,11 +854,19 @@ const TransactionTable = ({
               onClick={handleBulkSchedule}
               disabled={numSelected === 0}
               className="h-10 w-10 p-0 disabled:pointer-events-none disabled:opacity-45 sm:h-9 sm:w-auto sm:px-3"
-              title="Schedule selected"
+              title={t("transactionsTable.scheduleSelected", {
+                defaultValue: "Schedule selected",
+              })}
             >
               <CalendarClock className="h-4 w-4" />
-              <span className="sr-only">Schedule selected</span>
-              <span className="hidden sm:inline sm:ml-1">Schedule</span>
+              <span className="sr-only">
+                {t("transactionsTable.scheduleSelected", {
+                  defaultValue: "Schedule selected",
+                })}
+              </span>
+              <span className="hidden sm:inline sm:ml-1">
+                {t("transactionsTable.schedule", { defaultValue: "Schedule" })}
+              </span>
             </Button>
             {onLinkTransactions && (
               <Button
@@ -755,7 +874,9 @@ const TransactionTable = ({
                 variant="default"
                 className="h-10 w-10 bg-blue-600 p-0 text-white hover:bg-blue-700 disabled:pointer-events-none disabled:border disabled:border-border disabled:bg-muted disabled:text-muted-foreground sm:h-9 sm:w-auto sm:px-3"
                 disabled={numSelected !== 2}
-                title="Link selected pair"
+                title={t("transactionsTable.linkPairTitle", {
+                  defaultValue: "Link selected pair",
+                })}
                 onClick={() => {
                   const ids = Array.from(selectedIds);
                   if (ids.length === 2 && onLinkTransactions) {
@@ -765,8 +886,16 @@ const TransactionTable = ({
                 }}
               >
                 <Link className="h-4 w-4" />
-                <span className="sr-only">Link selected pair</span>
-                <span className="hidden sm:inline sm:ml-1">Link Pair</span>
+                <span className="sr-only">
+                  {t("transactionsTable.linkPairTitle", {
+                    defaultValue: "Link selected pair",
+                  })}
+                </span>
+                <span className="hidden sm:inline sm:ml-1">
+                  {t("transactionsTable.linkPair", {
+                    defaultValue: "Link Pair",
+                  })}
+                </span>
               </Button>
             )}
           </div>
@@ -777,7 +906,9 @@ const TransactionTable = ({
       <div className="block md:hidden space-y-3">
         {sortedData.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground border rounded-md">
-            No transactions found.
+            {t("transactionsTable.noTransactions", {
+              defaultValue: "No transactions found.",
+            })}
           </div>
         ) : (
           paginatedData.map((transaction) => (
@@ -816,18 +947,24 @@ const TransactionTable = ({
                 <Checkbox
                   checked={allCurrentPageSelected}
                   onCheckedChange={toggleSelectAll}
-                  aria-label="Select all transactions on this page"
+                  aria-label={t("transactionsTable.selectAllPage", {
+                    defaultValue: "Select all transactions on this page",
+                  })}
                 />
               </TableHead>
               <SortableHeader
-                label="Date"
+                label={t("transactionsTable.headers.date", {
+                  defaultValue: "Date",
+                })}
                 sortKey="date"
                 sortConfig={sortConfig}
                 onSort={handleHeaderClick}
                 onSortReset={handleHeaderRightClick}
               />
               <SortableHeader
-                label="Category"
+                label={t("transactionsTable.headers.category", {
+                  defaultValue: "Category",
+                })}
                 sortKey="category"
                 sortConfig={sortConfig}
                 onSort={handleHeaderClick}
@@ -835,7 +972,9 @@ const TransactionTable = ({
                 className="text-slate-800 dark:text-slate-200 font-semibold"
               />
               <SortableHeader
-                label="Sub-category"
+                label={t("transactionsTable.headers.subCategory", {
+                  defaultValue: "Sub-category",
+                })}
                 sortKey="sub_category"
                 sortConfig={sortConfig}
                 onSort={handleHeaderClick}
@@ -843,7 +982,9 @@ const TransactionTable = ({
                 className="text-slate-800 dark:text-slate-200 font-semibold"
               />
               <SortableHeader
-                label="Payee"
+                label={t("transactionsTable.headers.payee", {
+                  defaultValue: "Payee",
+                })}
                 sortKey="vendor"
                 sortConfig={sortConfig}
                 onSort={handleHeaderClick}
@@ -851,7 +992,9 @@ const TransactionTable = ({
                 className="text-slate-800 dark:text-slate-200 font-semibold"
               />
               <SortableHeader
-                label="Account"
+                label={t("transactionsTable.headers.account", {
+                  defaultValue: "Account",
+                })}
                 sortKey="account"
                 sortConfig={sortConfig}
                 onSort={handleHeaderClick}
@@ -859,7 +1002,9 @@ const TransactionTable = ({
                 className="text-slate-800 dark:text-slate-200 font-semibold"
               />
               <SortableHeader
-                label="Notes"
+                label={t("transactionsTable.headers.notes", {
+                  defaultValue: "Notes",
+                })}
                 sortKey="remarks"
                 sortConfig={sortConfig}
                 onSort={handleHeaderClick}
@@ -867,7 +1012,9 @@ const TransactionTable = ({
                 className="text-slate-800 dark:text-slate-200 font-semibold"
               />
               <SortableHeader
-                label="Amount"
+                label={t("transactionsTable.headers.amount", {
+                  defaultValue: "Amount",
+                })}
                 sortKey="amount"
                 sortConfig={sortConfig}
                 onSort={handleHeaderClick}
@@ -883,7 +1030,9 @@ const TransactionTable = ({
                   colSpan={8}
                   className="text-center py-10 text-muted-foreground"
                 >
-                  No transactions found.
+                  {t("transactionsTable.noTransactions", {
+                    defaultValue: "No transactions found.",
+                  })}
                 </TableCell>
               </TableRow>
             ) : (
@@ -920,7 +1069,11 @@ const TransactionTable = ({
       {totalItems > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
-            <span>Rows per page</span>
+            <span>
+              {t("transactionsTable.rowsPerPage", {
+                defaultValue: "Rows per page",
+              })}
+            </span>
             <Select
               value={pageSize.toString()}
               onValueChange={(v) => {
@@ -941,7 +1094,11 @@ const TransactionTable = ({
             </Select>
             <div className="h-4 w-px bg-border mx-2" />
             <span>
-              Page {currentPage} of {totalPages}
+              {t("management.status.page", {
+                page: currentPage,
+                total: totalPages,
+                defaultValue: "Page {{page}} of {{total}}",
+              })}
             </span>
           </div>
 

@@ -28,22 +28,36 @@ import { AIProvider } from "@/types/dataProvider";
 import { buildGeminiUrl } from "@/hooks/useAutoCategorize";
 import { readAiApiKeyFromStorage } from "@/constants/aiApiKeyStorage";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  type: z.enum([
-    "OPENAI",
-    "GEMINI",
-    "ANTHROPIC",
-    "MISTRAL",
-    "PERPLEXITY",
-    "CUSTOM",
-  ]),
-  baseUrl: z.string().url("Must be a valid URL"),
-  model: z.string().optional(),
-  description: z.string().optional(),
-  isDefault: z.boolean().optional(),
-});
+const buildFormSchema = (t: TFunction) =>
+  z.object({
+    name: z.string().min(
+      1,
+      t("aiProviders.dialog.errors.name", {
+        defaultValue: "Name is required",
+      }),
+    ),
+    type: z.enum([
+      "OPENAI",
+      "GEMINI",
+      "ANTHROPIC",
+      "MISTRAL",
+      "PERPLEXITY",
+      "CUSTOM",
+    ]),
+    baseUrl: z.string().url(
+      t("aiProviders.dialog.errors.url", {
+        defaultValue: "Must be a valid URL",
+      }),
+    ),
+    model: z.string().optional(),
+    description: z.string().optional(),
+    isDefault: z.boolean().optional(),
+  });
+
+type FormSchema = ReturnType<typeof buildFormSchema>;
 
 const PROVIDER_DOCS: Record<string, { url: string; endpoint: string }> = {
   OPENAI: {
@@ -85,9 +99,11 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   provider,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const dataProvider = useDataProvider();
+  const formSchema = React.useMemo(() => buildFormSchema(t), [t]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.infer<FormSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -129,7 +145,10 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
 
     if (!apiKey) {
       showError(
-        "Please save the provider and set an API key in Settings first to test.",
+        t("aiProviders.dialog.needKey", {
+          defaultValue:
+            "Please save the provider and set an API key in Settings first to test.",
+        }),
       );
       return;
     }
@@ -210,7 +229,11 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
         );
       }
 
-      showSuccess("Connection test successful!");
+      showSuccess(
+        t("aiProviders.dialog.testOk", {
+          defaultValue: "Connection test successful!",
+        }),
+      );
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -219,33 +242,52 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
         errorMessage.includes("ERR_FAILED")
       ) {
         showError(
-          `Connection failed: Likely a CORS block. Some providers restricted direct browser access. Consider a proxy or another provider.`,
+          t("aiProviders.dialog.corsBlocked", {
+            defaultValue:
+              "Connection failed: Likely a CORS block. Some providers restricted direct browser access. Consider a proxy or another provider.",
+          }),
         );
       } else {
-        showError(`Connection failed: ${errorMessage}`);
+        showError(
+          t("aiProviders.dialog.testFailed", {
+            message: errorMessage,
+            defaultValue: "Connection failed: {{message}}",
+          }),
+        );
       }
     } finally {
       setIsTesting(false);
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<FormSchema>) => {
     try {
       if (provider) {
         await dataProvider.updateAIProvider({
           ...values,
           id: provider.id,
         });
-        showSuccess("AI Provider updated successfully!");
+        showSuccess(
+          t("aiProviders.dialog.updated", {
+            defaultValue: "AI Provider updated successfully!",
+          }),
+        );
       } else {
         await dataProvider.addAIProvider(values);
-        showSuccess("AI Provider added successfully!");
+        showSuccess(
+          t("aiProviders.dialog.added", {
+            defaultValue: "AI Provider added successfully!",
+          }),
+        );
       }
       onSuccess?.();
       onOpenChange(false);
     } catch (error: unknown) {
       showError(
-        `Error: ${error instanceof Error ? error.message : String(error)}`,
+        t("aiProviders.dialog.error", {
+          message: error instanceof Error ? error.message : String(error),
+          defaultValue: "Error: {{message}}",
+        }),
       );
     }
   };
@@ -254,11 +296,25 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{provider ? "Edit" : "Add"} AI Provider</DialogTitle>
+          <DialogTitle>
+            {provider
+              ? t("aiProviders.dialog.titleEdit", {
+                  defaultValue: "Edit AI Provider",
+                })
+              : t("aiProviders.dialog.titleAdd", {
+                  defaultValue: "Add AI Provider",
+                })}
+          </DialogTitle>
           <DialogDescription>
             {provider
-              ? "Update the configuration for this AI model provider."
-              : "Add a new AI endpoint for auto-categorization."}
+              ? t("aiProviders.dialog.descriptionEdit", {
+                  defaultValue:
+                    "Update the configuration for this AI model provider.",
+                })
+              : t("aiProviders.dialog.descriptionAdd", {
+                  defaultValue:
+                    "Add a new AI endpoint for auto-categorization.",
+                })}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -268,10 +324,16 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Provider Name</FormLabel>
+                  <FormLabel>
+                    {t("aiProviders.dialog.name", {
+                      defaultValue: "Provider Name",
+                    })}
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., Local Llama, Mistral Beta"
+                      placeholder={t("aiProviders.dialog.namePlaceholder", {
+                        defaultValue: "e.g., Local Llama, Mistral Beta",
+                      })}
                       {...field}
                     />
                   </FormControl>
@@ -286,7 +348,11 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>API Type</FormLabel>
+                    <FormLabel>
+                      {t("aiProviders.dialog.apiType", {
+                        defaultValue: "API Type",
+                      })}
+                    </FormLabel>
                     <select
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={field.value}
@@ -313,7 +379,11 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                       <option value="ANTHROPIC">Anthropic</option>
                       <option value="MISTRAL">Mistral</option>
                       <option value="PERPLEXITY">Perplexity</option>
-                      <option value="CUSTOM">Custom (OpenAI Compatible)</option>
+                      <option value="CUSTOM">
+                        {t("aiProviders.dialog.customOption", {
+                          defaultValue: "Custom (OpenAI Compatible)",
+                        })}
+                      </option>
                     </select>
                     {PROVIDER_DOCS[field.value as keyof typeof PROVIDER_DOCS]
                       ?.url && (
@@ -327,7 +397,9 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         rel="noopener noreferrer"
                         className="text-[10px] text-indigo-500 hover:underline inline-block mt-1"
                       >
-                        View Documentation & Models →
+                        {t("aiProviders.dialog.docs", {
+                          defaultValue: "View Documentation & Models →",
+                        })}
                       </a>
                     )}
                     <FormMessage />
@@ -340,9 +412,18 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                 name="model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Model ID (Optional)</FormLabel>
+                    <FormLabel>
+                      {t("aiProviders.dialog.model", {
+                        defaultValue: "Model ID (Optional)",
+                      })}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., gpt-4o, llama3" {...field} />
+                      <Input
+                        placeholder={t("aiProviders.dialog.modelPlaceholder", {
+                          defaultValue: "e.g., gpt-4o, llama3",
+                        })}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -355,12 +436,19 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
               name="baseUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Base URL (Endpoint)</FormLabel>
+                  <FormLabel>
+                    {t("aiProviders.dialog.baseUrl", {
+                      defaultValue: "Base URL (Endpoint)",
+                    })}
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="https://api.openai.com/v1" {...field} />
                   </FormControl>
                   <p className="text-[10px] text-muted-foreground">
-                    Ensure this URL is allowed in the CSP or proxy if required.
+                    {t("aiProviders.dialog.baseUrlHint", {
+                      defaultValue:
+                        "Ensure this URL is allowed in the CSP or proxy if required.",
+                    })}
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -372,10 +460,17 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormLabel>
+                    {t("aiProviders.dialog.description", {
+                      defaultValue: "Description (Optional)",
+                    })}
+                  </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Notes about this endpoint..."
+                      placeholder={t(
+                        "aiProviders.dialog.descriptionPlaceholder",
+                        { defaultValue: "Notes about this endpoint..." },
+                      )}
                       {...field}
                     />
                   </FormControl>
@@ -396,7 +491,11 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Set as default provider</FormLabel>
+                    <FormLabel>
+                      {t("aiProviders.dialog.setDefault", {
+                        defaultValue: "Set as default provider",
+                      })}
+                    </FormLabel>
                   </div>
                 </FormItem>
               )}
@@ -417,11 +516,17 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                     ) : (
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     )}
-                    Test Connection
+                    {t("aiProviders.dialog.testConnection", {
+                      defaultValue: "Test Connection",
+                    })}
                   </Button>
                 )}
               </div>
-              <Button type="submit">Save Provider</Button>
+              <Button type="submit">
+                {t("aiProviders.dialog.save", {
+                  defaultValue: "Save Provider",
+                })}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

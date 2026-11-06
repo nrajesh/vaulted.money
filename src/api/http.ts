@@ -108,9 +108,51 @@ export function numberParam(
   return parsed;
 }
 
+const CALENDAR_DAY = /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/;
+
+/**
+ * True for `YYYY-MM-DD` or a full ISO timestamp that names a real calendar day.
+ * `Date.parse` alone is too lenient: it accepts "1" and "03/04/2026", and V8
+ * rolls "2026-02-30" over to March, while the API stores the string verbatim.
+ */
+export function isCalendarDate(value: string): boolean {
+  const match = CALENDAR_DAY.exec(value);
+  if (!match || Number.isNaN(Date.parse(value))) return false;
+  const [year, month, day] = [
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+  ];
+  const check = new Date(Date.UTC(year, month - 1, day));
+  return (
+    check.getUTCFullYear() === year &&
+    check.getUTCMonth() === month - 1 &&
+    check.getUTCDate() === day
+  );
+}
+
 /** Accepts `YYYY-MM-DD` or a full ISO timestamp. */
-export const isoDateSchema = z
+export const isoDateSchema = z.string().refine(isCalendarDate, {
+  message: "must be an ISO 8601 date (YYYY-MM-DD or full timestamp)",
+});
+
+/** A three-letter currency code such as `EUR`; lower case is normalised. */
+export const currencyCodeSchema = z
   .string()
-  .refine((value) => !Number.isNaN(Date.parse(value)), {
-    message: "must be an ISO 8601 date (YYYY-MM-DD or full timestamp)",
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z]{3}$/, {
+    message: 'must be a three-letter currency code such as "EUR"',
   });
+
+/** Parses an optional `YYYY-MM-DD` query value, rejecting garbage with a 400. */
+export function dateParam(
+  name: string,
+  value: string | undefined,
+): string | undefined {
+  if (value === undefined || value === "") return undefined;
+  if (!isCalendarDate(value)) {
+    throw badRequest(`Query parameter "${name}" must be a date (YYYY-MM-DD)`);
+  }
+  return value.slice(0, 10);
+}

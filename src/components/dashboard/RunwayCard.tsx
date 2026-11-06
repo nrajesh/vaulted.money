@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useFinancialRunway } from "@/hooks/dashboard/useFinancialRunway";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
 
 export const RunwayCard = () => {
   const {
@@ -17,16 +18,26 @@ export const RunwayCard = () => {
   } = useFinancialRunway();
 
   const { formatCurrency } = useCurrency();
+  const { t } = useTranslation();
 
   const formatDuration = (months: number) => {
-    if (months < 1) return "< 1 Month";
+    if (months < 1)
+      return t("dashboard.runway.lessThanMonth", { defaultValue: "< 1 Month" });
     const years = Math.floor(months / 12);
     const remainingMonths = Math.floor(months % 12);
+    const monthsLabel = (count: number) =>
+      t("dashboard.runway.month", { count, defaultValue: "{{count}} Months" });
 
     if (years > 0) {
-      return `${years} Year${years > 1 ? "s" : ""}${remainingMonths > 0 ? ` ${remainingMonths} Month${remainingMonths > 1 ? "s" : ""}` : ""}`;
+      const yearsLabel = t("dashboard.runway.year", {
+        count: years,
+        defaultValue: "{{count}} Years",
+      });
+      return remainingMonths > 0
+        ? `${yearsLabel} ${monthsLabel(remainingMonths)}`
+        : yearsLabel;
     }
-    return `${Math.floor(months)} Month${months !== 1 ? "s" : ""}`;
+    return monthsLabel(Math.floor(months));
   };
 
   const burnRate = Math.abs(netCashFlow);
@@ -42,10 +53,14 @@ export const RunwayCard = () => {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Financial Runway
+              {t("dashboard.runway.title", {
+                defaultValue: "Financial Runway",
+              })}
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Based on fixed expenses + recent spending
+              {t("dashboard.runway.subtitle", {
+                defaultValue: "Based on fixed expenses + recent spending",
+              })}
             </p>
           </div>
           <div
@@ -63,39 +78,62 @@ export const RunwayCard = () => {
 
         <div className="mt-2">
           <div className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            {isInfinite ? "Infinite" : formatDuration(runwayMonths)}
+            {isInfinite
+              ? t("dashboard.runway.infinite", { defaultValue: "Infinite" })
+              : formatDuration(runwayMonths)}
           </div>
           <p
             className={`mt-1 text-sm font-medium ${isInfinite ? "text-emerald-500" : runwayMonths < 6 ? "text-amber-500" : "text-slate-500"}`}
           >
             {isInfinite
-              ? "Savings are growing!"
-              : `Savings cover ${formatCurrency(burnRate)}/mo burn`}
+              ? t("dashboard.runway.savingsGrowing", {
+                  defaultValue: "Savings are growing!",
+                })
+              : t("dashboard.runway.burn", {
+                  amount: formatCurrency(burnRate),
+                  defaultValue: "Savings cover {{amount}}/mo burn",
+                })}
           </p>
         </div>
 
         {/* Breakdown Progress Bar or Mini Stats */}
         <div className="mt-6 space-y-3">
           <div className="flex justify-between text-xs text-slate-500">
-            <span>Monthly Stats</span>
+            <span>
+              {t("dashboard.runway.monthlyStats", {
+                defaultValue: "Monthly Stats",
+              })}
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-              <div className="text-xs text-slate-400">Fixed Cost</div>
+              <div className="text-xs text-slate-400">
+                {t("dashboard.runway.fixedCost", {
+                  defaultValue: "Fixed Cost",
+                })}
+              </div>
               <div className="font-semibold text-slate-700 dark:text-slate-200">
                 {formatCurrency(Math.abs(monthlyFixed.expenses))}
               </div>
             </div>
             <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-              <div className="text-xs text-slate-400">Avg Spending</div>
+              <div className="text-xs text-slate-400">
+                {t("dashboard.runway.avgSpending", {
+                  defaultValue: "Avg Spending",
+                })}
+              </div>
               <div className="font-semibold text-slate-700 dark:text-slate-200">
                 {formatCurrency(Math.abs(monthlyDiscretionary.expenses))}
               </div>
             </div>
           </div>
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-            <span className="text-xs text-slate-400">Total Savings</span>
+            <span className="text-xs text-slate-400">
+              {t("dashboard.runway.totalSavings", {
+                defaultValue: "Total Savings",
+              })}
+            </span>
             <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
               {formatCurrency(totalSavings)}
             </span>

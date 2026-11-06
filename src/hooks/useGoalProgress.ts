@@ -22,7 +22,8 @@ export interface GoalProgress {
 /**
  * Calculates goal progress for a budget marked as a goal.
  * Filters transactions matching the goal_context (account, category, or sub_category)
- * and sums amounts since the budget's start_date.
+ * and nets their amounts since the budget's start_date (deposits add,
+ * withdrawals subtract).
  */
 export function calculateGoalProgress(
   budget: Budget,
@@ -118,12 +119,14 @@ export function calculateGoalProgress(
     return true;
   });
 
-  // Sum amounts: for savings goals, we want positive amounts (income/savings)
-  // We take absolute values since savings = money flowing in
-  const accumulatedAmount = matchingTransactions.reduce((sum, t) => {
-    // For goals: positive amounts are savings contributions
-    return sum + Math.abs(t.amount);
-  }, 0);
+  // Net amount set aside: deposits (positive) add to the goal and withdrawals
+  // (negative) take away from it. Using absolute values would let spending
+  // money out of a savings account push the goal forward. It never goes below
+  // zero, so overdrawing cannot make progress negative.
+  const accumulatedAmount = Math.max(
+    0,
+    matchingTransactions.reduce((sum, t) => sum + t.amount, 0),
+  );
 
   const targetAmount = budget.target_amount || 1;
   const progressPercentage = Math.min(

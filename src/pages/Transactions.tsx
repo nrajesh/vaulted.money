@@ -23,6 +23,7 @@ import { ScheduledTransaction } from "@/types/dataProvider";
 import { TransactionPageHeader } from "@/components/transactions/TransactionPageHeader";
 import { useTransactionPageActions } from "@/hooks/transactions/useTransactionPageActions";
 import { MissingCurrencyDialog } from "@/components/dialogs/MissingCurrencyDialog";
+import TransferSuggestionsDialog from "@/components/transactions/TransferSuggestionsDialog";
 import {
   useAutoCategorize,
   CategorizeResult,
@@ -380,6 +381,9 @@ const Transactions = () => {
     setMappingDialogState,
     handleMappingConfirm,
     handleDetectTransfers,
+    transferReview,
+    setTransferReview,
+    handleLinkSuggestedTransfers,
     missingCurrencyAccounts,
     resolveMissingCurrencies,
   } = useTransactionPageActions(filteredTransactions);
@@ -854,6 +858,14 @@ const Transactions = () => {
         />
       )}
 
+      <TransferSuggestionsDialog
+        isOpen={transferReview.isOpen}
+        onOpenChange={(isOpen) =>
+          setTransferReview((previous) => ({ ...previous, isOpen }))
+        }
+        pairs={transferReview.pairs}
+        onLink={handleLinkSuggestedTransfers}
+      />
       <MissingCurrencyDialog
         isOpen={missingCurrencyAccounts.length > 0}
         onOpenChange={(open) => {

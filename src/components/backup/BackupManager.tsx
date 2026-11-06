@@ -5,8 +5,10 @@ import { useDataProvider } from "@/context/DataProviderContext";
 import { generateBackupData } from "@/utils/backupUtils";
 import { encryptData } from "@/utils/crypto";
 import { writeSyncFile } from "@/utils/fs-adapter";
+import { useTranslation } from "react-i18next";
 
 const BackupManager = () => {
+  const { t } = useTranslation();
   const dataProvider = useDataProvider();
 
   useEffect(() => {
@@ -45,21 +47,34 @@ const BackupManager = () => {
           await writeSyncFile(handleOrPath, filename, content);
 
           isSuccess = true;
-          showSuccess(`Scheduled backup completed (${filename})`);
+          showSuccess(
+            t("backup.run.completed", {
+              filename,
+              defaultValue: "Scheduled backup completed ({{filename}})",
+            }),
+          );
         } catch (e: unknown) {
           console.error("[BackupManager] Backup failed:", e);
           const error = e as Error;
 
           if (error.name === "NotFoundError") {
             showError(
-              `Backup folder not found for config ${backup.id}. Backup disabled.`,
+              t("backup.run.folderMissing", {
+                id: backup.id,
+                defaultValue:
+                  "Backup folder not found for config {{id}}. Backup disabled.",
+              }),
             );
             await dataProvider.updateBackupConfig(backup.id, {
               isActive: false,
             });
           } else if (error.name === "NotAllowedError") {
             showError(
-              `Permission denied for backup config ${backup.id}. Backup disabled.`,
+              t("backup.run.permissionDenied", {
+                id: backup.id,
+                defaultValue:
+                  "Permission denied for backup config {{id}}. Backup disabled.",
+              }),
             );
             await dataProvider.updateBackupConfig(backup.id, {
               isActive: false,
@@ -87,7 +102,7 @@ const BackupManager = () => {
     checkBackups();
 
     return () => clearInterval(intervalId);
-  }, [dataProvider]);
+  }, [dataProvider, t]);
 
   return null; // Headless component
 };

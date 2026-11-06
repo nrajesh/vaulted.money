@@ -48,6 +48,9 @@ if (!i18n.isInitialized) {
   });
 }
 
+// "languageChanged" does not fire for the initial language, so set it here.
+document.documentElement.lang = i18n.language;
+
 i18n.on("languageChanged", (language) => {
   if (!isLanguageEnabled(language)) {
     const fallbackLanguage = getEnabledLanguages()[0] ?? "en";

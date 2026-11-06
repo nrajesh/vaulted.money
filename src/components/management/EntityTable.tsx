@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import * as React from "react";
 import {
   Table,
@@ -42,6 +43,8 @@ interface EntityTableProps<T extends { id: string; name: string }> {
   isUpdating: boolean;
   isDeletable?: (item: T) => boolean;
   groupBy?: keyof T;
+  /** Display text for a group heading; defaults to the raw value. */
+  groupLabel?: (value: string) => string;
 }
 
 export const EntityTable = <T extends { id: string; name: string }>({
@@ -56,16 +59,24 @@ export const EntityTable = <T extends { id: string; name: string }>({
   isUpdating,
   isDeletable = () => true,
   groupBy,
+  groupLabel,
 }: EntityTableProps<T>) => {
+  const { t } = useTranslation();
   return (
     <div className="w-full">
       {/* Mobile View */}
       <div className="block md:hidden space-y-3">
         {isLoading ? (
-          <div className="text-center p-4">Loading...</div>
+          <div className="text-center p-4">
+            {t("management.status.loadingShort", {
+              defaultValue: "Loading...",
+            })}
+          </div>
         ) : data.length === 0 ? (
           <div className="text-center p-8 border rounded-lg text-muted-foreground bg-card">
-            No items found.
+            {t("management.status.noItems", {
+              defaultValue: "No items found.",
+            })}
           </div>
         ) : (
           data.map((item, index) => {
@@ -79,7 +90,14 @@ export const EntityTable = <T extends { id: string; name: string }>({
               <React.Fragment key={item.id}>
                 {isNewGroup && (
                   <div className="font-bold text-sm text-muted-foreground pt-2 pb-1 px-1">
-                    {String(item[groupBy] || "Uncategorized")}
+                    {groupLabel
+                      ? groupLabel(String(item[groupBy] || ""))
+                      : String(
+                          item[groupBy] ||
+                            t("management.status.uncategorized", {
+                              defaultValue: "Uncategorized",
+                            }),
+                        )}
                   </div>
                 )}
                 <ContextMenu>
@@ -96,7 +114,9 @@ export const EntityTable = <T extends { id: string; name: string }>({
                             onCheckedChange={(checked) =>
                               handleRowSelect(item.id, Boolean(checked))
                             }
-                            aria-label="Select card"
+                            aria-label={t("management.actions.selectCard", {
+                              defaultValue: "Select card",
+                            })}
                             disabled={!isDeletable(item)}
                             className="mt-1 flex-shrink-0"
                           />
@@ -170,7 +190,13 @@ export const EntityTable = <T extends { id: string; name: string }>({
                         )
                       }
                     >
-                      {selectedRows.includes(item.id) ? "Deselect" : "Select"}
+                      {selectedRows.includes(item.id)
+                        ? t("management.actions.deselect", {
+                            defaultValue: "Deselect",
+                          })
+                        : t("management.actions.select", {
+                            defaultValue: "Select",
+                          })}
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
@@ -178,7 +204,8 @@ export const EntityTable = <T extends { id: string; name: string }>({
                       onClick={() => handleEditClick(item)}
                       disabled={!isDeletable(item)}
                     >
-                      <Edit className="h-4 w-4 mr-2" /> Edit
+                      <Edit className="h-4 w-4 mr-2" />{" "}
+                      {t("management.actions.edit", { defaultValue: "Edit" })}
                     </ContextMenuItem>
                     <ContextMenuItem
                       inset
@@ -186,7 +213,10 @@ export const EntityTable = <T extends { id: string; name: string }>({
                       onClick={() => handleDeleteClick(item)}
                       disabled={!isDeletable(item)}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                      <Trash2 className="h-4 w-4 mr-2" />{" "}
+                      {t("management.actions.delete", {
+                        defaultValue: "Delete",
+                      })}
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
@@ -216,7 +246,9 @@ export const EntityTable = <T extends { id: string; name: string }>({
                       handleRowSelect(selectableIds.join(","), !!checked);
                     }
                   }}
-                  aria-label="Select all"
+                  aria-label={t("management.actions.selectAll", {
+                    defaultValue: "Select all",
+                  })}
                 />
               </TableHead>
               {columns.map((col) => (
@@ -228,7 +260,7 @@ export const EntityTable = <T extends { id: string; name: string }>({
                 </TableHead>
               ))}
               <TableHead className="text-right text-slate-800 dark:text-slate-200 font-semibold">
-                Actions
+                {t("management.columns.actions", { defaultValue: "Actions" })}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -236,7 +268,9 @@ export const EntityTable = <T extends { id: string; name: string }>({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length + 2} className="text-center">
-                  Loading...
+                  {t("management.status.loadingShort", {
+                    defaultValue: "Loading...",
+                  })}
                 </TableCell>
               </TableRow>
             ) : data.length === 0 ? (
@@ -245,7 +279,9 @@ export const EntityTable = <T extends { id: string; name: string }>({
                   colSpan={columns.length + 2}
                   className="text-center py-4 text-muted-foreground"
                 >
-                  No items found.
+                  {t("management.status.noItems", {
+                    defaultValue: "No items found.",
+                  })}
                 </TableCell>
               </TableRow>
             ) : (
@@ -264,7 +300,14 @@ export const EntityTable = <T extends { id: string; name: string }>({
                           colSpan={columns.length + 2}
                           className="font-semibold py-2 text-slate-900 dark:text-slate-100"
                         >
-                          {String(item[groupBy] || "Uncategorized")}
+                          {groupLabel
+                            ? groupLabel(String(item[groupBy] || ""))
+                            : String(
+                                item[groupBy] ||
+                                  t("management.status.uncategorized", {
+                                    defaultValue: "Uncategorized",
+                                  }),
+                              )}
                         </TableCell>
                       </TableRow>
                     )}
@@ -281,7 +324,9 @@ export const EntityTable = <T extends { id: string; name: string }>({
                               onCheckedChange={(checked) =>
                                 handleRowSelect(item.id, Boolean(checked))
                               }
-                              aria-label="Select row"
+                              aria-label={t("management.actions.selectRow", {
+                                defaultValue: "Select row",
+                              })}
                               disabled={!isDeletable(item)}
                             />
                           </TableCell>
@@ -311,12 +356,18 @@ export const EntityTable = <T extends { id: string; name: string }>({
                                       size="icon"
                                       onClick={() => handleEditClick(item)}
                                       disabled={!isDeletable(item)}
-                                      aria-label="Edit"
+                                      aria-label={t("management.actions.edit", {
+                                        defaultValue: "Edit",
+                                      })}
                                     >
                                       <Edit className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Edit</TooltipContent>
+                                  <TooltipContent>
+                                    {t("management.actions.edit", {
+                                      defaultValue: "Edit",
+                                    })}
+                                  </TooltipContent>
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -325,12 +376,19 @@ export const EntityTable = <T extends { id: string; name: string }>({
                                       size="icon"
                                       onClick={() => handleDeleteClick(item)}
                                       disabled={!isDeletable(item)}
-                                      aria-label="Delete"
+                                      aria-label={t(
+                                        "management.actions.delete",
+                                        { defaultValue: "Delete" },
+                                      )}
                                     >
                                       <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Delete</TooltipContent>
+                                  <TooltipContent>
+                                    {t("management.actions.delete", {
+                                      defaultValue: "Delete",
+                                    })}
+                                  </TooltipContent>
                                 </Tooltip>
                               </>
                             )}
@@ -348,8 +406,12 @@ export const EntityTable = <T extends { id: string; name: string }>({
                           }
                         >
                           {selectedRows.includes(item.id)
-                            ? "Deselect"
-                            : "Select"}
+                            ? t("management.actions.deselect", {
+                                defaultValue: "Deselect",
+                              })
+                            : t("management.actions.select", {
+                                defaultValue: "Select",
+                              })}
                         </ContextMenuItem>
                         <ContextMenuSeparator />
                         <ContextMenuItem
@@ -357,7 +419,10 @@ export const EntityTable = <T extends { id: string; name: string }>({
                           onClick={() => handleEditClick(item)}
                           disabled={!isDeletable(item)}
                         >
-                          <Edit className="h-4 w-4 mr-2" /> Edit
+                          <Edit className="h-4 w-4 mr-2" />{" "}
+                          {t("management.actions.edit", {
+                            defaultValue: "Edit",
+                          })}
                         </ContextMenuItem>
                         <ContextMenuItem
                           inset
@@ -365,7 +430,10 @@ export const EntityTable = <T extends { id: string; name: string }>({
                           onClick={() => handleDeleteClick(item)}
                           disabled={!isDeletable(item)}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                          <Trash2 className="h-4 w-4 mr-2" />{" "}
+                          {t("management.actions.delete", {
+                            defaultValue: "Delete",
+                          })}
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>

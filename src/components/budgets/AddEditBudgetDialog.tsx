@@ -51,6 +51,7 @@ import { Budget } from "@/data/finance-data";
 import { useLedger } from "@/contexts/LedgerContext";
 import { differenceInCalendarDays, endOfMonth, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import {
   Command,
@@ -82,6 +83,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
   allBudgets,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const { activeLedger } = useLedger();
   const { categories, subCategories, accounts, vendors } = useTransactions();
   const { availableCurrencies, selectedCurrency } = useCurrency();
@@ -131,9 +133,23 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
           budget_scope_name: z.string().nullable().optional(),
           category_id: z.string().optional(),
           sub_category_id: z.string().nullable().optional(),
-          target_amount: z.coerce.number().positive("Amount must be positive"),
-          currency: z.string().min(1, "Currency is required"),
-          start_date: z.string().min(1, "Start date is required"),
+          target_amount: z.coerce.number().positive(
+            t("budgets.dialog.errors.amountPositive", {
+              defaultValue: "Amount must be positive",
+            }),
+          ),
+          currency: z.string().min(
+            1,
+            t("budgets.dialog.errors.currency", {
+              defaultValue: "Currency is required",
+            }),
+          ),
+          start_date: z.string().min(
+            1,
+            t("budgets.dialog.errors.startDate", {
+              defaultValue: "Start date is required",
+            }),
+          ),
           frequency_value: z.coerce.number().min(1),
           frequency_unit: z.string().min(1),
           end_date: z.string().optional(),
@@ -150,7 +166,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
             if (!data.category_id || data.category_id.length === 0) {
               ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Category is required.",
+                message: t("budgets.dialog.errors.category", {
+                  defaultValue: "Category is required.",
+                }),
                 path: ["category_id"],
               });
             }
@@ -159,7 +177,14 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
             if (!data.budget_scope_name) {
               ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: `Please select ${data.budget_scope === "account" ? "an account" : "a vendor"}.`,
+                message:
+                  data.budget_scope === "account"
+                    ? t("budgets.dialog.errors.selectAccount", {
+                        defaultValue: "Please select an account.",
+                      })
+                    : t("budgets.dialog.errors.selectVendor", {
+                        defaultValue: "Please select a vendor.",
+                      }),
                 path: ["budget_scope_name"],
               });
             }
@@ -172,7 +197,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
           ) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Please select at least one account group.",
+              message: t("budgets.dialog.errors.accountGroup", {
+                defaultValue: "Please select at least one account group.",
+              }),
               path: ["account_scope_values"],
             });
           }
@@ -199,7 +226,21 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
           if (isDuplicate) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: `A budget for this ${data.budget_scope} already exists.`,
+              message:
+                data.budget_scope === "category"
+                  ? t("budgets.dialog.errors.duplicateCategory", {
+                      defaultValue:
+                        "A budget for this category already exists.",
+                    })
+                  : data.budget_scope === "account"
+                    ? t("budgets.dialog.errors.duplicateAccount", {
+                        defaultValue:
+                          "A budget for this account already exists.",
+                      })
+                    : t("budgets.dialog.errors.duplicateVendor", {
+                        defaultValue:
+                          "A budget for this vendor already exists.",
+                      }),
               path:
                 data.budget_scope === "category"
                   ? ["category_id"]
@@ -207,7 +248,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
             });
           }
         }),
-    [allBudgets, budget],
+    [allBudgets, budget, t],
   );
 
   type BudgetFormData = z.infer<typeof formSchema>;
@@ -445,8 +486,12 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
         } as unknown as import("@/types/dataProvider").Budget);
         showSuccess(
           values.is_goal
-            ? "Goal updated successfully!"
-            : "Budget updated successfully!",
+            ? t("budgets.dialog.goalUpdated", {
+                defaultValue: "Goal updated successfully!",
+              })
+            : t("budgets.dialog.budgetUpdated", {
+                defaultValue: "Budget updated successfully!",
+              }),
         );
       } else {
         await dataProvider.addBudget(
@@ -457,8 +502,12 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
         );
         showSuccess(
           values.is_goal
-            ? "Goal created successfully!"
-            : "Budget created successfully!",
+            ? t("budgets.dialog.goalCreated", {
+                defaultValue: "Goal created successfully!",
+              })
+            : t("budgets.dialog.budgetCreated", {
+                defaultValue: "Budget created successfully!",
+              }),
         );
       }
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
@@ -466,7 +515,12 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
       onOpenChange(false);
       triggerExport();
     } catch (error: unknown) {
-      showError(`Failed to save: ${(error as Error).message}`);
+      showError(
+        t("budgets.dialog.saveFailed", {
+          message: (error as Error).message,
+          defaultValue: "Failed to save: {{message}}",
+        }),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -531,12 +585,32 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
             ) : (
               <TrendingUp className="h-5 w-5 text-primary" />
             )}
-            {budget ? "Edit" : "Create"} {isGoal ? "Goal" : "Budget"}
+            {budget
+              ? isGoal
+                ? t("budgets.dialog.title.editGoal", {
+                    defaultValue: "Edit Goal",
+                  })
+                : t("budgets.dialog.title.editBudget", {
+                    defaultValue: "Edit Budget",
+                  })
+              : isGoal
+                ? t("budgets.dialog.title.createGoal", {
+                    defaultValue: "Create Goal",
+                  })
+                : t("budgets.dialog.title.createBudget", {
+                    defaultValue: "Create Budget",
+                  })}
           </DialogTitle>
           <DialogDescription>
             {isGoal
-              ? "Set a savings target - we'll track your progress."
-              : "Set a spending limit for a category, account, or vendor."}
+              ? t("budgets.dialog.descriptionGoal", {
+                  defaultValue:
+                    "Set a savings target - we'll track your progress.",
+                })
+              : t("budgets.dialog.descriptionBudget", {
+                  defaultValue:
+                    "Set a spending limit for a category, account, or vendor.",
+                })}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -550,10 +624,15 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                   <div className="space-y-0.5">
                     <FormLabel className="text-sm flex items-center gap-2 cursor-pointer">
                       <Target className="h-4 w-4 text-emerald-600" />
-                      Savings Goal
+                      {t("budgets.dialog.savingsGoal", {
+                        defaultValue: "Savings Goal",
+                      })}
                     </FormLabel>
                     <FormDescription className="text-xs">
-                      Track as a saving target instead of a spending limit.
+                      {t("budgets.dialog.savingsGoalHint", {
+                        defaultValue:
+                          "Track as a saving target instead of a spending limit.",
+                      })}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -571,7 +650,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
               <h4
                 className={`text-xs font-semibold uppercase tracking-wider ${sectionHeaderColor}`}
               >
-                Track Transactions Towards
+                {t("budgets.dialog.trackTowards", {
+                  defaultValue: "Track Transactions Towards",
+                })}
               </h4>
 
               {/* Scope pill buttons */}
@@ -583,7 +664,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                     <div className="flex flex-wrap gap-1.5">
                       <ScopePill
                         value="category"
-                        label="Category"
+                        label={t("budgets.dialog.scope.category", {
+                          defaultValue: "Category",
+                        })}
                         icon={Tag}
                         active={field.value === "category"}
                         onClick={() => {
@@ -595,7 +678,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
 
                       <ScopePill
                         value="account"
-                        label="Account"
+                        label={t("budgets.dialog.scope.account", {
+                          defaultValue: "Account",
+                        })}
                         icon={Wallet}
                         active={field.value === "account"}
                         onClick={() => {
@@ -608,7 +693,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                       />
                       <ScopePill
                         value="vendor"
-                        label="Vendor"
+                        label={t("budgets.dialog.scope.vendor", {
+                          defaultValue: "Vendor",
+                        })}
                         icon={Store}
                         active={field.value === "vendor"}
                         onClick={() => {
@@ -643,9 +730,16 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                             field.onChange(val);
                             form.setValue("sub_category_id", null);
                           }}
-                          placeholder="Select a category..."
-                          searchPlaceholder="Search categories..."
-                          emptyPlaceholder="No category found."
+                          placeholder={t("budgets.dialog.selectCategory", {
+                            defaultValue: "Select a category...",
+                          })}
+                          searchPlaceholder={t(
+                            "budgets.dialog.searchCategories",
+                            { defaultValue: "Search categories..." },
+                          )}
+                          emptyPlaceholder={t("budgets.dialog.noCategory", {
+                            defaultValue: "No category found.",
+                          })}
                         />
                         <FormMessage />
                       </FormItem>
@@ -666,12 +760,22 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                               .sort((a, b) => a.label.localeCompare(b.label))}
                             value={field.value || ""}
                             onChange={(val) => field.onChange(val || null)}
-                            placeholder="All sub-categories"
-                            searchPlaceholder="Search..."
-                            emptyPlaceholder="No sub-categories"
+                            placeholder={t("budgets.dialog.allSubCategories", {
+                              defaultValue: "All sub-categories",
+                            })}
+                            searchPlaceholder={t("budgets.dialog.search", {
+                              defaultValue: "Search...",
+                            })}
+                            emptyPlaceholder={t(
+                              "budgets.dialog.noSubCategories",
+                              { defaultValue: "No sub-categories" },
+                            )}
                           />
                           <FormDescription className="text-xs">
-                            Optionally narrow to a sub-category.
+                            {t("budgets.dialog.narrowToSub", {
+                              defaultValue:
+                                "Optionally narrow to a sub-category.",
+                            })}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -691,13 +795,23 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                         onChange={(val) => field.onChange(val || null)}
                         placeholder={
                           budgetScope === "account"
-                            ? "Select an account..."
+                            ? t("budgets.dialog.selectAccount", {
+                                defaultValue: "Select an account...",
+                              })
                             : budgetScope === "vendor"
-                              ? "Select a vendor..."
-                              : "Select a category..."
+                              ? t("budgets.dialog.selectVendor", {
+                                  defaultValue: "Select a vendor...",
+                                })
+                              : t("budgets.dialog.selectCategory", {
+                                  defaultValue: "Select a category...",
+                                })
                         }
-                        searchPlaceholder="Search..."
-                        emptyPlaceholder="No matches found."
+                        searchPlaceholder={t("budgets.dialog.search", {
+                          defaultValue: "Search...",
+                        })}
+                        emptyPlaceholder={t("budgets.dialog.noMatches", {
+                          defaultValue: "No matches found.",
+                        })}
                       />
                       <FormMessage />
                     </FormItem>
@@ -714,7 +828,13 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                 render={({ field }) => (
                   <FormItem className="col-span-3">
                     <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                      {isGoal ? "Goal Amount" : "Spending Limit"}
+                      {isGoal
+                        ? t("budgets.dialog.goalAmount", {
+                            defaultValue: "Goal Amount",
+                          })
+                        : t("budgets.dialog.spendingLimit", {
+                            defaultValue: "Spending Limit",
+                          })}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -734,7 +854,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                 render={({ field }) => (
                   <FormItem className="col-span-2">
                     <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                      Currency
+                      {t("budgets.dialog.currency", {
+                        defaultValue: "Currency",
+                      })}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
@@ -764,7 +886,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                      Start Date
+                      {t("budgets.dialog.startDate", {
+                        defaultValue: "Start Date",
+                      })}
                     </FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
@@ -780,7 +904,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                        Target Date
+                        {t("budgets.dialog.targetDate", {
+                          defaultValue: "Target Date",
+                        })}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -790,7 +916,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                         />
                       </FormControl>
                       <FormDescription className="text-xs">
-                        Defaults to end of month if empty
+                        {t("budgets.dialog.targetDateHint", {
+                          defaultValue: "Defaults to end of month if empty",
+                        })}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -803,7 +931,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                        End Date
+                        {t("budgets.dialog.endDate", {
+                          defaultValue: "End Date",
+                        })}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -828,7 +958,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                   render={({ field }) => (
                     <FormItem className="flex-1">
                       <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                        Repeat Every
+                        {t("budgets.dialog.repeatEvery", {
+                          defaultValue: "Repeat Every",
+                        })}
                       </FormLabel>
                       <FormControl>
                         <Input type="number" min="1" {...field} />
@@ -852,10 +984,24 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="d">Days</SelectItem>
-                          <SelectItem value="w">Weeks</SelectItem>
-                          <SelectItem value="m">Months</SelectItem>
-                          <SelectItem value="y">Years</SelectItem>
+                          <SelectItem value="d">
+                            {t("budgets.dialog.days", { defaultValue: "Days" })}
+                          </SelectItem>
+                          <SelectItem value="w">
+                            {t("budgets.dialog.weeks", {
+                              defaultValue: "Weeks",
+                            })}
+                          </SelectItem>
+                          <SelectItem value="m">
+                            {t("budgets.dialog.months", {
+                              defaultValue: "Months",
+                            })}
+                          </SelectItem>
+                          <SelectItem value="y">
+                            {t("budgets.dialog.years", {
+                              defaultValue: "Years",
+                            })}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -873,7 +1019,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                 <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/10 p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                      Suggested monthly saving
+                      {t("budgets.dialog.suggestedMonthly", {
+                        defaultValue: "Suggested monthly saving",
+                      })}
                     </span>
                     <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
                       {new Intl.NumberFormat(undefined, {
@@ -883,7 +1031,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                         maximumFractionDigits: 0,
                       }).format(computedMonthlyContribution)}
                       <span className="text-xs font-normal ml-0.5 opacity-70">
-                        /mo
+                        {t("budgets.dialog.perMonthShort", {
+                          defaultValue: "/mo",
+                        })}
                       </span>
                     </span>
                   </div>
@@ -897,7 +1047,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
               computedMonthlyContribution > 0 && (
                 <div className="flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/10 p-3">
                   <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                    Suggested monthly saving
+                    {t("budgets.dialog.suggestedMonthly", {
+                      defaultValue: "Suggested monthly saving",
+                    })}
                   </span>
                   <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
                     {new Intl.NumberFormat(undefined, {
@@ -907,7 +1059,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                       maximumFractionDigits: 0,
                     }).format(computedMonthlyContribution)}
                     <span className="text-xs font-normal ml-0.5 opacity-70">
-                      /mo
+                      {t("budgets.dialog.perMonthShort", {
+                        defaultValue: "/mo",
+                      })}
                     </span>
                   </span>
                 </div>
@@ -920,7 +1074,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                    From Accounts (Optional)
+                    {t("budgets.dialog.fromAccounts", {
+                      defaultValue: "From Accounts (Optional)",
+                    })}
                   </FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -956,7 +1112,9 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                               ))}
                             </div>
                           ) : (
-                            "All accounts"
+                            t("budgets.dialog.allAccounts", {
+                              defaultValue: "All accounts",
+                            })
                           )}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -964,9 +1122,17 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="Select account types..." />
+                        <CommandInput
+                          placeholder={t("budgets.dialog.selectAccountTypes", {
+                            defaultValue: "Select account types...",
+                          })}
+                        />
                         <CommandList>
-                          <CommandEmpty>No account type found.</CommandEmpty>
+                          <CommandEmpty>
+                            {t("budgets.dialog.noAccountType", {
+                              defaultValue: "No account type found.",
+                            })}
+                          </CommandEmpty>
                           <CommandGroup>
                             {accountTypes.map((type) => (
                               <CommandItem
@@ -1001,7 +1167,10 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                     </PopoverContent>
                   </Popover>
                   <FormDescription className="text-xs">
-                    Leave empty to include transactions from all accounts.
+                    {t("budgets.dialog.allAccountsHint", {
+                      defaultValue:
+                        "Leave empty to include transactions from all accounts.",
+                    })}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -1022,7 +1191,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                       />
                     </FormControl>
                     <FormLabel className="font-normal text-sm cursor-pointer">
-                      Active
+                      {t("budgets.dialog.active", { defaultValue: "Active" })}
                     </FormLabel>
                   </FormItem>
                 )}
@@ -1031,7 +1200,21 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {budget ? "Update" : "Create"} {isGoal ? "Goal" : "Budget"}
+                {budget
+                  ? isGoal
+                    ? t("budgets.dialog.submit.updateGoal", {
+                        defaultValue: "Update Goal",
+                      })
+                    : t("budgets.dialog.submit.updateBudget", {
+                        defaultValue: "Update Budget",
+                      })
+                  : isGoal
+                    ? t("budgets.dialog.submit.createGoal", {
+                        defaultValue: "Create Goal",
+                      })
+                    : t("budgets.dialog.submit.createBudget", {
+                        defaultValue: "Create Budget",
+                      })}
               </Button>
             </div>
           </form>

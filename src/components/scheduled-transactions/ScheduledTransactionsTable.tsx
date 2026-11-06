@@ -27,6 +27,7 @@ import {
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatDateToDDMMYYYY, cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   MoreHorizontal,
   Pencil,
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { ScheduledTransaction } from "@/types/dataProvider";
+import { hasScheduleEnded } from "@/utils/scheduleUtils";
 
 interface ScheduledTransactionsTableProps {
   transactions: ScheduledTransaction[];
@@ -62,11 +64,39 @@ export function ScheduledTransactionsTable({
   onProcessToday,
   onUnlink,
 }: ScheduledTransactionsTableProps) {
+  const { t } = useTranslation();
   const { accountCurrencyMap } = useTransactions();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = React.useState(1);
   const transactionsPerPage = 10;
+
+  // A schedule has ended once its next occurrence would fall after the end
+  // date: the startup scheduler stops creating transactions for it.
+  const isEnded = (transaction: ScheduledTransaction) =>
+    hasScheduleEnded(transaction.end_date, new Date(transaction.date));
+
+  // The next date means nothing once a schedule has ended, so show the marker
+  // and the date it stopped instead of an overdue "next" date.
+  const renderNextDate = (transaction: ScheduledTransaction) => {
+    if (!isEnded(transaction)) return formatDateToDDMMYYYY(transaction.date);
+    const endDate = formatDateToDDMMYYYY(transaction.end_date as string);
+    return (
+      <span
+        className="inline-flex flex-wrap items-center gap-2"
+        title={t("scheduled.table.endedTitle", {
+          date: endDate,
+          defaultValue:
+            "Ended on {{date}}. It will not create any more transactions.",
+        })}
+      >
+        <Badge variant="secondary" className="text-xs font-normal">
+          {t("scheduled.table.ended", { defaultValue: "Ended" })}
+        </Badge>
+        <span className="text-slate-500 dark:text-slate-400">{endDate}</span>
+      </span>
+    );
+  };
 
   const handleAccountClick = (accountName: string) => {
     navigate("/transactions", { state: { filterAccount: accountName } });
@@ -148,7 +178,13 @@ export function ScheduledTransactionsTable({
     console.error(
       "ScheduledTransactionsTable: accountCurrencyMap is missing from context.",
     );
-    return <div className="p-4 text-red-500">Error loading table context.</div>;
+    return (
+      <div className="p-4 text-red-500">
+        {t("scheduled.table.contextError", {
+          defaultValue: "Error loading table context.",
+        })}
+      </div>
+    );
   }
 
   return (
@@ -164,7 +200,10 @@ export function ScheduledTransactionsTable({
         <div className="flex min-h-12 flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="px-1 text-sm font-medium">
-              {selectedIds.size} selected
+              {t("scheduled.table.selected", {
+                count: selectedIds.size,
+                defaultValue: "{{count}} selected",
+              })}
             </span>
             <div className="h-4 w-px bg-border" />
             <Button
@@ -173,11 +212,19 @@ export function ScheduledTransactionsTable({
               onClick={() => setSelectedIds(new Set())}
               disabled={selectedIds.size === 0}
               className="h-10 w-10 p-0 disabled:pointer-events-none disabled:opacity-45 sm:h-9 sm:w-auto sm:px-3"
-              title="Clear selection"
+              title={t("scheduled.table.clearSelection", {
+                defaultValue: "Clear selection",
+              })}
             >
               <X className="h-4 w-4" />
-              <span className="sr-only">Clear selection</span>
-              <span className="hidden sm:inline sm:ml-1">Clear</span>
+              <span className="sr-only">
+                {t("scheduled.table.clearSelection", {
+                  defaultValue: "Clear selection",
+                })}
+              </span>
+              <span className="hidden sm:inline sm:ml-1">
+                {t("scheduled.table.clear", { defaultValue: "Clear" })}
+              </span>
             </Button>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -187,11 +234,19 @@ export function ScheduledTransactionsTable({
               onClick={handleBulkDelete}
               disabled={selectedIds.size === 0}
               className="h-10 w-10 p-0 disabled:pointer-events-none disabled:border disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 sm:h-9 sm:w-auto sm:px-3"
-              title="Delete selected"
+              title={t("scheduled.table.deleteSelected", {
+                defaultValue: "Delete selected",
+              })}
             >
               <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete selected</span>
-              <span className="hidden sm:inline sm:ml-1">Delete</span>
+              <span className="sr-only">
+                {t("scheduled.table.deleteSelected", {
+                  defaultValue: "Delete selected",
+                })}
+              </span>
+              <span className="hidden sm:inline sm:ml-1">
+                {t("scheduled.table.delete", { defaultValue: "Delete" })}
+              </span>
             </Button>
           </div>
         </div>
@@ -201,7 +256,9 @@ export function ScheduledTransactionsTable({
       <div className="block md:hidden space-y-4">
         {transactions.length === 0 ? (
           <div className="text-center py-8 text-slate-500 bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-md border">
-            No scheduled transactions found.
+            {t("scheduled.table.empty", {
+              defaultValue: "No scheduled transactions found.",
+            })}
           </div>
         ) : (
           currentTransactions.map((transaction, index) => {
@@ -216,44 +273,59 @@ export function ScheduledTransactionsTable({
                 key={transaction.id || `sched-txn-${index}`}
                 className={`app-mobile-row flex flex-col gap-3 bg-white/50 backdrop-blur-sm dark:bg-black/20 ${
                   selectedIds.has(transaction.id) ? "app-row-selected" : ""
-                }`}
+                } ${isEnded(transaction) ? "opacity-70" : ""}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <Checkbox
                       checked={selectedIds.has(transaction.id)}
                       onCheckedChange={() => toggleSelect(transaction.id)}
-                      aria-label={`Select scheduled transaction for ${transaction.vendor}`}
+                      aria-label={t("scheduled.table.selectOne", {
+                        name: transaction.vendor,
+                        defaultValue:
+                          "Select scheduled transaction for {{name}}",
+                      })}
                       className="mt-1 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold text-base truncate text-slate-800 dark:text-slate-100">
-                          {transaction.vendor || "Unknown"}
+                          {transaction.vendor ||
+                            t("scheduled.table.unknown", {
+                              defaultValue: "Unknown",
+                            })}
                         </span>
                         {transaction.transfer_id && (
                           <Link className="h-3.5 w-3.5 text-blue-500" />
                         )}
                       </div>
                       <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 truncate">
-                        {transaction.account || "Unknown"}
+                        {transaction.account ||
+                          t("scheduled.table.unknown", {
+                            defaultValue: "Unknown",
+                          })}
                       </div>
 
                       <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm mt-1">
                         <div className="flex flex-col">
                           <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 text-slate-500">
-                            Date
+                            {t("scheduled.table.headers.date", {
+                              defaultValue: "Date",
+                            })}
                           </span>
                           <span className="font-medium text-slate-700 dark:text-slate-300">
-                            {formatDateToDDMMYYYY(transaction.date)}
+                            {renderNextDate(transaction)}
                           </span>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 text-slate-500">
-                            Freq
+                            {t("scheduled.table.headers.freq", {
+                              defaultValue: "Freq",
+                            })}
                           </span>
                           <span className="text-slate-700 dark:text-slate-300">
-                            {transaction.frequency || "N/A"}
+                            {transaction.frequency ||
+                              t("scheduled.table.na", { defaultValue: "N/A" })}
                           </span>
                         </div>
                         <div className="flex flex-col col-span-2 mt-1">
@@ -264,7 +336,10 @@ export function ScheduledTransactionsTable({
                                 "text-xs",
                               )}
                             >
-                              {transaction.category || "Uncategorized"}
+                              {transaction.category ||
+                                t("scheduled.table.uncategorized", {
+                                  defaultValue: "Uncategorized",
+                                })}
                             </span>
                             {transaction.sub_category && (
                               <Badge variant="secondary" className="text-xs">
@@ -293,18 +368,27 @@ export function ScheduledTransactionsTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                          {t("scheduled.table.actions", {
+                            defaultValue: "Actions",
+                          })}
+                        </DropdownMenuLabel>
                         {onProcessToday && (
                           <DropdownMenuItem
                             onClick={() => onProcessToday(transaction)}
                           >
-                            <PlayCircle className="mr-2 h-4 w-4" /> Make happen
-                            today
+                            <PlayCircle className="mr-2 h-4 w-4" />{" "}
+                            {t("scheduled.table.makeHappenToday", {
+                              defaultValue: "Make happen today",
+                            })}
                           </DropdownMenuItem>
                         )}
                         {onEdit && (
                           <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                            <Pencil className="mr-2 h-4 w-4" />{" "}
+                            {t("scheduled.table.edit", {
+                              defaultValue: "Edit",
+                            })}
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
@@ -312,7 +396,10 @@ export function ScheduledTransactionsTable({
                             onClick={() => onDelete(transaction.id)}
                             className="text-destructive"
                           >
-                            <Trash className="mr-2 h-4 w-4" /> Delete
+                            <Trash className="mr-2 h-4 w-4" />{" "}
+                            {t("scheduled.table.delete", {
+                              defaultValue: "Delete",
+                            })}
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -337,26 +424,40 @@ export function ScheduledTransactionsTable({
                     selectedIds.size === transactions.length
                   }
                   onCheckedChange={toggleSelectAll}
-                  aria-label="Select all scheduled transactions"
+                  aria-label={t("scheduled.table.selectAll", {
+                    defaultValue: "Select all scheduled transactions",
+                  })}
                 />
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
-                Next Date
+                {t("scheduled.table.headers.nextDate", {
+                  defaultValue: "Next Date",
+                })}
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
-                Frequency
+                {t("scheduled.table.headers.frequency", {
+                  defaultValue: "Frequency",
+                })}
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
-                Vendor / Account
+                {t("scheduled.table.headers.vendorAccount", {
+                  defaultValue: "Vendor / Account",
+                })}
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
-                Category
+                {t("scheduled.table.headers.category", {
+                  defaultValue: "Category",
+                })}
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
-                Sub-category
+                {t("scheduled.table.headers.subCategory", {
+                  defaultValue: "Sub-category",
+                })}
               </TableHead>
               <TableHead className="text-right text-slate-800 dark:text-slate-200 font-semibold">
-                Amount
+                {t("scheduled.table.headers.amount", {
+                  defaultValue: "Amount",
+                })}
               </TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
@@ -368,7 +469,9 @@ export function ScheduledTransactionsTable({
                   colSpan={8}
                   className="text-center py-10 text-slate-500"
                 >
-                  No scheduled transactions found.
+                  {t("scheduled.table.empty", {
+                    defaultValue: "No scheduled transactions found.",
+                  })}
                 </TableCell>
               </TableRow>
             ) : (
@@ -385,7 +488,7 @@ export function ScheduledTransactionsTable({
                   <ContextMenu key={transaction.id || `sched-txn-${index}`}>
                     <ContextMenuTrigger asChild>
                       <TableRow
-                        className={`group cursor-pointer hover:bg-muted/50 ${selectedIds.has(transaction.id) ? "bg-muted" : ""}`}
+                        className={`group cursor-pointer hover:bg-muted/50 ${selectedIds.has(transaction.id) ? "bg-muted" : ""} ${isEnded(transaction) ? "opacity-70" : ""}`}
                         onDoubleClick={() => onEdit && onEdit(transaction)}
                       >
                         <TableCell
@@ -395,14 +498,19 @@ export function ScheduledTransactionsTable({
                           <Checkbox
                             checked={selectedIds.has(transaction.id)}
                             onCheckedChange={() => toggleSelect(transaction.id)}
-                            aria-label={`Select scheduled transaction for ${transaction.vendor}`}
+                            aria-label={t("scheduled.table.selectOne", {
+                              name: transaction.vendor,
+                              defaultValue:
+                                "Select scheduled transaction for {{name}}",
+                            })}
                           />
                         </TableCell>
                         <TableCell className="text-slate-700 dark:text-slate-300 font-medium">
-                          {formatDateToDDMMYYYY(transaction.date)}
+                          {renderNextDate(transaction)}
                         </TableCell>
                         <TableCell className="text-slate-500 dark:text-slate-400 text-sm">
-                          {transaction.frequency || "N/A"}
+                          {transaction.frequency ||
+                            t("scheduled.table.na", { defaultValue: "N/A" })}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
@@ -414,8 +522,12 @@ export function ScheduledTransactionsTable({
                                     onUnlink(transaction.transfer_id!);
                                 }}
                                 className="mr-1 p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors group/link"
-                                aria-label="Unlink Pair"
-                                title="Unlink Pair"
+                                aria-label={t("scheduled.table.unlinkPair", {
+                                  defaultValue: "Unlink Pair",
+                                })}
+                                title={t("scheduled.table.unlinkPair", {
+                                  defaultValue: "Unlink Pair",
+                                })}
                               >
                                 <Link className="h-3.5 w-3.5 text-blue-500 group-hover/link:text-red-500" />
                               </button>
@@ -428,7 +540,10 @@ export function ScheduledTransactionsTable({
                               }}
                               className="appearance-none bg-transparent border-0 p-0 text-left font-medium cursor-pointer hover:text-primary hover:underline text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded-sm"
                             >
-                              {transaction.vendor || "Unknown"}
+                              {transaction.vendor ||
+                                t("scheduled.table.unknown", {
+                                  defaultValue: "Unknown",
+                                })}
                             </button>
                           </div>
                           <button
@@ -439,7 +554,10 @@ export function ScheduledTransactionsTable({
                             }}
                             className="appearance-none bg-transparent border-0 p-0 text-left text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded-sm"
                           >
-                            {transaction.account || "Unknown"}
+                            {transaction.account ||
+                              t("scheduled.table.unknown", {
+                                defaultValue: "Unknown",
+                              })}
                           </button>
                         </TableCell>
                         <TableCell>
@@ -456,7 +574,10 @@ export function ScheduledTransactionsTable({
                                 "cursor-pointer hover:border-primary",
                             )}
                           >
-                            {transaction.category || "Uncategorized"}
+                            {transaction.category ||
+                              t("scheduled.table.uncategorized", {
+                                defaultValue: "Uncategorized",
+                              })}
                           </button>
                         </TableCell>
                         <TableCell>
@@ -481,25 +602,38 @@ export function ScheduledTransactionsTable({
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
+                                <span className="sr-only">
+                                  {t("scheduled.table.openMenu", {
+                                    defaultValue: "Open menu",
+                                  })}
+                                </span>
                                 <MoreHorizontal className="h-4 w-4 text-slate-500" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuLabel>
+                                {t("scheduled.table.actions", {
+                                  defaultValue: "Actions",
+                                })}
+                              </DropdownMenuLabel>
                               {onProcessToday && (
                                 <DropdownMenuItem
                                   onClick={() => onProcessToday(transaction)}
                                 >
-                                  <PlayCircle className="mr-2 h-4 w-4" /> Make
-                                  happen today
+                                  <PlayCircle className="mr-2 h-4 w-4" />{" "}
+                                  {t("scheduled.table.makeHappenToday", {
+                                    defaultValue: "Make happen today",
+                                  })}
                                 </DropdownMenuItem>
                               )}
                               {onEdit && (
                                 <DropdownMenuItem
                                   onClick={() => onEdit(transaction)}
                                 >
-                                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                                  <Pencil className="mr-2 h-4 w-4" />{" "}
+                                  {t("scheduled.table.edit", {
+                                    defaultValue: "Edit",
+                                  })}
                                 </DropdownMenuItem>
                               )}
                               {onDelete && (
@@ -507,7 +641,10 @@ export function ScheduledTransactionsTable({
                                   onClick={() => onDelete(transaction.id)}
                                   className="text-destructive"
                                 >
-                                  <Trash className="mr-2 h-4 w-4" /> Delete
+                                  <Trash className="mr-2 h-4 w-4" />{" "}
+                                  {t("scheduled.table.delete", {
+                                    defaultValue: "Delete",
+                                  })}
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
@@ -521,22 +658,29 @@ export function ScheduledTransactionsTable({
                         onClick={() => toggleSelect(transaction.id)}
                       >
                         {selectedIds.has(transaction.id)
-                          ? "Deselect"
-                          : "Select"}
+                          ? t("scheduled.table.deselect", {
+                              defaultValue: "Deselect",
+                            })
+                          : t("scheduled.table.select", {
+                              defaultValue: "Select",
+                            })}
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                       {onProcessToday && (
                         <ContextMenuItem
                           onClick={() => onProcessToday(transaction)}
                         >
-                          <PlayCircle className="mr-2 h-4 w-4" /> Make happen
-                          today
+                          <PlayCircle className="mr-2 h-4 w-4" />{" "}
+                          {t("scheduled.table.makeHappenToday", {
+                            defaultValue: "Make happen today",
+                          })}
                         </ContextMenuItem>
                       )}
                       <ContextMenuSeparator />
                       {onEdit && (
                         <ContextMenuItem onClick={() => onEdit(transaction)}>
-                          <Pencil className="mr-2 h-4 w-4" /> Edit
+                          <Pencil className="mr-2 h-4 w-4" />{" "}
+                          {t("scheduled.table.edit", { defaultValue: "Edit" })}
                         </ContextMenuItem>
                       )}
                       {onDelete && (
@@ -544,7 +688,10 @@ export function ScheduledTransactionsTable({
                           onClick={() => onDelete(transaction.id)}
                           className="text-destructive"
                         >
-                          <Trash className="mr-2 h-4 w-4" /> Delete
+                          <Trash className="mr-2 h-4 w-4" />{" "}
+                          {t("scheduled.table.delete", {
+                            defaultValue: "Delete",
+                          })}
                         </ContextMenuItem>
                       )}
                     </ContextMenuContent>
@@ -576,7 +723,11 @@ export function ScheduledTransactionsTable({
               </PaginationItem>
               <PaginationItem>
                 <span className="px-4 text-sm text-slate-500">
-                  Page {currentPage} of {totalPages}
+                  {t("scheduled.table.pageOf", {
+                    page: currentPage,
+                    total: totalPages,
+                    defaultValue: "Page {{page}} of {{total}}",
+                  })}
                 </span>
               </PaginationItem>
               <PaginationItem>

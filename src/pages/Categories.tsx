@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useCategoryManagement } from "@/hooks/useCategoryManagement";
 import { Category } from "@/data/finance-data";
@@ -16,6 +17,7 @@ import ManageSubCategoriesDialog from "@/components/categories/ManageSubCategori
 import { useDataProvider } from "@/context/DataProviderContext";
 
 const CategoriesPage = () => {
+  const { t } = useTranslation();
   const { invalidateAllData, transactions } = useTransactions();
   const managementProps = useCategoryManagement();
   const dataProvider = useDataProvider();
@@ -41,12 +43,21 @@ const CategoriesPage = () => {
       await dataProvider.renameCategory(categoryId, newName.trim());
     },
     onSuccess: async () => {
-      showSuccess("Category name updated successfully!");
+      showSuccess(
+        t("management.toasts.categoryRenamed", {
+          defaultValue: "Category name updated successfully!",
+        }),
+      );
       await invalidateAllData();
       setEditingCategoryId(null);
     },
     onError: (error: unknown) =>
-      showError(`Failed to update category name: ${(error as Error).message}`),
+      showError(
+        t("management.toasts.categoryRenameFailed", {
+          message: (error as Error).message,
+          defaultValue: "Failed to update category name: {{message}}",
+        }),
+      ),
   });
 
   const startEditing = (category: { id: string; name: string }) => {
@@ -109,7 +120,7 @@ const CategoriesPage = () => {
 
   const columns: ColumnDefinition<Category>[] = [
     {
-      header: "Name",
+      header: t("management.columns.name", { defaultValue: "Name" }),
       accessor: "name",
       cellRenderer: (item) =>
         editingCategoryId === item.id ? (
@@ -132,7 +143,9 @@ const CategoriesPage = () => {
         ),
     },
     {
-      header: "Sub-categories",
+      header: t("management.columns.subCategories", {
+        defaultValue: "Sub-categories",
+      }),
       accessor: (item) => counts[item.name] || 0,
       cellRenderer: (item) => {
         const count = counts[item.name] || 0;
@@ -169,7 +182,9 @@ const CategoriesPage = () => {
       },
     },
     {
-      header: "Transactions",
+      header: t("management.columns.transactions", {
+        defaultValue: "Transactions",
+      }),
       accessor: "totalTransactions",
       cellRenderer: (item) => (
         <span
@@ -185,10 +200,19 @@ const CategoriesPage = () => {
   return (
     <div className="tour-categories-list">
       <EntityManagementPage
-        title="Categories"
-        subtitle="Organize transactions with categories and sub-categories"
-        entityName="Category"
-        entityNamePlural="categories"
+        title={t("management.entities.category.title", {
+          defaultValue: "Categories",
+        })}
+        subtitle={t("management.entities.category.subtitle", {
+          defaultValue:
+            "Organize transactions with categories and sub-categories",
+        })}
+        entityName={t("management.entities.category.singular", {
+          defaultValue: "Category",
+        })}
+        entityNamePlural={t("management.entities.category.plural", {
+          defaultValue: "categories",
+        })}
         data={managementProps.categories}
         isLoading={managementProps.isLoadingCategories}
         columns={columns}

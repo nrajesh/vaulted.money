@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { usePayeeManagement } from "@/hooks/usePayeeManagement";
 import AddEditPayeeDialog, {
@@ -14,6 +15,7 @@ import CleanupEntitiesDialog from "@/components/management/CleanupEntitiesDialog
 import { useDataProvider } from "@/context/DataProviderContext";
 
 const VendorsPage = () => {
+  const { t } = useTranslation();
   const { vendors, isLoadingVendors, invalidateAllData } = useTransactions();
   const managementProps = usePayeeManagement(false);
   const dataProvider = useDataProvider();
@@ -37,12 +39,21 @@ const VendorsPage = () => {
       await dataProvider.renamePayee(vendorId, newName.trim());
     },
     onSuccess: async () => {
-      showSuccess("Vendor name updated successfully!");
+      showSuccess(
+        t("management.toasts.vendorRenamed", {
+          defaultValue: "Vendor name updated successfully!",
+        }),
+      );
       await invalidateAllData();
       setEditingVendorId(null);
     },
     onError: (error: unknown) =>
-      showError(`Failed to update vendor name: ${(error as Error).message}`),
+      showError(
+        t("management.toasts.vendorRenameFailed", {
+          message: (error as Error).message,
+          defaultValue: "Failed to update vendor name: {{message}}",
+        }),
+      ),
   });
 
   const startEditing = (vendor: { id: string; name: string }) => {
@@ -66,7 +77,7 @@ const VendorsPage = () => {
 
   const columns: ColumnDefinition<Payee>[] = [
     {
-      header: "Name",
+      header: t("management.columns.name", { defaultValue: "Name" }),
       accessor: "name",
       cellRenderer: (item) =>
         editingVendorId === item.id ? (
@@ -89,7 +100,9 @@ const VendorsPage = () => {
         ),
     },
     {
-      header: "Transactions",
+      header: t("management.columns.transactions", {
+        defaultValue: "Transactions",
+      }),
       accessor: "totalTransactions",
       cellRenderer: (item) => (
         <span
@@ -105,10 +118,18 @@ const VendorsPage = () => {
   return (
     <div className="tour-vendors-list">
       <EntityManagementPage<Payee>
-        title="Vendors"
-        subtitle="Manage payees and merchants"
-        entityName="Vendor"
-        entityNamePlural="vendors"
+        title={t("management.entities.vendor.title", {
+          defaultValue: "Vendors",
+        })}
+        subtitle={t("management.entities.vendor.subtitle", {
+          defaultValue: "Manage payees and merchants",
+        })}
+        entityName={t("management.entities.vendor.singular", {
+          defaultValue: "Vendor",
+        })}
+        entityNamePlural={t("management.entities.vendor.plural", {
+          defaultValue: "vendors",
+        })}
         data={vendors}
         isLoading={isLoadingVendors}
         columns={columns}

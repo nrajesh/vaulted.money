@@ -22,7 +22,7 @@ curl -H "Authorization: Bearer $VM_TOKEN" $VM            # list every endpoint
 
 `GET /api/v1` returns the full, current route table, and `GET /api/v1/openapi.json` an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) description generated from the code (request bodies included), so they are always the authoritative reference.
 
-Want a local AI agent (LM Studio, Claude Code) to use it? See the [MCP server](../mcp/README.md): eight small tools instead of 99, with previews before anything changes.
+Want a local AI agent (LM Studio, Claude Code) to use it? See the [MCP server](../mcp/README.md): twelve small tools instead of about 100, with previews before anything changes.
 
 Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every endpoint. Building your own app or scripts? See the [API cookbook](API_COOKBOOK.md) and the machine-readable spec at `GET /api/v1/openapi.json`.
 
@@ -37,6 +37,8 @@ Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every 
 | Errors | `{ "error": { "code", "message", "details?" } }` with 400/401/403/404/405/409/413/502/503/504 |
 | Deletes | `204 No Content` |
 | Downloads | `Content-Disposition: attachment` (see below) |
+
+Dates must be real calendar days, either `YYYY-MM-DD` or a full ISO 8601 timestamp: `2026-02-30`, `03/04/2026` and bare numbers are rejected with `400`, and so is a garbage `from`/`to` filter. Currency codes are three letters (`EUR`; lower case is upper-cased). Custom frequencies and budget intervals need a positive number (`2w`, not `0w`), and a recurring transaction or budget cannot end before it starts.
 
 Ledger data is addressed explicitly (`/ledgers/{ledgerId}/...`); the API never depends on which ledger is open in the UI. The open UI is refreshed after each change made through the API.
 
@@ -90,9 +92,9 @@ Under `/ledgers/{ledgerId}/transactions`.
 | `GET` | Filters: `from`, `to` (`YYYY-MM-DD`), `account`, `vendor`, `category`, `sub_category`, `min_amount`, `max_amount`, `type=income\|expense`, `search`, `exclude_transfers`, `limit` (default 100, max 1000), `offset` |
 | `POST` | `{date, amount, account, vendor, category, sub_category?, remarks?, currency?}`. Negative amounts are expenses. `currency` defaults to the account's. Unknown accounts, vendors and categories are created, as in the UI. |
 | `POST /bulk` | `{transactions: [...]}` (up to 1000) |
-| `POST /transfer` | `{from_account, to_account, amount, date, to_amount?, remarks?}`: two linked legs. `to_amount` is required when the currencies differ. |
+| `POST /transfer` | `{from_account, to_account, amount, date, to_amount?, remarks?}`: two linked legs. `to_amount` is required when the currencies differ and rejected (`400`) when they match and the amounts differ. |
 | `DELETE /transfer/{transferId}` | delete both legs |
-| `GET/PATCH/DELETE /{transactionId}` | |
+| `GET/PATCH/DELETE /{transactionId}` | Editing one leg of a transfer updates the other (date, category, remarks, swapped account and vendor, and the amount when both legs share a currency). Deleting one leg deletes both. Both match the app. |
 
 ### Recurring (scheduled) transactions
 Under `/ledgers/{ledgerId}/scheduled-transactions`.
@@ -104,7 +106,7 @@ Under `/ledgers/{ledgerId}/scheduled-transactions`.
 | `POST /{scheduledId}/skip` | `{date}`: skip one occurrence |
 
 - `date` is the **next** occurrence. The app turns due schedules into real transactions itself, whenever it is running, exactly as for schedules created in the UI.
-- `frequency`: `Daily`, `Weekly`, `Monthly`, `Yearly`, `One-time`, or a duration like `2w` (`d`, `w`, `m`, `y`).
+- `frequency`: `Daily`, `Weekly`, `Monthly`, `Yearly`, `One-time`, or a duration like `2w` (`d`, `w`, `m`, `y`; the number must be at least 1).
 - Accounts, vendors and categories that do not exist yet are created; `currency` defaults to the account's.
 
 ### Budgets
@@ -117,6 +119,8 @@ Under `/ledgers/{ledgerId}/budgets`. Responses include the computed `spent_amoun
 - `frequency`: `Monthly` (default), `Quarterly`, `Yearly`, `One-time`, or a duration such as `3m`.
 
 `GET/PATCH/DELETE /{budgetId}`.
+
+`GET /history?periods=6` shows which budgets you keep missing: for every active recurring budget (monthly, quarterly or yearly) it returns `spent` against the target for each of the last `periods` periods (1-24, default 6), oldest first, with `over_by` and `missed`, plus a `summary` (`periods_counted`, `periods_missed`, `miss_rate_pct`, `average_spent`, `worst_overspend`). Periods before the budget's start date are left out, and the period still running is shown with `in_progress: true` but not counted. Savings goals and switched-off budgets are not listed; one-time and custom-range budgets are listed under `skipped` with the reason. Spending is calculated exactly as for `spent_amount`.
 
 ### Currencies
 | | |

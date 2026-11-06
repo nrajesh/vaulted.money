@@ -1,5 +1,3 @@
-import { differenceInCalendarDays } from "date-fns";
-
 /**
  * Pure maintenance logic shared by the Transactions page buttons and the Local
  * API ("Detect Transfers", "Cleanup Duplicates"). Keeping one implementation
@@ -57,20 +55,41 @@ export function findTransferPairs<T extends MaintenanceTransaction>(
   const isLinked = (t: T) =>
     Boolean(t.transfer_id) && !t.transfer_id!.startsWith("split-");
 
+  // Parse every date once and bucket the candidates by calendar day, so each
+  // transaction is compared only with those at most one day away. Scanning the
+  // whole list per transaction was O(n²) and froze the UI on large ledgers.
+  const dayNumbers: (number | null)[] = list.map((t) => {
+    const parsed = parseDate(t.date);
+    return parsed
+      ? Math.round(
+          Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()) /
+            86_400_000,
+        )
+      : null;
+  });
+  const indicesByDay = new Map<number, number[]>();
+  dayNumbers.forEach((day, index) => {
+    if (day === null || isLinked(list[index])) return;
+    const bucket = indicesByDay.get(day);
+    if (bucket) bucket.push(index);
+    else indicesByDay.set(day, [index]);
+  });
+
   for (let i = 0; i < list.length; i++) {
     const t1 = list[i];
-    if (isLinked(t1) || processedIds.has(t1.id)) continue;
+    const day1 = dayNumbers[i];
+    if (day1 === null || isLinked(t1) || processedIds.has(t1.id)) continue;
 
-    for (let j = i + 1; j < list.length; j++) {
+    // Allow 1 day difference for timezone offsets or bank processing delays.
+    // Candidates are visited in list order so the first match still wins.
+    const candidates = [day1 - 1, day1, day1 + 1]
+      .flatMap((day) => indicesByDay.get(day) ?? [])
+      .filter((index) => index > i)
+      .sort((a, b) => a - b);
+
+    for (const j of candidates) {
       const t2 = list[j];
-      if (isLinked(t2) || processedIds.has(t2.id)) continue;
-
-      const d1 = parseDate(t1.date);
-      const d2 = parseDate(t2.date);
-      if (!d1 || !d2) continue;
-
-      // Allow 1 day difference for timezone offsets or bank processing delays
-      if (Math.abs(differenceInCalendarDays(d1, d2)) > 1) continue;
+      if (processedIds.has(t2.id)) continue;
       if (t1.account === t2.account) continue;
 
       // Strict match: same currency, amounts cancel out

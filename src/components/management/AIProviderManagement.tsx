@@ -5,13 +5,15 @@ import { AIProvider } from "@/types/dataProvider";
 import AddEditAIProviderDialog from "./AddEditAIProviderDialog";
 import { useAIProviderManagement } from "@/hooks/useAIProviderManagement";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 const AIProviderManagement = () => {
+  const { t } = useTranslation();
   const managementProps = useAIProviderManagement();
 
   const columns: ColumnDefinition<AIProvider>[] = [
     {
-      header: "Name",
+      header: t("aiProviders.columns.name", { defaultValue: "Name" }),
       accessor: "name",
       cellRenderer: (item) => (
         <div className="flex items-center gap-2">
@@ -23,14 +25,14 @@ const AIProviderManagement = () => {
               variant="secondary"
               className="text-[10px] h-4 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border-none"
             >
-              Default
+              {t("aiProviders.columns.default", { defaultValue: "Default" })}
             </Badge>
           )}
         </div>
       ),
     },
     {
-      header: "Type",
+      header: t("aiProviders.columns.type", { defaultValue: "Type" }),
       accessor: "type",
       cellRenderer: (item) => (
         <Badge
@@ -42,16 +44,17 @@ const AIProviderManagement = () => {
       ),
     },
     {
-      header: "Model",
+      header: t("aiProviders.columns.model", { defaultValue: "Model" }),
       accessor: "model",
       cellRenderer: (item) => (
         <span className={!item.model ? "text-muted-foreground italic" : ""}>
-          {item.model || "(None)"}
+          {item.model ||
+            t("aiProviders.columns.noModel", { defaultValue: "(None)" })}
         </span>
       ),
     },
     {
-      header: "Endpoint",
+      header: t("aiProviders.columns.endpoint", { defaultValue: "Endpoint" }),
       accessor: "baseUrl",
       cellRenderer: (item) => (
         <code className="text-xs text-muted-foreground break-all bg-slate-100 dark:bg-slate-800/50 px-1 py-0.5 rounded">
@@ -64,23 +67,31 @@ const AIProviderManagement = () => {
   return (
     <div className="tour-ai-list">
       <EntityManagementPage<AIProvider>
-        title="AI Providers"
+        title={t("aiProviders.page.title", { defaultValue: "AI Providers" })}
         subtitle={
           <div className="flex flex-col gap-1">
             <span className="tour-ai-byok">
-              Bring Your Own Key (BYOK) for AI analysis. Manage your endpoints
-              and configurations here.
+              {t("aiProviders.page.subtitle", {
+                defaultValue:
+                  "Bring Your Own Key (BYOK) for AI analysis. Manage your endpoints and configurations here.",
+              })}
             </span>
             <Link
               to="/settings"
               className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
             >
-              Go to Settings to manage API keys →
+              {t("aiProviders.page.settingsLink", {
+                defaultValue: "Go to Settings to manage API keys →",
+              })}
             </Link>
           </div>
         }
-        entityName="AI Provider"
-        entityNamePlural="AI providers"
+        entityName={t("aiProviders.page.singular", {
+          defaultValue: "AI Provider",
+        })}
+        entityNamePlural={t("aiProviders.page.plural", {
+          defaultValue: "AI providers",
+        })}
         data={managementProps.providers}
         columns={columns}
         AddEditDialogComponent={(props) => (

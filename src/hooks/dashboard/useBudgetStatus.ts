@@ -116,7 +116,9 @@ export const useBudgetStatus = () => {
       );
 
       totalBudget += budgetAmount;
-      totalSpent += spentAmount;
+      // A budget in net credit (refunds or income in its category) must not
+      // cancel out another budget's real overspending in this total.
+      totalSpent += Math.max(0, spentAmount);
     });
 
     const percentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;

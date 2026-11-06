@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { json, noContent, parse } from "../http";
+import { currencyCodeSchema, json, noContent, parse } from "../http";
 import type { RouteDef } from "../router";
 import { requireLedger } from "./shared";
 
 const createSchema = z.object({
   name: z.string().trim().min(1),
-  currency: z.string().trim().min(1),
+  currency: currencyCodeSchema,
   short_name: z.string().trim().optional(),
   icon: z.string().optional(),
 });
