@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
 import ApiAccessCard from "./ApiAccessCard";
 
 const win = window as unknown as { electron?: unknown };
@@ -56,5 +57,47 @@ describe("ApiAccessCard connect panel", () => {
     render(<ApiAccessCard />);
     await screen.findByText("Enable local API");
     expect(screen.queryByText("Connect to agent")).not.toBeInTheDocument();
+  });
+
+  it("Disconnect everything rotates the token and switches the API off", async () => {
+    const on = { ...status, enabled: true, running: true };
+    const off = { ...on, enabled: false, running: false, token: "new" };
+    const regenerateApiToken = vi.fn(() =>
+      Promise.resolve({ ...on, token: "new" }),
+    );
+    const setApiConfig = vi.fn(() => Promise.resolve(off));
+    win.electron = bridge({
+      getApiConfig: () => Promise.resolve(on),
+      regenerateApiToken,
+      setApiConfig,
+      getConnectInfo: () => Promise.resolve({ serverPath: "/x/server.mjs" }),
+    });
+    render(<ApiAccessCard />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Disconnect everything" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Confirm disconnect" }));
+    await waitFor(() =>
+      expect(setApiConfig).toHaveBeenCalledWith({ enabled: false }),
+    );
+    expect(regenerateApiToken).toHaveBeenCalledTimes(1);
+    expect(regenerateApiToken.mock.invocationCallOrder[0]).toBeLessThan(
+      setApiConfig.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("the panel switch turns the Local API on", async () => {
+    const setApiConfig = vi.fn(() =>
+      Promise.resolve({ ...status, enabled: true, running: true }),
+    );
+    win.electron = bridge({
+      setApiConfig,
+      getConnectInfo: () => Promise.resolve({ serverPath: "/x/server.mjs" }),
+    });
+    render(<ApiAccessCard />);
+    fireEvent.click(await screen.findByLabelText("Allow agents to connect"));
+    await waitFor(() =>
+      expect(setApiConfig).toHaveBeenCalledWith({ enabled: true }),
+    );
   });
 });

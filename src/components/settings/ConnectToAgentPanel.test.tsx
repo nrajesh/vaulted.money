@@ -167,6 +167,14 @@ describe("ConnectToAgentPanel", () => {
     expect(onDisconnect).toHaveBeenCalledTimes(1);
   });
 
+  it("names the download link by its visible text and explains the switch", () => {
+    renderPanel();
+    expect(
+      screen.getByRole("link", { name: "Download the .mcpb bundle" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/also turns the Local API/i)).toBeInTheDocument();
+  });
+
   it("can cancel the disconnect", () => {
     const { onDisconnect } = renderPanel();
     fireEvent.click(

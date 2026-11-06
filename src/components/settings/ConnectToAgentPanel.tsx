@@ -135,6 +135,12 @@ const ConnectToAgentPanel = ({
           }}
         />
       </div>
+      <p className="-mt-2 text-xs text-muted-foreground">
+        {t("settings.agent.enableHint", {
+          defaultValue:
+            "This also turns the Local API on or off for scripts, not only agents.",
+        })}
+      </p>
 
       <div className="space-y-2">
         <h4 className="text-sm font-medium">
@@ -147,9 +153,6 @@ const ConnectToAgentPanel = ({
               target="_blank"
               rel="noopener noreferrer"
               className="underline"
-              aria-label={t("settings.agent.downloadAria", {
-                defaultValue: "Download the Claude Desktop bundle",
-              })}
             >
               {t("settings.agent.download", {
                 defaultValue: "Download the .mcpb bundle",
@@ -236,7 +239,7 @@ const ConnectToAgentPanel = ({
             <p>
               {t("settings.agent.disconnectWarning", {
                 defaultValue:
-                  "This creates a new token and cuts off every connected agent until you reconnect it.",
+                  "This switches the Local API off and replaces the token, which cuts off every connected agent and script. Switch the Local API on again to let them reconnect on their own, with no copy-paste.",
               })}
             </p>
             <div className="flex gap-2">

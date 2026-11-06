@@ -109,6 +109,20 @@ const ApiAccessCard = () => {
     );
   };
 
+  // Agents re-read the app's config on every request, so a new token alone
+  // would be picked up at once. Switching the API off as well is what cuts
+  // them off until the user switches it on again.
+  const disconnectEverything = async () => {
+    await electron.regenerateApiToken();
+    await apply(
+      { enabled: false },
+      t("settings.api.disconnected", {
+        defaultValue:
+          "Local API switched off and token replaced. Switch it on to reconnect.",
+      }),
+    );
+  };
+
   return (
     <ThemedCard className="md:col-span-2 lg:col-span-3">
       <ThemedCardHeader>
@@ -260,7 +274,7 @@ const ApiAccessCard = () => {
             status={status}
             serverPath={serverPath}
             onToggle={toggleEnabled}
-            onDisconnect={regenerate}
+            onDisconnect={disconnectEverything}
           />
         )}
       </ThemedCardContent>
