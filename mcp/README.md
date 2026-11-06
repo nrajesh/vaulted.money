@@ -28,7 +28,7 @@ A model re-reads every tool definition on every turn. The API has about 100 oper
 ### Changing data safely
 
 - **Add a transaction:** `add_transaction` runs immediately and returns the new id, so a mistake is one `call_api DELETE …/transactions/{id}` away.
-- **Import a CSV:** `import_csv` maps common bank columns (date, description/payee, amount, category, currency, account, notes; `1.234,56` and `1,234.56` amounts; ISO and day-first dates) to the app's format, then shows the API's preview. The file is read by the server, so its contents never go through the chat. Importing needs a second call with `dry_run: false`.
+- **Import a CSV:** `import_csv` maps common bank columns (date, description/payee, amount, category, currency, account, notes; `1.234,56` and `1,234.56` amounts; ISO and day-first dates) to the app's format, then shows the API's preview. The server reads the file itself, so you never paste it into the chat; only the column names and a short preview of rows come back to the model. If the first line does not look like column names, it is not repeated back. Importing needs a second call with `dry_run: false`.
 - **Delete an account (or anything else):** `call_api` with `DELETE /ledgers/{ledgerId}/accounts/{id}` returns a preview ("would call…"). The model should show you that and only then repeat the call with `confirm: true`. Endpoints that support `dry_run` are previewed by the API itself. Deleting an account keeps its transactions; deleting a ledger deletes all its data.
 - **Real enforcement is your client's approval prompt.** A model can set `confirm: true` itself, so keep tool-call approval switched on for `call_api`, `add_transaction`, `add_transactions` and `import_csv` (LM Studio and Claude Code both ask by default). The read tools are marked read-only.
 - Take a backup first (`POST /backups/export`) when you let an agent loose on real data.
@@ -39,7 +39,7 @@ Models don't know today's date and are unreliable at date arithmetic, so asking 
 
 ## Large exports
 
-A CSV export or backup can be far bigger than a model should read. When a download from `call_api` is longer than 20,000 characters, the server saves the complete file instead of cutting it off, and replies with the path, the size and a short preview. Files go to `~/vaulted-exports` (change it with `VM_EXPORT_DIR`), readable by your user only, with a timestamp in the name so nothing is overwritten. They are plain files on your computer and may contain your financial data, so delete them when you are done. Smaller exports come back in the chat as before. `POST /backups/export` only reads, so it runs without a preview.
+A CSV export or backup can be far bigger than a model should read. When a download from `call_api` is longer than 20,000 characters, the server saves the complete file instead of cutting it off, and replies with the path, the size and a short preview. Files go to `~/vaulted-exports`, or wherever `VM_EXPORT_DIR` points (a relative path or `~/…` starts at your home folder). The folder must be a real folder that belongs to you, not a symlink or your home folder itself, and the server makes it private (readable by you only). Each file is readable by your user only and has a timestamp in its name. If that name is already taken, `-1`, `-2` and so on are added, so an existing file is never overwritten or followed. The files are plain files on your computer and may contain your financial data, so delete them when you are done. If you point `VM_EXPORT_DIR` at a synced folder (iCloud Drive, Dropbox, OneDrive), the files are uploaded to that service. Smaller exports come back in the chat as before. `POST /backups/export` only reads, so it runs without a preview.
 
 ## Setup
 
@@ -59,7 +59,9 @@ Where the server looks for the token and port, first match wins:
 
 1. `VM_TOKEN` (the token itself; `VM_BASE_URL` sets the address, default `http://127.0.0.1:47821/api/v1`)
 2. The desktop app's own `api-config.json` (or the file named by `VM_CONFIG_FILE`)
-3. The file `~/.vaulted-token` (or the file named by `VM_TOKEN_FILE`)
+3. The file `~/.vaulted-token` (or the file named by `VM_TOKEN_FILE`). It is used only when no app config is found; it does not override one.
+
+`VM_BASE_URL`, when set, always sets the address, even when the token comes from the app config.
 
 To use the manual route: in _Settings → Local API_ enable the API and copy the token, then `echo "<token>" > ~/.vaulted-token && chmod 600 ~/.vaulted-token`. Register the server with an absolute path to `server.mjs`. On Linux, AppImage users should copy `mcp/server.mjs` somewhere permanent and point their config at that copy, because the AppImage mounts under `/tmp/.mount_*`, a path that changes on every launch.
 
