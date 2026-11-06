@@ -5,8 +5,15 @@
   "version": "0.1.0",
   "description": "Ask Claude about your Vaulted Money ledgers: balances, spending, budgets and transactions, and add or import transactions. Vaulted Money is a local-first money manager. Your data stays on your computer, but whatever Claude reads through this extension is sent to the AI provider you chat with. The Vaulted Money desktop app must be running with the Local API switched on.",
   "author": {
-    "name": "Vaulted Money"
+    "name": "nrajesh",
+    "url": "https://github.com/nrajesh"
   },
+  "homepage": "https://github.com/nrajesh/vaulted.money",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrajesh/vaulted.money"
+  },
+  "license": "MIT",
   "server": {
     "type": "node",
     "entry_point": "server/index.mjs",
