@@ -19,8 +19,9 @@ export function stageMcpb(outDir) {
   mkdirSync(join(outDir, "server"), { recursive: true });
   copyFileSync(join(root, "mcpb/manifest.json"), join(outDir, "manifest.json"));
   copyFileSync(join(root, "mcp/server.mjs"), join(outDir, "server/index.mjs"));
-  // The bundle icon is the app icon, copied at build time rather than duplicated in git.
-  copyFileSync(join(root, "public/icon-512.png"), join(outDir, "icon.png"));
+  // The bundle icon is a source asset: the app logo cropped tight to its
+  // bounding box (public/icon-512.png has too much padding for Claude Desktop).
+  copyFileSync(join(root, "mcpb/icon.png"), join(outDir, "icon.png"));
 }
 
 if (
