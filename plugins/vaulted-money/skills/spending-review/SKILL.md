@@ -5,7 +5,7 @@ description: Use when the user asks where their money is going, wants a spending
 
 # Spending review
 
-Give a calm, plain-English picture of where the money went. Everything stays on the user's computer.
+Give a calm, plain-English picture of where the money went. The data comes from the user's own computer, but what you read here is sent to the AI provider, so do not claim it stays private.
 
 1. Call `list_ledgers` if you don't know which ledger to use. If there is more than one, ask which.
 2. Call `spending_summary` with a named `period` (default `last_30_days`; use `this_month` or `last_month` when asked).

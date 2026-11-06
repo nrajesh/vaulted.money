@@ -30,7 +30,7 @@ Then ask, for example: "Where is my money going this month?"
 
 - The desktop app must be running (it can sit in the tray).
 - Changes (adding, deleting, importing) ask you first. Keep Claude's approval prompts on.
-- Your access token is never shown to Claude. **Disconnect everything** in the same panel cuts off every connected agent.
+- Your access token is never shown to Claude. **Disconnect everything** in the same panel switches the Local API off and replaces the token, which cuts off every connected agent and script until you switch it on again. They then reconnect on their own.
 - **Privacy, honestly:** when you ask a question, the answers the app returns (for example transactions, vendors and balances) are read by Claude to write its reply. That means they are sent to Anthropic, like anything else you type into Claude. Only ask about data you are happy to share that way. If you want everything to stay on your device, use a local model with the same server instead (see [mcp/README.md](../../mcp/README.md)).
 - Works in Claude Code (terminal, desktop app's Code tab, IDE). It does not work in the claude.ai website, which cannot reach software on your computer.
 

@@ -2,7 +2,7 @@
  * Builds the one-click Claude Desktop bundle (release/vaulted-money.mcpb).
  *
  * The bundle is the MCP server plus a manifest, staged in a temp folder and
- * zipped by the official `mcpb` CLI (run through npx, so it is not a project
+ * zipped by the official `mcpb` CLI (run through npx, pinned to version 2.1.2 for repeatable builds, so it is not a project
  * dependency). The server is not duplicated in git: it is copied from
  * mcp/server.mjs at build time. It is named index.mjs so Node treats it as ESM.
  */
@@ -32,7 +32,7 @@ if (
     const output = join(root, "release/vaulted-money.mcpb");
     const run = spawnSync(
       "npx",
-      ["--yes", "@anthropic-ai/mcpb", "pack", stage, output],
+      ["--yes", "@anthropic-ai/mcpb@2.1.2", "pack", stage, output],
       { stdio: "inherit" },
     );
     process.exitCode = run.status ?? 1;

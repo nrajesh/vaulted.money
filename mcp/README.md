@@ -4,7 +4,7 @@ Lets a local AI agent (LM Studio, Claude Code, any MCP client) read and change y
 
 - **One file, no dependencies** (`server.mjs`, Node 18+). Nothing to install.
 - **Separate process.** It calls the Local API over HTTP, so the **desktop app must be running** with _Settings → Local API_ on. The window may be closed to the tray; quitting the app stops the API. (Your data lives inside the app, so the server cannot read it without the app.)
-- **Local-first.** Everything stays on `127.0.0.1`. The token is read from the app's config, never shown to the model.
+- **Local-first.** The server talks to the app only over `127.0.0.1`. The token is read from the app's config, never shown to the model.
 
 ## Why eight tools, not 99
 
@@ -41,7 +41,7 @@ Models don't know today's date and are unreliable at date arithmetic, so asking 
    - **Claude Code:** `/plugin marketplace add nrajesh/vaulted.money` then `/plugin install vaulted-money@vaulted-money`.
    - **Local model (LM Studio):** use _Copy local model configuration_ in the panel and paste it into `mcp.json`. Use a model with tool-calling support.
 
-Node.js 18 or newer is needed for the plugin and local-model routes. The server is started by the client when needed. It looks up the token on every request, so after _Disconnect everything_ (which creates a new token) it picks up the new one without a restart. Only the desktop app has to be running.
+Node.js 18 or newer is needed for the plugin and local-model routes. The server is started by the client when needed. It looks up the token on every request, so a new token or port is picked up without a restart. _Disconnect everything_ switches the Local API off and replaces the token, so every agent gets "Local API is off" until you switch it on again; after that they reconnect on their own, with no copy-paste. Only the desktop app has to be running.
 
 **Privacy:** the server itself uploads nothing, but what an agent reads (transactions, vendors, balances) is sent to that agent's AI provider (Anthropic, for Claude). A local model keeps everything on your device. The claude.ai website is not supported.
 
@@ -53,7 +53,7 @@ Where the server looks for the token and port, first match wins:
 2. The desktop app's own `api-config.json` (or the file named by `VM_CONFIG_FILE`)
 3. The file `~/.vaulted-token` (or the file named by `VM_TOKEN_FILE`)
 
-To use the manual route: in _Settings → Local API_ enable the API and copy the token, then `echo "<token>" > ~/.vaulted-token && chmod 600 ~/.vaulted-token`. Register the server with an absolute path to `server.mjs`.
+To use the manual route: in _Settings → Local API_ enable the API and copy the token, then `echo "<token>" > ~/.vaulted-token && chmod 600 ~/.vaulted-token`. Register the server with an absolute path to `server.mjs`. On Linux, AppImage users should copy `mcp/server.mjs` somewhere permanent and point their config at that copy, because the AppImage mounts under `/tmp/.mount_*`, a path that changes on every launch.
 
 **LM Studio**: Program → Install → _Edit mcp.json_:
 

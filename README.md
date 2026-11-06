@@ -130,7 +130,7 @@ You can let an AI agent such as Claude read your money manager and help with it,
 
 **Privacy, honestly.** The plugin and the server upload nothing. But when you ask a question, whatever the agent reads to answer it, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude). Only ask about data you are happy to share that way. A local model keeps everything on your device. The claude.ai website is not supported, because it cannot reach software on your computer.
 
-**Staying safe.** Keep your agent's approval prompts switched on for adding, deleting and importing. Deletions need an explicit confirmation, and it is wise to make a backup before you let an agent work on real data. **Disconnect everything** in the same panel creates a new token and cuts off every connected agent. More detail is in the [MCP server guide](mcp/README.md).
+**Staying safe.** Keep your agent's approval prompts switched on for adding, deleting and importing. Deletions need an explicit confirmation, and it is wise to make a backup before you let an agent work on real data. **Disconnect everything** in the same panel switches the Local API off and replaces the token, which cuts off every connected agent and script until you switch the Local API on again. They then reconnect on their own, with no copy-paste. More detail is in the [MCP server guide](mcp/README.md).
 
 ## Support the Project
 
