@@ -50,4 +50,18 @@ describe("stageMcpb", () => {
     for (const tool of manifest.tools)
       expect(tool.description.length).toBeGreaterThan(0);
   });
+
+  it("stages the app icon the manifest points at, as a square PNG", () => {
+    const manifest = stage();
+    expect(manifest.icon).toBe("icon.png");
+    const staged = readFileSync(join(dir, manifest.icon));
+    // Copied from the existing app icon, not duplicated in git.
+    expect(staged.equals(readFileSync("public/icon-512.png"))).toBe(true);
+    // PNG signature, then width/height as big-endian uint32 in the IHDR chunk.
+    expect(staged.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    const width = staged.readUInt32BE(16);
+    const height = staged.readUInt32BE(20);
+    expect(width).toBe(height);
+    expect(width).toBeGreaterThanOrEqual(256);
+  });
 });

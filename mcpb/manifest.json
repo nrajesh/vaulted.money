@@ -14,6 +14,7 @@
     "url": "https://github.com/nrajesh/vaulted.money"
   },
   "license": "MIT",
+  "icon": "icon.png",
   "server": {
     "type": "node",
     "entry_point": "server/index.mjs",

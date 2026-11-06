@@ -14,11 +14,13 @@ import { spawnSync } from "node:child_process";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Copy the manifest and the server into outDir in the layout the bundle needs. */
+/** Copy the manifest, the server and the icon into outDir in the layout the bundle needs. */
 export function stageMcpb(outDir) {
   mkdirSync(join(outDir, "server"), { recursive: true });
   copyFileSync(join(root, "mcpb/manifest.json"), join(outDir, "manifest.json"));
   copyFileSync(join(root, "mcp/server.mjs"), join(outDir, "server/index.mjs"));
+  // The bundle icon is the app icon, copied at build time rather than duplicated in git.
+  copyFileSync(join(root, "public/icon-512.png"), join(outDir, "icon.png"));
 }
 
 if (
