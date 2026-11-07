@@ -192,7 +192,7 @@ Exactly the formats of the app's **Import CSV / Export CSV** buttons, so files m
 | Vendors | `GET …/vendors/export` | `POST …/vendors/import` |
 | Categories | `GET …/categories/export` | `POST …/categories/import` |
 
-- Transaction files use `;` as the delimiter and `DD/MM/YYYY` dates, with the columns `Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date`. Accounts are `Account Name,Currency,Starting Balance,Remarks`; vendors `Vendor Name`; categories `Category Name,Sub Category Name`.
+- Transaction files use `;` as the delimiter and `DD/MM/YYYY` dates, with the columns `Date;Account;Vendor;Category;Sub Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date`. `Sub Category` is optional on import; missing sub-categories are created under their category. Accounts are `Account Name,Currency,Starting Balance,Remarks`; vendors `Vendor Name`; categories `Category Name,Sub Category Name`.
 - Imports create missing accounts, vendors and categories, never overwrite existing ones, and report `imported`/`created`, `already_existed` and skipped row numbers. Use `dry_run` to validate a file first.
 - Exports escape cells starting with `=`, `+`, `-` or `@` so spreadsheets do not run them as formulas.
 - CSV is for spreadsheets and bank exports. For a complete, lossless copy (budgets, schedules, sub-category tags, settings) use [Backups](#backups).

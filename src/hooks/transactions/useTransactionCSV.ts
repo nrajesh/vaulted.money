@@ -10,6 +10,7 @@ import {
   parseTransactionCSV,
   validateCSVHeaders,
   parseCSVRow,
+  uniqueSubCategoryPairs,
   sanitizeCSVField,
   CSVRow,
 } from "@/utils/csvUtils";
@@ -129,6 +130,22 @@ export const useTransactionCSV = () => {
             ),
           );
 
+          // Sub-categories belong to a category, so add them once the
+          // categories exist. One at a time to avoid creating duplicates.
+          for (const pair of uniqueSubCategoryPairs(parsedData)) {
+            const categoryId = await dataProvider.ensureCategoryExists(
+              pair.category,
+              activeLedger!.id,
+            );
+            if (categoryId) {
+              await dataProvider.ensureSubCategoryExists(
+                pair.subCategory,
+                categoryId,
+                activeLedger!.id,
+              );
+            }
+          }
+
           await Promise.all([refetchVendors(), refetchAccounts()]);
 
           // Step 3: Prepare transactions for insertion using the now-updated accountCurrencyMap
@@ -231,6 +248,7 @@ export const useTransactionCSV = () => {
       Account: sanitizeCSVField(t.account),
       Vendor: sanitizeCSVField(t.vendor),
       Category: sanitizeCSVField(t.category),
+      "Sub Category": sanitizeCSVField(t.sub_category),
       Amount: sanitizeCSVField(t.amount),
       Remarks: sanitizeCSVField(t.remarks),
       Currency: sanitizeCSVField(t.currency),

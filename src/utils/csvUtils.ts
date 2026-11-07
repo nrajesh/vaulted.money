@@ -7,6 +7,8 @@ export interface CSVRow {
   Account: string;
   Vendor: string;
   Category: string;
+  /** Optional. Names a sub-category of Category. */
+  "Sub Category"?: string;
   Amount: string;
   Remarks: string;
   Currency: string;
@@ -28,7 +30,11 @@ export const REQUIRED_CSV_HEADERS = [
   "End Date",
 ];
 
-export const OPTIONAL_CSV_HEADERS = ["Transfer Account", "Transfer Amount"];
+export const OPTIONAL_CSV_HEADERS = [
+  "Sub Category",
+  "Transfer Account",
+  "Transfer Amount",
+];
 
 export const MAPPABLE_CSV_HEADERS = [
   ...REQUIRED_CSV_HEADERS,
@@ -48,6 +54,7 @@ export interface ParsedTransaction {
   account: string;
   vendor: string;
   category: string;
+  sub_category: string | null;
   amount: number;
   remarks: string;
   currency: string;
@@ -55,6 +62,24 @@ export interface ParsedTransaction {
   is_scheduled_origin: boolean;
   recurrence_frequency: string | null;
   recurrence_end_date: string | null;
+}
+
+/**
+ * The distinct category and sub-category pairs in the rows, so each sub-category
+ * is created once. Rows with a sub-category but no category are ignored because
+ * a sub-category always belongs to a category.
+ */
+export function uniqueSubCategoryPairs(
+  rows: { Category?: string; "Sub Category"?: string }[],
+): { category: string; subCategory: string }[] {
+  const seen = new Map<string, { category: string; subCategory: string }>();
+  for (const row of rows) {
+    const category = row.Category?.trim();
+    const subCategory = row["Sub Category"]?.trim();
+    if (!category || !subCategory) continue;
+    seen.set(`${category}\u0000${subCategory}`, { category, subCategory });
+  }
+  return [...seen.values()];
 }
 
 export function validateCSVHeaders(headers: string[]): {
@@ -99,6 +124,7 @@ export function parseCSVRow(
       account: row.Account,
       vendor: row.Vendor,
       category: row.Category,
+      sub_category: row["Sub Category"]?.trim() || null,
       amount: parseFloat(row.Amount) || 0,
       remarks: row.Remarks || "",
       currency: accountCurrency,
@@ -194,6 +220,7 @@ export function parseImportedData(
           account,
           vendor,
           category,
+          sub_category: String(row["Sub Category"] || "").trim() || null,
           amount,
           remarks,
           currency: String(row["Currency"] || defaultCurrency),

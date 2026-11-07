@@ -1592,7 +1592,7 @@ describe("CSV import and export", () => {
     expect(exported.file?.contentType).toContain("text/csv");
     const csv = exported.file!.content;
     expect(csv.split("\r\n")[0]).toBe(
-      "Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date",
+      "Date;Account;Vendor;Category;Sub Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date",
     );
     expect(csv).toContain("'=SUM(A1)"); // formula injection neutralised
     expect(csv).toContain("01/08/2020");
@@ -1617,6 +1617,30 @@ describe("CSV import and export", () => {
     expect(
       copied.data.some((t) => t.amount === -12.5 && t.account === "Bank"),
     ).toBe(true);
+  });
+
+  it("keeps sub-categories when importing transactions from CSV", async () => {
+    const ledger = await createLedger();
+    const csv = [
+      "Date;Account;Vendor;Category;Sub Category;Amount;Remarks;Currency;Frequency;End Date",
+      "01/02/2021;Bank;Cafe;Food;Coffee;-3;;USD;None;",
+      "02/02/2021;Bank;Cafe;Food;Coffee;-4;;USD;None;",
+      "03/02/2021;Bank;Shop;Home;;-9;;USD;None;",
+    ].join("\n");
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/transactions/import`, { csv }),
+      201,
+    );
+    const list = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/transactions`, undefined, {
+        sub_category: "Coffee",
+      }),
+    );
+    expect(list.data).toHaveLength(2);
+    const categories = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/categories`),
+    );
+    expect(JSON.stringify(categories.data)).toContain("Coffee");
   });
 
   it("rejects malformed transaction CSVs with useful details", async () => {

@@ -4,6 +4,7 @@ import type { Category, SubCategory } from "@/types/dataProvider";
 import { formatDateToDDMMYYYY } from "@/lib/utils";
 import {
   parseCSVRow,
+  uniqueSubCategoryPairs,
   type ParsedTransaction,
   sanitizeCSVField,
   validateCSVHeaders,
@@ -77,6 +78,7 @@ async function exportTransactions(ctx: RouteContext) {
     Account: sanitizeCSVField(t.account),
     Vendor: sanitizeCSVField(t.vendor),
     Category: sanitizeCSVField(t.category),
+    "Sub Category": sanitizeCSVField(t.sub_category),
     Amount: sanitizeCSVField(t.amount),
     Remarks: sanitizeCSVField(t.remarks),
     Currency: sanitizeCSVField(t.currency),
@@ -145,6 +147,14 @@ async function importTransactions(ctx: RouteContext) {
       dp.ensureCategoryExists(name, ledger.id),
     ),
   );
+
+  // Sub-categories belong to a category, so add them once the categories exist.
+  for (const pair of uniqueSubCategoryPairs(rows)) {
+    const categoryId = await dp.ensureCategoryExists(pair.category, ledger.id);
+    if (categoryId) {
+      await dp.ensureSubCategoryExists(pair.subCategory, categoryId, ledger.id);
+    }
+  }
 
   const currencyByAccount = new Map(
     (await loadAccountResources(ctx.services, ledger.id)).map((a) => [

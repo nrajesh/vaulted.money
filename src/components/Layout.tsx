@@ -376,16 +376,13 @@ export const ConnectAgentSidebarItem = ({
   );
 };
 
-/** Desktop header icon button to /connect-agent. Exported for tests. */
-export const ConnectAgentHeaderButton = ({
+/** Desktop header icon button to Settings. Exported for tests. */
+export const SettingsHeaderButton = ({
   t,
 }: {
   t: ReturnType<typeof useTranslation>["t"];
 }) => {
-  if (!hasAgentBridge()) return null;
-  const label = t("layout.nav.connectAgent", {
-    defaultValue: "Connect an AI agent",
-  });
+  const label = t("layout.nav.settings", { defaultValue: "Settings" });
   return (
     <Button
       asChild
@@ -393,8 +390,8 @@ export const ConnectAgentHeaderButton = ({
       size="icon"
       className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
     >
-      <Link to="/connect-agent" aria-label={label}>
-        <Bot className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+      <Link to="/settings" aria-label={label}>
+        <BookOpen className="h-5 w-5 text-slate-600 dark:text-gray-300" />
         <span className="sr-only">{label}</span>
       </Link>
     </Button>
@@ -961,7 +958,7 @@ const Layout = () => {
               </Button>
             )}
             <LanguageSwitcher showLanguageSettings />
-            <ConnectAgentHeaderButton t={t} />
+            <SettingsHeaderButton t={t} />
             {hasTourForCurrentRoute && (
               <Button
                 variant="ghost"
