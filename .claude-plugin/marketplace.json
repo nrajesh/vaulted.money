@@ -1,0 +1,14 @@
+{
+  "name": "vaulted-money",
+  "owner": { "name": "nrajesh" },
+  "metadata": {
+    "description": "Plugins for Vaulted Money, the private, local-first money manager."
+  },
+  "plugins": [
+    {
+      "name": "vaulted-money",
+      "source": "./plugins/vaulted-money",
+      "description": "Ask Claude about your Vaulted Money ledgers. Your data stays on your computer, apart from the answers Claude reads to reply to you."
+    }
+  ]
+}

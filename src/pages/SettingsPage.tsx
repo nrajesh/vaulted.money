@@ -268,6 +268,19 @@ const SettingsPage = () => {
                     defaultValue: "Review privacy policy →",
                   })}
                 </Link>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("settings.ai.chatInstead", {
+                    defaultValue: "Want to chat with your data instead?",
+                  })}{" "}
+                  <Link
+                    to="/connect-agent"
+                    className="text-indigo-600 hover:underline"
+                  >
+                    {t("settings.ai.connectAgentLink", {
+                      defaultValue: "Connect an AI agent",
+                    })}
+                  </Link>
+                </p>
               </div>
               <Button
                 variant="outline"

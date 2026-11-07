@@ -30,6 +30,7 @@ const Analytics = lazy(() => import("@/pages/Analytics"));
 const CalendarView = lazy(() => import("@/pages/CalendarView"));
 const Transactions = lazy(() => import("@/pages/Transactions"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const ConnectAgentPage = lazy(() => import("@/pages/ConnectAgentPage"));
 const LanguagePage = lazy(() => import("@/pages/LanguagePage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Accounts = lazy(() => import("@/pages/Accounts"));
@@ -134,6 +135,10 @@ function App() {
                               <Route
                                 path="/settings"
                                 element={<SettingsPage />}
+                              />
+                              <Route
+                                path="/connect-agent"
+                                element={<ConnectAgentPage />}
                               />
                               <Route
                                 path="/language"

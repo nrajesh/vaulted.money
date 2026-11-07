@@ -138,6 +138,19 @@ describe("demo plan: scenarios", () => {
     expect(new Set(remarks).size).toBeGreaterThan(200);
   });
 
+  it("starts the main monthly budgets months ago so they have history", () => {
+    const home = plans.find((p) => p.ledger.name === "Home Budget")!;
+    for (const name of ["Groceries", "Dining Out"]) {
+      const budget = home.budgets.find((b) => b.category_name === name)!;
+      expect(budget.frequency, name).toBe("Monthly");
+      const monthsBack =
+        (NOW.getFullYear() - new Date(budget.start_date).getFullYear()) * 12 +
+        NOW.getMonth() -
+        new Date(budget.start_date).getMonth();
+      expect(monthsBack, name).toBeGreaterThanOrEqual(5);
+    }
+  });
+
   it("covers every budget kind", () => {
     const budgets = all((p) => p.budgets);
     const scopes = new Set(budgets.map((b) => b.budget_scope ?? "category"));

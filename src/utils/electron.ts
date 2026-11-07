@@ -26,6 +26,7 @@ export interface ElectronAPI {
     port?: number;
   }) => Promise<ApiServerStatus>;
   regenerateApiToken: () => Promise<ApiServerStatus>;
+  getConnectInfo: () => Promise<{ serverPath: string }>;
 }
 
 export interface ApiServerStatus {
