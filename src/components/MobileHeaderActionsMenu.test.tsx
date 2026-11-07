@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { ConnectAgentHeaderButton, MobileHeaderActionsMenu } from "./Layout";
+import { MobileHeaderActionsMenu, SettingsHeaderButton } from "./Layout";
 
 const win = window as unknown as { electron?: unknown };
 const translate = ((_key: string, options?: { defaultValue?: string }) =>
@@ -89,38 +89,15 @@ describe("agent entry points without the desktop bridge", () => {
     ).toBeNull();
   });
 
-  it("hides the desktop header button", () => {
+  it("shows a Settings button in the desktop header on every build", () => {
     render(
       <MemoryRouter>
-        <ConnectAgentHeaderButton t={translate} />
+        <SettingsHeaderButton t={translate} />
       </MemoryRouter>,
     );
-    expect(
-      screen.queryByRole("link", { name: "Connect an AI agent" }),
-    ).toBeNull();
-  });
-
-  it("hides the desktop header button on an older desktop build without the API bridge", () => {
-    win.electron = { selectFolder: () => Promise.resolve(null) };
-    render(
-      <MemoryRouter>
-        <ConnectAgentHeaderButton t={translate} />
-      </MemoryRouter>,
+    expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+      "href",
+      "/settings",
     );
-    expect(
-      screen.queryByRole("link", { name: "Connect an AI agent" }),
-    ).toBeNull();
-  });
-
-  it("shows the desktop header button with the bridge", () => {
-    win.electron = { getApiConfig: () => Promise.resolve({}) };
-    render(
-      <MemoryRouter>
-        <ConnectAgentHeaderButton t={translate} />
-      </MemoryRouter>,
-    );
-    expect(
-      screen.getByRole("link", { name: "Connect an AI agent" }),
-    ).toHaveAttribute("href", "/connect-agent");
   });
 });
