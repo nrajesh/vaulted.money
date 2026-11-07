@@ -149,11 +149,11 @@ export const setupClaudeCodePlugin = async (
     if (!added.ok) return "failed";
   }
 
+  // Installing a plugin that is already installed succeeds without updating
+  // it, so always follow with an update. Either one working is enough.
   const installed = await run(["plugin", "install", PLUGIN_ID]);
-  if (installed.ok) return "ready";
-  // Already installed: bring it up to date instead.
   const updated = await run(["plugin", "update", PLUGIN_ID]);
-  return updated.ok ? "ready" : "failed";
+  return installed.ok || updated.ok ? "ready" : "failed";
 };
 
 /** The real dependencies used by the app. */

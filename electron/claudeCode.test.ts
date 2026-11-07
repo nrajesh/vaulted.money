@@ -100,6 +100,7 @@ describe("setupClaudeCodePlugin", () => {
       ["plugin", "marketplace", "remove", "vaulted-money"],
       ["plugin", "marketplace", "add", "nrajesh/vaulted.money"],
       ["plugin", "install", "vaulted-money@vaulted-money"],
+      ["plugin", "update", "vaulted-money@vaulted-money"],
     ]);
   });
 
@@ -140,7 +141,21 @@ describe("setupClaudeCodePlugin", () => {
     ]);
   });
 
-  it("updates the plugin when it is already installed", async () => {
+  it("updates even when installing an already installed plugin succeeds", async () => {
+    const calls: string[][] = [];
+    const run = fakeTool(
+      { "plugin marketplace list": { ok: true, stdout: OURS } },
+      calls,
+    );
+    expect(await setupClaudeCodePlugin(withTool(run))).toBe("ready");
+    expect(calls.at(-1)).toEqual([
+      "plugin",
+      "update",
+      "vaulted-money@vaulted-money",
+    ]);
+  });
+
+  it("still succeeds when only the update works", async () => {
     const calls: string[][] = [];
     const run = fakeTool(
       {

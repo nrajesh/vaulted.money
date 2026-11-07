@@ -65,7 +65,6 @@ const ConnectAgentPage = () => {
       <ConnectToAgentPanel
         status={status}
         serverPath={serverPath}
-        headingLevel={2}
         onToggle={toggleEnabled}
         onDisconnect={disconnectEverything}
       />
@@ -105,7 +104,7 @@ const ConnectAgentPage = () => {
           })}
         </Link>
       </div>
-      <div className="max-w-2xl">{body}</div>
+      <div>{body}</div>
     </div>
   );
 };
