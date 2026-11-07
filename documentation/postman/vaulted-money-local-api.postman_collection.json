@@ -14823,7 +14823,7 @@
                   "",
                   "pm.test(\"Uses the app's column layout\", () => {",
                   "    const header = pm.response.text().split(/\\r?\\n/)[0];",
-                  "    pm.expect(header).to.equal(\"Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\");",
+                  "    pm.expect(header).to.equal(\"Date;Account;Vendor;Category;Sub Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\");",
                   "});",
                   "",
                   "pm.test(\"Has one line per transaction plus the header\", () => {",
@@ -14883,7 +14883,7 @@
                 }
               ],
               "cookie": [],
-              "body": "Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\n05/10/2026;PM Checking;Balance Adjustment;Adjustment;25;Reconciliation Adjustment to match balance 4244;USD;;false;None;\n05/10/2026;PM Checking;pm brew;PM Coffee;-5;;USD;;false;None;\n05/10/2026;PM Checking;PM Cafe;PM Dining;-12;;USD;;false;None;\n05/10/2026;PM Checking;PM Brew;PM Coffee;-4;;USD;;false;None;\n05/10/2026;PM Checking;PM Savings;Transfer;-150;;USD;85748360-5e9d-43da-810a-27baed17540f;false;None;"
+              "body": "Date;Account;Vendor;Category;Sub Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date\n05/10/2026;PM Checking;Balance Adjustment;Adjustment;;25;Reconciliation Adjustment to match balance 4244;USD;;false;None;\n05/10/2026;PM Checking;pm brew;PM Coffee;;-5;;USD;;false;None;\n05/10/2026;PM Checking;PM Cafe;PM Dining;;-12;;USD;;false;None;\n05/10/2026;PM Checking;PM Brew;PM Coffee;;-4;;USD;;false;None;\n05/10/2026;PM Checking;PM Savings;Transfer;;-150;;USD;85748360-5e9d-43da-810a-27baed17540f;false;None;"
             }
           ]
         },
