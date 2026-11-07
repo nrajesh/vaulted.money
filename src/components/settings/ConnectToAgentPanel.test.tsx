@@ -219,24 +219,14 @@ describe("ConnectToAgentPanel", () => {
     await waitFor(() => expect(status).toHaveTextContent("Copied"));
   });
 
-  it("keeps heading levels in order at both heading levels", () => {
-    const props = {
-      status: makeStatus(),
-      serverPath: SERVER_PATH,
-      onToggle: vi.fn(),
-      onDisconnect: vi.fn(),
-    };
-    const levels = () => {
-      selectChoice(/Claude Code/);
-      return screen
-        .getAllByRole("heading")
-        .map((h) => Number(h.tagName.slice(1)));
-    };
-    const { unmount } = render(<ConnectToAgentPanel {...props} />);
-    expect(levels()).toEqual([3, 4, 5, 5, 4, 4]);
-    unmount();
-    render(<ConnectToAgentPanel {...props} headingLevel={2} />);
-    expect(levels()).toEqual([2, 3, 4, 4, 3, 3]);
+  it("keeps heading levels in order", () => {
+    renderPanel();
+    selectChoice(/Claude Code/);
+    const levels = screen
+      .getAllByRole("heading")
+      .map((h) => Number(h.tagName.slice(1)));
+    // Card titles are h3 like the other pages; sections inside are h4 and h5.
+    expect(levels).toEqual([3, 4, 5, 5, 3, 4]);
   });
 
   it("keeps the privacy claims accurate", () => {
@@ -328,20 +318,10 @@ describe("ConnectToAgentPanel", () => {
     expect(onDisconnect).not.toHaveBeenCalled();
   });
 
-  it("renders its title at the requested heading level", () => {
-    const props = {
-      status: makeStatus(),
-      serverPath: SERVER_PATH,
-      onToggle: vi.fn(),
-      onDisconnect: vi.fn(),
-    };
-    const { rerender } = render(<ConnectToAgentPanel {...props} />);
+  it("renders its title as a card heading", () => {
+    renderPanel();
     expect(
       screen.getByRole("heading", { level: 3, name: "Connect to agent" }),
-    ).toBeInTheDocument();
-    rerender(<ConnectToAgentPanel {...props} headingLevel={2} />);
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Connect to agent" }),
     ).toBeInTheDocument();
   });
 
