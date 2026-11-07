@@ -17,12 +17,16 @@ Ask Claude about your money. Claude talks to the Vaulted Money desktop app on yo
 
 ## Install
 
-In Claude Code:
+The easiest way is the **Connect agent** page in the Vaulted Money desktop app: choose **Claude Code** and click **Set up Claude Code for me**.
+
+Or type these inside Claude Code:
 
 ```
 /plugin marketplace add nrajesh/vaulted.money
 /plugin install vaulted-money@vaulted-money
 ```
+
+In a normal terminal, start each with `claude` instead: `claude plugin marketplace add nrajesh/vaulted.money`.
 
 Then ask, for example: "Where is my money going this month?"
 

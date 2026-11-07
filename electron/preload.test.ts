@@ -31,6 +31,8 @@ describe("electron preload", () => {
       "regenerateApiToken",
       "joinPath",
       "getConnectInfo",
+      "detectClaude",
+      "setupClaudeCodePlugin",
     ]) {
       expect(source).toContain(name);
     }
@@ -39,6 +41,15 @@ describe("electron preload", () => {
   it("asks main for the MCP server path without passing arguments", () => {
     expect(source).toMatch(
       /getConnectInfo:\s*\(\)\s*=>\s*ipcRenderer\.invoke\("api:get-connect-info"\)/,
+    );
+  });
+
+  it("asks main to find Claude and set up the plugin without arguments", () => {
+    expect(source).toMatch(
+      /detectClaude:\s*\(\)\s*=>\s*ipcRenderer\.invoke\("claude:detect"\)/,
+    );
+    expect(source).toMatch(
+      /setupClaudeCodePlugin:\s*\(\)\s*=>\s*ipcRenderer\.invoke\("claude:setup-code-plugin"\)/,
     );
   });
 });

@@ -29,17 +29,17 @@ The important bit: your data stays local by default. There is no hosted Vaulted 
 
 ## What Can It Do?
 
-| Area | Plain-English Meaning |
-| --- | --- |
-| Ledgers | Keep separate money books, such as Personal, Business, or Joint. |
-| Transactions | Record money coming in or going out. |
-| Accounts | Track where money lives, such as checking, savings, cash, or credit. |
-| Categories | Understand what the money was for. |
-| Budgets | Set limits or goals and see progress. |
-| Imports | Bring in bank CSV exports. |
-| Reports | See income, spending, net worth, trends, and summaries. |
-| Backups | Export your data as JSON, with encrypted backup options. |
-| Optional AI | Bring your own API key to help categorize transactions. |
+| Area         | Plain-English Meaning                                                |
+| ------------ | -------------------------------------------------------------------- |
+| Ledgers      | Keep separate money books, such as Personal, Business, or Joint.     |
+| Transactions | Record money coming in or going out.                                 |
+| Accounts     | Track where money lives, such as checking, savings, cash, or credit. |
+| Categories   | Understand what the money was for.                                   |
+| Budgets      | Set limits or goals and see progress.                                |
+| Imports      | Bring in bank CSV exports.                                           |
+| Reports      | See income, spending, net worth, trends, and summaries.              |
+| Backups      | Export your data as JSON, with encrypted backup options.             |
+| Optional AI  | Bring your own API key to help categorize transactions.              |
 
 ## Quick Setup
 
@@ -72,17 +72,17 @@ That starts the local web app, compiles the Electron files, and opens the deskto
 
 The README is intentionally short. Use these pages for the details:
 
-| Page | Best For |
-| --- | --- |
-| [Getting Started](documentation/GETTING_STARTED.md) | A non-technical first run and first ledger walkthrough. |
-| [Setup and Builds](documentation/SETUP.md) | Full web, desktop, Android, iOS, and release commands. |
-| [User Guide](documentation/USER_GUIDE.md) | What the app does and how to use the main workflows. |
-| [Developer Guide](documentation/DEVELOPER_GUIDE.md) | Project structure, quality checks, AI provider notes, and contribution workflow. |
-| [Local API](documentation/API.md) | Desktop REST API for scripts: manage data and generate reports and backups. |
-| [API cookbook](documentation/API_COOKBOOK.md) | Recipes for using the app without the GUI, and for building your own interface. |
-| [Architecture](documentation/ARCHITECTURE.md) | Technical diagrams and system design. |
-| [Why Vaulted Money Exists](documentation/WHY_VAULTED_MONEY.md) | Motivation, privacy stance, and project philosophy. |
-| [Support](documentation/SUPPORT.md) | How to get help. |
+| Page                                                           | Best For                                                                         |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [Getting Started](documentation/GETTING_STARTED.md)            | A non-technical first run and first ledger walkthrough.                          |
+| [Setup and Builds](documentation/SETUP.md)                     | Full web, desktop, Android, iOS, and release commands.                           |
+| [User Guide](documentation/USER_GUIDE.md)                      | What the app does and how to use the main workflows.                             |
+| [Developer Guide](documentation/DEVELOPER_GUIDE.md)            | Project structure, quality checks, AI provider notes, and contribution workflow. |
+| [Local API](documentation/API.md)                              | Desktop REST API for scripts: manage data and generate reports and backups.      |
+| [API cookbook](documentation/API_COOKBOOK.md)                  | Recipes for using the app without the GUI, and for building your own interface.  |
+| [Architecture](documentation/ARCHITECTURE.md)                  | Technical diagrams and system design.                                            |
+| [Why Vaulted Money Exists](documentation/WHY_VAULTED_MONEY.md) | Motivation, privacy stance, and project philosophy.                              |
+| [Support](documentation/SUPPORT.md)                            | How to get help.                                                                 |
 
 ## Using the Local API (desktop)
 
@@ -119,12 +119,14 @@ You can let an AI agent such as Claude read your money manager and help with it,
 2. Then pick your agent:
 
 - **Claude Desktop:** download `vaulted-money.mcpb` from the [Releases page](https://github.com/nrajesh/vaulted.money/releases), double-click it and confirm the install. Nothing else is needed, not even Node.js.
-- **Claude Code:** run these two commands inside Claude Code. This needs [Node.js](https://nodejs.org/) 18 or newer.
+- **Claude Code:** on the Connect agent page, choose **Claude Code** and click **Set up Claude Code for me**. The app finds Claude Code on your computer and sets the plugin up (or updates it), and links to the download if it is not installed. Prefer to do it yourself? Paste this into a normal terminal (needs [Node.js](https://nodejs.org/) 18 or newer), or run the two `/plugin` commands inside Claude Code:
 
   ```
-  /plugin marketplace add nrajesh/vaulted.money
-  /plugin install vaulted-money@vaulted-money
+  claude plugin marketplace add nrajesh/vaulted.money
+  claude plugin install vaulted-money@vaulted-money
   ```
+
+  Inside Claude Code the same two steps are `/plugin marketplace add nrajesh/vaulted.money` and `/plugin install vaulted-money@vaulted-money`.
 
 - **A local model (for example LM Studio):** use **Copy setup** under **A private model on this computer** and paste it into the app's `mcp.json`. Choose a model that supports tool calling. Needs Node.js 18 or newer.
 
@@ -136,13 +138,13 @@ You can let an AI agent such as Claude read your money manager and help with it,
 
 Vaulted Money is free and open-source under the MIT license. If you find it useful and want to support development, you have several options:
 
-| Channel | Status |
-| --- | --- |
-| Buy on Apple App Store (€9.99 one-time) | Coming soon |
-| Buy on Google Play Store (€9.99 one-time) | Coming soon |
+| Channel                                                          | Status      |
+| ---------------------------------------------------------------- | ----------- |
+| Buy on Apple App Store (€9.99 one-time)                          | Coming soon |
+| Buy on Google Play Store (€9.99 one-time)                        | Coming soon |
 | Buy desktop binary on Lemon Squeezy or Polar.sh (€9.99 one-time) | Coming soon |
-| [GitHub Sponsors](https://github.com/sponsors/nrajesh) | Active |
-| PayPal / direct transfer (see in-app Donation page) | Active |
+| [GitHub Sponsors](https://github.com/sponsors/nrajesh)           | Active      |
+| PayPal / direct transfer (see in-app Donation page)              | Active      |
 
 The same app is free to build from source, regardless of which channel you choose. Store purchases exist to make installation simpler for non-technical users and to support continued development.
 
