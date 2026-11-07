@@ -294,7 +294,7 @@ sequenceDiagram
     - **Context**: Users want to script the app, import and export data without the GUI, and build their own interfaces. All data lives in the renderer's IndexedDB, which the main process cannot read.
     - **Decision**: The main process hosts a loopback-only HTTP server and relays requests over IPC to the renderer, which executes them against the same data layer as the UI. It is off by default and protected by a bearer token.
     - **Consequences**:
-        - **Pros**: No second data store to keep in sync. UI and API behave identically. Data never leaves the machine.
+        - **Pros**: No second data store to keep in sync. UI and API behave identically. The API itself sends nothing off the machine; an AI agent connected to it sends what it reads to its AI provider, unless it is a local model.
         - **Cons**: The app window must be running (the API answers `503 ui_not_ready` otherwise). Desktop only. The API is a public contract, so changes must update tests, docs and the Postman collection (see `documentation/CLAUDE.md`).
 - [2024-03-XX] [Direct Browser-to-AI Provider Communication]
     - **Context**: We want users to be able to use AI features without creating a centralized backend that could store their API keys or financial data, maintaining the "local-first" privacy ethos.

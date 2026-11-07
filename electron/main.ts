@@ -215,6 +215,14 @@ app.whenReady().then(() => {
     return apiStatus();
   });
 
+  // Where the bundled MCP server lives, for the "Connect to agent" panel.
+  // Takes no arguments: the path is computed here, never supplied by the renderer.
+  ipcMain.handle("api:get-connect-info", () => ({
+    serverPath: app.isPackaged
+      ? path.join(process.resourcesPath, "mcp", "server.mjs")
+      : path.join(app.getAppPath(), "mcp", "server.mjs"),
+  }));
+
   ipcMain.handle("path-join", (_event, ...segments: unknown[]) => {
     if (!segments.every((segment) => typeof segment === "string")) {
       throw new Error("path-join expects string segments");

@@ -5,7 +5,10 @@ import { LocalDataProvider } from "@/providers/LocalDataProvider";
 import { handleApiRequest } from "@/api/handleRequest";
 import type { ApiRequest } from "@/api/http";
 // @ts-expect-error plain ESM module without types
-import { createServer, normalizeBankCsv, parseCsv, projectPayoff, requiredPayment, resolvePeriod } from "./server.mjs";
+import { appConfigCandidates, createServer, exportFolder, loadConnection, normalizeBankCsv, parseCsv, projectPayoff, requiredPayment, resolvePeriod } from "./server.mjs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, linkSync, mkdtempSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 /**
  * The MCP tools against the real HTTP server, router and Dexie (only the
@@ -44,8 +47,9 @@ describe("MCP server tools", () => {
       baseUrl: base,
       token: TOKEN,
       exportDir: "/exports",
-      writeFile: (path: string, data: string) => {
-        saved[path] = data;
+      saveExport: (dir: string, name: string, data: string) => {
+        saved[`${dir}/${name}`] = data;
+        return `${dir}/${name}`;
       },
       readFile: (p: string) => {
         if (!(p in files)) throw new Error("ENOENT");
@@ -116,11 +120,195 @@ describe("MCP server tools", () => {
   });
 
   it("reports unreadable or unmappable files without calling the API", async () => {
-    expect((await run("import_csv", { path: "/missing.csv" })).isError).toBe(true);
+    const missing = await run("import_csv", { path: "/missing.csv" });
+    expect(missing.isError).toBe(true);
+    // Neither the path nor the OS error ("ENOENT") goes back to the model.
+    expect(missing.text).toBe("Cannot read that file.");
     files["/tmp/odd.csv"] = "foo,bar\n1,2\n";
     const bad = await run("import_csv", { path: "/tmp/odd.csv", account: "Checking" });
     expect(bad.isError).toBe(true);
-    expect(bad.text).toContain("No column found for Date");
+    // One message for all the missing columns, listing the names that would be accepted.
+    expect(bad.text).toBe(
+      "The first line has 2 columns; none is named Date, Vendor or Amount. Accepted names (any case) for " +
+        "Date: date, booking date, transaction date, posted, posting date, value date; " +
+        "Vendor: vendor, payee, description, merchant, name, counterparty, details; Amount: amount, value, sum.",
+    );
+    files["/tmp/no-amount.csv"] = "Date,Description,Balance\n2026-09-05,Cafe,10\n";
+    expect((await run("import_csv", { path: "/tmp/no-amount.csv", account: "Checking" })).text).toBe(
+      "The first line has 3 columns; none is named Amount. Accepted names (any case) for Amount: amount, value, sum.",
+    );
+  });
+
+  it("never repeats text from the file, even when it looks like column names", async () => {
+    // FAKE secrets only. Each first line could be mistaken for a header.
+    const firstLines = [
+      "ghp_aB3dE6gH9jK2mN5pQ8sT1vW4yZ7bC0eF3hJ6",
+      "AKIAIOSFODNN7EXAMPLE,wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+      "hunter2, AKIA1234",
+      "dGhpc2lzYXNlY3JldGtleQ==",
+      "my bank password is Tr0ub4dor",
+      "pin ١٢٣٤٥٦٧٨",
+      "key＝secretvalue",
+      "aws_key=AKIAFAKE,password=hunter2",
+      "Card 4111111111111111,Note: call me",
+    ];
+    for (const [i, line] of firstLines.entries()) {
+      files[`/tmp/secret-${i}.txt`] = `${line}\nmore\n`;
+      for (const delimiter of [undefined, ",", "|"]) {
+        const r = await run("import_csv", { path: `/tmp/secret-${i}.txt`, account: "Checking", delimiter });
+        expect(r.isError).toBe(true);
+        expect(r.text).toMatch(/^The first line has \d+ columns?; none is named Date, Vendor or Amount\. Accepted names/);
+        for (const cell of line.split(/[,|]/).map((c) => c.trim()).filter(Boolean)) expect(r.text).not.toContain(cell);
+        expect(r.text).not.toMatch(/ghp_|AKIA|hunter2|Tr0ub4dor|secretvalue|١٢٣|4111|call me|dGhpc2/);
+      }
+    }
+  });
+
+  it("only accepts a known delimiter", async () => {
+    files["/tmp/bank.csv"] = "Date,Description,Amount\n2026-09-05,Cafe,-4\n";
+    const bad = await run("import_csv", { path: "/tmp/bank.csv", account: "Checking", delimiter: "\n" });
+    expect(bad.isError).toBe(true);
+    expect(bad.text).toMatch(/delimiter/i);
+    expect((await run("import_csv", { path: "/tmp/bank.csv", account: "Checking", delimiter: "," })).isError).toBe(false);
+  });
+
+  it("refuses the app's config file, the token file and other file types", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "vm-guard-"));
+    try {
+      const fakeConfig = join(dir, "api-config.json");
+      const fakeTokenFile = join(dir, "token.txt");
+      writeFileSync(fakeConfig, '{"token":"FAKE-TOKEN"}');
+      writeFileSync(fakeTokenFile, "FAKE-TOKEN");
+      const guarded = createServer({
+        baseUrl: base,
+        token: TOKEN,
+        env: { VM_CONFIG_FILE: fakeConfig, VM_TOKEN_FILE: fakeTokenFile },
+        readFile: (p: string) => files[p] ?? "Date,Description,Amount\n",
+      });
+      const go = async (path: string) => {
+        const r = await guarded.call("import_csv", { path, account: "Checking" });
+        return { isError: !!r.isError, text: r.content[0].text as string };
+      };
+      for (const path of [fakeConfig, fakeTokenFile]) {
+        const r = await go(path);
+        expect(r.isError).toBe(true);
+        expect(r.text).toMatch(/can't import|cannot import|not a bank/i);
+        expect(r.text).not.toContain("FAKE-TOKEN");
+      }
+      // A symlink to a protected file is refused too.
+      const link = join(dir, "link.csv");
+      symlinkSync(fakeConfig, link);
+      expect((await go(link)).isError).toBe(true);
+      expect((await go("/tmp/notes.json")).text).toMatch(/\.csv/);
+      files["/tmp/UPPER.CSV"] = "Date,Description,Amount\n2026-09-05,Cafe,-4\n";
+      expect((await go("/tmp/UPPER.CSV")).isError).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a protected file reached by case variant, hard link or symlink", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "vm-guard-"));
+    try {
+      const fakeTokenFile = join(dir, "token.txt");
+      writeFileSync(fakeTokenFile, "FAKE-TOKEN");
+      const guarded = createServer({
+        baseUrl: base,
+        token: TOKEN,
+        env: { VM_CONFIG_FILE: join(dir, "none.json"), VM_TOKEN_FILE: fakeTokenFile },
+        readFile: (p: string) => readFileSync(p, "utf8"),
+      });
+      const go = async (path: string) => {
+        const r = await guarded.call("import_csv", { path, account: "Checking" });
+        return { isError: !!r.isError, text: r.content[0].text as string };
+      };
+      const variant = join(dir, "Token.txt");
+      if (existsSync(variant)) {
+        // Case-insensitive filesystem: the variant is the same file.
+        const r = await go(variant);
+        expect(r.isError).toBe(true);
+        expect(r.text).toMatch(/not a bank statement/);
+        expect(r.text).not.toContain("FAKE-TOKEN");
+      }
+      const hard = join(dir, "hard.txt");
+      linkSync(fakeTokenFile, hard);
+      const h = await go(hard);
+      expect(h.isError).toBe(true);
+      expect(h.text).toMatch(/not a bank statement/);
+      expect(h.text).not.toContain("FAKE-TOKEN");
+      const soft = join(dir, "soft.txt");
+      symlinkSync(fakeTokenFile, soft);
+      const sl = await go(soft);
+      expect(sl.isError).toBe(true);
+      expect(sl.text).toMatch(/not a bank statement/);
+      const normal = join(dir, "bank.csv");
+      writeFileSync(normal, "Date,Description,Amount\n2026-09-05,Cafe,-4\n");
+      expect((await go(normal)).isError).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("folds case on macOS and Windows even when neither file exists", async () => {
+    for (const platform of ["darwin", "win32"]) {
+      const guarded = createServer({
+        baseUrl: base,
+        token: TOKEN,
+        platform,
+        env: { VM_CONFIG_FILE: "/nonexistent-vm/none.json", VM_TOKEN_FILE: "/nonexistent-vm/Token.txt" },
+        readFile: () => "FAKE-TOKEN",
+      });
+      const r = await guarded.call("import_csv", { path: "/nonexistent-vm/token.txt", account: "Checking" });
+      expect(r.isError).toBe(true);
+      expect(r.content[0].text).toMatch(/not a bank statement/);
+    }
+  });
+
+  it("echoes only a short, single-line list of column names", async () => {
+    const names = Array.from({ length: 40 }, (_, i) => `col${i}${"x".repeat(80)}`);
+    files["/tmp/wide.csv"] = names.join(",") + "\n1,2\n";
+    const r = await run("import_csv", { path: "/tmp/wide.csv", account: "Checking" });
+    expect(r.isError).toBe(true);
+    expect(r.text).not.toContain("\n");
+    expect(r.text).not.toContain("x".repeat(41));
+    expect(r.text).not.toContain("col25");
+  });
+
+  it("says plainly when the app is not running", async () => {
+    const offline = createServer({
+      baseUrl: base,
+      token: TOKEN,
+      fetchImpl: () => Promise.reject(new TypeError("fetch failed")),
+    });
+    const r = await offline.call("list_ledgers", {}).catch((e: Error) => ({ isError: true, content: [{ text: e.message }] }));
+    expect(r.isError).toBe(true);
+    expect(r.content[0].text).toBe("Vaulted Money is not running. Open the desktop app (it can stay in the tray) and try again.");
+    const viaProtocol = await offline.handle({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "list_ledgers", arguments: {} } });
+    expect(viaProtocol.result.content[0].text).toContain("is not running");
+  });
+
+  it("reports a connection lookup failure as itself, looked up once per request", async () => {
+    let lookups = 0;
+    const switchedOff = createServer({
+      getConnection: () => {
+        lookups++;
+        throw new Error("Vaulted Money's Local API is off. Open the app, go to Settings → Local API and switch it on.");
+      },
+      fetchImpl: () => Promise.reject(new TypeError("fetch failed")),
+    });
+    const r = await switchedOff.handle({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "list_ledgers", arguments: {} } });
+    expect(r.result.content[0].text).toContain("Local API is off");
+    expect(r.result.content[0].text).not.toContain("not running");
+    expect(lookups).toBe(1);
+    let connections = 0;
+    let fetches = 0;
+    const live = createServer({
+      getConnection: () => (connections++, { baseUrl: base, token: TOKEN }),
+      fetchImpl: (url: URL, init: RequestInit) => (fetches++, fetch(url, init)),
+    });
+    expect((await live.call("list_ledgers", {})).isError).toBeFalsy();
+    expect(fetches).toBeGreaterThan(0);
+    expect(connections).toBe(fetches);
   });
 
   it("previews destructive calls and only runs them when confirmed", async () => {
@@ -131,6 +319,34 @@ describe("MCP server tools", () => {
     const preview = await run("call_api", { method: "DELETE", path });
     expect(preview.json).toMatchObject({ preview: true, executed: false });
     expect((await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/accounts" })).json.data).toHaveLength(1);
+    // Only the boolean true confirms. Strings and numbers a model might send stay previews.
+    for (const confirm of ["false", "no", 1, "true", 0, "yes"]) {
+      const stillPreview = await run("call_api", { method: "DELETE", path, confirm });
+      expect(stillPreview.json).toMatchObject({ preview: true, executed: false });
+    }
+    expect((await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/accounts" })).json.data).toHaveLength(1);
+    // Nor can a path reach a different endpoint from the one shown: dot
+    // segments in any spelling, and tabs or newlines the URL parser would drop.
+    const sneakyPaths = [
+      "/ledgers/{ledgerId}/accounts/../../..", "/ledgers/%2e%2e/x", "/ledgers/{ledgerId}/.%2E/accounts", "/../x", "..",
+      "/ledgers/{ledgerId}/.\t./x", "/ledgers/{ledgerId}/.\n./x", "/ledgers/{ledgerId}/.\r./x", "/ledgers/{ledgerId}/./accounts", "/ledgers\\..\\x",
+    ];
+    for (const sneaky of sneakyPaths) {
+      for (const method of ["DELETE", "GET"]) {
+        const r = await run("call_api", { method, path: sneaky, confirm: true });
+        expect(r.isError, `${method} ${JSON.stringify(sneaky)}`).toBe(true);
+        expect(r.text).toMatch(/control characters|segments/);
+      }
+    }
+    expect((await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/accounts" })).json.data).toHaveLength(1);
+    // Backstop in every request: the URL that runs must be exactly the path asked for
+    // (here the parser would turn the backslash into a slash).
+    const rewritten = await mcp.handle({ jsonrpc: "2.0", id: 7, method: "tools/call", params: { name: "call_api", arguments: { method: "GET", path: "/ledgers\\{ledgerId}" } } });
+    expect(rewritten.result.isError).toBe(true);
+    expect(rewritten.result.content[0].text).toMatch(/not a plain API path/);
+    // A ".." inside the query string is only a value, so it is allowed.
+    const query = await run("call_api", { method: "GET", path: "/ledgers/{ledgerId}/transactions?search=.." });
+    expect(query.isError).toBe(false);
 
     const done = await run("call_api", { method: "DELETE", path, confirm: true });
     expect(done.json).toEqual({ deleted: true });
@@ -175,6 +391,13 @@ describe("MCP server tools", () => {
     expect(content).toHaveLength(result.json.characters);
     expect(content.split("\n").filter((l: string) => l.includes("Shop ")).length).toBe(300);
     expect(result.json.preview.length).toBeLessThanOrEqual(1500);
+
+    // VM_EXPORT_DIR, as documented, moves where the file goes.
+    const moved: Record<string, string> = {};
+    const elsewhere = createServer({ baseUrl: base, token: TOKEN, env: { VM_EXPORT_DIR: "/chosen" }, saveExport: (dir: string, name: string, data: string) => { moved[`${dir}/${name}`] = data; return `${dir}/${name}`; } });
+    const again = JSON.parse((await elsewhere.call("call_api", { method: "GET", path: "/ledgers/{ledgerId}/transactions/export" })).content[0].text);
+    expect(again.saved_to).toMatch(/^\/chosen\/\d{8}-\d{6}-.+\.csv$/);
+    expect(Object.keys(moved)).toEqual([again.saved_to]);
   });
 
   it("returns a small export inline without writing a file", async () => {
@@ -371,5 +594,221 @@ describe("loan payoff maths", () => {
     expect(projectPayoff({ balance: 12000, annualRatePct: 6, monthlyPayment: payment }, now).months).toBeLessThanOrEqual(24);
     expect(projectPayoff({ balance: 12000, annualRatePct: 6, monthlyPayment: payment - 0.05 }, now).months).toBeGreaterThan(24);
     expect(requiredPayment({ balance: 1200, annualRatePct: 0, months: 12 })).toBe(100);
+  });
+});
+
+describe("MCP connection discovery", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "vm-conn-"));
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+  const write = (name: string, content: string) => {
+    const file = join(dir, name);
+    writeFileSync(file, content);
+    return file;
+  };
+  const config = (extra: Record<string, unknown> = {}) =>
+    write("api-config.json", JSON.stringify({ enabled: true, port: 51234, token: "cfg-token", ...extra }));
+  const nowhere = join(tmpdir(), "vm-does-not-exist-token");
+
+  it("reads token and port from the app config", () => {
+    const VM_CONFIG_FILE = config();
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE: nowhere }, "linux", dir)).toEqual({
+      token: "cfg-token",
+      baseUrl: "http://127.0.0.1:51234/api/v1",
+    });
+  });
+
+  it("follows a changed port", () => {
+    const VM_CONFIG_FILE = config();
+    const env = { VM_CONFIG_FILE, VM_TOKEN_FILE: nowhere };
+    expect(loadConnection(env, "linux", dir).baseUrl).toContain(":51234/");
+    config({ port: 60000 });
+    expect(loadConnection(env, "linux", dir).baseUrl).toContain(":60000/");
+  });
+
+  it("prefers the VM_TOKEN env over the config", () => {
+    const VM_CONFIG_FILE = config();
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN: "env-token", VM_BASE_URL: "http://x/api/v1" }, "linux", dir)).toEqual({
+      token: "env-token",
+      baseUrl: "http://x/api/v1",
+    });
+  });
+
+  it("prefers the config over a token file with a different token and port", () => {
+    const VM_CONFIG_FILE = config();
+    const VM_TOKEN_FILE = write("tok", "file-token\n");
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE }, "linux", dir)).toEqual({
+      token: "cfg-token",
+      baseUrl: "http://127.0.0.1:51234/api/v1",
+    });
+  });
+
+  it("falls back to the token file when no config exists", () => {
+    const VM_TOKEN_FILE = write("tok", "file-token\n");
+    expect(loadConnection({ VM_CONFIG_FILE: join(dir, "nope.json"), VM_TOKEN_FILE }, "linux", dir)).toEqual({
+      token: "file-token",
+      baseUrl: "http://127.0.0.1:47821/api/v1",
+    });
+  });
+
+  it("prefers VM_TOKEN over both the config and the token file", () => {
+    const VM_CONFIG_FILE = config();
+    const VM_TOKEN_FILE = write("tok", "file-token");
+    expect(loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE, VM_TOKEN: "env-token" }, "linux", dir).token).toBe("env-token");
+  });
+
+  it("says the Local API is off even when a token file exists", () => {
+    const VM_CONFIG_FILE = config({ enabled: false });
+    const VM_TOKEN_FILE = write("tok", "file-token");
+    expect(() => loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE }, "linux", dir)).toThrow("Local API is off");
+  });
+
+  it("says the Local API is off when the config is disabled", () => {
+    const VM_CONFIG_FILE = config({ enabled: false });
+    expect(() => loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE: nowhere }, "linux", dir)).toThrow(
+      "Vaulted Money's Local API is off. Open the app, go to Settings → Local API and switch it on.",
+    );
+  });
+
+  it.each([
+    ["missing", () => join(dir, "nope.json")],
+    ["empty", () => write("empty.json", "")],
+    ["invalid JSON", () => write("bad.json", "{not json")],
+  ])("says it could not find the app for a %s config", (_label, make) => {
+    expect(() => loadConnection({ VM_CONFIG_FILE: make(), VM_TOKEN_FILE: nowhere }, "linux", dir)).toThrow(
+      "Could not find Vaulted Money. Open the desktop app once, or set VM_TOKEN.",
+    );
+  });
+
+  it("lists the config candidates per platform", () => {
+    const home = "/Users/Jane Doe";
+    expect(appConfigCandidates({}, "darwin", home)).toEqual([
+      "/Users/Jane Doe/Library/Application Support/Vaulted Money/api-config.json",
+      "/Users/Jane Doe/Library/Application Support/vite_react_shadcn_ts/api-config.json",
+    ]);
+    expect(appConfigCandidates({ APPDATA: "C:\\Users\\Jane Doe\\AppData\\Roaming" }, "win32", "C:\\Users\\Jane Doe")).toEqual([
+      join("C:\\Users\\Jane Doe\\AppData\\Roaming", "Vaulted Money", "api-config.json"),
+      join("C:\\Users\\Jane Doe\\AppData\\Roaming", "vite_react_shadcn_ts", "api-config.json"),
+    ]);
+    expect(appConfigCandidates({ XDG_CONFIG_HOME: "/x/cfg" }, "linux", home)).toEqual([
+      "/x/cfg/Vaulted Money/api-config.json",
+      "/x/cfg/vite_react_shadcn_ts/api-config.json",
+    ]);
+    expect(appConfigCandidates({}, "linux", home)[0]).toBe("/Users/Jane Doe/.config/Vaulted Money/api-config.json");
+  });
+});
+
+/**
+ * The real export writer (nothing injected), in throwaway folders. A download
+ * can hold the whole ledger, so it must never overwrite or follow an existing
+ * file, and the folder must be private and the user's own.
+ */
+describe("saving large exports", () => {
+  let home: string;
+  const fixed = new Date("2026-01-02T03:04:05Z");
+  const stamp = "20260102-030405";
+  const big = "y".repeat(25_000);
+  const serverFor = (env: Record<string, string>, disposition = 'attachment; filename="Main_transactions_export.csv"') =>
+    createServer({
+      baseUrl: "http://127.0.0.1:1/api/v1",
+      token: "FAKE",
+      env,
+      home,
+      now: () => fixed,
+      fetchImpl: async (url: URL) =>
+        new URL(url).pathname.endsWith("/ledgers")
+          ? new Response(JSON.stringify({ data: [{ id: "L1", name: "Main", currency: "EUR" }] }))
+          : new Response(big, { headers: { "content-disposition": disposition } }),
+    });
+  const download = async (server: ReturnType<typeof createServer>) => {
+    const r = await server.call("call_api", { method: "GET", path: "/ledgers/{ledgerId}/transactions/export" });
+    return { isError: !!r.isError, text: r.content[0].text as string, json: r.isError ? undefined : JSON.parse(r.content[0].text) };
+  };
+  const mode = (p: string) => statSync(p).mode & 0o777;
+
+  beforeEach(() => {
+    home = mkdtempSync(join(tmpdir(), "vm-export-"));
+  });
+  afterEach(() => rmSync(home, { recursive: true, force: true }));
+
+  it("writes an owner-only file in a private folder, and gives a same-second name a suffix", async () => {
+    const dir = join(home, "exports");
+    const server = serverFor({ VM_EXPORT_DIR: dir });
+    const first = await download(server);
+    const second = await download(server);
+    expect(first.json.saved_to).toBe(join(dir, `${stamp}-Main_transactions_export.csv`));
+    expect(second.json.saved_to).toBe(join(dir, `${stamp}-Main_transactions_export-1.csv`));
+    expect(readFileSync(first.json.saved_to, "utf8")).toBe(big);
+    expect(readFileSync(second.json.saved_to, "utf8")).toBe(big);
+    expect(mode(first.json.saved_to)).toBe(0o600);
+    expect(mode(dir)).toBe(0o700);
+  });
+
+  it("does not write through a symlink planted at the export's name", async () => {
+    const dir = join(home, "exports");
+    mkdirSync(dir, { mode: 0o700 });
+    const victim = join(home, "victim.txt");
+    writeFileSync(victim, "ORIGINAL");
+    symlinkSync(victim, join(dir, `${stamp}-Main_transactions_export.csv`));
+    const r = await download(serverFor({ VM_EXPORT_DIR: dir }));
+    expect(r.json.saved_to).toBe(join(dir, `${stamp}-Main_transactions_export-1.csv`));
+    expect(readFileSync(victim, "utf8")).toBe("ORIGINAL");
+  });
+
+  it("leaves an existing folder's permissions alone, and refuses a symlinked folder or the home folder", async () => {
+    const open = join(home, "open");
+    mkdirSync(open);
+    chmodSync(open, 0o755);
+    const saved = await download(serverFor({ VM_EXPORT_DIR: open }));
+    expect(saved.isError).toBe(false);
+    expect(mode(open)).toBe(0o755);
+    expect(mode(saved.json.saved_to)).toBe(0o600);
+
+    const elsewhere = join(home, "elsewhere");
+    mkdirSync(elsewhere);
+    symlinkSync(elsewhere, join(home, "linked"));
+    const linked = await download(serverFor({ VM_EXPORT_DIR: join(home, "linked") }));
+    expect(linked.isError).toBe(true);
+    expect(linked.text).toMatch(/symbolic link/);
+    expect(readdirSync(elsewhere)).toEqual([]);
+
+    // The home folder is recognised by identity, however it is spelled.
+    const spellings = ["~", `${home}/`, `${home}/./`, join(home, "open", "..")];
+    const upper = home.toUpperCase();
+    if (upper !== home && existsSync(upper)) spellings.push(upper); // case-insensitive filesystem
+    for (const spelling of spellings) {
+      const atHome = await download(serverFor({ VM_EXPORT_DIR: spelling }));
+      expect(atHome.isError).toBe(true);
+      expect(atHome.text).toMatch(/home folder/);
+    }
+    expect(readdirSync(home).sort()).toEqual(["elsewhere", "linked", "open"]);
+  });
+
+  it.skipIf(typeof process.getuid !== "function" || process.getuid() === 0)("refuses a folder that belongs to someone else", async () => {
+    // The filesystem root, owned by root, stands in for another user's folder; nothing is written there.
+    const r = await download(serverFor({ VM_EXPORT_DIR: "/" }));
+    expect(r.isError).toBe(true);
+    expect(r.text).toMatch(/another user/);
+  });
+
+  it("resolves a relative or ~/ VM_EXPORT_DIR against the home folder", async () => {
+    expect(exportFolder({}, home)).toBe(join(home, "vaulted-exports"));
+    expect(exportFolder({ VM_EXPORT_DIR: "rel-exports" }, home)).toBe(join(home, "rel-exports"));
+    expect(exportFolder({ VM_EXPORT_DIR: "~/tilde" }, home)).toBe(join(home, "tilde"));
+    expect(exportFolder({ VM_EXPORT_DIR: "/abs/dir" }, home)).toBe("/abs/dir");
+    const r = await download(serverFor({ VM_EXPORT_DIR: "rel-exports" }));
+    expect(r.json.saved_to).toBe(join(home, "rel-exports", `${stamp}-Main_transactions_export.csv`));
+    expect(existsSync(r.json.saved_to)).toBe(true);
+  });
+
+  it("falls back to export.txt for a malformed or hostile file name", async () => {
+    const dir = join(home, "exports");
+    const malformed = await download(serverFor({ VM_EXPORT_DIR: dir }, "attachment; filename*=UTF-8''%E0%A4%A"));
+    expect(malformed.json.saved_to).toBe(join(dir, `${stamp}-export.txt`));
+    const traversal = await download(serverFor({ VM_EXPORT_DIR: dir }, "attachment; filename*=UTF-8''..%2F..%2Fevil.sh"));
+    expect(traversal.json.saved_to).toBe(join(dir, `${stamp}-evil.sh`));
+    expect(readdirSync(home).sort()).toEqual(["exports"]);
   });
 });

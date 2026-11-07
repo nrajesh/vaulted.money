@@ -12,14 +12,21 @@
  * common questions and return trimmed, pre-aggregated answers; `search_api` +
  * `call_api` reach every other endpoint without loading its schema up front.
  *
- *   VM_TOKEN_FILE  file holding the access token (default ~/.vaulted-token)
- *   VM_TOKEN       the token itself (overrides the file)
- *   VM_BASE_URL    default http://127.0.0.1:47821/api/v1
- *   VM_EXPORT_DIR  where large downloads are saved (default ~/vaulted-exports)
+ * Where the token comes from, first match wins (looked up again on every request):
+ *   1. VM_TOKEN       the token itself
+ *   2. the desktop app's own api-config.json (token, port, on/off), or the
+ *      file named by VM_CONFIG_FILE instead
+ *   3. VM_TOKEN_FILE  a file holding the token (default ~/.vaulted-token); only
+ *                     used when no app config is found, it does not override one
+ *
+ *   VM_BASE_URL    the API address; when set it wins over the config's port
+ *                  (default http://127.0.0.1:47821/api/v1)
+ *   VM_EXPORT_DIR  where large downloads are saved (default ~/vaulted-exports;
+ *                  a relative path or ~/... is taken from the home folder)
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, extname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== ""));
@@ -100,6 +107,33 @@ function toAppDate(raw) {
   if (m) return `${m[1].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[3]}`;
   return s;
 }
+const DELIMITERS = [",", ";", "\t", "|"];
+const CSV_EXTENSIONS = [".csv", ".tsv", ".txt"];
+/** Resolve symlinks and the true on-disk spelling when the file exists; otherwise just make the path absolute. */
+function realOrResolved(p) {
+  try { return realpathSync.native(p); } catch { return resolve(p); }
+}
+function fileIdentity(p) {
+  try { const s = statSync(p); return `${s.dev}:${s.ino}`; } catch { return undefined; }
+}
+/**
+ * True when `path` is one of the protected files. Compares the real path (case
+ * folded on macOS and Windows, whose filesystems ignore case) and, as a second
+ * check, the file identity (device + inode), which also catches hard links.
+ */
+function isProtectedFile(path, files, platform) {
+  const fold = (p) => (platform === "darwin" || platform === "win32" ? p.toLowerCase() : p);
+  const target = fold(realOrResolved(path));
+  if (files.some((f) => fold(f) === target)) return true;
+  const id = fileIdentity(path);
+  return id !== undefined && files.some((f) => fileIdentity(f) === id);
+}
+/** Files import_csv must never read: the app's own config files and the token file. */
+function protectedFiles(env, platform, home) {
+  const files = [...appConfigCandidates(env, platform, home), ...(env.VM_CONFIG_FILE ? [env.VM_CONFIG_FILE] : [])];
+  files.push(env.VM_TOKEN_FILE ?? join(home, ".vaulted-token"));
+  return files.map(realOrResolved);
+}
 /**
  * Reshape a bank CSV into the app's import format (the one the Import CSV
  * button and the API use). Returns { csv, rows, mapped, problems }.
@@ -116,7 +150,14 @@ export function normalizeBankCsv(input, { account, currency, delimiter } = {}) {
     if (at >= 0) index[target] = at;
   }
   const problems = [];
-  for (const need of ["Date", "Vendor", "Amount"]) if (index[need] === undefined) problems.push(`No column found for ${need}. Columns in the file: ${header.join(", ")}`);
+  const missing = ["Date", "Vendor", "Amount"].filter((need) => index[need] === undefined);
+  if (missing.length) {
+    // Never repeat the file's own text: if this is not a bank statement, its
+    // first line could be a password or a key. Say what would be accepted instead.
+    const names = missing.length === 1 ? missing[0] : `${missing.slice(0, -1).join(", ")} or ${missing.at(-1)}`;
+    const accepted = missing.map((need) => `${need}: ${ALIASES[need].join(", ")}`).join("; ");
+    problems.push(`The first line has ${header.length} ${header.length === 1 ? "column" : "columns"}; none is named ${names}. Accepted names (any case) for ${accepted}.`);
+  }
   if (index.Account === undefined && !account) problems.push("The file has no account column: pass `account`.");
   if (problems.length) return { problems };
   const out = ["Date;Account;Vendor;Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date"];
@@ -206,28 +247,91 @@ export function requiredPayment({ balance, annualRatePct, months }) {
 
 /** Responses longer than this are saved to a file instead of passing through the chat. */
 export const INLINE_LIMIT = 20000;
+
+/** The export folder: VM_EXPORT_DIR made absolute (relative and ~/ paths start at home), or ~/vaulted-exports. */
+export function exportFolder(env, home) {
+  const chosen = env.VM_EXPORT_DIR?.trim();
+  if (!chosen) return join(home, "vaulted-exports");
+  return resolve(home, chosen === "~" ? "." : chosen.replace(/^~[/\\]/, ""));
+}
+
+/**
+ * Save an export without ever replacing or following an existing file, and
+ * return the path written. The folder must be a real folder owned by this user,
+ * not a symlink and not the home folder itself. A missing folder is created
+ * owner-only (0700); an existing one keeps its permissions. The file is created
+ * owner-only (0600) with O_EXCL ("wx"), which also fails on a planted symlink;
+ * if the name is taken, -1, -2, ... is added.
+ */
+export function writeExportFile(dir, fileName, data, { home = homedir(), uid = process.getuid?.() } = {}) {
+  let folder;
+  try { folder = lstatSync(dir); } catch (e) {
+    if (e?.code !== "ENOENT") throw e;
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    folder = lstatSync(dir);
+  }
+  if (folder.isSymbolicLink()) throw new Error("the export folder is a symbolic link");
+  if (!folder.isDirectory()) throw new Error("the export folder is not a folder");
+  // Compare by identity, not by spelling: "~/", "~/." and a case variant are all home.
+  let homeInfo;
+  try { homeInfo = statSync(home); } catch { /* no home folder to protect */ }
+  if (homeInfo && folder.dev === homeInfo.dev && folder.ino === homeInfo.ino) throw new Error("the export folder is your home folder; set VM_EXPORT_DIR to a folder of its own");
+  // uid is unavailable on Windows, where the user's profile folder is private already.
+  if (uid !== undefined && folder.uid !== uid) throw new Error("the export folder belongs to another user");
+  const dot = fileName.lastIndexOf(".");
+  const stem = dot > 0 ? fileName.slice(0, dot) : fileName;
+  const extension = dot > 0 ? fileName.slice(dot) : "";
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const path = join(dir, attempt ? `${stem}-${attempt}${extension}` : fileName);
+    try {
+      writeFileSync(path, data, { mode: 0o600, flag: "wx" });
+      return path;
+    } catch (e) {
+      if (e?.code !== "EEXIST") throw e;
+    }
+  }
+  throw new Error("too many exports with the same name; delete some old ones");
+}
 /** POST endpoints that only read (they are POST so that a password is not put in the URL). */
 const READ_ONLY_POSTS = [/^\/backups\/export$/];
 
 export function createServer({
   baseUrl,
+  getBaseUrl,
   token,
   getToken,
   now = () => new Date(),
   fetchImpl = fetch,
   readFile = (p) => readFileSync(p, "utf8"),
-  exportDir = join(homedir(), "vaulted-exports"),
-  // Owner-only: exports can hold the whole ledger.
-  writeFile = (p, data) => {
-    mkdirSync(exportDir, { recursive: true, mode: 0o700 });
-    writeFileSync(p, data, { mode: 0o600 });
-  },
+  env = process.env,
+  platform = process.platform,
+  home = homedir(),
+  getConnection,
+  exportDir = exportFolder(env, home),
+  // Owner-only and never overwriting: exports can hold the whole ledger.
+  saveExport = (dir, fileName, data) => writeExportFile(dir, fileName, data, { home }),
 }) {
   let ledgers, spec;
   const api = async (method, path, { query, body } = {}) => {
-    const url = new URL(baseUrl.replace(/\/$/, "") + path);
+    // Look the connection up once, outside the fetch's try: a missing or
+    // switched-off config must be reported as that, not as "not running".
+    const connection = getConnection ? getConnection() : { baseUrl: getBaseUrl ? getBaseUrl() : baseUrl, token: getToken ? getToken() : token };
+    const base = connection.baseUrl.replace(/\/$/, "");
+    const url = new URL(base + path);
+    // The endpoint that runs must be exactly the one asked for: no segment
+    // resolved away, no character dropped. The parser only adds %-encoding, so
+    // comparing the decoded forms ignores that and catches everything else.
+    const decoded = (value) => { try { return decodeURIComponent(value); } catch { return value; } };
+    const intended = new URL(base).pathname.replace(/\/$/, "") + path.split(/[?#]/)[0];
+    if (decoded(url.pathname) !== decoded(intended)) throw new Error("That path is not a plain API path (it has \"..\", \".\", a backslash or control characters).");
     for (const [k, v] of Object.entries(clean(query ?? {}))) url.searchParams.set(k, String(v));
-    const res = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${getToken ? getToken() : token}`, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    let res;
+    try {
+      res = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${connection.token}`, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    } catch {
+      // Connection refused or reset: the desktop app is not running.
+      throw new Error("Vaulted Money is not running. Open the desktop app (it can stay in the tray) and try again.");
+    }
     const raw = await res.text();
     let json;
     try { json = raw ? JSON.parse(raw) : null; } catch { json = undefined; }
@@ -244,13 +348,15 @@ export function createServer({
     const isDownload = /attachment/i.test(r.disposition);
     if (r.raw.length <= INLINE_LIMIT || (isJson && !isDownload)) return text(isJson ? r.json : r.raw);
     const suggested = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(r.disposition)?.[1] ?? "export.txt";
-    const safeName = basename(decodeURIComponent(suggested)).replace(/[^\w.-]+/g, "_") || "export.txt";
+    let decoded;
+    try { decoded = decodeURIComponent(suggested); } catch { decoded = "export.txt"; } // malformed %-escape
+    const safeName = basename(decoded).replace(/[^\w.-]+/g, "_") || "export.txt";
     const stamp = now().toISOString().replace(/[-:]/g, "").replace(/\..*$/, "").replace("T", "-");
-    const file = join(exportDir, `${stamp}-${safeName}`);
+    let file;
     try {
-      writeFile(file, r.raw);
+      file = saveExport(exportDir, `${stamp}-${safeName}`, r.raw);
     } catch (e) {
-      return fail(`The response is ${r.raw.length} characters, too large to show, and it could not be saved to ${file}: ${e instanceof Error ? e.message : e}`);
+      return fail(`The response is ${r.raw.length} characters, too large to show, and it could not be saved in ${exportDir}: ${e instanceof Error ? e.message : e}`);
     }
     return text({ saved_to: file, characters: r.raw.length, preview: r.raw.slice(0, 1500), note: "Too large to show here, so it was saved on this computer only. Open that file to see all of it. It may contain your financial data: delete it when you are done." });
   }
@@ -258,7 +364,7 @@ export function createServer({
 
   async function fetchLedgers() {
     const r = await api("GET", "/ledgers");
-    if (!r.ok) throw new Error(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 200)}${r.status === 401 ? " (check the token in ~/.vaulted-token matches Settings -> Local API)" : ""}`);
+    if (!r.ok) throw new Error(`API ${r.status}: ${r.json?.error?.message ?? r.raw.slice(0, 200)}${r.status === 401 ? " (the token no longer matches Settings -> Local API; reconnect or restart the app)" : ""}`);
     if (!r.json.data.length) throw new Error("There are no ledgers yet.");
     return r.json.data;
   }
@@ -385,6 +491,12 @@ export function createServer({
       inputSchema: { type: "object", properties: { ...ledgerProp, method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] }, path: { type: "string", description: "e.g. /ledgers/{ledgerId}/vendors" }, query: { type: "object" }, body: { type: "object" }, confirm: { type: "boolean", description: "true only after the user approved the preview" } }, required: ["method", "path"] },
       annotations: { destructiveHint: true, openWorldHint: false },
       async run(a) {
+        if (typeof a.path !== "string" || typeof a.method !== "string") return fail("Give `method` and `path`.");
+        // URL parsing drops tabs and newlines and resolves ".." (also written
+        // %2e%2e), which could reach a different endpoint than the one previewed.
+        // A ".." in the query string is just a value, so only the path part is checked.
+        if (/[\u0000-\u001F\u007F]/.test(a.path)) return fail("The path must not contain control characters.");
+        if (a.path.split(/[?#]/)[0].split(/[/\\]/).some((segment) => /^(\.|%2e){1,2}$/i.test(segment))) return fail("The path must not contain \".\" or \"..\" segments.");
         let path = a.path.replace(/^\/?api\/v1/, "").replace(/^(?!\/)/, "/");
         if (path.includes("{ledgerId}")) path = path.replaceAll("{ledgerId}", (await resolveLedger(a.ledger)).id);
         const method = a.method.toUpperCase();
@@ -394,7 +506,8 @@ export function createServer({
           return r.ok ? deliver(r) : apiError(r);
         }
         let body = a.body;
-        if (!a.confirm) {
+        // Only a real boolean true confirms: "false", "no" or 1 must not run a change.
+        if (a.confirm !== true) {
           const s = await loadSpec().catch(() => undefined);
           // Find the spec entry for this path ({param} segments match anything).
           const known = s && Object.entries(s.paths).find(([p, ops]) => ops[method.toLowerCase()] && new RegExp("^" + p.replace(/\{\w+\}/g, "[^/]+") + "$").test(path));
@@ -427,13 +540,17 @@ export function createServer({
     },
     {
       name: "import_csv",
-      description: "Import a bank/statement CSV from a file on this computer. Columns are mapped automatically (date, description/payee, amount, ...). The default is a PREVIEW (dry_run true); repeat with dry_run false to import. The file's contents never pass through the chat.",
-      inputSchema: { type: "object", properties: { ...ledgerProp, path: { type: "string", description: "Absolute path to the .csv file" }, account: { type: "string", description: "Account name, if the file has no account column" }, currency: { type: "string" }, delimiter: { type: "string" }, dry_run: { type: "boolean", description: "Default true" } }, required: ["path"] },
+      description: "Import a bank/statement CSV from a file on this computer. Columns are mapped automatically (date, description/payee, amount, ...). The default is a PREVIEW (dry_run true); repeat with dry_run false to import. The whole file is not sent to the chat: only the matched column mapping and a short preview of rows come back.",
+      inputSchema: { type: "object", properties: { ...ledgerProp, path: { type: "string", description: "Absolute path to the .csv file" }, account: { type: "string", description: "Account name, if the file has no account column" }, currency: { type: "string" }, delimiter: { type: "string", enum: DELIMITERS, description: "Optional: , ; tab or |. Detected automatically if omitted." }, dry_run: { type: "boolean", description: "Default true" } }, required: ["path"] },
       annotations: { destructiveHint: false, openWorldHint: false },
       async run(a) {
+        if (a.delimiter !== undefined && !DELIMITERS.includes(a.delimiter)) return fail("The delimiter must be one of: comma, semicolon, tab or | (pipe).");
+        if (typeof a.path === "string" && isProtectedFile(a.path, protectedFiles(env, platform, home), platform)) return fail("I can't import that file: it is not a bank statement. Pick your bank's CSV export instead.");
+        if (typeof a.path !== "string" || !CSV_EXTENSIONS.includes(extname(a.path).toLowerCase())) return fail("I can only import bank statement files ending in .csv, .tsv or .txt.");
         const l = await resolveLedger(a.ledger);
         let input;
-        try { input = readFile(a.path); } catch (e) { return fail(`Cannot read ${a.path}: ${e.message}`); }
+        // No path and no OS error text: they would tell the model what exists on this computer.
+        try { input = readFile(a.path); } catch { return fail("Cannot read that file."); }
         const n = normalizeBankCsv(input, { account: a.account, currency: a.currency ?? l.currency, delimiter: a.delimiter });
         if (n.problems?.length) return fail(n.problems.join(" "));
         const dry = a.dry_run !== false;
@@ -515,7 +632,7 @@ export function createServer({
         const key = (r) => `${String(r.date).slice(0, 10)}|${normName(r.account)}|${normName(r.vendor)}|${cents(r.amount)}`;
         const seen = new Set(existing.map(key));
         const duplicates = rows.filter((r) => seen.has(key(r)));
-        const toAdd = a.skip_duplicates ? rows.filter((r) => !seen.has(key(r))) : rows;
+        const toAdd = a.skip_duplicates === true ? rows.filter((r) => !seen.has(key(r))) : rows;
 
         const dry = a.dry_run !== false;
         if (dry) {
@@ -535,7 +652,7 @@ export function createServer({
         const r = await api("POST", `/ledgers/${l.id}/transactions/bulk`, { body: { transactions: toAdd } });
         if (!r.ok) return apiError(r);
         const ids = (r.json?.data ?? []).map((t) => t.id);
-        return text({ ledger: l.name, dry_run: false, added: r.json?.count ?? ids.length, skipped_duplicates: a.skip_duplicates ? duplicates.length : 0, ids: ids.slice(0, 100), ids_not_shown: Math.max(0, ids.length - 100) || undefined, undo: "Each can be removed with call_api DELETE /ledgers/{ledgerId}/transactions/{id}." });
+        return text({ ledger: l.name, dry_run: false, added: r.json?.count ?? ids.length, skipped_duplicates: a.skip_duplicates === true ? duplicates.length : 0, ids: ids.slice(0, 100), ids_not_shown: Math.max(0, ids.length - 100) || undefined, undo: "Each can be removed with call_api DELETE /ledgers/{ledgerId}/transactions/{id}." });
       },
     },
     {
@@ -619,17 +736,51 @@ export function createServer({
   return { tools: publicTools, handle, call: (name, args) => byName.get(name).run(args ?? {}) };
 }
 
-/** Read the token from VM_TOKEN or the token file. */
+const DEFAULT_BASE_URL = "http://127.0.0.1:47821/api/v1";
+// Electron's userData folder: the app can use either name (product name or package name), so both are tried.
+const APP_FOLDER_NAMES = ["Vaulted Money", "vite_react_shadcn_ts"];
+
+/** Where the desktop app keeps api-config.json (token, port, enabled), most likely first. */
+export function appConfigCandidates(env = process.env, platform = process.platform, home = homedir()) {
+  const root = platform === "darwin" ? join(home, "Library", "Application Support")
+    : platform === "win32" ? (env.APPDATA || join(home, "AppData", "Roaming"))
+    : (env.XDG_CONFIG_HOME || join(home, ".config"));
+  return APP_FOLDER_NAMES.map((name) => join(root, name, "api-config.json"));
+}
+
+/**
+ * Find the token and base URL: VM_TOKEN, then the desktop app's own
+ * api-config.json, then the token file as a fallback. Re-read per request so a new token or port needs no restart.
+ */
+export function loadConnection(env = process.env, platform = process.platform, home = homedir()) {
+  const baseUrl = env.VM_BASE_URL ?? DEFAULT_BASE_URL;
+  if (env.VM_TOKEN) return { token: env.VM_TOKEN.trim(), baseUrl };
+  const candidates = env.VM_CONFIG_FILE ? [env.VM_CONFIG_FILE] : appConfigCandidates(env, platform, home);
+  for (const file of candidates) {
+    let config;
+    try { config = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
+    if (!config || typeof config !== "object") continue;
+    if (config.enabled === false) throw new Error("Vaulted Money's Local API is off. Open the app, go to Settings \u2192 Local API and switch it on.");
+    if (typeof config.token === "string" && config.token) {
+      return { token: config.token, baseUrl: env.VM_BASE_URL ?? (Number.isInteger(config.port) ? `http://127.0.0.1:${config.port}/api/v1` : DEFAULT_BASE_URL) };
+    }
+  }
+  try {
+    const fromFile = readFileSync(env.VM_TOKEN_FILE ?? join(home, ".vaulted-token"), "utf8").trim();
+    if (fromFile) return { token: fromFile, baseUrl };
+  } catch { /* no token file either */ }
+  throw new Error("Could not find Vaulted Money. Open the desktop app once, or set VM_TOKEN.");
+}
+
+/** Read the token (kept for callers that only need the token). */
 export function loadToken(env = process.env) {
-  if (env.VM_TOKEN) return env.VM_TOKEN.trim();
-  const file = env.VM_TOKEN_FILE ?? join(homedir(), ".vaulted-token");
-  try { return readFileSync(file, "utf8").trim(); } catch { throw new Error(`No token: set VM_TOKEN, or save the token from Settings -> Local API in ${file}`); }
+  return loadConnection(env).token;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  // The token is re-read on every request, so regenerating it in Settings only
-  // needs the new value saved to the token file (no restart).
-  const server = createServer({ baseUrl: process.env.VM_BASE_URL ?? "http://127.0.0.1:47821/api/v1", getToken: () => loadToken() });
+  // The connection is re-read on every request, so a regenerated token or a
+  // changed port in the app's config is picked up without a restart.
+  const server = createServer({ getConnection: () => loadConnection() });
   let buffer = "";
   process.stdin.setEncoding("utf8");
   process.stdin.on("data", (chunk) => {

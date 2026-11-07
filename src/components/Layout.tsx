@@ -38,8 +38,10 @@ import {
   HelpCircle,
   LogOut,
   MoreHorizontal,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getElectronAPI } from "@/utils/electron";
 import {
   Collapsible,
   CollapsibleContent,
@@ -339,7 +341,68 @@ type MobileHeaderActionsMenuProps = {
   isHomepageMobilePreview?: boolean;
 };
 
-const MobileHeaderActionsMenu = ({
+/**
+ * Connecting an agent needs the desktop Local API, so entry points only show
+ * when the Electron bridge exposes it (same guard as useLocalApi).
+ */
+const hasAgentBridge = () =>
+  typeof getElectronAPI()?.getApiConfig === "function";
+
+/**
+ * Sidebar entry for the agent page, shown only with the desktop bridge.
+ * Exported for tests. Must be rendered inside SidebarProvider.
+ */
+export const ConnectAgentSidebarItem = ({
+  isActive,
+  t,
+}: {
+  isActive: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) => {
+  if (!hasAgentBridge()) return null;
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive}>
+        <Link to="/connect-agent">
+          <Bot />
+          <span>
+            {t("layout.nav.connectAgentShort", {
+              defaultValue: "Connect agent",
+            })}
+          </span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+};
+
+/** Desktop header icon button to /connect-agent. Exported for tests. */
+export const ConnectAgentHeaderButton = ({
+  t,
+}: {
+  t: ReturnType<typeof useTranslation>["t"];
+}) => {
+  if (!hasAgentBridge()) return null;
+  const label = t("layout.nav.connectAgent", {
+    defaultValue: "Connect an AI agent",
+  });
+  return (
+    <Button
+      asChild
+      variant="ghost"
+      size="icon"
+      className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+    >
+      <Link to="/connect-agent" aria-label={label}>
+        <Bot className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+        <span className="sr-only">{label}</span>
+      </Link>
+    </Button>
+  );
+};
+
+// Exported only so tests can render the menu without the whole Layout.
+export const MobileHeaderActionsMenu = ({
   displayName,
   hasTourForCurrentRoute,
   logout,
@@ -387,6 +450,22 @@ const MobileHeaderActionsMenu = ({
             <Link to="/">
               <Home className="h-5 w-5" />
               {t("home.actions.home", { defaultValue: "Home" })}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem asChild className={actionItemClassName}>
+          <Link to="/settings">
+            <BookOpen className="h-5 w-5" />
+            {t("layout.nav.settings", { defaultValue: "Settings" })}
+          </Link>
+        </DropdownMenuItem>
+        {hasAgentBridge() && (
+          <DropdownMenuItem asChild className={actionItemClassName}>
+            <Link to="/connect-agent">
+              <Bot className="h-5 w-5" />
+              {t("layout.nav.connectAgent", {
+                defaultValue: "Connect an AI agent",
+              })}
             </Link>
           </DropdownMenuItem>
         )}
@@ -653,6 +732,10 @@ const Layout = () => {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <ConnectAgentSidebarItem
+                isActive={location.pathname === "/connect-agent"}
+                t={t}
+              />
             </SidebarMenu>
           </SidebarGroup>
           <SidebarGroup>
@@ -878,6 +961,7 @@ const Layout = () => {
               </Button>
             )}
             <LanguageSwitcher showLanguageSettings />
+            <ConnectAgentHeaderButton t={t} />
             {hasTourForCurrentRoute && (
               <Button
                 variant="ghost"

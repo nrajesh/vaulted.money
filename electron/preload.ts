@@ -30,4 +30,5 @@ contextBridge.exposeInMainWorld("electron", {
   setApiConfig: (update: { enabled?: boolean; port?: number }) =>
     ipcRenderer.invoke("api:set-config", update),
   regenerateApiToken: () => ipcRenderer.invoke("api:regenerate-token"),
+  getConnectInfo: () => ipcRenderer.invoke("api:get-connect-info"),
 });

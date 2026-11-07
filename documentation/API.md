@@ -5,7 +5,7 @@ Vaulted Money's desktop app can expose its data over a local HTTP API, so script
 - **Desktop (Electron) only.** The web and mobile builds have no process that can listen on a socket.
 - **Off by default.** Turn it on in **Settings → Local API**.
 - **The app must be running.** Closing the window only hides it, so the API keeps working until you quit the app.
-- **Local-first.** The server binds to `127.0.0.1` and is never reachable from the network. No data leaves the device.
+- **Local-first.** The server binds to `127.0.0.1` and is never reachable from the network. The API itself sends nothing off the device, but an AI agent you connect to it sends what it reads to its AI provider (Anthropic, for Claude). A local model keeps everything on the device.
 
 ## Quick start
 
@@ -22,7 +22,7 @@ curl -H "Authorization: Bearer $VM_TOKEN" $VM            # list every endpoint
 
 `GET /api/v1` returns the full, current route table, and `GET /api/v1/openapi.json` an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) description generated from the code (request bodies included), so they are always the authoritative reference.
 
-Want a local AI agent (LM Studio, Claude Code) to use it? See the [MCP server](../mcp/README.md): twelve small tools instead of about 100, with previews before anything changes.
+Want an AI agent or model runner on this computer to use it (for example LM Studio with a local model, or Claude Code, which sends what it reads to Anthropic)? See the [MCP server](../mcp/README.md): twelve small tools instead of about 100, with previews before anything changes.
 
 Prefer a GUI? A ready-made [Postman collection](postman/README.md) covers every endpoint. Building your own app or scripts? See the [API cookbook](API_COOKBOOK.md) and the machine-readable spec at `GET /api/v1/openapi.json`.
 

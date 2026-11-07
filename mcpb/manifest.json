@@ -1,0 +1,80 @@
+{
+  "manifest_version": "0.3",
+  "name": "vaulted-money",
+  "display_name": "Vaulted Money",
+  "version": "0.1.0",
+  "description": "Ask Claude about your Vaulted Money ledgers: balances, spending, budgets and transactions, and add or import transactions. Vaulted Money is a local-first money manager. Your data stays on your computer, but whatever Claude reads through this extension is sent to the AI provider you chat with. The Vaulted Money desktop app must be running with the Local API switched on.",
+  "author": {
+    "name": "nrajesh",
+    "url": "https://github.com/nrajesh"
+  },
+  "homepage": "https://github.com/nrajesh/vaulted.money",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrajesh/vaulted.money"
+  },
+  "license": "MIT",
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.mjs"]
+    }
+  },
+  "tools": [
+    {
+      "name": "list_ledgers",
+      "description": "List ledgers with their accounts and balances."
+    },
+    {
+      "name": "spending_summary",
+      "description": "Summarise spending by category, vendor or period."
+    },
+    {
+      "name": "find_transactions",
+      "description": "Search transactions by text, date, amount, account or category."
+    },
+    {
+      "name": "budgets_and_insights",
+      "description": "Show budget progress and spending insights."
+    },
+    {
+      "name": "search_api",
+      "description": "Find other Local API endpoints and their parameters."
+    },
+    {
+      "name": "call_api",
+      "description": "Call a Local API endpoint found with search_api."
+    },
+    {
+      "name": "add_transaction",
+      "description": "Add a transaction to a ledger."
+    },
+    {
+      "name": "import_csv",
+      "description": "Import a bank CSV file into a ledger."
+    },
+    {
+      "name": "find_entity",
+      "description": "Look up everything a name could mean before changing it."
+    },
+    {
+      "name": "add_transactions",
+      "description": "Add many transactions at once, with a preview first."
+    },
+    {
+      "name": "budget_history",
+      "description": "Show which budgets were missed in past months."
+    },
+    {
+      "name": "payoff_projection",
+      "description": "Work out how long a loan takes to pay off."
+    }
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": { "node": ">=18.0.0" }
+  }
+}

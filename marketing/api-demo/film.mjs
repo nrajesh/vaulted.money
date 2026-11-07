@@ -580,7 +580,7 @@ function makeChat({ x, y, w, hgt, title, items }) {
   const hd = head(`Chat with your money. <em>On your own device.</em>`, `A local model and a small helper: ${glow("no cloud, no per-token bill")}, and your data stays on your device.`);
   const box = (x, title, sub, cls = "") => h(`<div class="card" style="left:${x}px;top:290px;width:384px;height:112px;padding:20px 22px;${cls}"><h3 style="font-size:25px;white-space:nowrap">${title}</h3><div class="sub" style="font-size:19px;white-space:nowrap">${sub}</div></div>`);
   const flow = [
-    box(96, "Local model", "LM Studio, Claude Code"),
+    box(96, "Local model", "For example LM Studio"),
     box(544, "Helper (MCP server)", `${nTools} small tools`, "border-color:hsl(188 57% 59%);box-shadow:0 0 40px hsl(188 57% 59% / .22)"),
     box(992, "Local API", "Only on this device"),
     box(1440, "Vaulted Money", "Your data, your device"),
@@ -611,7 +611,7 @@ function makeChat({ x, y, w, hgt, title, items }) {
     cmp.querySelector("#b1").style.width = 900 * tw(t, 5.8, 6.8) + "px";
     cmp.querySelector("#b2").style.width = Math.max(2, 900 * (toolsKb / specKb) * tw(t, 7.0, 7.8)) + "px";
   }, { take: { at: 8.6, cards: [
-    { icon: ICON.chat, title: "Chat with your money", bullets: ["Ask in plain words", `${glow("Nothing leaves your device")}`] },
+    { icon: ICON.chat, title: "Chat with your money", bullets: ["Ask in plain words", `${glow("With a local model, nothing leaves your device")}`] },
     { icon: ICON.layers, title: "Small by design", bullets: [`${["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"][nTools] ?? nTools} simple tools`, "Quick even for local models"] },
   ] } });
 }

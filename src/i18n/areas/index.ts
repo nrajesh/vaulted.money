@@ -12,6 +12,7 @@ import { backupScreen } from "./backupScreen";
 import { csvImportScreen } from "./csvImportScreen";
 import { budgetDialogs } from "./budgetDialogs";
 import { aiProviderScreens } from "./aiProviderScreens";
+import { connectAgent } from "./connectAgent";
 import { mergeMissing } from "./merge";
 import type { AreaLanguage, AreaTranslations } from "./types";
 
@@ -31,6 +32,7 @@ export const areaTranslations: AreaTranslations[] = [
   csvImportScreen,
   budgetDialogs,
   aiProviderScreens,
+  connectAgent,
 ];
 
 /**
