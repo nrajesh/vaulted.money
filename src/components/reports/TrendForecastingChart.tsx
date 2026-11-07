@@ -18,6 +18,7 @@ import {
   Legend,
 } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { shortMonthLabel, longMonthLabel } from "@/utils/monthLabels";
 import { useTheme } from "@/contexts/ThemeContext";
 
 import { Transaction } from "@/data/finance-data";
@@ -64,10 +65,7 @@ const TrendForecastingChart: React.FC<TrendForecastingChartProps> = ({
 
     const historicalData = sortedMonths.map((monthKey, index) => ({
       index,
-      month: new Date(monthKey + "-02").toLocaleString("default", {
-        month: "short",
-        year: "2-digit",
-      }),
+      month: monthKey,
       actual: monthlyNet[monthKey],
     }));
 
@@ -129,10 +127,7 @@ const TrendForecastingChart: React.FC<TrendForecastingChartProps> = ({
 
       combinedData.push({
         index: futureIndex,
-        month: futureDate.toLocaleString("default", {
-          month: "short",
-          year: "2-digit",
-        }),
+        month: futureMonthKey,
         actual: null,
         baselineForecast: baseline,
         finalForecast: baseline + scheduledImpact,
@@ -179,6 +174,8 @@ const TrendForecastingChart: React.FC<TrendForecastingChartProps> = ({
               />
               <XAxis
                 dataKey="month"
+                tickFormatter={shortMonthLabel}
+                minTickGap={24}
                 tick={{
                   fill: isFinancialPulse ? "#94a3b8" : "#666",
                   fontSize: 11,
@@ -194,6 +191,7 @@ const TrendForecastingChart: React.FC<TrendForecastingChartProps> = ({
                 stroke={isFinancialPulse ? "rgba(255,255,255,0.1)" : "#e5e7eb"}
               />
               <Tooltip
+                labelFormatter={(label) => longMonthLabel(String(label))}
                 formatter={(value: unknown, name: unknown) => [
                   formatCurrency(value as number),
                   (name as string).charAt(0).toUpperCase() +

@@ -717,22 +717,21 @@ const Layout = () => {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={location.pathname === "/ai-providers"}
+                  isActive={
+                    location.pathname === "/ai-providers" ||
+                    location.pathname === "/connect-agent"
+                  }
                 >
                   <Link to="/ai-providers">
                     <Brain />
                     <span>
-                      {t("layout.nav.aiProviders", {
-                        defaultValue: "AI Providers",
+                      {t("layout.nav.aiAndAgents", {
+                        defaultValue: "AI & agents",
                       })}
                     </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <ConnectAgentSidebarItem
-                isActive={location.pathname === "/connect-agent"}
-                t={t}
-              />
             </SidebarMenu>
           </SidebarGroup>
           <SidebarGroup>

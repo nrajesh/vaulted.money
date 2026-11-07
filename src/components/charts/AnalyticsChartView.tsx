@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ThemedCard, ThemedCardContent } from "@/components/ThemedCard";
 import { type Transaction } from "@/data/finance-data";
 import { useAnalyticsPeriod } from "@/hooks/useAnalyticsPeriod";
@@ -18,15 +18,32 @@ type ChartMode = "line" | "bar" | "pie";
 
 interface AnalyticsChartViewProps {
   transactions: Transaction[];
+  /** Date range chosen in the filter bar; the chart follows it. */
+  filterDateRange?: { from?: Date; to?: Date };
 }
 
-export function AnalyticsChartView({ transactions }: AnalyticsChartViewProps) {
+export function AnalyticsChartView({
+  transactions,
+  filterDateRange,
+}: AnalyticsChartViewProps) {
   const { t } = useTranslation();
   const [chartMode, setChartMode] = useState<ChartMode>("line");
   const [entityType, setEntityType] = useState<EntityType>("category");
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
 
   const analytics = useAnalyticsPeriod(transactions);
+
+  // When a date range is picked in the filter bar, show exactly that range
+  // instead of the default "this month", which would hide every result.
+  const filterFrom = filterDateRange?.from;
+  const filterTo = filterDateRange?.to ?? filterDateRange?.from;
+  const filterFromTime = filterFrom?.getTime();
+  const filterToTime = filterTo?.getTime();
+  const { setCustomRange } = analytics;
+  useEffect(() => {
+    if (filterFromTime === undefined || filterToTime === undefined) return;
+    setCustomRange(new Date(filterFromTime), new Date(filterToTime));
+  }, [filterFromTime, filterToTime, setCustomRange]);
 
   const handleNavigateBack = useCallback(() => {
     if (analytics.canNavigateBack) {

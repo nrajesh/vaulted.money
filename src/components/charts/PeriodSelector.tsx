@@ -93,6 +93,20 @@ export function PeriodSelector({
               selected={customDateRange}
               onSelect={setCustomDateRange}
               numberOfMonths={1}
+              // Month and year pickers let you jump straight to any period.
+              captionLayout="dropdown"
+              startMonth={new Date(1990, 0)}
+              endMonth={new Date()}
+              defaultMonth={customDateRange?.from ?? new Date()}
+              classNames={{
+                month_caption: "flex justify-center pt-1 items-center h-7",
+                dropdowns: "flex items-center gap-1 text-sm font-medium",
+                dropdown_root:
+                  "relative inline-flex items-center rounded-md px-2 py-1 hover:bg-muted focus-within:ring-2 focus-within:ring-ring",
+                dropdown:
+                  "absolute inset-0 h-full w-full cursor-pointer opacity-0",
+                caption_label: "inline-flex items-center gap-1",
+              }}
             />
             <div className="flex justify-end px-1">
               <Button

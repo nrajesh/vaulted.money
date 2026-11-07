@@ -14,6 +14,9 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "Connect an AI agent",
+        aiProvidersHint: "Use your own AI key to categorise transactions",
+        connectAgentHint: "Let an AI assistant like Claude use your data",
+        aiAndAgents: "AI & agents",
         connectAgentShort: "Connect agent",
       },
     },
@@ -126,6 +129,11 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "Conectar un agente de IA",
+        aiProvidersHint:
+          "Usa tu propia clave de IA para categorizar transacciones",
+        connectAgentHint:
+          "Deja que un asistente de IA como Claude use tus datos",
+        aiAndAgents: "IA y agentes",
         connectAgentShort: "Conectar agente",
       },
     },
@@ -242,6 +250,9 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "连接 AI 智能体",
+        aiProvidersHint: "使用你自己的 AI 密钥为交易分类",
+        connectAgentHint: "让 Claude 等 AI 助手使用你的数据",
+        aiAndAgents: "AI 与智能体",
         connectAgentShort: "连接智能体",
       },
     },
@@ -347,6 +358,11 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "Een AI-agent koppelen",
+        aiProvidersHint:
+          "Gebruik je eigen AI-sleutel om transacties te categoriseren",
+        connectAgentHint:
+          "Laat een AI-assistent zoals Claude je gegevens gebruiken",
+        aiAndAgents: "AI en agents",
         connectAgentShort: "Agent koppelen",
       },
     },
@@ -459,6 +475,11 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "AI முகவரை இணை",
+        aiProvidersHint:
+          "பரிவர்த்தனைகளை வகைப்படுத்த உங்கள் சொந்த AI விசையைப் பயன்படுத்துங்கள்",
+        connectAgentHint:
+          "Claude போன்ற AI உதவியாளர் உங்கள் தரவைப் பயன்படுத்தட்டும்",
+        aiAndAgents: "AI மற்றும் முகவர்கள்",
         connectAgentShort: "முகவரை இணை",
       },
     },
