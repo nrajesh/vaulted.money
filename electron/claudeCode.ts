@@ -64,19 +64,55 @@ const commonToolFolders = (deps: ClaudeCodeDeps): string[] => {
 };
 
 /**
- * Returns the full path of the `claude` tool, or null. Windows is limited to
- * the native `claude.exe` because `.cmd` wrappers need a shell, which this
- * module deliberately never uses.
+ * Returns the full path of a command line tool, looking on PATH first and then
+ * in the usual install folders, or null.
  */
-export const findClaudeCode = (deps: ClaudeCodeDeps): string | null => {
-  const fileName = deps.platform === "win32" ? "claude.exe" : "claude";
+export const findOnPath = (
+  deps: ClaudeCodeDeps,
+  fileName: string,
+  extraFolders: string[],
+): string | null => {
   const separator = deps.platform === "win32" ? ";" : ":";
   const fromPath = (deps.env.PATH ?? "").split(separator).filter(Boolean);
-  for (const folder of [...fromPath, ...commonToolFolders(deps)]) {
+  for (const folder of [...fromPath, ...extraFolders]) {
     const candidate = path.join(folder, fileName);
     if (deps.isRunnable(candidate)) return candidate;
   }
   return null;
+};
+
+/**
+ * Returns the full path of the `claude` tool, or null. Windows is limited to
+ * the native `claude.exe` because `.cmd` wrappers need a shell, which this
+ * module deliberately never uses.
+ */
+export const findClaudeCode = (deps: ClaudeCodeDeps): string | null =>
+  findOnPath(
+    deps,
+    deps.platform === "win32" ? "claude.exe" : "claude",
+    commonToolFolders(deps),
+  );
+
+/**
+ * The environment for running a tool. A tool installed with npm starts `node`
+ * from PATH, which a desktop app often does not have, so add the usual folders.
+ */
+export const toolEnvironment = (
+  deps: ClaudeCodeDeps,
+  tool: string,
+  extraFolders: string[],
+): NodeJS.ProcessEnv => {
+  const separator = deps.platform === "win32" ? ";" : ":";
+  return {
+    ...deps.env,
+    PATH: [
+      ...(deps.env.PATH ?? "").split(separator),
+      path.dirname(tool),
+      ...extraFolders,
+    ]
+      .filter(Boolean)
+      .join(separator),
+  };
 };
 
 /** True when the Claude desktop app looks installed. */
@@ -116,19 +152,7 @@ export const setupClaudeCodePlugin = async (
   const tool = findClaudeCode(deps);
   if (!tool) return "not-found";
 
-  // A tool installed with npm starts `node` from PATH, which a desktop app
-  // often does not have, so add the usual folders.
-  const separator = deps.platform === "win32" ? ";" : ":";
-  const env = {
-    ...deps.env,
-    PATH: [
-      ...(deps.env.PATH ?? "").split(separator),
-      path.dirname(tool),
-      ...commonToolFolders(deps),
-    ]
-      .filter(Boolean)
-      .join(separator),
-  };
+  const env = toolEnvironment(deps, tool, commonToolFolders(deps));
   const run = (args: string[]) => deps.run(tool, args, env);
 
   const listing = await run(["plugin", "marketplace", "list"]);

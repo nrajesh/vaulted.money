@@ -128,6 +128,7 @@ You can let an AI agent such as Claude read your money manager and help with it,
 
   Inside Claude Code the same two steps are `/plugin marketplace add nrajesh/vaulted.money` and `/plugin install vaulted-money@vaulted-money`.
 
+- **Codex:** on the Connect agent page, choose **Codex** and click **Set up Codex for me**. The app finds Codex on your computer and registers the server with it (needs [Node.js](https://nodejs.org/) 18 or newer). Not installed yet? The page shows the install command (`npm install -g @openai/codex`). Prefer to do it yourself? Use **Copy config** and paste it into `~/.codex/config.toml`.
 - **A local model (for example LM Studio):** use **Copy setup** under **A private model on this computer** and paste it into the app's `mcp.json`. Choose a model that supports tool calling. Needs Node.js 18 or newer.
 
 **Privacy, honestly.** The plugin and the server upload nothing. But when you ask a question, whatever the agent reads to answer it, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude). Only ask about data you are happy to share that way. A local model keeps everything on your device. The claude.ai website is not supported, because it cannot reach software on your computer.
