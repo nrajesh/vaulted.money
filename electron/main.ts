@@ -4,6 +4,11 @@ import * as fs from "fs";
 import * as Security from "./security";
 import { ApiServer, type RelayRequest, type RelayResponse } from "./apiServer";
 import { DEFAULT_API_PORT, generateToken, isValidPort } from "./apiAuth";
+import {
+  detectClaude,
+  realClaudeCodeDeps,
+  setupClaudeCodePlugin,
+} from "./claudeCode";
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
@@ -223,6 +228,13 @@ app.whenReady().then(() => {
       : path.join(app.getAppPath(), "mcp", "server.mjs"),
   }));
 
+  // Looks for Claude on this computer and sets up the Claude Code plugin.
+  // Neither takes arguments, and only a short result code goes back.
+  ipcMain.handle("claude:detect", () => detectClaude(realClaudeCodeDeps()));
+  ipcMain.handle("claude:setup-code-plugin", () =>
+    setupClaudeCodePlugin(realClaudeCodeDeps()),
+  );
+
   ipcMain.handle("path-join", (_event, ...segments: unknown[]) => {
     if (!segments.every((segment) => typeof segment === "string")) {
       throw new Error("path-join expects string segments");
@@ -313,20 +325,14 @@ app.whenReady().then(() => {
     return selectedPath;
   });
 
-  ipcMain.handle(
-    "check-directory-access",
-    async (_event, dirPath: string) => {
-      try {
-        await fs.promises.access(
-          dirPath,
-          fs.constants.R_OK | fs.constants.W_OK,
-        );
-        return true;
-      } catch {
-        return false;
-      }
-    },
-  );
+  ipcMain.handle("check-directory-access", async (_event, dirPath: string) => {
+    try {
+      await fs.promises.access(dirPath, fs.constants.R_OK | fs.constants.W_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  });
 
   ipcMain.handle("read-file", async (_event, filePath: string) => {
     const dir = path.dirname(filePath);

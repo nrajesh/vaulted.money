@@ -93,7 +93,7 @@ describe("ConnectToAgentPanel", () => {
     writeText.mockRejectedValueOnce(new Error("denied"));
     renderPanel();
     selectChoice(/Claude Code/);
-    const button = screen.getByRole("button", { name: "Copy step 1" });
+    const button = screen.getByRole("button", { name: "Copy commands" });
     fireEvent.click(button);
     await waitFor(() => expect(showError).toHaveBeenCalledTimes(1));
     expect(button.querySelector(".lucide-check")).toBeNull();
@@ -104,7 +104,7 @@ describe("ConnectToAgentPanel", () => {
     try {
       renderPanel();
       selectChoice(/Claude Code/);
-      fireEvent.click(screen.getByRole("button", { name: "Copy step 1" }));
+      fireEvent.click(screen.getByRole("button", { name: "Copy commands" }));
       await vi.advanceTimersByTimeAsync(0);
       cleanup();
       expect(vi.getTimerCount()).toBe(0);
@@ -134,7 +134,7 @@ describe("ConnectToAgentPanel", () => {
     expect(screen.getByText(/Keep Vaulted Money open/)).toBeInTheDocument();
     expect(screen.getByText(/No extra software/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy setup" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Copy step 1" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Copy commands" })).toBeNull();
   });
 
   it("shows each choice's own steps and hides the others", () => {
@@ -150,7 +150,7 @@ describe("ConnectToAgentPanel", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Download/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Copy step 1" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Copy commands" })).toBeNull();
 
     selectChoice(/Claude Code/);
     expect(screen.getByText("In the Claude app")).toBeInTheDocument();
@@ -163,8 +163,7 @@ describe("ConnectToAgentPanel", () => {
       screen.getByText(/Open Discover, find Vaulted Money/),
     ).toBeInTheDocument();
     expect(screen.getByText("No commands needed.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Copy step 1" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Copy step 2" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Copy commands" })).toBeVisible();
     expect(screen.getByText(/Needs Node 18/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy setup" })).toBeNull();
   });
@@ -181,12 +180,11 @@ describe("ConnectToAgentPanel", () => {
     selectChoice(/A private model/);
     fireEvent.click(screen.getByRole("button", { name: "Copy setup" }));
     selectChoice(/Claude Code/);
-    fireEvent.click(screen.getByRole("button", { name: "Copy step 1" }));
-    fireEvent.click(screen.getByRole("button", { name: "Copy step 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy commands" }));
     fireEvent.click(screen.getByRole("button", { name: "Copy question 1" }));
     fireEvent.click(screen.getByRole("button", { name: "Copy question 2" }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(5));
-    const [local, one, two, ask1, ask2] = writeText.mock.calls.map(
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(4));
+    const [local, commands, ask1, ask2] = writeText.mock.calls.map(
       (c) => c[0] as string,
     );
     expect(JSON.parse(local)).toEqual({
@@ -194,8 +192,11 @@ describe("ConnectToAgentPanel", () => {
         "vaulted-money": { command: "node", args: [SERVER_PATH] },
       },
     });
-    expect(one).toBe("/plugin marketplace add nrajesh/vaulted.money");
-    expect(two).toBe("/plugin install vaulted-money@vaulted-money");
+    // A plain terminal needs the `claude` prefix; `/plugin` only works
+    // inside a running Claude Code session.
+    expect(commands).toBe(
+      "claude plugin marketplace add nrajesh/vaulted.money\nclaude plugin install vaulted-money@vaulted-money",
+    );
     expect(ask1).toBe("Where is my money going this month?");
     expect(ask2).toBe("Am I over budget anywhere?");
     for (const [text] of writeText.mock.calls) {
@@ -342,5 +343,82 @@ describe("ConnectToAgentPanel", () => {
     expect(
       screen.getByRole("heading", { level: 2, name: "Connect to agent" }),
     ).toBeInTheDocument();
+  });
+
+  describe("finding Claude on this computer", () => {
+    const bridge = (over: Record<string, unknown>) => {
+      (window as unknown as { electron?: unknown }).electron = over;
+    };
+    afterEach(() => {
+      delete (window as unknown as { electron?: unknown }).electron;
+    });
+
+    it("shows only the manual steps when the build cannot look", () => {
+      renderPanel();
+      selectChoice(/Claude Code/);
+      expect(
+        screen.queryByRole("button", { name: "Set up Claude Code for me" }),
+      ).toBeNull();
+      expect(screen.queryByText(/could not find/i)).toBeNull();
+    });
+
+    it("offers the setup button when Claude Code is found and reports success", async () => {
+      const setup = vi.fn().mockResolvedValue("ready");
+      bridge({
+        detectClaude: vi.fn().mockResolvedValue({ code: true, desktop: true }),
+        setupClaudeCodePlugin: setup,
+      });
+      renderPanel();
+      selectChoice(/Claude Code/);
+      fireEvent.click(
+        await screen.findByRole("button", {
+          name: "Set up Claude Code for me",
+        }),
+      );
+      expect(await screen.findByText(/Done\. Open Claude Code/)).toBeVisible();
+      expect(setup).toHaveBeenCalledWith();
+    });
+
+    it("falls back to the manual steps when the setup fails", async () => {
+      bridge({
+        detectClaude: vi.fn().mockResolvedValue({ code: true, desktop: true }),
+        setupClaudeCodePlugin: vi.fn().mockRejectedValue(new Error("boom")),
+      });
+      renderPanel();
+      selectChoice(/Claude Code/);
+      fireEvent.click(
+        await screen.findByRole("button", {
+          name: "Set up Claude Code for me",
+        }),
+      );
+      expect(await screen.findByText(/did not work/)).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: "Copy commands" }),
+      ).toBeVisible();
+    });
+
+    it("links to the Claude Code page when it is not installed", async () => {
+      bridge({
+        detectClaude: vi.fn().mockResolvedValue({ code: false, desktop: true }),
+      });
+      renderPanel();
+      selectChoice(/Claude Code/);
+      const link = await screen.findByRole("link", { name: /Get Claude Code/ });
+      expect(link).toHaveAttribute("href", "https://claude.com/claude-code");
+      expect(
+        screen.queryByRole("button", { name: "Set up Claude Code for me" }),
+      ).toBeNull();
+    });
+
+    it("links to the Claude app download when the app is not installed", async () => {
+      bridge({
+        detectClaude: vi.fn().mockResolvedValue({ code: true, desktop: false }),
+      });
+      renderPanel();
+      const link = await screen.findByRole("link", {
+        name: /Get the Claude app/,
+      });
+      expect(link).toHaveAttribute("href", "https://claude.ai/download");
+    });
   });
 });

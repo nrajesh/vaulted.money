@@ -27,6 +27,9 @@ export interface ElectronAPI {
   }) => Promise<ApiServerStatus>;
   regenerateApiToken: () => Promise<ApiServerStatus>;
   getConnectInfo: () => Promise<{ serverPath: string }>;
+  /** Optional: absent in desktop builds older than the setup button. */
+  detectClaude?: () => Promise<{ code: boolean; desktop: boolean }>;
+  setupClaudeCodePlugin?: () => Promise<"ready" | "failed" | "not-found">;
 }
 
 export interface ApiServerStatus {

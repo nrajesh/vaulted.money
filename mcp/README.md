@@ -46,7 +46,7 @@ A CSV export or backup can be far bigger than a model should read. When a downlo
 1. In the desktop app: _Settings → Local API → Connect an AI agent_ (opens the Connect to agent page) → switch on **Allow agents to connect**. The server finds the app's own config (token and port), so there is no token to copy.
 2. Connect your agent:
    - **Claude Desktop:** download `vaulted-money.mcpb` from the GitHub Releases page and double-click it. No Node.js needed.
-   - **Claude Code:** `/plugin marketplace add nrajesh/vaulted.money` then `/plugin install vaulted-money@vaulted-money`.
+   - **Claude Code:** click _Set up Claude Code for me_ on the Connect agent page, or run `claude plugin marketplace add nrajesh/vaulted.money` then `claude plugin install vaulted-money@vaulted-money` in a terminal (inside Claude Code, use `/plugin ...`).
    - **Local model (LM Studio):** use _Copy setup_ under **A private model on this computer** and paste it into `mcp.json`. Use a model with tool-calling support.
 
 Node.js 18 or newer is needed for the plugin and local-model routes. The server is started by the client when needed. It looks up the token on every request, so a new token or port is picked up without a restart. _Disconnect everything_ switches the Local API off and replaces the token, so every agent gets "Local API is off" until you switch it on again; after that they reconnect on their own, with no copy-paste. Only the desktop app has to be running.
