@@ -1,6 +1,6 @@
 {
   "name": "vaulted-money",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "Ask Claude where your money goes, check budgets and import bank CSVs. Works with the Vaulted Money desktop app. Your data stays on your computer, apart from what Claude reads to answer you.",
   "author": { "name": "nrajesh" },
   "homepage": "https://github.com/nrajesh/vaulted.money",
