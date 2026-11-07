@@ -31,4 +31,6 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("api:set-config", update),
   regenerateApiToken: () => ipcRenderer.invoke("api:regenerate-token"),
   getConnectInfo: () => ipcRenderer.invoke("api:get-connect-info"),
+  detectClaude: () => ipcRenderer.invoke("claude:detect"),
+  setupClaudeCodePlugin: () => ipcRenderer.invoke("claude:setup-code-plugin"),
 });

@@ -15,13 +15,17 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { ApiServerStatus } from "@/utils/electron";
+import { getElectronAPI, type ApiServerStatus } from "@/utils/electron";
 import { showError } from "@/utils/toast";
 
 const RELEASES_URL = "https://github.com/nrajesh/vaulted.money/releases/latest";
 const CLAUDE_CODE_REPOSITORY = "nrajesh/vaulted.money";
-const CLAUDE_CODE_STEP_ONE = "/plugin marketplace add nrajesh/vaulted.money";
-const CLAUDE_CODE_STEP_TWO = "/plugin install vaulted-money@vaulted-money";
+const CLAUDE_APP_DOWNLOAD_URL = "https://claude.ai/download";
+const CLAUDE_CODE_URL = "https://claude.com/claude-code";
+// Two lines: a terminal runs them one after the other when pasted. The
+// `claude` prefix matters: a plain terminal does not understand `/plugin`.
+const CLAUDE_CODE_COMMANDS =
+  "claude plugin marketplace add nrajesh/vaulted.money\nclaude plugin install vaulted-money@vaulted-money";
 const EXAMPLE_QUESTIONS = [
   "Where is my money going this month?",
   "Am I over budget anywhere?",
@@ -65,7 +69,8 @@ const CopyButton = ({
   </Button>
 );
 
-type CopyTarget = "local" | "repo" | "step1" | "step2" | "ask0" | "ask1";
+type CopyTarget = "local" | "repo" | "commands" | "ask0" | "ask1";
+type SetupState = "idle" | "running" | "ready" | "failed" | "not-found";
 type Choice = "claude-app" | "local" | "claude-code";
 
 /**
@@ -96,6 +101,38 @@ const ConnectToAgentPanel = ({
   const Heading = `h${headingLevel}` as const;
   const [confirming, setConfirming] = React.useState(false);
   const [choice, setChoice] = React.useState<Choice>("claude-app");
+  // What the desktop app found on this computer. Stays null in an older build
+  // that cannot look, in which case the page shows only the manual steps.
+  const [detected, setDetected] = React.useState<{
+    code: boolean;
+    desktop: boolean;
+  } | null>(null);
+  const [setupState, setSetupState] = React.useState<SetupState>("idle");
+  React.useEffect(() => {
+    let cancelled = false;
+    getElectronAPI()
+      ?.detectClaude?.()
+      .then((result) => {
+        if (!cancelled) setDetected(result);
+      })
+      .catch(() => {
+        if (!cancelled) setDetected(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const runClaudeCodeSetup = async () => {
+    const setup = getElectronAPI()?.setupClaudeCodePlugin;
+    if (!setup) return;
+    setSetupState("running");
+    try {
+      setSetupState(await setup());
+    } catch {
+      setSetupState("failed");
+    }
+  };
   const SubHeading = headingLevel === 2 ? "h3" : "h4";
   const RouteHeading = headingLevel === 2 ? "h4" : "h5";
 
@@ -343,6 +380,33 @@ const ConnectToAgentPanel = ({
           </TabsList>
 
           <TabsContent value="claude-app" className="space-y-3">
+            {detected && !detected.desktop && (
+              <div className="space-y-2 rounded-md border p-3 text-sm">
+                <p>
+                  {t("settings.agent.appNotFound", {
+                    defaultValue:
+                      "We could not find the Claude app on this computer.",
+                  })}
+                </p>
+                <Button asChild variant="outline" size="sm">
+                  <a
+                    href={CLAUDE_APP_DOWNLOAD_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t("settings.agent.appGet", {
+                      defaultValue: "Get the Claude app",
+                    })}
+                    <span className="sr-only">
+                      {" "}
+                      {t("settings.agent.newTab", {
+                        defaultValue: "(opens in a new tab)",
+                      })}
+                    </span>
+                  </a>
+                </Button>
+              </div>
+            )}
             <ol className="space-y-3">
               {step(
                 1,
@@ -436,6 +500,76 @@ const ConnectToAgentPanel = ({
           </TabsContent>
 
           <TabsContent value="claude-code" className="space-y-4">
+            {detected && (
+              <div className="space-y-2 rounded-md border p-3 text-sm">
+                {detected.code ? (
+                  <>
+                    <p>
+                      {t("settings.agent.codeFound", {
+                        defaultValue: "Claude Code is on this computer.",
+                      })}
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={setupState === "running"}
+                      onClick={runClaudeCodeSetup}
+                    >
+                      {t("settings.agent.codeSetupButton", {
+                        defaultValue: "Set up Claude Code for me",
+                      })}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      {t("settings.agent.codeNotFound", {
+                        defaultValue:
+                          "We could not find Claude Code on this computer.",
+                      })}
+                    </p>
+                    <Button asChild variant="outline" size="sm">
+                      <a
+                        href={CLAUDE_CODE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t("settings.agent.codeGet", {
+                          defaultValue: "Get Claude Code",
+                        })}
+                        <span className="sr-only">
+                          {" "}
+                          {t("settings.agent.newTab", {
+                            defaultValue: "(opens in a new tab)",
+                          })}
+                        </span>
+                      </a>
+                    </Button>
+                  </>
+                )}
+                <p role="status" className="text-xs text-muted-foreground">
+                  {setupState === "running" &&
+                    t("settings.agent.codeSetupRunning", {
+                      defaultValue: "Setting up. This can take a minute.",
+                    })}
+                  {setupState === "ready" &&
+                    t("settings.agent.codeSetupReady", {
+                      defaultValue:
+                        "Done. Open Claude Code and ask about your money.",
+                    })}
+                  {setupState === "failed" &&
+                    t("settings.agent.codeSetupFailed", {
+                      defaultValue:
+                        "That did not work. Use the steps below instead.",
+                    })}
+                  {setupState === "not-found" &&
+                    t("settings.agent.codeNotFound", {
+                      defaultValue:
+                        "We could not find Claude Code on this computer.",
+                    })}
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <RouteHeading className="text-sm font-medium">
                 {t("settings.agent.routeApp", {
@@ -502,38 +636,22 @@ const ConnectToAgentPanel = ({
                   defaultValue: "Needs Node 18 or newer.",
                 })}
               </p>
-              <ol className="space-y-3">
-                {step(
-                  1,
-                  <>
-                    <code className="break-all rounded bg-muted px-2 py-1 text-xs">
-                      {CLAUDE_CODE_STEP_ONE}
-                    </code>
-                    {copyButton(
-                      "step1",
-                      CLAUDE_CODE_STEP_ONE,
-                      t("settings.agent.copyStep1", {
-                        defaultValue: "Copy step 1",
-                      }),
-                    )}
-                  </>,
-                )}
-                {step(
-                  2,
-                  <>
-                    <code className="break-all rounded bg-muted px-2 py-1 text-xs">
-                      {CLAUDE_CODE_STEP_TWO}
-                    </code>
-                    {copyButton(
-                      "step2",
-                      CLAUDE_CODE_STEP_TWO,
-                      t("settings.agent.copyStep2", {
-                        defaultValue: "Copy step 2",
-                      }),
-                    )}
-                  </>,
-                )}
-              </ol>
+              <p className="text-xs text-muted-foreground">
+                {t("settings.agent.terminalNote", {
+                  defaultValue:
+                    "Paste this into a normal terminal, not into Claude Code.",
+                })}
+              </p>
+              <pre className="whitespace-pre-wrap break-all rounded bg-muted px-2 py-1 text-xs">
+                {CLAUDE_CODE_COMMANDS}
+              </pre>
+              {copyButton(
+                "commands",
+                CLAUDE_CODE_COMMANDS,
+                t("settings.agent.copyCommands", {
+                  defaultValue: "Copy commands",
+                }),
+              )}
             </div>
             {privacyLine(
               t("settings.agent.codePrivacy", {

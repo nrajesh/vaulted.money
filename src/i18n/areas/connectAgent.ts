@@ -39,6 +39,18 @@ export const connectAgent: AreaTranslations = {
         codeBlurb:
           "For people who already use Claude Code, in the Claude app or in a terminal.",
         codeNode: "Needs Node 18 or newer.",
+        copyCommands: "Copy commands",
+        codeFound: "Claude Code is on this computer.",
+        codeSetupButton: "Set up Claude Code for me",
+        codeSetupRunning: "Setting up. This can take a minute.",
+        codeSetupReady: "Done. Open Claude Code and ask about your money.",
+        codeSetupFailed: "That did not work. Use the steps below instead.",
+        codeNotFound: "We could not find Claude Code on this computer.",
+        codeGet: "Get Claude Code",
+        appNotFound: "We could not find the Claude app on this computer.",
+        appGet: "Get the Claude app",
+        terminalNote:
+          "Paste this into a normal terminal, not into Claude Code.",
         codePrivacy: "What Claude reads is sent to Anthropic.",
         codeTitle: "Claude Code",
         confirm: "Disconnect",
@@ -50,8 +62,6 @@ export const connectAgent: AreaTranslations = {
         copyQuestion: "Copy question",
         copyRepository: "Copy repository name",
         copySetup: "Copy setup",
-        copyStep1: "Copy step 1",
-        copyStep2: "Copy step 2",
         demoTip:
           "Tip: try it with demo data first (Ledgers, then Generate demo data). It replaces your current data, so only use it on a fresh start.",
         description:
@@ -144,6 +154,18 @@ export const connectAgent: AreaTranslations = {
         codeBlurb:
           "Para quienes ya usan Claude Code, en la aplicación de Claude o en un terminal.",
         codeNode: "Necesita Node 18 o posterior.",
+        copyCommands: "Copiar comandos",
+        codeFound: "Claude Code está en este ordenador.",
+        codeSetupButton: "Configurar Claude Code por mí",
+        codeSetupRunning: "Configurando. Puede tardar un minuto.",
+        codeSetupReady: "Listo. Abre Claude Code y pregunta por tu dinero.",
+        codeSetupFailed: "No funcionó. Usa los pasos de abajo.",
+        codeNotFound: "No encontramos Claude Code en este ordenador.",
+        codeGet: "Obtener Claude Code",
+        appNotFound: "No encontramos la app de Claude en este ordenador.",
+        appGet: "Obtener la app de Claude",
+        terminalNote:
+          "Pega esto en un terminal normal, no dentro de Claude Code.",
         codePrivacy: "Lo que Claude lee se envía a Anthropic.",
         codeTitle: "Claude Code",
         confirm: "Desconectar",
@@ -155,8 +177,6 @@ export const connectAgent: AreaTranslations = {
         copyQuestion: "Copiar la pregunta",
         copyRepository: "Copiar el nombre del repositorio",
         copySetup: "Copiar la configuración",
-        copyStep1: "Copiar el paso 1",
-        copyStep2: "Copiar el paso 2",
         demoTip:
           "Consejo: pruébalo antes con datos de demostración (Libros y luego Generar datos de demostración). Sustituyen tus datos actuales, así que úsalos solo al empezar de cero.",
         description:
@@ -246,6 +266,17 @@ export const connectAgent: AreaTranslations = {
         chooseTitle: "您想如何聊天？",
         codeBlurb: "适合已经在 Claude 应用或终端中使用 Claude Code 的用户。",
         codeNode: "需要 Node 18 或更高版本。",
+        copyCommands: "复制命令",
+        codeFound: "这台电脑上已有 Claude Code。",
+        codeSetupButton: "为我设置 Claude Code",
+        codeSetupRunning: "正在设置，可能需要一分钟。",
+        codeSetupReady: "完成。打开 Claude Code，问问你的资金情况。",
+        codeSetupFailed: "没有成功。请改用下面的步骤。",
+        codeNotFound: "在这台电脑上找不到 Claude Code。",
+        codeGet: "获取 Claude Code",
+        appNotFound: "在这台电脑上找不到 Claude 应用。",
+        appGet: "获取 Claude 应用",
+        terminalNote: "请粘贴到普通终端，而不是 Claude Code 里。",
         codePrivacy: "Claude 读取的内容会发送给 Anthropic。",
         codeTitle: "Claude Code",
         confirm: "断开连接",
@@ -256,8 +287,6 @@ export const connectAgent: AreaTranslations = {
         copyQuestion: "复制问题",
         copyRepository: "复制仓库名称",
         copySetup: "复制配置",
-        copyStep1: "复制第 1 步",
-        copyStep2: "复制第 2 步",
         demoTip:
           "提示：先用演示数据试一试（账本，然后选择生成演示数据）。演示数据会替换您当前的数据，因此只在全新开始时使用。",
         description: "只需三个简单步骤，即可与 AI 聊聊您的理财应用。",
@@ -344,6 +373,17 @@ export const connectAgent: AreaTranslations = {
         codeBlurb:
           "Voor wie Claude Code al gebruikt, in de Claude-app of in een terminal.",
         codeNode: "Vereist Node 18 of nieuwer.",
+        copyCommands: "Opdrachten kopiëren",
+        codeFound: "Claude Code staat op deze computer.",
+        codeSetupButton: "Claude Code voor mij instellen",
+        codeSetupRunning: "Bezig met instellen. Dit kan een minuut duren.",
+        codeSetupReady: "Klaar. Open Claude Code en vraag naar je geld.",
+        codeSetupFailed: "Dat lukte niet. Gebruik de stappen hieronder.",
+        codeNotFound: "We konden Claude Code niet vinden op deze computer.",
+        codeGet: "Claude Code downloaden",
+        appNotFound: "We konden de Claude-app niet vinden op deze computer.",
+        appGet: "De Claude-app downloaden",
+        terminalNote: "Plak dit in een gewone terminal, niet in Claude Code.",
         codePrivacy: "Wat Claude leest, wordt naar Anthropic gestuurd.",
         codeTitle: "Claude Code",
         confirm: "Loskoppelen",
@@ -355,8 +395,6 @@ export const connectAgent: AreaTranslations = {
         copyQuestion: "Vraag kopiëren",
         copyRepository: "Naam van de repository kopiëren",
         copySetup: "Configuratie kopiëren",
-        copyStep1: "Stap 1 kopiëren",
-        copyStep2: "Stap 2 kopiëren",
         demoTip:
           "Tip: probeer het eerst met demogegevens (Grootboeken, dan Demogegevens genereren). Die vervangen je huidige gegevens, dus gebruik ze alleen als je opnieuw begint.",
         description:
@@ -450,6 +488,20 @@ export const connectAgent: AreaTranslations = {
         codeBlurb:
           "Claude பயன்பாட்டிலோ டெர்மினலிலோ ஏற்கெனவே Claude Code பயன்படுத்துபவர்களுக்கு.",
         codeNode: "Node 18 அல்லது புதிய பதிப்பு தேவை.",
+        copyCommands: "கட்டளைகளை நகலெடு",
+        codeFound: "இந்தக் கணினியில் Claude Code உள்ளது.",
+        codeSetupButton: "எனக்காக Claude Code-ஐ அமை",
+        codeSetupRunning: "அமைக்கிறது. ஒரு நிமிடம் ஆகலாம்.",
+        codeSetupReady:
+          "முடிந்தது. Claude Code-ஐத் திறந்து உங்கள் பணம் பற்றிக் கேளுங்கள்.",
+        codeSetupFailed:
+          "அது வேலை செய்யவில்லை. கீழே உள்ள படிகளைப் பயன்படுத்துங்கள்.",
+        codeNotFound: "இந்தக் கணினியில் Claude Code கிடைக்கவில்லை.",
+        codeGet: "Claude Code-ஐப் பெறு",
+        appNotFound: "இந்தக் கணினியில் Claude செயலி கிடைக்கவில்லை.",
+        appGet: "Claude செயலியைப் பெறு",
+        terminalNote:
+          "இதை சாதாரண டெர்மினலில் ஒட்டுங்கள், Claude Code-க்குள் அல்ல.",
         codePrivacy: "Claude படிப்பவை Anthropic-க்கு அனுப்பப்படும்.",
         codeTitle: "Claude Code",
         confirm: "துண்டி",
@@ -461,8 +513,6 @@ export const connectAgent: AreaTranslations = {
         copyQuestion: "கேள்வியை நகலெடு",
         copyRepository: "களஞ்சியத்தின் பெயரை நகலெடு",
         copySetup: "அமைப்பை நகலெடு",
-        copyStep1: "படி 1-ஐ நகலெடு",
-        copyStep2: "படி 2-ஐ நகலெடு",
         demoTip:
           "குறிப்பு: முதலில் டெமோ தரவுடன் முயலுங்கள் (பேரேடுகள், பிறகு டெமோ தரவை உருவாக்கு). அது உங்கள் தற்போதைய தரவை மாற்றிவிடும், எனவே புதிதாகத் தொடங்கும்போது மட்டும் பயன்படுத்துங்கள்.",
         description:
