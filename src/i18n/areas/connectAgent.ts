@@ -19,6 +19,8 @@ export const connectAgent: AreaTranslations = {
           "Analyze, chat or debate with your data using an AI agent",
         aiAndAgents: "AI & agents",
         connectAgentShort: "Connect agent",
+        connectAgentDesktopOnly:
+          "Connect an agent is available in the desktop app",
       },
     },
     settings: {
@@ -157,6 +159,8 @@ export const connectAgent: AreaTranslations = {
           "Analiza, conversa o debate con tus datos usando un agente de IA",
         aiAndAgents: "IA y agentes",
         connectAgentShort: "Conectar agente",
+        connectAgentDesktopOnly:
+          "Conectar un agente está disponible en la aplicación de escritorio",
       },
     },
     settings: {
@@ -297,6 +301,7 @@ export const connectAgent: AreaTranslations = {
         connectAgentHint: "借助 AI 智能体分析、对话或探讨你的数据",
         aiAndAgents: "AI 与智能体",
         connectAgentShort: "连接智能体",
+        connectAgentDesktopOnly: "连接智能体功能仅在桌面应用中提供",
       },
     },
     settings: {
@@ -426,6 +431,8 @@ export const connectAgent: AreaTranslations = {
           "Analyseer, chat of debatteer met je gegevens via een AI-agent",
         aiAndAgents: "AI en agents",
         connectAgentShort: "Agent koppelen",
+        connectAgentDesktopOnly:
+          "Een agent koppelen is beschikbaar in de desktop-app",
       },
     },
     settings: {
@@ -564,6 +571,8 @@ export const connectAgent: AreaTranslations = {
           "AI முகவருடன் உங்கள் தரவை ஆய்வு செய்யுங்கள், உரையாடுங்கள், விவாதியுங்கள்",
         aiAndAgents: "AI மற்றும் முகவர்கள்",
         connectAgentShort: "முகவரை இணை",
+        connectAgentDesktopOnly:
+          "முகவரை இணைப்பது டெஸ்க்டாப் செயலியில் கிடைக்கும்",
       },
     },
     settings: {

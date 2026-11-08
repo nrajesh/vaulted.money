@@ -8,6 +8,14 @@ export const searchSuggestions: AreaTranslations = {
   en: {
     filters: {
       active: {
+        amountExact: "Amount: {{amount}}",
+        amountBetween: "Amount: {{min}} to {{max}}",
+        amountOver: "Over {{amount}}",
+        amountUnder: "Under {{amount}}",
+        income: "Income",
+        expenses: "Expenses",
+        largest: "Largest {{count}}",
+        smallest: "Smallest {{count}}",
         dateUntil: "Date: until {{date}}",
       },
       conversational: {
@@ -39,6 +47,14 @@ export const searchSuggestions: AreaTranslations = {
   es: {
     filters: {
       active: {
+        amountExact: "Importe: {{amount}}",
+        amountBetween: "Importe: de {{min}} a {{max}}",
+        amountOver: "Más de {{amount}}",
+        amountUnder: "Menos de {{amount}}",
+        income: "Ingresos",
+        expenses: "Gastos",
+        largest: "Las {{count}} mayores",
+        smallest: "Las {{count}} menores",
         dateUntil: "Fecha: hasta {{date}}",
       },
       conversational: {
@@ -70,6 +86,14 @@ export const searchSuggestions: AreaTranslations = {
   zh: {
     filters: {
       active: {
+        amountExact: "金额：{{amount}}",
+        amountBetween: "金额：{{min}} 至 {{max}}",
+        amountOver: "超过 {{amount}}",
+        amountUnder: "低于 {{amount}}",
+        income: "收入",
+        expenses: "支出",
+        largest: "最大的 {{count}} 笔",
+        smallest: "最小的 {{count}} 笔",
         dateUntil: "日期：截至 {{date}}",
       },
       conversational: {
@@ -101,6 +125,14 @@ export const searchSuggestions: AreaTranslations = {
   nl: {
     filters: {
       active: {
+        amountExact: "Bedrag: {{amount}}",
+        amountBetween: "Bedrag: {{min}} tot {{max}}",
+        amountOver: "Meer dan {{amount}}",
+        amountUnder: "Minder dan {{amount}}",
+        income: "Inkomsten",
+        expenses: "Uitgaven",
+        largest: "Grootste {{count}}",
+        smallest: "Kleinste {{count}}",
         dateUntil: "Datum: tot {{date}}",
       },
       conversational: {
@@ -132,6 +164,14 @@ export const searchSuggestions: AreaTranslations = {
   ta: {
     filters: {
       active: {
+        amountExact: "தொகை: {{amount}}",
+        amountBetween: "தொகை: {{min}} முதல் {{max}} வரை",
+        amountOver: "{{amount}}க்கு மேல்",
+        amountUnder: "{{amount}}க்கு கீழ்",
+        income: "வருமானம்",
+        expenses: "செலவுகள்",
+        largest: "மிகப்பெரிய {{count}}",
+        smallest: "மிகச்சிறிய {{count}}",
         dateUntil: "தேதி: {{date}} வரை",
       },
       conversational: {

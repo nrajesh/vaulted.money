@@ -1,6 +1,6 @@
 import { DateRange } from "react-day-picker";
 import { Transaction } from "@/types/dataProvider";
-import { filterTransactions } from "@/utils/nlp-search";
+import { matchesTransactionText } from "@/utils/searchFilters";
 import { slugify } from "@/lib/utils";
 
 export interface TransactionFilterState {
@@ -23,7 +23,9 @@ export const applyTransactionFilters = (
   let filtered = [...transactions];
 
   if (filters.searchTerm.trim()) {
-    filtered = filterTransactions(filtered, filters.searchTerm);
+    filtered = filtered.filter((transaction) =>
+      matchesTransactionText(transaction, filters.searchTerm),
+    );
   }
 
   if (filters.dateRange?.from) {

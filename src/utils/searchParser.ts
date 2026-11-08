@@ -81,6 +81,8 @@ const FUZZY_IGNORED_WORDS: ReadonlySet<string> = new Set([
   "incomes",
   "expense",
   "expenses",
+  "negative",
+  "positive",
   "spent",
   "spending",
   "transaction",
@@ -1403,8 +1405,9 @@ export const parseSearchQuery = (
 
   // Transaction Type Parsing
   // "spending on gas" and "earned in 2023" read as expense / income.
-  const expenseWords = /\b(expenses|expense|spent|spending|spend)\b/i;
-  const incomeWords = /\b(incomes|income|earned|earnings|earning)\b/i;
+  const expenseWords =
+    /\b(expenses|expense|spent|spending|spend|negative|overdrawn)\b/i;
+  const incomeWords = /\b(incomes|income|earned|earnings|earning|positive)\b/i;
   if (expenseWords.test(remainingQuery)) {
     result.transactionType = "expense";
     remainingQuery = remainingQuery

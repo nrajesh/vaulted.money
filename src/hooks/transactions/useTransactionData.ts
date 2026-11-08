@@ -2,7 +2,7 @@ import * as React from "react";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { slugify } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
-import { filterTransactions } from "@/utils/nlp-search";
+import { matchesTransactionText } from "@/utils/searchFilters";
 import { projectScheduledTransactions } from "@/utils/forecasting";
 
 import { Transaction } from "@/types/dataProvider";
@@ -88,7 +88,7 @@ export const useTransactionData = ({
     let filtered = combinedTransactions;
 
     if (searchTerm) {
-      filtered = filterTransactions(filtered, searchTerm);
+      filtered = filtered.filter((t) => matchesTransactionText(t, searchTerm));
     }
 
     if (

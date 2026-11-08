@@ -46,6 +46,8 @@ interface ConversationalSearchInputProps {
   accounts: { name: string; slug: string; type?: string }[];
   vendors: { name: string; slug: string }[];
   currentFilters?: ParsedFilterState;
+  /** Text on the closed button; defaults to "Filter transactions...". */
+  placeholder?: string;
   className?: string;
 }
 
@@ -57,6 +59,7 @@ export function ConversationalSearchInput({
   subCategories = [],
   accounts,
   vendors,
+  placeholder,
   className,
 }: ConversationalSearchInputProps) {
   const { t, i18n } = useTranslation();
@@ -539,9 +542,10 @@ export function ConversationalSearchInput({
           )}
         >
           {step === "ROOT"
-            ? t("filters.searchBar.placeholder", {
+            ? (placeholder ??
+              t("filters.searchBar.placeholder", {
                 defaultValue: "Filter transactions...",
-              })
+              }))
             : t("filters.conversational.filterBy", {
                 step: t(`filters.conversational.${step.toLowerCase()}`, {
                   defaultValue: step.toLowerCase(),

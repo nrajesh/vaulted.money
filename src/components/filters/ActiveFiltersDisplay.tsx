@@ -2,14 +2,45 @@ import { useTransactionFilters } from "@/hooks/transactions/useTransactionFilter
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { slugify } from "@/lib/utils";
 import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { isOpenRangeStart } from "@/utils/searchParser";
 
-export const ActiveFiltersDisplay = () => {
-  const { t } = useTranslation();
+/** The filter state the chips read and clear, shared by every search screen. */
+export interface ActiveFilters {
+  dateRange: DateRange | undefined;
+  setDateRange: (range: DateRange | undefined) => void;
+  selectedAccounts: string[];
+  setSelectedAccounts: (slugs: string[]) => void;
+  selectedCategories: string[];
+  setSelectedCategories: (slugs: string[]) => void;
+  selectedSubCategories: string[];
+  setSelectedSubCategories: (slugs: string[]) => void;
+  selectedVendors: string[];
+  setSelectedVendors: (slugs: string[]) => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  minAmount: number | undefined;
+  setMinAmount: (amount: number | undefined) => void;
+  maxAmount: number | undefined;
+  setMaxAmount: (amount: number | undefined) => void;
+  transactionType: "income" | "expense" | undefined;
+  setTransactionType: (type: "income" | "expense" | undefined) => void;
+  limit: number | undefined;
+  setLimit: (limit: number | undefined) => void;
+  sortOrder: "largest" | "smallest" | undefined;
+  setSortOrder: (order: "largest" | "smallest" | undefined) => void;
+}
+
+export const ActiveFiltersDisplay = () => (
+  <ActiveFilterChips filters={useTransactionFilters()} />
+);
+
+export const ActiveFilterChips = ({ filters }: { filters: ActiveFilters }) => {
+  const { t, i18n } = useTranslation();
   const {
     dateRange,
     setDateRange,
@@ -23,7 +54,17 @@ export const ActiveFiltersDisplay = () => {
     setSelectedVendors,
     searchTerm,
     setSearchTerm,
-  } = useTransactionFilters();
+    minAmount,
+    setMinAmount,
+    maxAmount,
+    setMaxAmount,
+    transactionType,
+    setTransactionType,
+    limit,
+    setLimit,
+    sortOrder,
+    setSortOrder,
+  } = filters;
   const { accounts, categories, vendors } = useTransactions();
 
   const chips: React.ReactNode[] = [];
@@ -144,6 +185,75 @@ export const ActiveFiltersDisplay = () => {
       ),
     );
   });
+
+  // Amount, income/expense and top-N: what "over 50", "expenses" and
+  // "top 5" turn into, shown so they can be seen and removed like the rest.
+  const formatAmount = (value: number) =>
+    new Intl.NumberFormat(i18n.language).format(value);
+  if (minAmount !== undefined || maxAmount !== undefined) {
+    const label =
+      minAmount !== undefined && minAmount === maxAmount
+        ? t("filters.active.amountExact", {
+            amount: formatAmount(minAmount),
+            defaultValue: "Amount: {{amount}}",
+          })
+        : minAmount !== undefined && maxAmount !== undefined
+          ? t("filters.active.amountBetween", {
+              min: formatAmount(minAmount),
+              max: formatAmount(maxAmount),
+              defaultValue: "Amount: {{min}} to {{max}}",
+            })
+          : minAmount !== undefined
+            ? t("filters.active.amountOver", {
+                amount: formatAmount(minAmount),
+                defaultValue: "Over {{amount}}",
+              })
+            : t("filters.active.amountUnder", {
+                amount: formatAmount(maxAmount!),
+                defaultValue: "Under {{amount}}",
+              });
+    chips.push(
+      renderChip(
+        label,
+        () => {
+          setMinAmount(undefined);
+          setMaxAmount(undefined);
+        },
+        "amount-chip",
+      ),
+    );
+  }
+  if (transactionType) {
+    chips.push(
+      renderChip(
+        transactionType === "income"
+          ? t("filters.active.income", { defaultValue: "Income" })
+          : t("filters.active.expenses", { defaultValue: "Expenses" }),
+        () => setTransactionType(undefined),
+        "type-chip",
+      ),
+    );
+  }
+  if (limit !== undefined) {
+    chips.push(
+      renderChip(
+        sortOrder === "smallest"
+          ? t("filters.active.smallest", {
+              count: limit,
+              defaultValue: "Smallest {{count}}",
+            })
+          : t("filters.active.largest", {
+              count: limit,
+              defaultValue: "Largest {{count}}",
+            }),
+        () => {
+          setLimit(undefined);
+          setSortOrder(undefined);
+        },
+        "limit-chip",
+      ),
+    );
+  }
 
   // Search Term
   if (searchTerm) {
