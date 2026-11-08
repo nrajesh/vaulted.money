@@ -96,6 +96,7 @@ On the Ledgers screen choose _Generate demo data_, then ask:
 - "Am I over budget anywhere?" → `budgets_and_insights`
 - "Add a €12.50 coffee at Cafe Central on my checking account, category Food." → `add_transaction`
 - "Import /Users/me/Downloads/statement.csv into Checking, preview first." → `import_csv`
+- "Show what I spent at starbuks over 20 since 2020." → `search_api`, then `call_api` on `/search/interpret` (turns the sentence into filters), then `find_transactions`
 - "Merge the vendors Starbucks and STARBUCKS." → `search_api`, then `call_api` (preview, then confirm)
 - "Which budgets do I keep missing?" → `budget_history` (the demo's Home Budget has months of history, with Dining Out and Groceries often over)
 - "Delete abc." → `find_entity` first, so it can ask whether you mean the budget, the account or the category

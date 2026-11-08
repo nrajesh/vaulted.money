@@ -88,14 +88,14 @@ export const DailyTransactions: React.FC<DailyTransactionsProps> = ({
                     className={cn(
                       "flex flex-col space-y-2 rounded-xl border bg-card p-4 transition-colors hover:bg-accent/50",
                       isProjected &&
-                        "opacity-70 italic text-slate-500 bg-slate-50/50 dark:bg-slate-900/50 border-dashed",
+                        "italic text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/50 border-dashed",
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           {isProjected && (
-                            <CalendarClock className="h-4 w-4 text-blue-500" />
+                            <CalendarClock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           )}
                           <span className="font-semibold">
                             {isTransfer
@@ -121,7 +121,9 @@ export const DailyTransactions: React.FC<DailyTransactionsProps> = ({
                       <div
                         className={cn(
                           "font-bold",
-                          isExpense ? "text-red-500" : "text-green-500",
+                          isExpense
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-green-700 dark:text-green-400",
                           isProjected && "text-slate-500 dark:text-slate-400",
                         )}
                       >

@@ -1068,7 +1068,7 @@ const LedgerEntryPage = () => {
                   // like the main call to action.
                   ledgers.length === 0
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive",
+                    : "border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-red-400/40 dark:text-red-400 dark:hover:text-red-300",
                 )}
               >
                 <RotateCcw className="mt-0.5 h-5 w-5" />
@@ -1082,7 +1082,7 @@ const LedgerEntryPage = () => {
                     className={cn(
                       "block text-xs",
                       ledgers.length === 0
-                        ? "text-indigo-100"
+                        ? "text-primary-foreground/80"
                         : "text-muted-foreground",
                     )}
                   >

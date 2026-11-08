@@ -45,13 +45,13 @@ export const TopCategoriesList = ({
                 style={{ width: `${cat.percentage}%` }}
               />
             </div>
-            <div className="text-[10px] mt-1 text-right text-slate-400 dark:text-white/40">
+            <div className="text-[10px] mt-1 text-right text-slate-500 dark:text-white/40">
               {cat.percentage.toFixed(0)}% of total
             </div>
           </div>
         ))}
         {categories.length === 0 && (
-          <div className="py-10 text-center text-slate-400 dark:text-white/30">
+          <div className="py-10 text-center text-slate-500 dark:text-white/30">
             No category data yet
           </div>
         )}

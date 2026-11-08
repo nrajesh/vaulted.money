@@ -46,13 +46,13 @@ export const Wealthometer = ({
       >
         <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
           <div>
-            <span className="block text-slate-400 dark:text-white/40">In</span>
-            <span className="text-emerald-600 dark:text-emerald-400">
+            <span className="block text-slate-500 dark:text-white/40">In</span>
+            <span className="text-emerald-700 dark:text-emerald-400">
               {currencyFormatter(monthlyIncome)}
             </span>
           </div>
           <div>
-            <span className="block text-slate-400 dark:text-white/40">Out</span>
+            <span className="block text-slate-500 dark:text-white/40">Out</span>
             <span className="text-rose-600 dark:text-rose-400">
               {currencyFormatter(monthlyExpenses)}
             </span>

@@ -595,7 +595,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                     {isTesting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <CheckCircle2 className="h-4 w-4 text-green-700 dark:text-green-400" />
                     )}
                     {t("aiProviders.dialog.testConnection", {
                       defaultValue: "Test Connection",

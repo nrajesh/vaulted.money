@@ -227,7 +227,7 @@ const CustomTooltip = ({
         </span>
         {hasPrevious && (
           <span
-            className={`text-sm font-bold ${isLower ? "text-emerald-600 dark:text-emerald-400" : isHigher ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}
+            className={`text-sm font-bold ${isLower ? "text-emerald-700 dark:text-emerald-400" : isHigher ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}
           >
             {isLower ? "▼" : isHigher ? "▲" : ""}{" "}
             {formatCurrency(Math.abs(delta))}

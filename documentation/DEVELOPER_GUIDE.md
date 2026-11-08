@@ -29,7 +29,7 @@ vaulted.money/
 │   ├── pages/                 # Route-level pages
 │   ├── providers/             # Data provider implementations
 │   ├── types/                 # Shared TypeScript types
-│   └── utils/                 # Helpers and domain utilities
+│   └── utils/                 # Helpers and domain utilities (search parser, fuzzy matching, filters)
 ├── android/                   # Capacitor Android project
 ├── ios/                       # Capacitor iOS project
 ├── documentation/             # Project docs

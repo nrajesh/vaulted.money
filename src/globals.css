@@ -19,12 +19,12 @@
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215.4 16.3% 40%;
 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
@@ -64,6 +64,8 @@
     --brand-accent: 24 74% 58%;
     --brand-accent-soft: 30 78% 74%;
     --brand-accent-strong: 18 74% 52%;
+    /* Accent as text on light tints: --brand-accent is too pale for 4.5:1. */
+    --brand-accent-text: 18 80% 33%;
 
     --analytics-grid: 214 32% 91%;
     --analytics-axis: 215 16% 47%;
@@ -132,6 +134,7 @@
     --brand-accent: 188 57% 59%;
     --brand-accent-soft: 184 47% 74%;
     --brand-accent-strong: 199 54% 42%;
+    --brand-accent-text: 188 57% 59%;
 
     --analytics-grid: 217 19% 26%;
     --analytics-axis: 215 20% 65%;
@@ -195,7 +198,7 @@
   }
 
   .app-page-subtitle {
-    @apply mt-2 max-w-5xl text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400;
+    @apply mt-2 max-w-5xl text-sm sm:text-base leading-relaxed text-slate-600 dark:text-slate-400;
   }
 
   .app-page-header {
@@ -258,21 +261,21 @@
 /* ── Sidebar: active nav items use brand accent ───────────────────────────── */
 [data-sidebar="menu-button"][data-active="true"] {
   background-color: hsl(var(--brand-accent) / 0.12);
-  color: hsl(var(--brand-accent));
+  color: hsl(var(--brand-accent-text));
 }
 
 [data-sidebar="menu-button"][data-active="true"] svg {
-  color: hsl(var(--brand-accent));
+  color: hsl(var(--brand-accent-text));
 }
 
 /* Hover gets a subtle brand tint so hover→active feels continuous */
 [data-sidebar="menu-button"]:not([data-active="true"]):hover {
   background-color: hsl(var(--brand-accent) / 0.07);
-  color: hsl(var(--brand-accent) / 0.85);
+  color: hsl(var(--brand-accent-text));
 }
 
 [data-sidebar="menu-button"]:not([data-active="true"]):hover svg {
-  color: hsl(var(--brand-accent) / 0.85);
+  color: hsl(var(--brand-accent-text));
 }
 
 @layer components {

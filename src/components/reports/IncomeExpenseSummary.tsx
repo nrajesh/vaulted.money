@@ -146,7 +146,7 @@ const IncomeExpenseSummary: React.FC<IncomeExpenseSummaryProps> = ({
                       )}
                     </span>
                     <span
-                      className={`text-sm font-semibold text-green-600 dark:text-green-400 ${hasScheduled ? "opacity-70" : ""}`}
+                      className={`text-sm font-semibold text-green-700 dark:text-green-400 ${hasScheduled ? "opacity-70" : ""}`}
                     >
                       {formatCurrency(amount)}
                     </span>
@@ -156,7 +156,7 @@ const IncomeExpenseSummary: React.FC<IncomeExpenseSummaryProps> = ({
             )}
             <div className="flex items-center justify-between pt-2">
               <span className="font-bold text-sm">Total Income</span>
-              <span className="font-bold text-green-600 dark:text-green-400">
+              <span className="font-bold text-green-700 dark:text-green-400">
                 {formatCurrency(summary.totalIncome)}
               </span>
             </div>
@@ -248,7 +248,7 @@ const IncomeExpenseSummary: React.FC<IncomeExpenseSummaryProps> = ({
                       Target: {target !== null ? formatCurrency(target) : "-"}
                     </span>
                     <span
-                      className={`${variance !== null && variance < 0 ? "text-red-500 font-medium" : ""}`}
+                      className={`${variance !== null && variance < 0 ? "text-red-600 dark:text-red-400 font-medium" : ""}`}
                     >
                       {variance !== null
                         ? `${variance < 0 ? "Over: " : "Left: "}${formatCurrency(Math.abs(variance))}`
@@ -320,7 +320,7 @@ const IncomeExpenseSummary: React.FC<IncomeExpenseSummaryProps> = ({
                         {target !== null ? formatCurrency(target) : "-"}
                       </TableCell>
                       <TableCell
-                        className={`text-right ${variance !== null && variance < 0 ? "text-red-500" : ""}`}
+                        className={`text-right ${variance !== null && variance < 0 ? "text-red-600 dark:text-red-400" : ""}`}
                       >
                         {variance !== null ? formatCurrency(variance) : "-"}
                       </TableCell>

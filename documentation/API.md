@@ -96,6 +96,21 @@ Under `/ledgers/{ledgerId}/transactions`.
 | `DELETE /transfer/{transferId}` | delete both legs |
 | `GET/PATCH/DELETE /{transactionId}` | Editing one leg of a transfer updates the other (date, category, remarks, swapped account and vendor, and the amount when both legs share a currency). Deleting one leg deletes both. Both match the app. |
 
+### Search (natural-language phrases)
+Under `/ledgers/{ledgerId}/search`. This is the code behind the search box in the app, so a script and the app read a phrase the same way.
+
+| | |
+|---|---|
+| `GET /interpret?q=...` | Reads a phrase such as `starbuks over 20 last month` and changes nothing. Optional: `today=YYYY-MM-DD` (what "today" means, for repeatable results), `typos=false` (match names exactly). |
+
+The response has three parts:
+
+- `filters`: what was understood. `date_range` (`from` is `null` for "before 2019"), `all_time`, `min_amount` / `max_amount` (the **size** of an amount, sign ignored, as in the app), `type` (`income` or `expense`), `accounts`, `categories`, `sub_categories`, `vendors` (names), `text` (the words left over), `limit` / `sort` (for "top 5"), and `corrections` (names matched despite a typo or a plural, with what was typed). `combine` is always `"all"`: **every filter must match, and several values of one kind (two vendors) match either**.
+- `params`: the query for `GET /transactions` that gives the same result, where that endpoint can express it. Amounts are converted to its signed `min_amount` / `max_amount` when the phrase says income or expense.
+- `unmapped`: filters `GET /transactions` cannot express, each with the reason: several values of one kind (it takes one), a size without income or expense, and "top N".
+
+It reads names from the ledger's own accounts, vendors, categories and sub-categories, so "grocery" finds `Groceries` and "starbuks" finds `Starbucks`. It understands dates ("last month", "2 weeks from today", "between 2025 jul and sep", "since 2020"), amounts ("over 50", "between 10 and 20", "€100"), income and expense words, account types ("savings") and "top 5".
+
 ### Recurring (scheduled) transactions
 Under `/ledgers/{ledgerId}/scheduled-transactions`.
 

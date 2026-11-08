@@ -12,6 +12,7 @@ import { SmartScheduleDialog } from "@/components/scheduled-transactions/SmartSc
 import { addMonths, addWeeks, addYears } from "date-fns";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { slugify } from "@/lib/utils";
+import { matchesTransactionText } from "@/utils/searchFilters";
 import { useTranslation } from "react-i18next";
 
 const ScheduledTransactionsPage = () => {
@@ -43,6 +44,7 @@ const ScheduledTransactionsPage = () => {
     selectedVendors,
     minAmount,
     maxAmount,
+    transactionType,
   } = filterState;
 
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
@@ -114,16 +116,11 @@ const ScheduledTransactionsPage = () => {
       if (maxAmount !== undefined && Math.abs(t.amount) > maxAmount)
         return false;
 
-      // Search Term (Generic)
-      if (searchTerm) {
-        const lower = searchTerm.toLowerCase();
-        return (
-          (t.remarks || "").toLowerCase().includes(lower) ||
-          (t.vendor || "").toLowerCase().includes(lower) ||
-          (t.category || "").toLowerCase().includes(lower) ||
-          (t.account || "").toLowerCase().includes(lower)
-        );
-      }
+      if (transactionType === "income" && t.amount <= 0) return false;
+      if (transactionType === "expense" && t.amount >= 0) return false;
+
+      // Search text: every word must appear somewhere on the transaction.
+      if (searchTerm && !matchesTransactionText(t, searchTerm)) return false;
 
       return true;
     });
@@ -143,6 +140,7 @@ const ScheduledTransactionsPage = () => {
     selectedVendors,
     minAmount,
     maxAmount,
+    transactionType,
     searchTerm,
     targetId,
   ]);
@@ -323,7 +321,7 @@ const ScheduledTransactionsPage = () => {
                 variant="outline"
                 className="border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900 dark:hover:bg-indigo-950"
               >
-                <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />{" "}
+                <Sparkles className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" />{" "}
                 {t("scheduled.header.autoSchedule", {
                   defaultValue: "Auto-Schedule",
                 })}

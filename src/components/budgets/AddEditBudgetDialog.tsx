@@ -581,7 +581,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isGoal ? (
-              <Target className="h-5 w-5 text-emerald-600" />
+              <Target className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
             ) : (
               <TrendingUp className="h-5 w-5 text-primary" />
             )}
@@ -623,7 +623,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 border-emerald-200/60 dark:border-emerald-800/60">
                   <div className="space-y-0.5">
                     <FormLabel className="text-sm flex items-center gap-2 cursor-pointer">
-                      <Target className="h-4 w-4 text-emerald-600" />
+                      <Target className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
                       {t("budgets.dialog.savingsGoal", {
                         defaultValue: "Savings Goal",
                       })}

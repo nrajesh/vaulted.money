@@ -39,7 +39,7 @@ export function SpendingSummaryHeader({
         <p className="mt-1 text-sm font-medium flex items-center gap-1.5">
           {isLower && (
             <>
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                 ▼ {formatCurrency(absDelta)}
               </span>
             </>

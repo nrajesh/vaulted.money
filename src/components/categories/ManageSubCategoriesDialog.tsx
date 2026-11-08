@@ -270,7 +270,7 @@ const ManageSubCategoriesDialog: React.FC<ManageSubCategoriesDialogProps> = ({
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-8 w-8 text-green-600"
+                                  className="h-8 w-8 text-green-700 dark:text-green-400"
                                   onClick={() => handleSaveEdit(sub)}
                                   disabled={isLoading}
                                   aria-label="Save"

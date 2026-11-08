@@ -37,6 +37,7 @@ The important bit: your data stays local by default. There is no hosted Vaulted 
 | Categories   | Understand what the money was for.                                   |
 | Budgets      | Set limits or goals and see progress.                                |
 | Imports      | Bring in bank CSV exports.                                           |
+| Search       | Type a sentence such as "groceries over 50 last month" and pick what it understood. |
 | Reports      | See income, spending, net worth, trends, and summaries.              |
 | Backups      | Export your data as JSON, with encrypted backup options.             |
 | Optional AI  | Bring your own API key to help categorize transactions.              |
@@ -109,7 +110,7 @@ curl -H "$AUTH" -H "Content-Type: application/json" -X POST -OJ $VM/backups/expo
 
 `GET $VM` lists every endpoint. The app must be running (closing the window only hides it). Restoring a backup replaces data and needs `"confirm_replace": true`.
 
-Beyond basic data entry the API covers the app's clean-up tools (detect transfers, remove duplicates, categorize, reconcile balances, merge and clean up accounts/vendors/categories), CSV import and export, settings, and an OpenAPI description at `GET $VM/openapi.json` for generating your own client. The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md); [recipes for scripts, month-end routines and building your own interface](documentation/API_COOKBOOK.md) are in the cookbook. To try it from Postman, import the [ready-made collection](documentation/postman/README.md).
+Beyond basic data entry the API covers the app's clean-up tools (detect transfers, remove duplicates, categorize, reconcile balances, merge and clean up accounts/vendors/categories), CSV import and export, settings, and an OpenAPI description at `GET $VM/openapi.json` for generating your own client. The full guide, with every endpoint, filters, error format and the security model, is in [Local API](documentation/API.md); [recipes for scripts, month-end routines and building your own interface](documentation/API_COOKBOOK.md) are in the cookbook. Scripts can also hand the API a plain sentence: `GET $VM/ledgers/$LEDGER/search/interpret?q=starbuks over 20 last month` returns the same structured filters the app's search box builds, plus the matching transactions query. To try it from Postman, import the [ready-made collection](documentation/postman/README.md).
 
 ## Use with an AI agent
 

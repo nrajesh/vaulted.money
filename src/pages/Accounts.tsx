@@ -11,7 +11,7 @@ import EntityManagementPage from "@/components/management/EntityManagementPage";
 import AccountDeduplicationDialog from "@/components/management/AccountDeduplicationDialog";
 import AccountBalanceReconciliationDialog from "@/components/management/AccountBalanceReconciliationDialog";
 
-import { filterAccounts } from "@/utils/nlp-search";
+import { filterAccounts } from "@/utils/searchFilters";
 
 import { GroupedEntityTable } from "@/components/management/GroupedEntityTable";
 

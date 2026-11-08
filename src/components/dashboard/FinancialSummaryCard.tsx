@@ -27,9 +27,13 @@ export const FinancialSummaryCard = ({
   ) => {
     if (isPositive === null) return "text-muted-foreground";
     if (type === "expenses") {
-      return isPositive ? "text-red-500" : "text-green-500";
+      return isPositive
+        ? "text-red-600 dark:text-red-400"
+        : "text-green-700 dark:text-green-400";
     }
-    return isPositive ? "text-green-500" : "text-red-500";
+    return isPositive
+      ? "text-green-700 dark:text-green-400"
+      : "text-red-600 dark:text-red-400";
   };
 
   return (

@@ -1,5 +1,17 @@
 import * as React from "react";
-import { Search, Calendar, CreditCard, Tag, Store } from "lucide-react";
+import {
+  Search,
+  Sparkles,
+  CreditCard,
+  Tag,
+  Store,
+  Calendar,
+  Banknote,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpDown,
+  Layers,
+} from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -15,8 +27,14 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ParsedFilterState, parseSearchQuery } from "@/utils/searchParser";
-import { format } from "date-fns";
+import { ParsedFilterState, isOpenRangeStart } from "@/utils/searchParser";
+import {
+  interpretQuery,
+  mergeInterpretationUpdates,
+  type InterpretationItem,
+  type InterpretationPart,
+} from "@/utils/searchInterpretation";
+import { formatDisplayDate } from "@/utils/dateFormat";
 import { useTranslation } from "react-i18next";
 
 interface ConversationalSearchInputProps {
@@ -26,8 +44,14 @@ interface ConversationalSearchInputProps {
   accounts: { name: string; slug: string; type?: string }[];
   vendors: { name: string; slug: string }[];
   currentFilters?: ParsedFilterState;
+  /** Text on the closed button; defaults to "Filter transactions...". */
+  placeholder?: string;
   className?: string;
 }
+
+/** Identifies a suggested piece, so one already taken is not offered again. */
+const partKey = (part: InterpretationPart): string =>
+  part.kind === "entity" ? `entity:${part.entity}:${part.slug}` : part.kind;
 
 type SearchStep = "ROOT" | "CATEGORY" | "ACCOUNT" | "VENDOR" | "DATE";
 
@@ -37,52 +61,45 @@ export function ConversationalSearchInput({
   subCategories = [],
   accounts,
   vendors,
+  placeholder,
   className,
 }: ConversationalSearchInputProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [step, setStep] = React.useState<SearchStep>("ROOT");
   const [input, setInput] = React.useState("");
-  const [nlpDate, setNlpDate] =
-    React.useState<ParsedFilterState["dateRange"]>();
-  const [isAllTime, setIsAllTime] = React.useState(false);
 
   // Reset to root when closing
   React.useEffect(() => {
     if (!open) {
       setStep("ROOT");
       setInput("");
-      setNlpDate(undefined);
-      setIsAllTime(false);
+      setApplied([]);
     }
   }, [open]);
 
-  // Live NLP Date Parsing & Flattened Search
-  React.useEffect(() => {
-    if (input.trim().length > 2) {
-      // Check for date only
-      const parserContext = {
-        categories: [],
-        accounts: [],
-        subCategories: [],
-        vendors: [],
-      };
-      const result = parseSearchQuery(input, parserContext);
-      if (result.isAllTime) {
-        setIsAllTime(true);
-        setNlpDate(undefined);
-      } else if (result.dateRange) {
-        setNlpDate(result.dateRange);
-        setIsAllTime(false);
-      } else {
-        setNlpDate(undefined);
-        setIsAllTime(false);
-      }
-    } else {
-      setNlpDate(undefined);
-      setIsAllTime(false);
-    }
-  }, [input]);
+  // What the parser makes of the text, offered as one suggestion the user can
+  // pick (or ignore). Typo matching is on here because the user confirms the
+  // result; nothing is applied until they choose it.
+  const interpretation = React.useMemo(() => {
+    if (step !== "ROOT" || input.trim().length <= 2) return null;
+    return interpretQuery(
+      input,
+      { categories, subCategories, accounts, vendors },
+      { fuzzy: true },
+    ).interpretation;
+  }, [step, input, categories, subCategories, accounts, vendors]);
+
+  // Pieces the user has already taken. They stay applied (and show as chips
+  // outside); the rest of the suggestion stays open so more can be picked.
+  const [applied, setApplied] = React.useState<string[]>([]);
+  const remaining = React.useMemo(
+    () =>
+      interpretation?.items.filter(
+        (item) => !applied.includes(partKey(item.part)),
+      ) ?? [],
+    [interpretation, applied],
+  );
 
   const handleSelectType = (nextStep: SearchStep) => {
     setStep(nextStep);
@@ -119,6 +136,206 @@ export function ConversationalSearchInput({
 
   // Filter Lists based on Input (fuse-like behavior done by Command automatically if we render all,
   // but optimizing for "ROOT" step showing suggestions)
+
+  const formatAmount = (value: number) =>
+    new Intl.NumberFormat(i18n.language).format(value);
+
+  const describePart = (part: InterpretationPart): string => {
+    switch (part.kind) {
+      case "allTime":
+        return t("filters.conversational.suggest.allTime", {
+          defaultValue: "All time",
+        });
+      case "date": {
+        // "before 2019" has no real start date; say "until" instead.
+        if (isOpenRangeStart(part.from) && part.to) {
+          return t("filters.conversational.suggest.dateUntil", {
+            date: formatDisplayDate(part.to, i18n.language),
+            defaultValue: "Date: until {{date}}",
+          });
+        }
+        return t("filters.conversational.suggest.date", {
+          from: formatDisplayDate(part.from, i18n.language),
+          to: formatDisplayDate(part.to ?? part.from, i18n.language),
+          defaultValue: "Date: {{from}} – {{to}}",
+        });
+      }
+      case "amount":
+        if (part.min !== undefined && part.min === part.max) {
+          return t("filters.conversational.suggest.amountExact", {
+            amount: formatAmount(part.min),
+            defaultValue: "Amount: {{amount}}",
+          });
+        }
+        if (part.min !== undefined && part.max !== undefined) {
+          return t("filters.conversational.suggest.amountBetween", {
+            min: formatAmount(part.min),
+            max: formatAmount(part.max),
+            defaultValue: "Amount: {{min}} to {{max}}",
+          });
+        }
+        if (part.min !== undefined) {
+          return t("filters.conversational.suggest.amountOver", {
+            amount: formatAmount(part.min),
+            defaultValue: "Over {{amount}}",
+          });
+        }
+        return t("filters.conversational.suggest.amountUnder", {
+          amount: formatAmount(part.max!),
+          defaultValue: "Under {{amount}}",
+        });
+      case "type":
+        return part.type === "income"
+          ? t("filters.conversational.suggest.income", {
+              defaultValue: "Income",
+            })
+          : t("filters.conversational.suggest.expenses", {
+              defaultValue: "Expenses",
+            });
+      case "limit":
+        return part.order === "smallest"
+          ? t("filters.conversational.suggest.smallest", {
+              count: part.count,
+              defaultValue: "Smallest {{count}}",
+            })
+          : t("filters.conversational.suggest.largest", {
+              count: part.count,
+              defaultValue: "Largest {{count}}",
+            });
+      case "accounts":
+        return t("filters.conversational.suggest.accountsCount", {
+          count: part.count,
+          defaultValue: "{{count}} accounts",
+        });
+      case "entity": {
+        const name = part.typed
+          ? t("filters.conversational.suggest.typo", {
+              name: part.name,
+              typed: part.typed,
+              defaultValue: "{{name}} (matched “{{typed}}”)",
+            })
+          : part.name;
+        switch (part.entity) {
+          case "account":
+            return t("filters.conversational.suggest.account", {
+              name,
+              defaultValue: "Account: {{name}}",
+            });
+          case "category":
+            return t("filters.conversational.suggest.category", {
+              name,
+              defaultValue: "Category: {{name}}",
+            });
+          case "subCategory":
+            return t("filters.conversational.suggest.subCategory", {
+              name,
+              defaultValue: "Sub-category: {{name}}",
+            });
+          default:
+            return t("filters.conversational.suggest.vendor", {
+              name,
+              defaultValue: "Vendor: {{name}}",
+            });
+        }
+      }
+      case "text":
+        return t("filters.conversational.suggest.text", {
+          text: part.text,
+          defaultValue: 'Text: "{{text}}"',
+        });
+    }
+  };
+
+  // A suggestion that relies on a typo correction goes last, so Enter keeps
+  // doing the plain search; exact interpretations are selected first.
+  const suggestionLast = remaining.some(
+    (item) => item.part.kind === "entity" && item.part.typed,
+  );
+
+  const partIcon = (part: InterpretationPart) => {
+    const className = "mr-2 h-4 w-4 shrink-0 text-primary";
+    switch (part.kind) {
+      case "date":
+      case "allTime":
+        return <Calendar className={className} />;
+      case "amount":
+        return <Banknote className={className} />;
+      case "type":
+        return part.type === "income" ? (
+          <TrendingUp className={className} />
+        ) : (
+          <TrendingDown className={className} />
+        );
+      case "limit":
+        return <ArrowUpDown className={className} />;
+      case "accounts":
+        return <Layers className={className} />;
+      case "text":
+        return <Search className={className} />;
+      case "entity":
+        if (part.entity === "account")
+          return <CreditCard className={className} />;
+        if (part.entity === "vendor") return <Store className={className} />;
+        return <Tag className={className} />;
+    }
+  };
+
+  // Taking one piece applies it and leaves the popover open for the others.
+  const takePiece = (item: InterpretationItem) => {
+    onUpdate(item.update);
+    setApplied((previous) => [...previous, partKey(item.part)]);
+  };
+
+  const takeAllRemaining = () => {
+    onUpdate(mergeInterpretationUpdates(remaining));
+    setOpen(false);
+  };
+
+  // Every understood piece is its own row, so the user can take just one of
+  // them; with several left, "apply all" comes first and is the default.
+  const suggestionGroup = remaining.length > 0 && (
+    <CommandGroup
+      forceMount
+      heading={t("filters.conversational.suggest.heading", {
+        defaultValue: "Understood as",
+      })}
+    >
+      <div className="px-2 pb-1 text-xs text-muted-foreground">
+        {t("filters.conversational.suggest.combineHint", {
+          defaultValue:
+            "Results must match every filter you pick. Several of the same kind (two vendors) match either.",
+        })}
+      </div>
+      {remaining.length > 1 && (
+        <CommandItem
+          forceMount
+          value={"suggest-all-" + input}
+          onSelect={takeAllRemaining}
+        >
+          <Sparkles className="mr-2 h-4 w-4 shrink-0 text-primary" />
+          <span className="font-medium">
+            {t("filters.conversational.suggest.applyAll", {
+              count: remaining.length,
+              defaultValue: "Apply all {{count}}",
+            })}
+          </span>
+        </CommandItem>
+      )}
+      {remaining.map((item) => (
+        <CommandItem
+          key={partKey(item.part)}
+          forceMount
+          value={`suggest-${partKey(item.part)}-${input}`}
+          onSelect={() => takePiece(item)}
+        >
+          {partIcon(item.part)}
+          <span className="rounded-md bg-primary/10 px-2 py-0.5 text-sm">
+            {describePart(item.part)}
+          </span>
+        </CommandItem>
+      ))}
+    </CommandGroup>
+  );
 
   const renderRootSuggestions = () => {
     // If input is empty, show types
@@ -159,50 +376,7 @@ export function ConversationalSearchInput({
     // If input exists, show NLP results + Entity Matches
     return (
       <>
-        {nlpDate && (
-          <CommandGroup
-            heading={t("filters.conversational.detectedDate", {
-              defaultValue: "Detected Date",
-            })}
-          >
-            <CommandItem
-              value={"date-" + input}
-              onSelect={() => {
-                onUpdate({ dateRange: nlpDate });
-                setOpen(false);
-              }}
-            >
-              <Calendar className="mr-2 h-4 w-4 text-primary" />
-              {t("filters.conversational.useDate", {
-                range: nlpDate.to
-                  ? `${format(nlpDate.from!, "MMM d")} - ${format(nlpDate.to, "MMM d, yyyy")}`
-                  : format(nlpDate.from!, "MMM d, yyyy"),
-                defaultValue: `Use Date: ${format(nlpDate.from!, "MMM d")} - ${nlpDate.to ? format(nlpDate.to, "MMM d, yyyy") : ""}`,
-              })}
-            </CommandItem>
-          </CommandGroup>
-        )}
-
-        {isAllTime && (
-          <CommandGroup
-            heading={t("filters.conversational.detectedDate", {
-              defaultValue: "Detected Date",
-            })}
-          >
-            <CommandItem
-              value="date-all-time"
-              onSelect={() => {
-                onUpdate({ isAllTime: true });
-                setOpen(false);
-              }}
-            >
-              <Calendar className="mr-2 h-4 w-4 text-primary" />
-              {t("filters.conversational.timeRangeAllTime", {
-                defaultValue: "Time Range: All Time",
-              })}
-            </CommandItem>
-          </CommandGroup>
-        )}
+        {!suggestionLast && suggestionGroup}
 
         {/* Show top entity matches mixed in, or grouped? Command filters for us if we render them. 
                     Lets render a subset of everything if input length > 1 */}
@@ -287,6 +461,8 @@ export function ConversationalSearchInput({
             })}
           </CommandItem>
         </CommandGroup>
+
+        {suggestionLast && suggestionGroup}
       </>
     );
   };
@@ -387,9 +563,10 @@ export function ConversationalSearchInput({
           )}
         >
           {step === "ROOT"
-            ? t("filters.searchBar.placeholder", {
+            ? (placeholder ??
+              t("filters.searchBar.placeholder", {
                 defaultValue: "Filter transactions...",
-              })
+              }))
             : t("filters.conversational.filterBy", {
                 step: t(`filters.conversational.${step.toLowerCase()}`, {
                   defaultValue: step.toLowerCase(),
@@ -409,7 +586,10 @@ export function ConversationalSearchInput({
               defaultValue:
                 "Type to filter (e.g. 'Groceries', 'Next Week', 'Checking')...",
             })}
-            onValueChange={setInput}
+            onValueChange={(value) => {
+              setInput(value);
+              setApplied([]);
+            }}
             value={input}
             onKeyDown={(e) => {
               if (e.key === "Backspace" && !input && step !== "ROOT")
@@ -441,6 +621,23 @@ export function ConversationalSearchInput({
             </CommandEmpty>
             {renderStepContent()}
           </CommandList>
+          {(input || applied.length > 0) && (
+            <div className="flex items-center justify-end gap-2 border-t p-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setInput("");
+                  setApplied([]);
+                }}
+              >
+                {t("filters.conversational.clear", { defaultValue: "Clear" })}
+              </Button>
+              <Button size="sm" onClick={() => setOpen(false)}>
+                {t("filters.conversational.done", { defaultValue: "Done" })}
+              </Button>
+            </div>
+          )}
         </Command>
       </PopoverContent>
     </Popover>

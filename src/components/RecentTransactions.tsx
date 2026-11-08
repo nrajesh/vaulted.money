@@ -263,7 +263,7 @@ export function RecentTransactions({
                         )}
                       </TableCell>
                       <TableCell
-                        className={`text-right font-medium ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}
+                        className={`text-right font-medium ${transaction.amount > 0 ? "text-green-700 dark:text-green-400" : "text-red-600"}`}
                       >
                         {formatCurrency(
                           transaction.amount,

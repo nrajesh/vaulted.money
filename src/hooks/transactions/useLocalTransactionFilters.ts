@@ -27,6 +27,10 @@ export interface LocalFilterState {
   setSortOrder: React.Dispatch<
     React.SetStateAction<"largest" | "smallest" | undefined>
   >;
+  transactionType: "income" | "expense" | undefined;
+  setTransactionType: React.Dispatch<
+    React.SetStateAction<"income" | "expense" | undefined>
+  >;
   rawSearchQuery: string;
   setRawSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   handleResetFilters: () => void;
@@ -65,6 +69,10 @@ export const useLocalTransactionFilters = (): LocalFilterState => {
     "largest" | "smallest" | undefined
   >(undefined);
 
+  const [transactionType, setTransactionType] = React.useState<
+    "income" | "expense" | undefined
+  >(undefined);
+
   const handleResetFilters = React.useCallback(() => {
     setSearchTerm("");
     setRawSearchQuery("");
@@ -78,6 +86,7 @@ export const useLocalTransactionFilters = (): LocalFilterState => {
     setMaxAmount(undefined);
     setLimit(undefined);
     setSortOrder(undefined);
+    setTransactionType(undefined);
   }, []);
 
   return {
@@ -103,6 +112,8 @@ export const useLocalTransactionFilters = (): LocalFilterState => {
     setLimit,
     sortOrder,
     setSortOrder,
+    transactionType,
+    setTransactionType,
     rawSearchQuery,
     setRawSearchQuery,
     handleResetFilters,

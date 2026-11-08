@@ -292,7 +292,7 @@ export function SmartScheduleDialog({
       <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wand2 className="h-5 w-5 text-blue-500" />
+            <Wand2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             {t("scheduled.smart.title", {
               defaultValue: "Smart Schedule Creation",
             })}

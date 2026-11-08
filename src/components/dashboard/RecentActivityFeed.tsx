@@ -104,7 +104,7 @@ export const RecentActivityFeed = ({
                 <div
                   className={cn(
                     "font-medium text-sm",
-                    isExpense ? "" : "text-green-600",
+                    isExpense ? "" : "text-green-700 dark:text-green-400",
                   )}
                 >
                   {isExpense ? "-" : "+"}

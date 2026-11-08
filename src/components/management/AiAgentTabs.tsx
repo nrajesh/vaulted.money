@@ -10,11 +10,13 @@ const hasAgentBridge = () =>
 /**
  * Switcher shared by the AI providers and Connect agent pages. Both sit under
  * one "AI & agents" sidebar entry, so this is how you move between them.
- * The agent tab shows only in the desktop app, where agents can connect.
+ * Agents can only connect to the desktop app, so on the web that tab is shown
+ * greyed out and says so.
  */
 const AiAgentTabs = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const desktopOnly = !hasAgentBridge();
 
   const tabs = [
     {
@@ -25,32 +27,48 @@ const AiAgentTabs = () => {
         defaultValue: "Use your own AI key to categorise transactions",
       }),
     },
-    ...(hasAgentBridge()
-      ? [
-          {
-            to: "/connect-agent",
-            icon: Bot,
-            label: t("layout.nav.connectAgentShort", {
-              defaultValue: "Connect agent",
-            }),
-            hint: t("layout.nav.connectAgentHint", {
-              defaultValue:
-                "Analyze, chat or debate with your data using an AI agent",
-            }),
-          },
-        ]
-      : []),
+    {
+      to: "/connect-agent",
+      icon: Bot,
+      label: t("layout.nav.connectAgentShort", {
+        defaultValue: "Connect agent",
+      }),
+      // On the web there is nothing to open, so say where it lives instead of
+      // hiding the tab and leaving people to wonder.
+      hint: desktopOnly
+        ? t("layout.nav.connectAgentDesktopOnly", {
+            defaultValue: "Connect an agent is available in the desktop app",
+          })
+        : t("layout.nav.connectAgentHint", {
+            defaultValue:
+              "Analyze, chat or debate with your data using an AI agent",
+          }),
+      disabled: desktopOnly,
+    },
   ];
-
-  if (tabs.length < 2) return null;
 
   return (
     <nav
       aria-label={t("layout.nav.aiAndAgents", { defaultValue: "AI & agents" })}
       className="grid gap-2 sm:grid-cols-2"
     >
-      {tabs.map(({ to, icon: Icon, label, hint }) => {
+      {tabs.map(({ to, icon: Icon, label, hint, disabled }) => {
         const active = pathname === to;
+        if (disabled) {
+          return (
+            <div
+              key={to}
+              aria-disabled="true"
+              className="flex h-full items-start gap-3 rounded-lg border border-dashed px-4 py-3 text-left text-muted-foreground"
+            >
+              <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <span className="flex flex-col">
+                <span className="text-sm font-semibold">{label}</span>
+                <span className="text-xs">{hint}</span>
+              </span>
+            </div>
+          );
+        }
         return (
           <Link
             key={to}

@@ -338,7 +338,7 @@ const AlertsAndInsights: React.FC<AlertsAndInsightsProps> = ({
                         </span>{" "}
                         budget is at{" "}
                         <span
-                          className={`font-bold ${alert.percentage >= 100 ? "text-destructive" : "text-amber-500"}`}
+                          className={`font-bold ${alert.percentage >= 100 ? "text-destructive" : "text-amber-700 dark:text-amber-400"}`}
                         >
                           {alert.percentage}%
                         </span>{" "}
