@@ -10,10 +10,9 @@ import type { AIProvider } from "@/types/dataProvider";
  * endpoint has no default: the server picks (LM Studio, for example, uses the
  * model that is loaded).
  *
- * Providers retire models without warning, so this list is checked monthly by
- * .github/workflows/model-review.yml. Update AI_MODELS_REVIEWED when you review.
+ * Providers retire models without warning, so the provider dialog can also
+ * load the live list with the user's own key (see src/utils/aiModels.ts).
  */
-export const AI_MODELS_REVIEWED = "2026-11-08";
 
 export const AI_DEFAULT_MODELS: Record<AIProvider["type"], string | null> = {
   OPENAI: "gpt-4o",

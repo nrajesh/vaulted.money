@@ -35,6 +35,7 @@ import { useDataProvider } from "@/context/DataProviderContext";
 import { AIProvider } from "@/types/dataProvider";
 import { buildGeminiUrl } from "@/hooks/useAutoCategorize";
 import { readAiApiKeyFromStorage } from "@/constants/aiApiKeyStorage";
+import { fetchProviderModels } from "@/utils/aiModels";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -146,6 +147,43 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   }, [provider, form, isOpen]);
 
   const [isTesting, setIsTesting] = React.useState(false);
+  const [models, setModels] = React.useState<string[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = React.useState(false);
+
+  // Asks the provider which models this key can use, so the list is never stale.
+  const handleLoadModels = async () => {
+    const values = form.getValues();
+    const apiKey = provider?.id ? readAiApiKeyFromStorage(provider.id) : "";
+    if (!apiKey) {
+      showError(
+        t("aiProviders.dialog.needKey", {
+          defaultValue:
+            "Please save the provider and set an API key in Settings first to test.",
+        }),
+      );
+      return;
+    }
+    setIsLoadingModels(true);
+    try {
+      const found = await fetchProviderModels(values, apiKey);
+      setModels(found ?? []);
+      showSuccess(
+        t("aiProviders.dialog.modelsLoaded", {
+          count: found?.length ?? 0,
+          defaultValue: "{{count}} models found",
+        }),
+      );
+    } catch (error: unknown) {
+      showError(
+        t("aiProviders.dialog.modelsFailed", {
+          message: error instanceof Error ? error.message : String(error),
+          defaultValue: "Could not load models: {{message}}",
+        }),
+      );
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
 
   const handleTestConnection = async () => {
     const values = form.getValues();
@@ -423,19 +461,51 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                 name="model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {t("aiProviders.dialog.model", {
-                        defaultValue: "Model ID (Optional)",
-                      })}
-                    </FormLabel>
+                    <div className="flex items-center justify-between gap-2">
+                      <FormLabel>
+                        {t("aiProviders.dialog.model", {
+                          defaultValue: "Model ID (Optional)",
+                        })}
+                      </FormLabel>
+                      {form.watch("type") !== "PERPLEXITY" && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          disabled={isLoadingModels}
+                          onClick={handleLoadModels}
+                        >
+                          {isLoadingModels && (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          )}
+                          {isLoadingModels
+                            ? t("aiProviders.dialog.loadingModels", {
+                                defaultValue: "Loading…",
+                              })
+                            : t("aiProviders.dialog.loadModels", {
+                                defaultValue: "Load models",
+                              })}
+                        </Button>
+                      )}
+                    </div>
                     <FormControl>
                       <Input
-                        placeholder={t("aiProviders.dialog.modelPlaceholder", {
-                          defaultValue: "e.g., gpt-4o, llama3",
-                        })}
+                        list="provider-models"
+                        placeholder={
+                          defaultModel(form.watch("type")) ??
+                          t("aiProviders.dialog.modelPlaceholder", {
+                            defaultValue: "e.g., gpt-4o, llama3",
+                          })
+                        }
                         {...field}
                       />
                     </FormControl>
+                    <datalist id="provider-models">
+                      {models.map((id) => (
+                        <option key={id} value={id} />
+                      ))}
+                    </datalist>
                     <FormMessage />
                   </FormItem>
                 )}
