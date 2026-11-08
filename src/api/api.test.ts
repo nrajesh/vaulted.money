@@ -631,6 +631,138 @@ describe("transactions", () => {
   });
 });
 
+describe("search interpretation", () => {
+  beforeEach(clearAll);
+
+  interface Interpretation {
+    query: string;
+    filters: {
+      combine: string;
+      date_range: { from: string | null; to: string | null } | null;
+      min_amount: number | null;
+      max_amount: number | null;
+      type: string | null;
+      accounts: string[];
+      categories: string[];
+      vendors: string[];
+      text: string;
+      corrections: { kind: string; typed: string; name: string }[];
+    };
+    params: Record<string, string | number>;
+    unmapped: { filter: string; reason: string }[];
+  }
+
+  const setup = async () => {
+    const ledger = await createLedger();
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/transactions`, {
+        date: "2026-10-05",
+        amount: -12,
+        account: "Joint Checking",
+        vendor: "Starbucks",
+        category: "Groceries",
+      }),
+      201,
+    );
+    const interpret = (q: string, extra: Record<string, string> = {}) =>
+      ok<Interpretation>(
+        call("GET", `/ledgers/${ledger.id}/search/interpret`, undefined, {
+          q,
+          today: "2026-11-08",
+          ...extra,
+        }),
+      );
+    return { ledger, interpret };
+  };
+
+  it("reads a phrase like the search box: typos, plurals, dates and amounts", async () => {
+    const { interpret } = await setup();
+    const body = await interpret(
+      "between 2025 jul and sep starbuks over 100 grocery",
+    );
+
+    expect(body.filters).toMatchObject({
+      combine: "all",
+      date_range: { from: "2025-07-01", to: "2025-09-30" },
+      min_amount: 100,
+      max_amount: null,
+      vendors: ["Starbucks"],
+      categories: ["Groceries"],
+      text: "",
+    });
+    expect(body.filters.corrections).toEqual(
+      expect.arrayContaining([
+        { kind: "vendor", typed: "starbuks", name: "Starbucks" },
+        { kind: "category", typed: "grocery", name: "Groceries" },
+      ]),
+    );
+  });
+
+  it("gives the matching transactions query, converting amounts to signed ones", async () => {
+    const { ledger, interpret } = await setup();
+    const body = await interpret(
+      "expenses over 20 at starbuks 2 weeks from today",
+    );
+
+    expect(body.params).toEqual({
+      from: "2026-11-08",
+      to: "2026-11-22",
+      vendor: "Starbucks",
+      type: "expense",
+      max_amount: -20,
+    });
+    expect(body.unmapped).toEqual([]);
+
+    // Feeding the params back into the list endpoint is accepted.
+    const list = await ok<{ total: number }>(
+      call(
+        "GET",
+        `/ledgers/${ledger.id}/transactions`,
+        undefined,
+        Object.fromEntries(
+          Object.entries(body.params).map(([k, v]) => [k, String(v)]),
+        ),
+      ),
+    );
+    expect(list.total).toBe(0);
+  });
+
+  it("says what the transactions endpoint cannot express", async () => {
+    const { interpret } = await setup();
+    const sizeOnly = await interpret("over 50");
+    expect(sizeOnly.params).toEqual({});
+    expect(sizeOnly.unmapped.map((u) => u.filter)).toEqual(["amount"]);
+
+    const top = await interpret("top 5 groceries");
+    expect(top.unmapped.map((u) => u.filter)).toContain("limit");
+  });
+
+  it("can switch typo matching off", async () => {
+    const { interpret } = await setup();
+    const exact = await interpret("starbuks", { typos: "false" });
+    expect(exact.filters.vendors).toEqual([]);
+    expect(exact.filters.text).toBe("starbuks");
+  });
+
+  it("changes nothing and rejects bad input", async () => {
+    const { ledger } = await setup();
+    const path = `/ledgers/${ledger.id}/search/interpret`;
+    expect((await call("GET", path)).status).toBe(400);
+    expect((await call("GET", path, undefined, { q: "   " })).status).toBe(400);
+    expect(
+      (await call("GET", path, undefined, { q: "x", today: "soon" })).status,
+    ).toBe(400);
+    expect(
+      (
+        await call("GET", "/ledgers/nope/search/interpret", undefined, {
+          q: "x",
+        })
+      ).status,
+    ).toBe(404);
+    expect((await call("POST", path, {})).status).toBe(405);
+  });
+});
+
 describe("scheduled transactions", () => {
   beforeEach(clearAll);
 

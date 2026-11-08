@@ -51,7 +51,6 @@ describe("ConversationalSearchInput suggestion", () => {
     expect(onUpdate.mock.calls[0][0]).toMatchObject({
       selectedVendors: ["starbucks"],
       minAmount: 20,
-      searchTerm: "",
     });
   });
 
@@ -62,6 +61,46 @@ describe("ConversationalSearchInput suggestion", () => {
     const update = onUpdate.mock.calls[0][0];
     expect(update).toEqual({ minAmount: 20, maxAmount: undefined });
     expect(update.selectedVendors).toBeUndefined();
+  });
+
+  it("keeps the other pieces on offer after one is taken", async () => {
+    const { onUpdate } = await openAndType("groceries over 20 netflix");
+    await userEvent.click(await screen.findByText("Over 20"));
+
+    // The taken piece is gone from the suggestion; the rest stay, popover open.
+    expect(screen.queryByText("Over 20")).not.toBeInTheDocument();
+    expect(screen.getByText("Category: Groceries")).toBeInTheDocument();
+    expect(screen.getByText(/Apply all 1|Understood as/)).toBeInTheDocument();
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(screen.getByText("Category: Groceries"));
+    expect(onUpdate).toHaveBeenCalledTimes(2);
+    expect(onUpdate.mock.calls[1][0]).toEqual({
+      selectedCategories: ["groceries"],
+    });
+  });
+
+  it("applies whatever is left with 'Apply all' and then closes", async () => {
+    const { onUpdate } = await openAndType("groceries over 20 starbucks");
+    await userEvent.click(await screen.findByText("Over 20"));
+    await userEvent.click(screen.getByText(/Apply all 2/));
+
+    expect(onUpdate).toHaveBeenCalledTimes(2);
+    expect(onUpdate.mock.calls[1][0]).toEqual({
+      selectedCategories: ["groceries"],
+      selectedVendors: ["starbucks"],
+    });
+    expect(screen.queryByText("Understood as")).not.toBeInTheDocument();
+  });
+
+  it("says how the filters combine, and offers Clear and Done", async () => {
+    await openAndType("groceries over 20");
+    expect(
+      await screen.findByText(/must match every filter/),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.queryByText("Understood as")).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/type to filter/i)).toHaveValue("");
   });
 
   it("has the suggestion selected first, so Enter accepts it", async () => {

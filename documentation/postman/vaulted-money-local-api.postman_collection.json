@@ -5505,6 +5505,175 @@
           ]
         },
         {
+          "name": "Search: interpret a phrase",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Reads the phrase the way the search box does\", () => {",
+                  "    const f = pm.response.json().filters;",
+                  "    pm.expect(f.combine).to.equal(\"all\");",
+                  "    pm.expect(f.vendors).to.eql([\"PM Cafe\"]);",
+                  "    pm.expect(f.type).to.equal(\"expense\");",
+                  "    pm.expect(f.min_amount).to.equal(5);",
+                  "    pm.expect(f.date_range.from).to.equal(\"2020-01-01\");",
+                  "    pm.expect(f.text).to.equal(\"\");",
+                  "});",
+                  "",
+                  "pm.test(\"Reports the typo it corrected\", () => {",
+                  "    const c = pm.response.json().filters.corrections;",
+                  "    pm.expect(c).to.have.lengthOf(1);",
+                  "    pm.expect(c[0]).to.include({ kind: \"vendor\", typed: \"pm cafee\", name: \"PM Cafe\" });",
+                  "});",
+                  "",
+                  "pm.test(\"Gives the equivalent transactions query, with a signed amount\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.params).to.include({ vendor: \"PM Cafe\", type: \"expense\", from: \"2020-01-01\" });",
+                  "    pm.expect(body.params.max_amount).to.equal(-5);",
+                  "    pm.expect(body.unmapped).to.eql([]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Reads a natural-language phrase with the same code as the search box in the app and returns the structured filters (`filters`), the equivalent query for `GET /transactions` (`params`) and anything that endpoint cannot express (`unmapped`). Every filter must match (`combine: all`); several values of one kind match either. Changes nothing. Optional: `today=YYYY-MM-DD` for repeatable dates, `typos=false` for exact names.",
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/search/interpret?q=expenses over 5 pm cafee since 2020",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "search",
+                "interpret"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "expenses over 5 pm cafee since 2020"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "description": "Reads a natural-language phrase with the same code as the search box in the app and returns the structured filters (`filters`), the equivalent query for `GET /transactions` (`params`) and anything that endpoint cannot express (`unmapped`). Every filter must match (`combine: all`); several values of one kind match either. Changes nothing. Optional: `today=YYYY-MM-DD` for repeatable dates, `typos=false` for exact names.",
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/search/interpret?q=expenses over 5 pm cafee since 2020",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers",
+                    "{{ledgerId}}",
+                    "search",
+                    "interpret"
+                  ],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "expenses over 5 pm cafee since 2020"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"query\": \"expenses over 5 pm cafee since 2020\",\n  \"filters\": {\n    \"combine\": \"all\",\n    \"date_range\": {\n      \"from\": \"2020-01-01\",\n      \"to\": \"2026-11-08\"\n    },\n    \"all_time\": false,\n    \"min_amount\": 5,\n    \"max_amount\": null,\n    \"type\": \"expense\",\n    \"accounts\": [],\n    \"categories\": [],\n    \"sub_categories\": [],\n    \"vendors\": [\n      \"PM Cafe\"\n    ],\n    \"text\": \"\",\n    \"limit\": null,\n    \"sort\": null,\n    \"corrections\": [\n      {\n        \"kind\": \"vendor\",\n        \"typed\": \"pm cafee\",\n        \"name\": \"PM Cafe\"\n      }\n    ]\n  },\n  \"params\": {\n    \"from\": \"2020-01-01\",\n    \"to\": \"2026-11-08\",\n    \"vendor\": \"PM Cafe\",\n    \"type\": \"expense\",\n    \"max_amount\": -5\n  },\n  \"unmapped\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Search: interpret without q -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "",
+                  "pm.test(\"Response body contains error information\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"error\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "`q` is required.",
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/search/interpret",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "search",
+                "interpret"
+              ],
+              "query": []
+            }
+          },
+          "response": [
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "description": "`q` is required.",
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/search/interpret",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers",
+                    "{{ledgerId}}",
+                    "search",
+                    "interpret"
+                  ],
+                  "query": []
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Query parameter \\\"q\\\" is required\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Get transaction",
           "event": [
             {

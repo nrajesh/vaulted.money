@@ -5,7 +5,7 @@ import {
   type ActiveFilters,
 } from "@/components/filters/ActiveFiltersDisplay";
 import { useTransactions } from "@/contexts/TransactionsContext";
-import { slugify } from "@/lib/utils";
+import { buildSearchEntities } from "@/utils/searchInterpretation";
 import type { ParsedFilterState } from "@/utils/searchParser";
 
 /** The filter state this box writes to: the global one or a page's own. */
@@ -80,62 +80,30 @@ export const TransactionSearchBox = ({ filters, placeholder }: Props) => {
     }
   };
 
-  // Stable references: the search box memoises its parse on these lists.
-  const categoryOptions = React.useMemo(
-    () => categories.map((c) => ({ name: c.name, slug: slugify(c.name) })),
-    [categories],
-  );
-  const subCategoryOptions = React.useMemo(() => {
-    const unique = new Map<string, { name: string; slug: string }>();
-    subCategories?.forEach((s) => {
-      const slug = slugify(s.name);
-      if (!unique.has(slug)) unique.set(slug, { name: s.name, slug });
-    });
-    return Array.from(unique.values());
-  }, [subCategories]);
-  const accountOptions = React.useMemo(
+  // One list of names, built the way the API builds it, and stable between
+  // renders because the search box memoises its parse on it. Vendors seen on
+  // transactions make a payee typed a moment ago findable before it is saved.
+  const entities = React.useMemo(
     () =>
-      accounts.map((a) => ({
-        name: a.name,
-        slug: slugify(a.name),
-        type: a.type,
-      })),
-    [accounts],
+      buildSearchEntities({
+        accounts,
+        categories,
+        subCategories: subCategories ?? [],
+        vendors,
+        extraVendorNames: transactions.map((t) => t.vendor).filter(Boolean),
+      }),
+    [accounts, categories, subCategories, vendors, transactions],
   );
-  const vendorOptions = React.useMemo(() => {
-    const unique = new Map<string, { name: string; slug: string }>();
-
-    // Payees from the database are the reliable source.
-    vendors.forEach((v) => {
-      const slug = slugify(v.name);
-      if (!unique.has(slug)) unique.set(slug, { name: v.name, slug });
-    });
-
-    // Vendors seen on transactions make a payee typed a moment ago findable
-    // before the background sync catches up, except names that are accounts.
-    const accountSlugs = new Set(accounts.map((a) => slugify(a.name)));
-    transactions.forEach((t) => {
-      if (!t.vendor) return;
-      const slug = slugify(t.vendor);
-      if (!unique.has(slug) && !accountSlugs.has(slug)) {
-        unique.set(slug, { name: t.vendor, slug });
-      }
-    });
-
-    return Array.from(unique.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-  }, [vendors, transactions, accounts]);
 
   return (
     <div className="w-full space-y-4">
       <ConversationalSearchInput
         onUpdate={handleUpdate}
         placeholder={placeholder}
-        categories={categoryOptions}
-        subCategories={subCategoryOptions}
-        accounts={accountOptions}
-        vendors={vendorOptions}
+        categories={entities.categories}
+        subCategories={entities.subCategories}
+        accounts={entities.accounts}
+        vendors={entities.vendors}
       />
       <ActiveFilterChips filters={filters} />
     </div>

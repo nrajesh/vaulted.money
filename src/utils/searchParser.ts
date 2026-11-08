@@ -200,6 +200,8 @@ export interface ParseOptions {
    * callers that show the interpretation for confirmation turn it on.
    */
   fuzzy?: boolean;
+  /** What "today" means, for reproducible results. Defaults to the clock. */
+  now?: Date;
 }
 
 interface SearchContext {
@@ -241,7 +243,7 @@ export const parseSearchQuery = (
     result.dateRange = undefined;
     remainingQuery = remainingQuery.replace(/all time/gi, "").trim();
   }
-  const today = new Date();
+  const today = options.now ? new Date(options.now) : new Date();
   today.setHours(12, 0, 0, 0); // Normalize today to noon
 
   // Helper to replace matched text

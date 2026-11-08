@@ -27,13 +27,11 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ParsedFilterState, isOpenRangeStart } from "@/utils/searchParser";
 import {
-  ParsedFilterState,
-  parseSearchQuery,
-  isOpenRangeStart,
-} from "@/utils/searchParser";
-import {
-  buildInterpretation,
+  interpretQuery,
+  mergeInterpretationUpdates,
+  type InterpretationItem,
   type InterpretationPart,
 } from "@/utils/searchInterpretation";
 import { formatDisplayDate } from "@/utils/dateFormat";
@@ -50,6 +48,10 @@ interface ConversationalSearchInputProps {
   placeholder?: string;
   className?: string;
 }
+
+/** Identifies a suggested piece, so one already taken is not offered again. */
+const partKey = (part: InterpretationPart): string =>
+  part.kind === "entity" ? `entity:${part.entity}:${part.slug}` : part.kind;
 
 type SearchStep = "ROOT" | "CATEGORY" | "ACCOUNT" | "VENDOR" | "DATE";
 
@@ -72,6 +74,7 @@ export function ConversationalSearchInput({
     if (!open) {
       setStep("ROOT");
       setInput("");
+      setApplied([]);
     }
   }, [open]);
 
@@ -80,18 +83,23 @@ export function ConversationalSearchInput({
   // result; nothing is applied until they choose it.
   const interpretation = React.useMemo(() => {
     if (step !== "ROOT" || input.trim().length <= 2) return null;
-    const parsed = parseSearchQuery(
+    return interpretQuery(
       input,
       { categories, subCategories, accounts, vendors },
       { fuzzy: true },
-    );
-    return buildInterpretation(parsed, {
-      categories,
-      subCategories,
-      accounts,
-      vendors,
-    });
+    ).interpretation;
   }, [step, input, categories, subCategories, accounts, vendors]);
+
+  // Pieces the user has already taken. They stay applied (and show as chips
+  // outside); the rest of the suggestion stays open so more can be picked.
+  const [applied, setApplied] = React.useState<string[]>([]);
+  const remaining = React.useMemo(
+    () =>
+      interpretation?.items.filter(
+        (item) => !applied.includes(partKey(item.part)),
+      ) ?? [],
+    [interpretation, applied],
+  );
 
   const handleSelectType = (nextStep: SearchStep) => {
     setStep(nextStep);
@@ -240,8 +248,9 @@ export function ConversationalSearchInput({
 
   // A suggestion that relies on a typo correction goes last, so Enter keeps
   // doing the plain search; exact interpretations are selected first.
-  const suggestionLast =
-    interpretation?.parts.some((p) => p.kind === "entity" && p.typed) ?? false;
+  const suggestionLast = remaining.some(
+    (item) => item.part.kind === "entity" && item.part.typed,
+  );
 
   const partIcon = (part: InterpretationPart) => {
     const className = "mr-2 h-4 w-4 shrink-0 text-primary";
@@ -271,41 +280,53 @@ export function ConversationalSearchInput({
     }
   };
 
-  const acceptSuggestion = (update: Partial<ParsedFilterState>) => {
-    onUpdate(update);
+  // Taking one piece applies it and leaves the popover open for the others.
+  const takePiece = (item: InterpretationItem) => {
+    onUpdate(item.update);
+    setApplied((previous) => [...previous, partKey(item.part)]);
+  };
+
+  const takeAllRemaining = () => {
+    onUpdate(mergeInterpretationUpdates(remaining));
     setOpen(false);
   };
 
   // Every understood piece is its own row, so the user can take just one of
-  // them; with several, "apply all" comes first and is the default.
-  const suggestionGroup = interpretation && (
+  // them; with several left, "apply all" comes first and is the default.
+  const suggestionGroup = remaining.length > 0 && (
     <CommandGroup
       forceMount
       heading={t("filters.conversational.suggest.heading", {
         defaultValue: "Understood as",
       })}
     >
-      {interpretation.items.length > 1 && (
+      <div className="px-2 pb-1 text-xs text-muted-foreground">
+        {t("filters.conversational.suggest.combineHint", {
+          defaultValue:
+            "Results must match every filter you pick. Several of the same kind (two vendors) match either.",
+        })}
+      </div>
+      {remaining.length > 1 && (
         <CommandItem
           forceMount
           value={"suggest-all-" + input}
-          onSelect={() => acceptSuggestion(interpretation.update)}
+          onSelect={takeAllRemaining}
         >
           <Sparkles className="mr-2 h-4 w-4 shrink-0 text-primary" />
           <span className="font-medium">
             {t("filters.conversational.suggest.applyAll", {
-              count: interpretation.items.length,
+              count: remaining.length,
               defaultValue: "Apply all {{count}}",
             })}
           </span>
         </CommandItem>
       )}
-      {interpretation.items.map((item, index) => (
+      {remaining.map((item) => (
         <CommandItem
-          key={index}
+          key={partKey(item.part)}
           forceMount
-          value={`suggest-${index}-${input}`}
-          onSelect={() => acceptSuggestion(item.update)}
+          value={`suggest-${partKey(item.part)}-${input}`}
+          onSelect={() => takePiece(item)}
         >
           {partIcon(item.part)}
           <span className="rounded-md bg-primary/10 px-2 py-0.5 text-sm">
@@ -565,7 +586,10 @@ export function ConversationalSearchInput({
               defaultValue:
                 "Type to filter (e.g. 'Groceries', 'Next Week', 'Checking')...",
             })}
-            onValueChange={setInput}
+            onValueChange={(value) => {
+              setInput(value);
+              setApplied([]);
+            }}
             value={input}
             onKeyDown={(e) => {
               if (e.key === "Backspace" && !input && step !== "ROOT")
@@ -597,6 +621,23 @@ export function ConversationalSearchInput({
             </CommandEmpty>
             {renderStepContent()}
           </CommandList>
+          {(input || applied.length > 0) && (
+            <div className="flex items-center justify-end gap-2 border-t p-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setInput("");
+                  setApplied([]);
+                }}
+              >
+                {t("filters.conversational.clear", { defaultValue: "Clear" })}
+              </Button>
+              <Button size="sm" onClick={() => setOpen(false)}>
+                {t("filters.conversational.done", { defaultValue: "Done" })}
+              </Button>
+            </div>
+          )}
         </Command>
       </PopoverContent>
     </Popover>

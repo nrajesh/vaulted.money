@@ -12,6 +12,7 @@ import { languageRoutes } from "./languages";
 import { ledgerRoutes } from "./ledgers";
 import { maintenanceRoutes } from "./maintenance";
 import { scheduledTransactionRoutes } from "./scheduledTransactions";
+import { searchRoutes } from "./search";
 import { settingsRoutes } from "./settings";
 import { transactionRoutes } from "./transactions";
 import { vendorRoutes } from "./vendors";
@@ -22,6 +23,7 @@ const resourceRoutes: RouteDef[] = [
   ...vendorRoutes,
   ...categoryRoutes,
   ...transactionRoutes,
+  ...searchRoutes,
   ...maintenanceRoutes,
   ...csvRoutes,
   ...scheduledTransactionRoutes,
