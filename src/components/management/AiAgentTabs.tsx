@@ -34,7 +34,8 @@ const AiAgentTabs = () => {
               defaultValue: "Connect agent",
             }),
             hint: t("layout.nav.connectAgentHint", {
-              defaultValue: "Let an AI assistant like Claude use your data",
+              defaultValue:
+                "Analyze, chat or debate with your data using an AI agent",
             }),
           },
         ]
@@ -46,7 +47,7 @@ const AiAgentTabs = () => {
   return (
     <nav
       aria-label={t("layout.nav.aiAndAgents", { defaultValue: "AI & agents" })}
-      className="mb-4 flex flex-wrap gap-2"
+      className="mb-4 grid gap-2 sm:grid-cols-2"
     >
       {tabs.map(({ to, icon: Icon, label, hint }) => {
         const active = pathname === to;
@@ -56,7 +57,7 @@ const AiAgentTabs = () => {
             to={to}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex min-w-[12rem] flex-1 items-start gap-3 rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-none",
+              "flex h-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
                 ? "border-primary bg-primary/5"
                 : "hover:bg-muted/60 text-muted-foreground",

@@ -906,7 +906,7 @@ const Layout = () => {
           isHomepageMobilePreview && "h-screen overflow-hidden",
         )}
       >
-        <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:px-6 md:static">
+        <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
           <div className="flex min-w-0 items-center gap-3">
             <SidebarTrigger className="h-10 w-10 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-gray-700 dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
               <img

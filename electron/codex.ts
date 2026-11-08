@@ -45,13 +45,30 @@ const extraToolFolders = (deps: ClaudeCodeDeps): string[] => {
   ].filter(Boolean);
 };
 
+/**
+ * The ChatGPT desktop app has Codex built in and ships its own `codex` tool, so
+ * a user with only the app has no separate install on PATH.
+ */
+const bundledCodexFolders = (deps: ClaudeCodeDeps): string[] =>
+  deps.platform === "darwin"
+    ? [
+        "/Applications/ChatGPT.app/Contents/Resources",
+        path.join(
+          deps.home,
+          "Applications",
+          "ChatGPT.app",
+          "Contents",
+          "Resources",
+        ),
+      ]
+    : [];
+
 /** Returns the full path of the `codex` tool, or null. */
 export const findCodex = (deps: ClaudeCodeDeps): string | null =>
-  findOnPath(
-    deps,
-    deps.platform === "win32" ? "codex.exe" : "codex",
-    extraToolFolders(deps),
-  );
+  findOnPath(deps, deps.platform === "win32" ? "codex.exe" : "codex", [
+    ...extraToolFolders(deps),
+    ...bundledCodexFolders(deps),
+  ]);
 
 export const detectCodex = (deps: ClaudeCodeDeps): CodexDetection => ({
   cli: findCodex(deps) !== null,

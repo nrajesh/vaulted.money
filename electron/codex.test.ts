@@ -47,6 +47,16 @@ describe("findCodex", () => {
     expect(detectCodex(deps)).toEqual({ cli: true });
   });
 
+  it("finds the Codex built into the ChatGPT app", () => {
+    const deps = makeDeps({
+      isRunnable: (p) =>
+        p === "/Applications/ChatGPT.app/Contents/Resources/codex",
+    });
+    expect(findCodex(deps)).toBe(
+      "/Applications/ChatGPT.app/Contents/Resources/codex",
+    );
+  });
+
   it("reports it missing when it is not installed", () => {
     expect(detectCodex(makeDeps())).toEqual({ cli: false });
   });
