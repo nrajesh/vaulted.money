@@ -130,7 +130,7 @@ export const LanguageSwitcher = ({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
           aria-label={t("language.label")}
         >
           <LanguageIcon className="h-5 w-5 text-slate-600 dark:text-gray-300" />

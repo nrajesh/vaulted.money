@@ -545,10 +545,10 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
     const colorMap = {
       emerald: active
         ? "bg-emerald-600 text-white shadow-sm"
-        : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700",
+        : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-input hover:border-emerald-300 dark:hover:border-emerald-700",
       rose: active
         ? "bg-rose-600 text-white shadow-sm"
-        : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-700",
+        : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-input hover:border-rose-300 dark:hover:border-rose-700",
     };
 
     return (

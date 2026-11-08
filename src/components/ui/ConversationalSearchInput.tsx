@@ -93,12 +93,17 @@ export function ConversationalSearchInput({
   // Pieces the user has already taken. They stay applied (and show as chips
   // outside); the rest of the suggestion stays open so more can be picked.
   const [applied, setApplied] = React.useState<string[]>([]);
+  // While the last word is still being typed ("ove" on its way to "over"),
+  // what is left over is not a finished piece of text, so it is not offered.
+  const lastWordFinished = /\s$/.test(input);
   const remaining = React.useMemo(
     () =>
       interpretation?.items.filter(
-        (item) => !applied.includes(partKey(item.part)),
+        (item) =>
+          !applied.includes(partKey(item.part)) &&
+          (item.part.kind !== "text" || lastWordFinished),
       ) ?? [],
-    [interpretation, applied],
+    [interpretation, applied, lastWordFinished],
   );
 
   const handleSelectType = (nextStep: SearchStep) => {

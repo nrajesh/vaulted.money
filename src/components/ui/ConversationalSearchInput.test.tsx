@@ -63,6 +63,14 @@ describe("ConversationalSearchInput suggestion", () => {
     expect(update.selectedVendors).toBeUndefined();
   });
 
+  it("does not offer a half-typed word as text", async () => {
+    await openAndType("groceries ove");
+    expect(await screen.findByText("Category: Groceries")).toBeInTheDocument();
+    expect(screen.queryByText(/Text:/)).not.toBeInTheDocument();
+    await userEvent.type(screen.getByPlaceholderText(/type to filter/i), "r ");
+    expect(await screen.findByText(/Text: "over"/)).toBeInTheDocument();
+  });
+
   it("keeps the other pieces on offer after one is taken", async () => {
     const { onUpdate } = await openAndType("groceries over 20 netflix");
     await userEvent.click(await screen.findByText("Over 20"));
