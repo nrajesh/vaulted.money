@@ -2,6 +2,13 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -342,7 +349,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -353,12 +360,10 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         defaultValue: "API Type",
                       })}
                     </FormLabel>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    <Select
                       value={field.value}
-                      onChange={(e) => {
-                        const newType = e.target
-                          .value as keyof typeof PROVIDER_DOCS;
+                      onValueChange={(value) => {
+                        const newType = value as keyof typeof PROVIDER_DOCS;
                         field.onChange(newType);
 
                         // Auto-fill endpoint if current is empty or matches another provider's default
@@ -374,17 +379,24 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         }
                       }}
                     >
-                      <option value="OPENAI">OpenAI</option>
-                      <option value="GEMINI">Google Gemini</option>
-                      <option value="ANTHROPIC">Anthropic</option>
-                      <option value="MISTRAL">Mistral</option>
-                      <option value="PERPLEXITY">Perplexity</option>
-                      <option value="CUSTOM">
-                        {t("aiProviders.dialog.customOption", {
-                          defaultValue: "Custom (OpenAI Compatible)",
-                        })}
-                      </option>
-                    </select>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="OPENAI">OpenAI</SelectItem>
+                        <SelectItem value="GEMINI">Google Gemini</SelectItem>
+                        <SelectItem value="ANTHROPIC">Anthropic</SelectItem>
+                        <SelectItem value="MISTRAL">Mistral</SelectItem>
+                        <SelectItem value="PERPLEXITY">Perplexity</SelectItem>
+                        <SelectItem value="CUSTOM">
+                          {t("aiProviders.dialog.customOption", {
+                            defaultValue: "Custom (OpenAI Compatible)",
+                          })}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     {PROVIDER_DOCS[field.value as keyof typeof PROVIDER_DOCS]
                       ?.url && (
                       <a
@@ -395,7 +407,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[10px] text-indigo-500 hover:underline inline-block mt-1"
+                        className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline inline-block mt-1"
                       >
                         {t("aiProviders.dialog.docs", {
                           defaultValue: "View Documentation & Models →",

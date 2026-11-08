@@ -2,6 +2,13 @@ import * as React from "react";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -249,20 +256,25 @@ const AddEditPayeeDialog: React.FC<AddEditPayeeDialogProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Account Type</FormLabel>
-                      <div className="relative w-full">
-                        <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={field.value}
-                          onChange={field.onChange}
-                          // disabled={!!payee} // Allow changing account type
-                        >
-                          <option value="Checking">Checking</option>
-                          <option value="Savings">Savings</option>
-                          <option value="Credit Card">Credit Card</option>
-                          <option value="Investment">Investment</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Checking">Checking</SelectItem>
+                          <SelectItem value="Savings">Savings</SelectItem>
+                          <SelectItem value="Credit Card">
+                            Credit Card
+                          </SelectItem>
+                          <SelectItem value="Investment">Investment</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

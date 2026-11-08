@@ -86,7 +86,7 @@ const AIProviderManagement = () => {
             </span>
             <Link
               to="/settings"
-              className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+              className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline flex items-center gap-1"
             >
               {t("aiProviders.page.settingsLink", {
                 defaultValue: "Go to Settings to manage API keys →",
