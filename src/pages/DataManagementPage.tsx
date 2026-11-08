@@ -368,10 +368,7 @@ const DataManagementPage = () => {
             </ThemedCardDescription>
           </ThemedCardHeader>
           <ThemedCardContent>
-            <Button
-              onClick={() => setIsGenerateConfirmOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
+            <Button onClick={() => setIsGenerateConfirmOpen(true)}>
               <RotateCcw className="mr-2 h-4 w-4" />
               {t("dataManagement.demo.button", {
                 defaultValue: "Generate Data",

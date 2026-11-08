@@ -3,6 +3,15 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ConnectAgentPage from "./ConnectAgentPage";
 
+const aiFeatures = vi.hoisted(() => ({ enabled: true }));
+vi.mock("@/hooks/useAiFeatures", () => ({
+  useAiFeatures: () => ({
+    enabled: aiFeatures.enabled,
+    ready: true,
+    setEnabled: vi.fn(),
+  }),
+}));
+
 const win = window as unknown as { electron?: unknown };
 
 const status = {
@@ -29,6 +38,7 @@ const renderPage = () =>
 describe("ConnectAgentPage", () => {
   afterEach(() => {
     delete win.electron;
+    aiFeatures.enabled = true;
   });
 
   it("explains that it is desktop-only outside Electron", () => {
@@ -37,19 +47,15 @@ describe("ConnectAgentPage", () => {
       screen.getByRole("heading", { level: 1, name: "Connect to agent" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/desktop app only/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /Back to Settings/ }),
-    ).toHaveAttribute("href", "/settings");
   });
 
-  it("links back to AI Integrations for categorising with your own API key", () => {
+  it("shows only the AI switch when AI features are off", () => {
+    aiFeatures.enabled = false;
     renderPage();
+    expect(screen.getByText("AI is off")).toBeInTheDocument();
     expect(
-      screen.getByText(/Looking for AI categorisation with your own API key\?/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "See AI Integrations in Settings." }),
-    ).toHaveAttribute("href", "/settings");
+      screen.queryByRole("heading", { level: 1, name: "Connect to agent" }),
+    ).toBeNull();
   });
 
   it("explains an older desktop build without the API bridge", () => {

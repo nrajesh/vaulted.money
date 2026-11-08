@@ -144,7 +144,7 @@ export const TransactionPageHeader: React.FC<TransactionPageHeaderProps> = ({
           </Button>
           <Button
             onClick={onAddTransaction}
-            className="col-span-full min-w-0 justify-center bg-indigo-600 text-white hover:bg-indigo-700 sm:col-span-1 sm:flex-none"
+            className="col-span-full min-w-0 justify-center sm:col-span-1 sm:flex-none"
           >
             <Plus className="mr-2 h-4 w-4" />
             {t("transactions.header.addTransaction", {

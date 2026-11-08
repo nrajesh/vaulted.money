@@ -1067,7 +1067,7 @@ const LedgerEntryPage = () => {
                   // With data present this wipes everything, so it must not look
                   // like the main call to action.
                   ledgers.length === 0
-                    ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive",
                 )}
               >
