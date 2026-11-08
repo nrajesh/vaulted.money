@@ -150,6 +150,12 @@ export function ConversationalSearchInput({
         });
       }
       case "amount":
+        if (part.min !== undefined && part.min === part.max) {
+          return t("filters.conversational.suggest.amountExact", {
+            amount: formatAmount(part.min),
+            defaultValue: "Amount: {{amount}}",
+          });
+        }
         if (part.min !== undefined && part.max !== undefined) {
           return t("filters.conversational.suggest.amountBetween", {
             min: formatAmount(part.min),

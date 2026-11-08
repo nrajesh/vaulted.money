@@ -19,7 +19,7 @@ import {
   setDay,
 } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { findFuzzyPhrase } from "@/utils/fuzzyMatch";
+import { editDistance, findFuzzyPhrase } from "@/utils/fuzzyMatch";
 
 const MONTH_PREFIXES = [
   "jan",
@@ -110,6 +110,11 @@ const FUZZY_IGNORED_WORDS: ReadonlySet<string> = new Set([
   "decade",
   "century",
   // Filler words dropped from the search text further down.
+  "there",
+  "anything",
+  "which",
+  "where",
+  "please",
   "all",
   "show",
   "list",
@@ -129,6 +134,33 @@ const FUZZY_IGNORED_WORDS: ReadonlySet<string> = new Set([
 export const OPEN_RANGE_START = new Date(1900, 0, 1, 12);
 export const isOpenRangeStart = (date: Date): boolean =>
   date.getFullYear() <= OPEN_RANGE_START.getFullYear();
+
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+};
+
+/** A count written as digits, a number word, or "a"/"an". */
+const countOf = (word: string): number => {
+  const w = word.toLowerCase();
+  if (w === "a" || w === "an") return 1;
+  const digits = parseInt(w, 10);
+  return Number.isNaN(digits) ? (NUMBER_WORDS[w] ?? 0) : digits;
+};
+
+/** Words that make a request read like a sentence but narrow nothing. */
+const FILLER_WORDS =
+  /\b(and|&|all|transactions?|items?|show|me|list|my|in|on|at|during|account(?:s)?|with|for|of|from|is|are|was|were|there|any|anything|a|an|the|did|do|does|i|have|has|had|find|get|give|what|which|how|much|many|than|to|that|this|these|those|it|its|if|can|could|would|should|please|where|when)\b/gi;
 
 /** Regex alternation of month names and abbreviations, for building patterns. */
 const MONTH_PATTERN = [...FULL_MONTH_NAMES, ...MONTH_PREFIXES, "sept"].join(
@@ -195,6 +227,11 @@ export const parseSearchQuery = (
   };
 
   let remainingQuery = query;
+  // People write "2025 jul" as often as "jul 2025"; read both the same way.
+  remainingQuery = remainingQuery.replace(
+    new RegExp(`\\b((?:19|20)\\d{2})\\s+(${MONTH_PATTERN})\\b`, "gi"),
+    "$2 $1",
+  );
   const lowerQuery = query.toLowerCase();
 
   if (lowerQuery.includes("all time")) {
@@ -263,10 +300,27 @@ export const parseSearchQuery = (
   if (betweenMatch && !looksLikeMoney) {
     // Each end may be a whole month or year, so take the earliest start and
     // the latest end whichever order they were typed in.
-    const firstStart = parseSimpleDate(betweenMatch[1]);
-    const firstEnd = parseSimpleDate(betweenMatch[1], true);
-    const secondStart = parseSimpleDate(betweenMatch[2]);
-    const secondEnd = parseSimpleDate(betweenMatch[2], true);
+    // "between jul 2025 and sep" / "between jul and sep 2025": a month with
+    // no year borrows the other side's year (or this year if neither has one).
+    let first = betweenMatch[1].trim();
+    let second = betweenMatch[2].trim();
+    const isBareMonth = (text: string) =>
+      new RegExp(`^(${MONTH_PATTERN})\\.?$`, "i").test(text);
+    const yearOf = (text: string) => text.match(/\b((?:19|20)\d{2})\s*$/)?.[1];
+    if (isBareMonth(first) && !isBareMonth(second)) {
+      first = `${first} ${yearOf(second) ?? today.getFullYear()}`;
+    }
+    if (isBareMonth(second)) {
+      const startYear = yearOf(first) ?? String(today.getFullYear());
+      const wraps =
+        isBareMonth(first) && monthIndexOf(second) < monthIndexOf(first);
+      if (isBareMonth(first)) first = `${first} ${startYear}`;
+      second = `${second} ${wraps ? Number(startYear) + 1 : startYear}`;
+    }
+    const firstStart = parseSimpleDate(first);
+    const firstEnd = parseSimpleDate(first, true);
+    const secondStart = parseSimpleDate(second);
+    const secondEnd = parseSimpleDate(second, true);
     if (firstStart && firstEnd && secondStart && secondEnd) {
       result.dateRange = {
         from: firstStart < secondStart ? firstStart : secondStart,
@@ -321,6 +375,34 @@ export const parseSearchQuery = (
           result.dateRange = { from: longAgo, to: periodEnd };
         }
         remainingQuery = remainingQuery.replace(boundMatch[0], "").trim();
+      }
+    }
+  }
+
+  // Ahead of today: "2 weeks from today", "3 days from now", "in 2 weeks".
+  // Must come before the "today" keyword below, which would take "today" out.
+  if (!result.dateRange) {
+    const countPattern = `\\d+|${Object.keys(NUMBER_WORDS).join("|")}|an?`;
+    const unitPattern = "days?|weeks?|months?|years?";
+    const aheadMatch = remainingQuery.match(
+      new RegExp(
+        `\\b(?:in\\s+)?(${countPattern})\\s+(${unitPattern})\\s+(?:from\\s+(?:today|now)|ahead|later|hence)\\b|\\bin\\s+(${countPattern})\\s+(${unitPattern})\\b`,
+        "i",
+      ),
+    );
+    if (aheadMatch) {
+      const count = countOf(aheadMatch[1] ?? aheadMatch[3]);
+      const unit = (aheadMatch[2] ?? aheadMatch[4]).toLowerCase();
+      if (count > 0) {
+        const end = unit.startsWith("day")
+          ? addDays(today, count)
+          : unit.startsWith("week")
+            ? addWeeks(today, count)
+            : unit.startsWith("month")
+              ? addMonths(today, count)
+              : addYears(today, count);
+        result.dateRange = { from: today, to: end };
+        remainingQuery = remainingQuery.replace(aheadMatch[0], "").trim();
       }
     }
   }
@@ -889,6 +971,27 @@ export const parseSearchQuery = (
     }
   }
 
+  // A bare amount with a currency ("€100", "100 euros") means that amount.
+  if (result.minAmount === undefined && result.maxAmount === undefined) {
+    const currencyWords = String.raw`(?:eur|euros?|usd|dollars?|gbp|pounds?|inr|rupees?)\b`;
+    const bareMatch =
+      remainingQuery.match(
+        new RegExp(String.raw`(?<![\w.])[$€£₹]\s*${AMOUNT}`, "i"),
+      ) ??
+      remainingQuery.match(
+        new RegExp(
+          String.raw`(?<![\w.])${AMOUNT}\s*(?:[$€£₹]|${currencyWords})`,
+          "i",
+        ),
+      );
+    if (bareMatch) {
+      const exact = toAmount(bareMatch[1], bareMatch[2]);
+      result.minAmount = exact;
+      result.maxAmount = exact;
+      remainingQuery = remainingQuery.replace(bareMatch[0], "").trim();
+    }
+  }
+
   // --- 2. Entity Matching (Fuzzy/Exact) ---
   // We split the query into words and also try to match multi-word phrases against our lists.
   // A simple approach: iterate through all known entities and check if their name exists in the query.
@@ -1197,7 +1300,7 @@ export const parseSearchQuery = (
   // misspelled name ("starbuks", "grocries"). Collect every plausible match
   // first and only then remove them, so each match's position refers to the
   // same text.
-  if (options.fuzzy) {
+  const approximateMatch = (typos: boolean) => {
     const fuzzySpans: { start: number; end: number }[] = [];
     const candidates: {
       kind: NonNullable<ParsedFilterState["fuzzyMatches"]>[number]["kind"];
@@ -1215,6 +1318,7 @@ export const parseSearchQuery = (
           remainingQuery,
           entity.name,
           FUZZY_IGNORED_WORDS,
+          { maxEdits: typos ? undefined : 0 },
         );
         if (match) candidates.push({ kind, slug: entity.slug, match });
       }
@@ -1272,7 +1376,11 @@ export const parseSearchQuery = (
           remainingQuery.slice(span.end);
       });
     remainingQuery = remainingQuery.replace(/\s+/g, " ").trim();
-  }
+  };
+  // "grocery" for "Groceries" is certain enough to use as typed; spelling
+  // mistakes are only guessed at when the caller will show the result first.
+  approximateMatch(false);
+  if (options.fuzzy) approximateMatch(true);
 
   // --- 4. Special Keywords ("All Transactions", "All Expenses", "Income") ---
 
@@ -1325,12 +1433,22 @@ export const parseSearchQuery = (
   // Clean up remaining query (remove dangling & , and, and filler words)
   // Clean up remaining query (remove dangling & , and, and filler words)
   let cleanSearchTerm = remainingQuery
-    .replace(
-      /\b(and|&|all|transactions?|items?|show|me|list|my|in|on|at|during|account(?:s)?|with|for|of|from)\b/gi,
-      " ",
-    )
+    .replace(FILLER_WORDS, " ")
     .replace(/\s+/g, " ") // Collapse spaces
     .trim();
+
+  // "accont" and "transction" are filler too, just misspelled.
+  cleanSearchTerm = cleanSearchTerm
+    .split(" ")
+    .filter(
+      (word) =>
+        !["account", "accounts", "transaction", "transactions"].some(
+          (filler) =>
+            word.length >= 6 &&
+            editDistance(word.toLowerCase(), filler, 1) <= 1,
+        ),
+    )
+    .join(" ");
 
   // If just punctuation remains, clear it
   if (/^[^a-zA-Z0-9]+$/.test(cleanSearchTerm)) {

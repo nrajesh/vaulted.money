@@ -293,3 +293,84 @@ describe("review fixes", () => {
     expect(result?.update.selectedAccounts).toHaveLength(5);
   });
 });
+
+describe("conversational queries", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 8, 10, 0, 0));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const sentenceContext = {
+    ...context,
+    accounts: [
+      ...context.accounts,
+      { name: "Joint Checking", slug: "joint-checking", type: "checking" },
+    ],
+  };
+
+  it("reads a full sentence with a future date, typos and an amount", () => {
+    const parsed = parseSearchQuery(
+      "2 weeks from today is there any transaction in joint accont in grocies €100",
+      sentenceContext,
+      { fuzzy: true },
+    );
+    expect([ymd(parsed.dateRange?.from), ymd(parsed.dateRange?.to)]).toEqual([
+      "2026-11-08",
+      "2026-11-22",
+    ]);
+    expect(parsed.selectedAccounts).toEqual(["joint-checking"]);
+    expect(parsed.selectedCategories).toEqual(["groceries"]);
+    expect(parsed.minAmount).toBe(100);
+    expect(parsed.maxAmount).toBe(100);
+    expect(parsed.searchTerm).toBe("");
+  });
+
+  it("reads month names in human order and a singular category", () => {
+    const parsed = parseSearchQuery(
+      "between 2025 jul and sep any transactions in grocery",
+      context,
+    );
+    expect([ymd(parsed.dateRange?.from), ymd(parsed.dateRange?.to)]).toEqual([
+      "2025-07-01",
+      "2025-09-30",
+    ]);
+    expect(parsed.selectedCategories).toEqual(["groceries"]);
+    expect(parsed.searchTerm).toBe("");
+  });
+
+  it.each([
+    ["in 3 days", "2026-11-08", "2026-11-11"],
+    ["in a month", "2026-11-08", "2026-12-08"],
+    ["3 months from now", "2026-11-08", "2027-02-08"],
+    ["next 2 weeks", "2026-11-08", "2026-11-22"],
+    ["2025 jul", "2025-07-01", "2025-07-31"],
+    ["between jul and sep 2025", "2025-07-01", "2025-09-30"],
+    ["jul to sep 2025", "2025-07-01", "2025-09-30"],
+    ["between nov and feb", "2026-11-01", "2027-02-28"],
+  ])("reads %j as %s to %s", (query, from, to) => {
+    expect(range(query)).toEqual([from, to]);
+  });
+
+  it("reads a bare currency amount as that amount", () => {
+    for (const text of ["€100", "100 euros", "$100", "100€"]) {
+      const parsed = parseSearchQuery(text, context);
+      expect([parsed.minAmount, parsed.maxAmount]).toEqual([100, 100]);
+      expect(parsed.searchTerm).toBe("");
+    }
+    // Plain numbers stay text: "2 weeks" or a vendor "7 Eleven" are not money.
+    expect(parseSearchQuery("7 eleven", context).minAmount).toBeUndefined();
+  });
+
+  it("matches singular and plural names without needing typo matching", () => {
+    expect(parseSearchQuery("grocery", context).selectedCategories).toEqual([
+      "groceries",
+    ]);
+    expect(
+      parseSearchQuery("restaurant", context).selectedSubCategories,
+    ).toEqual(["restaurants"]);
+    expect(parseSearchQuery("netflixes", context).selectedVendors).toEqual([
+      "netflix",
+    ]);
+  });
+});

@@ -61,6 +61,23 @@ export const editDistance = (a: string, b: string, limit: number): number => {
   return previousRow[b.length];
 };
 
+/**
+ * Reduces a word to its singular so "grocery" meets "groceries" and
+ * "vendor" meets "vendors". Deliberately crude: it only has to make two
+ * spellings of the same name agree, not be correct English.
+ */
+export const stemWord = (word: string): string => {
+  const w = word.toLowerCase();
+  if (w.length <= 3) return w;
+  if (w.endsWith("ies")) return w.slice(0, -3) + "y";
+  if (/(ses|xes|zes|ches|shes)$/.test(w)) return w.slice(0, -2);
+  if (w.endsWith("s") && !/(ss|us|is)$/.test(w)) return w.slice(0, -1);
+  return w;
+};
+
+const stemPhrase = (phrase: string): string =>
+  phrase.split(" ").map(stemWord).join(" ");
+
 export interface FuzzyPhraseMatch {
   /** Where the matched words start and end in the original query. */
   start: number;
@@ -71,18 +88,23 @@ export interface FuzzyPhraseMatch {
 }
 
 /**
- * Finds the run of words in `query` that best matches `name` within the
- * allowed number of typos. Words in `ignoredWords` (dates, filter keywords)
- * and numbers are never taken as part of a name.
+ * Finds the run of words in `query` that best matches `name`, ignoring
+ * singular/plural, within the allowed number of typos. Pass `maxEdits: 0` to
+ * accept only plural differences. Words in `ignoredWords` (dates, filter
+ * keywords) and numbers are never taken as part of a name.
  */
 export const findFuzzyPhrase = (
   query: string,
   name: string,
   ignoredWords: ReadonlySet<string>,
+  options: { maxEdits?: number } = {},
 ): FuzzyPhraseMatch | null => {
-  const target = normalizeForMatch(name).replace(/\s+/g, " ");
-  const limit = allowedEdits(target.length);
-  if (limit === 0 || !target) return null;
+  const rawTarget = normalizeForMatch(name).replace(/\s+/g, " ");
+  const target = stemPhrase(rawTarget);
+  if (!target) return null;
+  // The limit follows the name as written; stemming only shortens it.
+  const limit = options.maxEdits ?? allowedEdits(rawTarget.length);
+  if (limit === 0 && options.maxEdits === undefined) return null;
 
   // Words without the punctuation around them: "starbuks." and "(starbuks)"
   // are the word "starbuks".
@@ -104,12 +126,18 @@ export const findFuzzyPhrase = (
       continue;
     }
 
-    const candidate = normalizedWords.join(" ");
+    const rawCandidate = normalizedWords.join(" ");
+    const candidate = stemPhrase(rawCandidate);
     // People rarely mistype the first letter; requiring it removes most
     // false positives between unrelated words.
     if (candidate[0] !== target[0]) continue;
 
-    const distance = editDistance(candidate, target, limit);
+    // Compare as typed and with plurals folded: stemming a misspelling
+    // ("grocies" -> "grocy") can move it further from the name.
+    const distance = Math.min(
+      editDistance(candidate, target, limit),
+      editDistance(rawCandidate, rawTarget, limit),
+    );
     if (distance > limit) continue;
 
     if (!best || distance < best.distance) {
