@@ -70,6 +70,12 @@ export const connectAgent: AreaTranslations = {
         copyConfig: "Copy config",
         codexConfigNote: "Or add this to ~/.codex/config.toml",
         codexPrivacy: "What Codex reads is sent to OpenAI.",
+        hubSwitch: "AI features",
+        hubSwitchHint: "Off hides AI and blocks agent access.",
+        hubOffTitle: "AI is off",
+        hubOffBody:
+          "Nothing is sent to any AI provider and no agent can connect.",
+        hubTurnOn: "Turn on AI",
         codePrivacy: "What Claude reads is sent to Anthropic.",
         codeTitle: "Claude Code",
         confirm: "Disconnect",
@@ -107,7 +113,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "This desktop build cannot connect agents yet. Update or rebuild the desktop app to use it.",
         pageIntro:
-          "Let an AI agent such as Claude read and update your money manager. The connection to the app stays on this computer. What an agent reads is sent to its AI provider (Anthropic, for Claude). A local model keeps everything on this device.",
+          "Let an AI agent read and update your data. What it reads is sent to its AI provider, unless the model runs on this device.",
         privacyCloud:
           "Whatever the agent reads, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude).",
         privacyLocal:
@@ -205,6 +211,12 @@ export const connectAgent: AreaTranslations = {
         copyConfig: "Copiar configuración",
         codexConfigNote: "O añade esto a ~/.codex/config.toml",
         codexPrivacy: "Lo que Codex lee se envía a OpenAI.",
+        hubSwitch: "Funciones de IA",
+        hubSwitchHint: "Apagado oculta la IA y bloquea a los agentes.",
+        hubOffTitle: "La IA está desactivada",
+        hubOffBody:
+          "No se envía nada a ningún proveedor de IA y ningún agente puede conectarse.",
+        hubTurnOn: "Activar IA",
         codePrivacy: "Lo que Claude lee se envía a Anthropic.",
         codeTitle: "Claude Code",
         confirm: "Desconectar",
@@ -242,7 +254,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "Esta versión de escritorio aún no puede conectar agentes. Actualiza o recompila la aplicación de escritorio para usarlo.",
         pageIntro:
-          "Deja que un agente de IA como Claude lea y actualice tu gestor de finanzas. La conexión con la aplicación se queda en este ordenador. Lo que lee un agente se envía a su proveedor de IA (Anthropic, en el caso de Claude). Un modelo local lo mantiene todo en este dispositivo.",
+          "Deja que un agente de IA lea y actualice tus datos. Lo que lee se envía a su proveedor de IA, salvo que el modelo se ejecute en este equipo.",
         privacyCloud:
           "Todo lo que lee el agente, como transacciones, proveedores y saldos, se envía al proveedor de IA (Anthropic, en el caso de Claude).",
         privacyLocal:
@@ -333,6 +345,11 @@ export const connectAgent: AreaTranslations = {
         copyConfig: "复制配置",
         codexConfigNote: "或将此内容添加到 ~/.codex/config.toml",
         codexPrivacy: "Codex 读取的内容会发送给 OpenAI。",
+        hubSwitch: "AI 功能",
+        hubSwitchHint: "关闭后隐藏 AI 并阻止智能体访问。",
+        hubOffTitle: "AI 已关闭",
+        hubOffBody: "不会向任何 AI 提供商发送数据，也没有智能体能连接。",
+        hubTurnOn: "开启 AI",
         codePrivacy: "Claude 读取的内容会发送给 Anthropic。",
         codeTitle: "Claude Code",
         confirm: "断开连接",
@@ -367,7 +384,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "此桌面版本还无法连接智能体。请更新或重新构建桌面应用以使用此功能。",
         pageIntro:
-          "让 Claude 等 AI 智能体读取并更新您的理财应用。与应用的连接只在这台电脑上进行。智能体读取的内容会发送给它的 AI 提供商（对 Claude 而言是 Anthropic）。本地模型会把一切都保留在这台设备上。",
+          "让 AI 智能体读取并更新你的数据。它读取的内容会发送给其 AI 提供商，除非模型在本机运行。",
         privacyCloud:
           "智能体读取的任何内容（例如交易、商家和余额）都会发送给 AI 提供商（对 Claude 而言是 Anthropic）。",
         privacyLocal:
@@ -460,6 +477,12 @@ export const connectAgent: AreaTranslations = {
         copyConfig: "Config kopiëren",
         codexConfigNote: "Of voeg dit toe aan ~/.codex/config.toml",
         codexPrivacy: "Wat Codex leest, wordt naar OpenAI gestuurd.",
+        hubSwitch: "AI-functies",
+        hubSwitchHint: "Uit verbergt AI en blokkeert agenttoegang.",
+        hubOffTitle: "AI staat uit",
+        hubOffBody:
+          "Er wordt niets naar een AI-aanbieder gestuurd en geen agent kan verbinden.",
+        hubTurnOn: "AI aanzetten",
         codePrivacy: "Wat Claude leest, wordt naar Anthropic gestuurd.",
         codeTitle: "Claude Code",
         confirm: "Loskoppelen",
@@ -497,7 +520,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "Deze desktopversie kan nog geen agents koppelen. Werk de desktop-app bij of bouw hem opnieuw om dit te gebruiken.",
         pageIntro:
-          "Laat een AI-agent zoals Claude je geldbeheer lezen en bijwerken. De verbinding met de app blijft op deze computer. Wat een agent leest, wordt naar zijn AI-aanbieder gestuurd (Anthropic, voor Claude). Een lokaal model houdt alles op dit apparaat.",
+          "Laat een AI-agent je gegevens lezen en bijwerken. Wat het leest, gaat naar de AI-aanbieder, tenzij het model op dit apparaat draait.",
         privacyCloud:
           "Alles wat de agent leest, zoals transacties, leveranciers en saldi, wordt naar de AI-aanbieder gestuurd (Anthropic, voor Claude).",
         privacyLocal:
@@ -600,6 +623,12 @@ export const connectAgent: AreaTranslations = {
         copyConfig: "கட்டமைப்பை நகலெடு",
         codexConfigNote: "அல்லது இதை ~/.codex/config.toml இல் சேர்க்கவும்",
         codexPrivacy: "Codex படிப்பது OpenAI க்கு அனுப்பப்படும்.",
+        hubSwitch: "AI அம்சங்கள்",
+        hubSwitchHint: "அணைத்தால் AI மறைந்து முகவர் அணுகல் தடுக்கப்படும்.",
+        hubOffTitle: "AI அணைந்துள்ளது",
+        hubOffBody:
+          "எந்த AI வழங்குநருக்கும் எதுவும் அனுப்பப்படாது; எந்த முகவரும் இணைய முடியாது.",
+        hubTurnOn: "AI ஐ இயக்கு",
         codePrivacy: "Claude படிப்பவை Anthropic-க்கு அனுப்பப்படும்.",
         codeTitle: "Claude Code",
         confirm: "துண்டி",
@@ -639,7 +668,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "இந்த டெஸ்க்டாப் பதிப்பால் இன்னும் முகவர்களை இணைக்க முடியாது. இதைப் பயன்படுத்த டெஸ்க்டாப் பயன்பாட்டைப் புதுப்பிக்கவும் அல்லது மீண்டும் உருவாக்கவும்.",
         pageIntro:
-          "Claude போன்ற AI முகவர் உங்கள் பண மேலாளரைப் படிக்கவும் புதுப்பிக்கவும் அனுமதியுங்கள். பயன்பாட்டுடனான இணைப்பு இந்தக் கணினியிலேயே இருக்கும். முகவர் படிப்பவை அதன் AI வழங்குநருக்கு (Claude-க்கு Anthropic) அனுப்பப்படும். உள்ளூர் மாதிரி அனைத்தையும் இந்தச் சாதனத்திலேயே வைத்திருக்கும்.",
+          "AI முகவர் உங்கள் தரவைப் படித்து புதுப்பிக்கட்டும். மாதிரி இந்தச் சாதனத்தில் இயங்காவிட்டால், அது படிப்பது அதன் AI வழங்குநருக்கு அனுப்பப்படும்.",
         privacyCloud:
           "பரிவர்த்தனைகள், விற்பனையாளர்கள், இருப்புகள் போன்று முகவர் படிக்கும் அனைத்தும் AI வழங்குநருக்கு (Claude-க்கு Anthropic) அனுப்பப்படும்.",
         privacyLocal:

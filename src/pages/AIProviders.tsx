@@ -1,13 +1,10 @@
 import AIProviderManagement from "@/components/management/AIProviderManagement";
-import AiAgentTabs from "@/components/management/AiAgentTabs";
+import AiHubLayout from "@/components/management/AiHubLayout";
 
-const AIProvidersPage = () => {
-  return (
-    <>
-      <AiAgentTabs />
-      <AIProviderManagement />
-    </>
-  );
-};
+const AIProvidersPage = () => (
+  <AiHubLayout>
+    <AIProviderManagement />
+  </AiHubLayout>
+);
 
 export default AIProvidersPage;

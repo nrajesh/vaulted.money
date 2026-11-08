@@ -195,7 +195,7 @@
   }
 
   .app-page-subtitle {
-    @apply mt-2 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400;
+    @apply mt-2 max-w-5xl text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400;
   }
 
   .app-page-header {

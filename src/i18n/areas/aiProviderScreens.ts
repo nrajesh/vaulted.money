@@ -21,6 +21,8 @@ export const aiProviderScreens: AreaTranslations = {
         endpoint: "Endpoint",
         default: "Default",
         noModel: "(None)",
+        defaultModel: "Default: {{model}}",
+        serverModel: "Server default",
       },
       dialog: {
         titleEdit: "Edit AI Provider",
@@ -75,6 +77,8 @@ export const aiProviderScreens: AreaTranslations = {
         endpoint: "Punto de conexión",
         default: "Predeterminado",
         noModel: "(Ninguno)",
+        defaultModel: "Predeterminado: {{model}}",
+        serverModel: "Predeterminado del servidor",
       },
       dialog: {
         titleEdit: "Editar proveedor de IA",
@@ -130,6 +134,8 @@ export const aiProviderScreens: AreaTranslations = {
         endpoint: "接口地址",
         default: "默认",
         noModel: "（无）",
+        defaultModel: "默认：{{model}}",
+        serverModel: "服务器默认",
       },
       dialog: {
         titleEdit: "编辑 AI 提供商",
@@ -182,6 +188,8 @@ export const aiProviderScreens: AreaTranslations = {
         endpoint: "Eindpunt",
         default: "Standaard",
         noModel: "(Geen)",
+        defaultModel: "Standaard: {{model}}",
+        serverModel: "Serverstandaard",
       },
       dialog: {
         titleEdit: "AI-aanbieder bewerken",
@@ -237,6 +245,8 @@ export const aiProviderScreens: AreaTranslations = {
         endpoint: "முனையம்",
         default: "இயல்புநிலை",
         noModel: "(எதுவுமில்லை)",
+        defaultModel: "இயல்புநிலை: {{model}}",
+        serverModel: "சேவையக இயல்புநிலை",
       },
       dialog: {
         titleEdit: "AI வழங்குநரைத் திருத்து",

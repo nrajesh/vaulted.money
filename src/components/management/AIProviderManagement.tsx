@@ -6,6 +6,7 @@ import AddEditAIProviderDialog from "./AddEditAIProviderDialog";
 import { useAIProviderManagement } from "@/hooks/useAIProviderManagement";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
+import { AI_DEFAULT_MODELS } from "@/constants/aiDefaultModels";
 
 const AIProviderManagement = () => {
   const { t } = useTranslation();
@@ -49,7 +50,14 @@ const AIProviderManagement = () => {
       cellRenderer: (item) => (
         <span className={!item.model ? "text-muted-foreground italic" : ""}>
           {item.model ||
-            t("aiProviders.columns.noModel", { defaultValue: "(None)" })}
+            (AI_DEFAULT_MODELS[item.type]
+              ? t("aiProviders.columns.defaultModel", {
+                  defaultValue: "Default: {{model}}",
+                  model: AI_DEFAULT_MODELS[item.type],
+                })
+              : t("aiProviders.columns.serverModel", {
+                  defaultValue: "Server default",
+                }))}
         </span>
       ),
     },

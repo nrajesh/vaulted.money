@@ -47,7 +47,7 @@ const AiAgentTabs = () => {
   return (
     <nav
       aria-label={t("layout.nav.aiAndAgents", { defaultValue: "AI & agents" })}
-      className="mb-4 grid gap-2 sm:grid-cols-2"
+      className="grid gap-2 sm:grid-cols-2"
     >
       {tabs.map(({ to, icon: Icon, label, hint }) => {
         const active = pathname === to;
@@ -59,11 +59,17 @@ const AiAgentTabs = () => {
             className={cn(
               "flex h-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
-                ? "border-primary bg-primary/5"
-                : "hover:bg-muted/60 text-muted-foreground",
+                ? "border-primary bg-primary/10 shadow-sm"
+                : "text-muted-foreground hover:bg-muted/60",
             )}
           >
-            <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <Icon
+              className={cn(
+                "mt-0.5 h-4 w-4 shrink-0",
+                active && "text-primary",
+              )}
+              aria-hidden
+            />
             <span className="flex flex-col">
               <span className="text-sm font-semibold text-foreground">
                 {label}
