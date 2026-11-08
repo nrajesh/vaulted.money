@@ -153,13 +153,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col p-3 sm:p-5">
+      <CardContent className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 sm:p-5">
         <div className="mb-2 grid shrink-0 grid-cols-7 gap-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:mb-3 sm:gap-2 sm:text-sm sm:tracking-normal">
           {weekDays.map((day) => (
             <div key={day}>{day}</div>
           ))}
         </div>
-        <div className="grid min-h-0 flex-1 grid-cols-7 grid-rows-6 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-7 content-start auto-rows-[4.5rem] gap-1.5 sm:auto-rows-[5.25rem] sm:gap-2">
           {calendarDays.map((day) => {
             const dateKey = format(day, "yyyy-MM-dd");
             const data = dayData[dateKey] || {

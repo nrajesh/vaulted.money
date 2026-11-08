@@ -17,6 +17,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import {
+  monthKeyFor,
+  shortMonthLabel,
+  longMonthLabel,
+} from "@/utils/monthLabels";
 import { useTheme } from "@/contexts/ThemeContext";
 
 import { Transaction } from "@/types/dataProvider";
@@ -37,10 +42,7 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
       {};
 
     transactions.forEach((t) => {
-      const month = new Date(t.date).toLocaleString("default", {
-        month: "short",
-        year: "2-digit",
-      });
+      const month = monthKeyFor(new Date(t.date));
       if (!dataByMonth[month]) {
         dataByMonth[month] = { income: 0, expenses: 0 };
       }
@@ -58,9 +60,10 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
       }
     });
 
+    // Oldest month first, so the chart reads left to right through time.
     return Object.entries(dataByMonth)
-      .map(([month, values]) => ({ month, ...values }))
-      .reverse();
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, values]) => ({ month, ...values }));
   }, [transactions, selectedCurrency, convertBetweenCurrencies]);
 
   return (
@@ -77,6 +80,8 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="month"
+              tickFormatter={shortMonthLabel}
+              minTickGap={24}
               tick={{
                 fill: isFinancialPulse ? "#94a3b8" : "#666",
                 fontSize: 11,
@@ -92,6 +97,7 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
               stroke={isFinancialPulse ? "rgba(255,255,255,0.1)" : "#e5e7eb"}
             />
             <Tooltip
+              labelFormatter={(label) => longMonthLabel(String(label))}
               formatter={(value) => formatCurrency(Number(value))}
               contentStyle={{
                 backgroundColor: isFinancialPulse ? "rgba(0,0,0,0.8)" : "white",

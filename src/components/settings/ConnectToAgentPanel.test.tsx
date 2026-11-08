@@ -401,4 +401,64 @@ describe("ConnectToAgentPanel", () => {
       expect(link).toHaveAttribute("href", "https://claude.ai/download");
     });
   });
+
+  describe("Codex", () => {
+    const bridge = (over: Record<string, unknown>) => {
+      (window as unknown as { electron?: unknown }).electron = over;
+    };
+    afterEach(() => {
+      delete (window as unknown as { electron?: unknown }).electron;
+    });
+
+    it("always offers the config snippet with the server path, never the token", () => {
+      renderPanel();
+      selectChoice(/^Codex/);
+      expect(screen.getByText(/\[mcp_servers\.vaulted-money\]/)).toBeVisible();
+      expect(screen.getByText(/command = "node"/)).toBeVisible();
+      expect(document.body.textContent).not.toContain("secret-token");
+    });
+
+    it("offers one-click setup when Codex is found and reports success", async () => {
+      const setup = vi.fn().mockResolvedValue("ready");
+      bridge({
+        detectCodex: vi.fn().mockResolvedValue({ cli: true }),
+        setupCodex: setup,
+      });
+      renderPanel();
+      selectChoice(/^Codex/);
+      fireEvent.click(
+        await screen.findByRole("button", { name: "Set up Codex for me" }),
+      );
+      expect(await screen.findByText(/Done\. Open Codex/)).toBeVisible();
+      expect(setup).toHaveBeenCalledWith();
+    });
+
+    it("says when Node.js is needed", async () => {
+      bridge({
+        detectCodex: vi.fn().mockResolvedValue({ cli: true }),
+        setupCodex: vi.fn().mockResolvedValue("node-missing"),
+      });
+      renderPanel();
+      selectChoice(/^Codex/);
+      fireEvent.click(
+        await screen.findByRole("button", { name: "Set up Codex for me" }),
+      );
+      expect(
+        await screen.findByText(/Node 18 or newer is needed/),
+      ).toBeVisible();
+    });
+
+    it("shows install help when Codex is not found", async () => {
+      bridge({ detectCodex: vi.fn().mockResolvedValue({ cli: false }) });
+      renderPanel();
+      selectChoice(/^Codex/);
+      expect(
+        await screen.findByRole("link", { name: /Get Codex/ }),
+      ).toHaveAttribute("href", "https://github.com/openai/codex");
+      expect(screen.getByText("npm install -g @openai/codex")).toBeVisible();
+      expect(
+        screen.queryByRole("button", { name: "Set up Codex for me" }),
+      ).toBeNull();
+    });
+  });
 });

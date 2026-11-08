@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ConnectToAgentPanel from "@/components/settings/ConnectToAgentPanel";
+import AiAgentTabs from "@/components/management/AiAgentTabs";
 import { useLocalApi } from "@/hooks/useLocalApi";
 
 /**
@@ -73,6 +74,7 @@ const ConnectAgentPage = () => {
 
   return (
     <div className="page-container">
+      <AiAgentTabs />
       <div className="app-page-header">
         <h1 className="app-gradient-title app-page-title">
           {t("settings.agent.title", { defaultValue: "Connect to agent" })}

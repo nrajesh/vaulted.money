@@ -59,7 +59,7 @@ export default function Insights() {
 
   // Pagination State - Budgets only
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 4;
 
   // Dialog State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -186,12 +186,14 @@ export default function Insights() {
     currentPeriodLabel,
     prevPeriodLabel,
     hasInsufficientData,
+    latestActivityLabel,
   } = useMemo(() => {
     const now = new Date();
 
     // 1. Determine Anchor Date
     // Default to today. If no transactions in last 30 days, find latest transaction date
     let anchorDate = now;
+    let latestActivityLabel: string | null = null;
     const last30DaysStartDate = subDays(now, 30);
 
     const recentTransactions = transactions.filter(
@@ -206,6 +208,7 @@ export default function Insights() {
           : latest;
       }, transactions[0]);
       anchorDate = new Date(latestTx.date);
+      latestActivityLabel = format(anchorDate, "MMM d, yyyy");
     }
 
     // 2. Define Time Windows
@@ -379,6 +382,7 @@ export default function Insights() {
       currentPeriodLabel,
       prevPeriodLabel,
       hasInsufficientData,
+      latestActivityLabel,
     };
   }, [transactions, accounts, vendors, formatCurrency]);
 
@@ -427,14 +431,19 @@ export default function Insights() {
     return (
       <div className="space-y-6 p-6">
         <Skeleton className="h-10 w-[200px]" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-[200px] w-full rounded-xl" />
           ))}
         </div>
       </div>
     );
   }
+
+  // Say why there is nothing to compare, instead of a generic "history" hint.
+  const insufficientDataMessage = latestActivityLabel
+    ? `Your latest transaction is from ${latestActivityLabel}. Trends compare the 30 days up to that date with the 30 days before it, and the earlier 30 days have no transactions.`
+    : "Trends compare the last 30 days with the 30 days before. The earlier 30 days have no transactions yet.";
 
   const renderTrendItem = (trend: TrendItem) => (
     <div
@@ -532,7 +541,7 @@ export default function Insights() {
           </Alert>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               {paginatedInsights.map((item) => (
                 <Card
                   key={item.budget.id}
@@ -664,10 +673,7 @@ export default function Insights() {
               <Alert variant="default" className="bg-muted/50 border-dashed">
                 <Lightbulb className="h-4 w-4" />
                 <AlertTitle>Insufficient Data</AlertTitle>
-                <AlertDescription>
-                  Trends will appear here once you have more than 30 days of
-                  transaction history.
-                </AlertDescription>
+                <AlertDescription>{insufficientDataMessage}</AlertDescription>
               </Alert>
             ) : topAccountTrends.length === 0 ? (
               <div className="text-sm text-muted-foreground italic">
@@ -697,10 +703,7 @@ export default function Insights() {
               <Alert variant="default" className="bg-muted/50 border-dashed">
                 <Lightbulb className="h-4 w-4" />
                 <AlertTitle>Insufficient Data</AlertTitle>
-                <AlertDescription>
-                  Trends will appear here once you have more than 30 days of
-                  transaction history.
-                </AlertDescription>
+                <AlertDescription>{insufficientDataMessage}</AlertDescription>
               </Alert>
             ) : topVendorTrends.length === 0 ? (
               <div className="text-sm text-muted-foreground italic">

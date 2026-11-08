@@ -9,6 +9,7 @@ import {
   realClaudeCodeDeps,
   setupClaudeCodePlugin,
 } from "./claudeCode";
+import { copyServerFile, detectCodex, setupCodex } from "./codex";
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
@@ -233,6 +234,22 @@ app.whenReady().then(() => {
   ipcMain.handle("claude:detect", () => detectClaude(realClaudeCodeDeps()));
   ipcMain.handle("claude:setup-code-plugin", () =>
     setupClaudeCodePlugin(realClaudeCodeDeps()),
+  );
+
+  // Same for Codex. The server is copied to a stable place in the app's data
+  // folder so an app update or move never leaves Codex pointing at a missing file.
+  ipcMain.handle("codex:detect", () => detectCodex(realClaudeCodeDeps()));
+  ipcMain.handle("codex:setup", () =>
+    setupCodex(
+      realClaudeCodeDeps(),
+      {
+        source: app.isPackaged
+          ? path.join(process.resourcesPath, "mcp", "server.mjs")
+          : path.join(app.getAppPath(), "mcp", "server.mjs"),
+        target: path.join(app.getPath("userData"), "mcp", "server.mjs"),
+      },
+      copyServerFile,
+    ),
   );
 
   ipcMain.handle("path-join", (_event, ...segments: unknown[]) => {
