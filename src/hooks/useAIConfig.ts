@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { AIProvider } from "@/types/dataProvider";
 import { useDataProvider } from "@/context/DataProviderContext";
+import { useAiFeatures } from "@/hooks/useAiFeatures";
 import {
   readAiApiKeyFromStorage,
   writeAiApiKeyToStorage,
@@ -11,8 +12,11 @@ export interface AIConfig {
   apiKey: string;
 }
 
+const EMPTY_CONFIG: AIConfig = { provider: null, apiKey: "" };
+
 export const useAIConfig = () => {
   const dataProvider = useDataProvider();
+  const { enabled: aiEnabled } = useAiFeatures();
   const [config, setConfig] = useState<AIConfig>({
     provider: null,
     apiKey: "",
@@ -51,7 +55,8 @@ export const useAIConfig = () => {
   };
 
   return {
-    config,
+    // With AI features off, no provider is active, so every AI button hides.
+    config: aiEnabled ? config : EMPTY_CONFIG,
     saveConfig,
     refreshConfig,
     isLoading,

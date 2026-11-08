@@ -20,6 +20,21 @@ import {
 } from "date-fns";
 import { DateRange } from "react-day-picker";
 
+const MONTH_PREFIXES = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
 export interface ParsedFilterState {
   searchTerm: string; // The remaining text that wasn't parsed into a structured filter
   selectedAccounts: string[] | undefined;
@@ -77,7 +92,7 @@ export const parseSearchQuery = (
   };
 
   // Helper to parse simple date keywords or formats for "between X and Y"
-  const parseSimpleDate = (str: string): Date | null => {
+  const parseSimpleDate = (str: string, asRangeEnd = false): Date | null => {
     const s = str.toLowerCase().trim();
     if (s === "today") return today;
     if (s === "yesterday") return subDays(today, 1);
@@ -95,15 +110,37 @@ export const parseSearchQuery = (
         0,
       );
     }
+
+    // "jan 2020" / "december 2021": the whole month (first day when it opens
+    // the range, last day when it closes it).
+    const monthYear = s.match(/^([a-z]{3,9})\.?\s+(\d{4})$/);
+    if (monthYear) {
+      const monthIndex = MONTH_PREFIXES.findIndex((m) =>
+        monthYear[1].startsWith(m),
+      );
+      if (monthIndex >= 0) {
+        const first = new Date(parseInt(monthYear[2], 10), monthIndex, 1, 12);
+        return asRangeEnd ? endOfMonth(first) : first;
+      }
+    }
+
+    // "2020": the whole year.
+    const yearOnly = s.match(/^(\d{4})$/);
+    if (yearOnly) {
+      const year = parseInt(yearOnly[1], 10);
+      return asRangeEnd ? new Date(year, 11, 31, 12) : new Date(year, 0, 1, 12);
+    }
     return null;
   };
 
-  // "Between X and Y"
-  const betweenRegex = /\bbetween\s+(.+?)\s+and\s+(.+?)\b/i;
+  // "Between X and Y". The second part stops at the end of a date-like phrase
+  // (a word, an optional year) so "dec 2021" is read whole, not as "dec".
+  const betweenRegex =
+    /\bbetween\s+(.+?)\s+and\s+([a-z]{3,9}\.?\s+\d{4}|[\w/.-]+)/i;
   const betweenMatch = remainingQuery.match(betweenRegex);
   if (betweenMatch) {
     const d1 = parseSimpleDate(betweenMatch[1]);
-    const d2 = parseSimpleDate(betweenMatch[2]);
+    const d2 = parseSimpleDate(betweenMatch[2], true);
     if (d1 && d2) {
       result.dateRange = { from: d1 < d2 ? d1 : d2, to: d1 < d2 ? d2 : d1 };
       remainingQuery = remainingQuery.replace(betweenMatch[0], "").trim();

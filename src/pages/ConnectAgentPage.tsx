@@ -1,7 +1,6 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ConnectToAgentPanel from "@/components/settings/ConnectToAgentPanel";
+import AiHubLayout from "@/components/management/AiHubLayout";
 import { useLocalApi } from "@/hooks/useLocalApi";
 
 /**
@@ -72,40 +71,22 @@ const ConnectAgentPage = () => {
   }
 
   return (
-    <div className="page-container">
-      <div className="app-page-header">
-        <h1 className="app-gradient-title app-page-title">
-          {t("settings.agent.title", { defaultValue: "Connect to agent" })}
-        </h1>
-        <p className="app-page-subtitle">
-          {t("settings.agent.pageIntro", {
-            defaultValue:
-              "Let an AI agent such as Claude read and update your money manager. The connection to the app stays on this computer. What an agent reads is sent to its AI provider (Anthropic, for Claude). A local model keeps everything on this device.",
-          })}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t("settings.agent.byokNote", {
-            defaultValue:
-              "Looking for AI categorisation with your own API key?",
-          })}{" "}
-          <Link to="/settings" className="underline">
-            {t("settings.agent.byokLink", {
-              defaultValue: "See AI Integrations in Settings.",
+    <AiHubLayout>
+      <div className="page-container">
+        <div className="app-page-header">
+          <h1 className="app-gradient-title app-page-title">
+            {t("settings.agent.title", { defaultValue: "Connect to agent" })}
+          </h1>
+          <p className="app-page-subtitle">
+            {t("settings.agent.pageIntro", {
+              defaultValue:
+                "Let an AI agent read and update your data. What it reads is sent to its AI provider, unless the model runs on this device.",
             })}
-          </Link>
-        </p>
-        <Link
-          to="/settings"
-          className="mt-2 inline-flex items-center gap-1 text-sm underline"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t("settings.agent.backToSettings", {
-            defaultValue: "Back to Settings",
-          })}
-        </Link>
+          </p>
+        </div>
+        <div>{body}</div>
       </div>
-      <div>{body}</div>
-    </div>
+    </AiHubLayout>
   );
 };
 

@@ -257,10 +257,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                 defaultValue: "Export CSV",
               })}
             </Button>
-            <Button
-              onClick={handleAddClick}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
+            <Button onClick={handleAddClick}>
               <PlusCircle className="mr-2 h-4 w-4" />{" "}
               {t("management.actions.add", {
                 name: entityName,

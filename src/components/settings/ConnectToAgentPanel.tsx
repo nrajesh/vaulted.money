@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   Bot,
+  Braces,
   Check,
   Copy,
   Download,
@@ -29,6 +30,8 @@ const RELEASES_URL = "https://github.com/nrajesh/vaulted.money/releases/latest";
 const CLAUDE_CODE_REPOSITORY = "nrajesh/vaulted.money";
 const CLAUDE_APP_DOWNLOAD_URL = "https://claude.ai/download";
 const CLAUDE_CODE_URL = "https://claude.com/claude-code";
+const CODEX_URL = "https://github.com/openai/codex";
+const CODEX_INSTALL_COMMAND = "npm install -g @openai/codex";
 // Two lines: a terminal runs them one after the other when pasted. The
 // `claude` prefix matters: a plain terminal does not understand `/plugin`.
 const CLAUDE_CODE_COMMANDS =
@@ -74,9 +77,17 @@ const CopyButton = ({
   </Button>
 );
 
-type CopyTarget = "local" | "repo" | "commands" | "ask0" | "ask1";
+type CopyTarget =
+  | "local"
+  | "repo"
+  | "commands"
+  | "ask0"
+  | "ask1"
+  | "codexInstall"
+  | "codexConfig";
 type SetupState = "idle" | "running" | "ready" | "failed" | "not-found";
-type Choice = "claude-app" | "local" | "claude-code";
+type CodexSetupState = SetupState | "node-missing";
+type Choice = "claude-app" | "local" | "claude-code" | "codex";
 
 /**
  * Lets the user connect an AI agent to the Local API. Status is owned by the
@@ -111,6 +122,22 @@ const ConnectToAgentPanel = ({
     desktop: boolean;
   } | null>(null);
   const [setupState, setSetupState] = React.useState<SetupState>("idle");
+  const [codexFound, setCodexFound] = React.useState<boolean | null>(null);
+  const [codexState, setCodexState] = React.useState<CodexSetupState>("idle");
+  React.useEffect(() => {
+    let cancelled = false;
+    getElectronAPI()
+      ?.detectCodex?.()
+      .then((result) => {
+        if (!cancelled) setCodexFound(result.cli);
+      })
+      .catch(() => {
+        if (!cancelled) setCodexFound(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   React.useEffect(() => {
     let cancelled = false;
     getElectronAPI()
@@ -136,6 +163,16 @@ const ConnectToAgentPanel = ({
       setSetupState("failed");
     }
   };
+  const runCodexSetup = async () => {
+    const setup = getElectronAPI()?.setupCodex;
+    if (!setup) return;
+    setCodexState("running");
+    try {
+      setCodexState(await setup());
+    } catch {
+      setCodexState("failed");
+    }
+  };
   // The card titles are h3, like the cards on the other pages.
   const SubHeading = "h4";
   const RouteHeading = "h5";
@@ -149,6 +186,9 @@ const ConnectToAgentPanel = ({
     null,
     2,
   );
+
+  // Codex reads TOML. A JSON string is also a valid TOML string.
+  const codexConfig = `[mcp_servers.vaulted-money]\ncommand = "node"\nargs = [${JSON.stringify(serverPath)}]`;
 
   const copy = async (target: CopyTarget, value: string) => {
     try {
@@ -349,7 +389,7 @@ const ConnectToAgentPanel = ({
                 aria-label={t("settings.agent.chooseTitle", {
                   defaultValue: "How do you want to chat?",
                 })}
-                className="grid h-auto w-full items-stretch gap-2 bg-transparent p-0 sm:grid-cols-3"
+                className="grid h-auto w-full items-stretch gap-2 bg-transparent p-0 grid-cols-2 sm:grid-cols-4"
               >
                 {choiceCard(
                   "claude-app",
@@ -385,6 +425,15 @@ const ConnectToAgentPanel = ({
                   t("settings.agent.codeBlurb", {
                     defaultValue:
                       "For people who already use Claude Code, in the Claude app or in a terminal.",
+                  }),
+                  null,
+                )}
+                {choiceCard(
+                  "codex",
+                  <Braces className="h-4 w-4" aria-hidden="true" />,
+                  t("settings.agent.codexTitle", { defaultValue: "Codex" }),
+                  t("settings.agent.codexBlurb", {
+                    defaultValue: "For people who use OpenAI Codex.",
                   }),
                   null,
                 )}
@@ -673,6 +722,129 @@ const ConnectToAgentPanel = ({
                 {privacyLine(
                   t("settings.agent.codePrivacy", {
                     defaultValue: "What Claude reads is sent to Anthropic.",
+                  }),
+                )}
+              </TabsContent>
+
+              <TabsContent value="codex" className="space-y-4">
+                {codexFound !== null && (
+                  <div className="space-y-2 rounded-md border p-3 text-sm">
+                    {codexFound ? (
+                      <>
+                        <p>
+                          {t("settings.agent.codexFound", {
+                            defaultValue: "Codex is on this computer.",
+                          })}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={codexState === "running"}
+                          onClick={runCodexSetup}
+                        >
+                          {t("settings.agent.codexSetupButton", {
+                            defaultValue: "Set up Codex for me",
+                          })}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <p>
+                          {t("settings.agent.codexNotFound", {
+                            defaultValue:
+                              "We could not find Codex on this computer.",
+                          })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t("settings.agent.codexInstallNote", {
+                            defaultValue:
+                              "Install, then come back and click Set up.",
+                          })}
+                        </p>
+                        <pre className="whitespace-pre-wrap break-all rounded bg-muted px-2 py-1 text-xs">
+                          {CODEX_INSTALL_COMMAND}
+                        </pre>
+                        <div className="flex flex-wrap gap-2">
+                          {copyButton(
+                            "codexInstall",
+                            CODEX_INSTALL_COMMAND,
+                            t("settings.agent.copyInstall", {
+                              defaultValue: "Copy install command",
+                            }),
+                          )}
+                          <Button asChild variant="outline" size="sm">
+                            <a
+                              href={CODEX_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {t("settings.agent.codexGet", {
+                                defaultValue: "Get Codex",
+                              })}
+                              <span className="sr-only">
+                                {" "}
+                                {t("settings.agent.newTab", {
+                                  defaultValue: "(opens in a new tab)",
+                                })}
+                              </span>
+                            </a>
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                    <p role="status" className="text-xs text-muted-foreground">
+                      {codexState === "running" &&
+                        t("settings.agent.codeSetupRunning", {
+                          defaultValue: "Setting up. This can take a minute.",
+                        })}
+                      {codexState === "ready" &&
+                        t("settings.agent.codexSetupReady", {
+                          defaultValue:
+                            "Done. Open Codex and ask about your money.",
+                        })}
+                      {codexState === "failed" &&
+                        t("settings.agent.codexSetupFailed", {
+                          defaultValue:
+                            "That did not work. Use the steps below instead.",
+                        })}
+                      {codexState === "node-missing" &&
+                        t("settings.agent.codexNodeMissing", {
+                          defaultValue:
+                            "Node 18 or newer is needed. Install it, then try again.",
+                        })}
+                      {codexState === "not-found" &&
+                        t("settings.agent.codexNotFound", {
+                          defaultValue:
+                            "We could not find Codex on this computer.",
+                        })}
+                    </p>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    {t("settings.agent.codexConfigNote", {
+                      defaultValue: "Or add this to ~/.codex/config.toml",
+                    })}
+                  </p>
+                  <pre className="whitespace-pre-wrap break-all rounded bg-muted px-2 py-1 text-xs">
+                    {codexConfig}
+                  </pre>
+                  {copyButton(
+                    "codexConfig",
+                    codexConfig,
+                    t("settings.agent.copyConfig", {
+                      defaultValue: "Copy config",
+                    }),
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {t("settings.agent.nodeNote", {
+                      defaultValue: "Requires Node 18 or newer.",
+                    })}
+                  </p>
+                </div>
+                {privacyLine(
+                  t("settings.agent.codexPrivacy", {
+                    defaultValue: "What Codex reads is sent to OpenAI.",
                   }),
                 )}
               </TabsContent>

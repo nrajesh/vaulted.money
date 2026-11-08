@@ -18,6 +18,12 @@ import {
   Line,
 } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import {
+  monthKeyFor,
+  monthStartFor,
+  shortMonthLabel,
+  longMonthLabel,
+} from "@/utils/monthLabels";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Budget, Transaction } from "@/data/finance-data";
 
@@ -38,10 +44,7 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
       {};
 
     transactions.forEach((t) => {
-      const month = new Date(t.date).toLocaleString("default", {
-        month: "short",
-        year: "2-digit",
-      });
+      const month = monthKeyFor(new Date(t.date));
       if (!dataByMonth[month]) {
         dataByMonth[month] = { income: 0, expenses: 0 };
       }
@@ -60,10 +63,9 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
     });
 
     return Object.entries(dataByMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, values]) => {
-        const monthDate = new Date(
-          month.replace(/(\w{3})\s(\d{2})/, "$1 1, 20$2"),
-        );
+        const monthDate = monthStartFor(month);
         const totalBudgetForMonth = budgets
           .filter((b) => {
             const startDate = new Date(b.start_date);
@@ -91,8 +93,7 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
           ...values,
           budgetTarget: totalBudgetForMonth > 0 ? totalBudgetForMonth : null,
         };
-      })
-      .reverse();
+      });
   }, [transactions, budgets, selectedCurrency, convertBetweenCurrencies]);
 
   const { isFinancialPulse } = useTheme();
@@ -126,6 +127,8 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
             />
             <XAxis
               dataKey="month"
+              tickFormatter={shortMonthLabel}
+              minTickGap={24}
               tick={{
                 fill: isFinancialPulse ? "#94a3b8" : "#666",
                 fontSize: 11,
@@ -141,6 +144,7 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
               stroke={isFinancialPulse ? "rgba(255,255,255,0.1)" : "#e5e7eb"}
             />
             <Tooltip
+              labelFormatter={(label) => longMonthLabel(String(label))}
               formatter={(value) => formatCurrency(Number(value))}
               contentStyle={{
                 backgroundColor: isFinancialPulse ? "rgba(0,0,0,0.8)" : "white",

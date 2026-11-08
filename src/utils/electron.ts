@@ -30,6 +30,8 @@ export interface ElectronAPI {
   /** Optional: absent in desktop builds older than the setup button. */
   detectClaude?: () => Promise<{ code: boolean; desktop: boolean }>;
   setupClaudeCodePlugin?: () => Promise<"ready" | "failed" | "not-found">;
+  detectCodex?: () => Promise<{ cli: boolean }>;
+  setupCodex?: () => Promise<"ready" | "failed" | "not-found" | "node-missing">;
 }
 
 export interface ApiServerStatus {

@@ -1,5 +1,5 @@
 /**
- * Builds the one-click Claude Desktop bundle (release/vaulted-money.mcpb).
+ * Builds the one-click Claude Desktop bundle (release/extension/vaulted-money.mcpb).
  *
  * The bundle is the MCP server plus a manifest, staged in a temp folder and
  * zipped by the official `mcpb` CLI (run through npx, pinned to version 2.1.2 for repeatable builds, so it is not a project
@@ -31,8 +31,8 @@ if (
   const stage = mkdtempSync(join(tmpdir(), "vaulted-mcpb-"));
   try {
     stageMcpb(stage);
-    mkdirSync(join(root, "release"), { recursive: true });
-    const output = join(root, "release/vaulted-money.mcpb");
+    mkdirSync(join(root, "release", "extension"), { recursive: true });
+    const output = join(root, "release/extension/vaulted-money.mcpb");
     const run = spawnSync(
       "npx",
       ["--yes", "@anthropic-ai/mcpb@2.1.2", "pack", stage, output],

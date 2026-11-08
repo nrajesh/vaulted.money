@@ -33,6 +33,8 @@ describe("electron preload", () => {
       "getConnectInfo",
       "detectClaude",
       "setupClaudeCodePlugin",
+      "detectCodex",
+      "setupCodex",
     ]) {
       expect(source).toContain(name);
     }
@@ -50,6 +52,15 @@ describe("electron preload", () => {
     );
     expect(source).toMatch(
       /setupClaudeCodePlugin:\s*\(\)\s*=>\s*ipcRenderer\.invoke\("claude:setup-code-plugin"\)/,
+    );
+  });
+
+  it("asks main to find Codex and set it up without arguments", () => {
+    expect(source).toMatch(
+      /detectCodex:\s*\(\)\s*=>\s*ipcRenderer\.invoke\("codex:detect"\)/,
+    );
+    expect(source).toMatch(
+      /setupCodex:\s*\(\)\s*=>\s*ipcRenderer\.invoke\("codex:setup"\)/,
     );
   });
 });

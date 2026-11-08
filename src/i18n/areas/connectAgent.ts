@@ -14,6 +14,10 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "Connect an AI agent",
+        aiProvidersHint: "Use your own AI key to categorise transactions",
+        connectAgentHint:
+          "Analyze, chat or debate with your data using an AI agent",
+        aiAndAgents: "AI & agents",
         connectAgentShort: "Connect agent",
       },
     },
@@ -51,6 +55,27 @@ export const connectAgent: AreaTranslations = {
         appGet: "Get the Claude app",
         terminalNote:
           "Paste this into a normal terminal, not into Claude Code.",
+        codexTitle: "Codex",
+        codexBlurb: "For people who use OpenAI Codex.",
+        codexFound: "Codex is on this computer.",
+        codexSetupButton: "Set up Codex for me",
+        codexSetupReady: "Done. Open Codex and ask about your money.",
+        codexSetupFailed: "That did not work. Use the steps below instead.",
+        codexNodeMissing:
+          "Node 18 or newer is needed. Install it, then try again.",
+        codexNotFound: "We could not find Codex on this computer.",
+        codexGet: "Get Codex",
+        codexInstallNote: "Install, then come back and click Set up.",
+        copyInstall: "Copy install command",
+        copyConfig: "Copy config",
+        codexConfigNote: "Or add this to ~/.codex/config.toml",
+        codexPrivacy: "What Codex reads is sent to OpenAI.",
+        hubSwitch: "AI features",
+        hubSwitchHint: "Off hides AI and blocks agent access.",
+        hubOffTitle: "AI is off",
+        hubOffBody:
+          "Nothing is sent to any AI provider and no agent can connect.",
+        hubTurnOn: "Turn on AI",
         codePrivacy: "What Claude reads is sent to Anthropic.",
         codeTitle: "Claude Code",
         confirm: "Disconnect",
@@ -88,7 +113,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "This desktop build cannot connect agents yet. Update or rebuild the desktop app to use it.",
         pageIntro:
-          "Let an AI agent such as Claude read and update your money manager. The connection to the app stays on this computer. What an agent reads is sent to its AI provider (Anthropic, for Claude). A local model keeps everything on this device.",
+          "Let an AI agent read and update your data. What it reads is sent to its AI provider, unless the model runs on this device.",
         privacyCloud:
           "Whatever the agent reads, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude).",
         privacyLocal:
@@ -126,6 +151,11 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "Conectar un agente de IA",
+        aiProvidersHint:
+          "Usa tu propia clave de IA para categorizar transacciones",
+        connectAgentHint:
+          "Analiza, conversa o debate con tus datos usando un agente de IA",
+        aiAndAgents: "IA y agentes",
         connectAgentShort: "Conectar agente",
       },
     },
@@ -166,6 +196,27 @@ export const connectAgent: AreaTranslations = {
         appGet: "Obtener la app de Claude",
         terminalNote:
           "Pega esto en un terminal normal, no dentro de Claude Code.",
+        codexTitle: "Codex",
+        codexBlurb: "Para quienes usan OpenAI Codex.",
+        codexFound: "Codex está en este equipo.",
+        codexSetupButton: "Configurar Codex por mí",
+        codexSetupReady: "Listo. Abre Codex y pregunta por tu dinero.",
+        codexSetupFailed: "No funcionó. Usa los pasos de abajo.",
+        codexNodeMissing:
+          "Se necesita Node 18 o superior. Instálalo e inténtalo de nuevo.",
+        codexNotFound: "No encontramos Codex en este equipo.",
+        codexGet: "Obtener Codex",
+        codexInstallNote: "Instálalo, vuelve y pulsa Configurar.",
+        copyInstall: "Copiar comando de instalación",
+        copyConfig: "Copiar configuración",
+        codexConfigNote: "O añade esto a ~/.codex/config.toml",
+        codexPrivacy: "Lo que Codex lee se envía a OpenAI.",
+        hubSwitch: "Funciones de IA",
+        hubSwitchHint: "Apagado oculta la IA y bloquea a los agentes.",
+        hubOffTitle: "La IA está desactivada",
+        hubOffBody:
+          "No se envía nada a ningún proveedor de IA y ningún agente puede conectarse.",
+        hubTurnOn: "Activar IA",
         codePrivacy: "Lo que Claude lee se envía a Anthropic.",
         codeTitle: "Claude Code",
         confirm: "Desconectar",
@@ -203,7 +254,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "Esta versión de escritorio aún no puede conectar agentes. Actualiza o recompila la aplicación de escritorio para usarlo.",
         pageIntro:
-          "Deja que un agente de IA como Claude lea y actualice tu gestor de finanzas. La conexión con la aplicación se queda en este ordenador. Lo que lee un agente se envía a su proveedor de IA (Anthropic, en el caso de Claude). Un modelo local lo mantiene todo en este dispositivo.",
+          "Deja que un agente de IA lea y actualice tus datos. Lo que lee se envía a su proveedor de IA, salvo que el modelo se ejecute en este equipo.",
         privacyCloud:
           "Todo lo que lee el agente, como transacciones, proveedores y saldos, se envía al proveedor de IA (Anthropic, en el caso de Claude).",
         privacyLocal:
@@ -242,6 +293,9 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "连接 AI 智能体",
+        aiProvidersHint: "使用你自己的 AI 密钥为交易分类",
+        connectAgentHint: "借助 AI 智能体分析、对话或探讨你的数据",
+        aiAndAgents: "AI 与智能体",
         connectAgentShort: "连接智能体",
       },
     },
@@ -277,6 +331,25 @@ export const connectAgent: AreaTranslations = {
         appNotFound: "在这台电脑上找不到 Claude 应用。",
         appGet: "获取 Claude 应用",
         terminalNote: "请粘贴到普通终端，而不是 Claude Code 里。",
+        codexTitle: "Codex",
+        codexBlurb: "适合使用 OpenAI Codex 的人。",
+        codexFound: "此电脑上已有 Codex。",
+        codexSetupButton: "为我设置 Codex",
+        codexSetupReady: "完成。打开 Codex，问问你的资金情况。",
+        codexSetupFailed: "没有成功。请改用下面的步骤。",
+        codexNodeMissing: "需要 Node 18 或更高版本。请先安装，然后重试。",
+        codexNotFound: "在此电脑上找不到 Codex。",
+        codexGet: "获取 Codex",
+        codexInstallNote: "安装后回来点击“设置”。",
+        copyInstall: "复制安装命令",
+        copyConfig: "复制配置",
+        codexConfigNote: "或将此内容添加到 ~/.codex/config.toml",
+        codexPrivacy: "Codex 读取的内容会发送给 OpenAI。",
+        hubSwitch: "AI 功能",
+        hubSwitchHint: "关闭后隐藏 AI 并阻止智能体访问。",
+        hubOffTitle: "AI 已关闭",
+        hubOffBody: "不会向任何 AI 提供商发送数据，也没有智能体能连接。",
+        hubTurnOn: "开启 AI",
         codePrivacy: "Claude 读取的内容会发送给 Anthropic。",
         codeTitle: "Claude Code",
         confirm: "断开连接",
@@ -311,7 +384,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "此桌面版本还无法连接智能体。请更新或重新构建桌面应用以使用此功能。",
         pageIntro:
-          "让 Claude 等 AI 智能体读取并更新您的理财应用。与应用的连接只在这台电脑上进行。智能体读取的内容会发送给它的 AI 提供商（对 Claude 而言是 Anthropic）。本地模型会把一切都保留在这台设备上。",
+          "让 AI 智能体读取并更新你的数据。它读取的内容会发送给其 AI 提供商，除非模型在本机运行。",
         privacyCloud:
           "智能体读取的任何内容（例如交易、商家和余额）都会发送给 AI 提供商（对 Claude 而言是 Anthropic）。",
         privacyLocal:
@@ -347,6 +420,11 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "Een AI-agent koppelen",
+        aiProvidersHint:
+          "Gebruik je eigen AI-sleutel om transacties te categoriseren",
+        connectAgentHint:
+          "Analyseer, chat of debatteer met je gegevens via een AI-agent",
+        aiAndAgents: "AI en agents",
         connectAgentShort: "Agent koppelen",
       },
     },
@@ -384,6 +462,27 @@ export const connectAgent: AreaTranslations = {
         appNotFound: "We konden de Claude-app niet vinden op deze computer.",
         appGet: "De Claude-app downloaden",
         terminalNote: "Plak dit in een gewone terminal, niet in Claude Code.",
+        codexTitle: "Codex",
+        codexBlurb: "Voor wie OpenAI Codex gebruikt.",
+        codexFound: "Codex staat op deze computer.",
+        codexSetupButton: "Codex voor mij instellen",
+        codexSetupReady: "Klaar. Open Codex en vraag naar je geld.",
+        codexSetupFailed: "Dat lukte niet. Gebruik de stappen hieronder.",
+        codexNodeMissing:
+          "Node 18 of nieuwer is nodig. Installeer het en probeer opnieuw.",
+        codexNotFound: "We konden Codex niet vinden op deze computer.",
+        codexGet: "Codex downloaden",
+        codexInstallNote: "Installeer het, kom terug en klik op Instellen.",
+        copyInstall: "Installatieopdracht kopiëren",
+        copyConfig: "Config kopiëren",
+        codexConfigNote: "Of voeg dit toe aan ~/.codex/config.toml",
+        codexPrivacy: "Wat Codex leest, wordt naar OpenAI gestuurd.",
+        hubSwitch: "AI-functies",
+        hubSwitchHint: "Uit verbergt AI en blokkeert agenttoegang.",
+        hubOffTitle: "AI staat uit",
+        hubOffBody:
+          "Er wordt niets naar een AI-aanbieder gestuurd en geen agent kan verbinden.",
+        hubTurnOn: "AI aanzetten",
         codePrivacy: "Wat Claude leest, wordt naar Anthropic gestuurd.",
         codeTitle: "Claude Code",
         confirm: "Loskoppelen",
@@ -421,7 +520,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "Deze desktopversie kan nog geen agents koppelen. Werk de desktop-app bij of bouw hem opnieuw om dit te gebruiken.",
         pageIntro:
-          "Laat een AI-agent zoals Claude je geldbeheer lezen en bijwerken. De verbinding met de app blijft op deze computer. Wat een agent leest, wordt naar zijn AI-aanbieder gestuurd (Anthropic, voor Claude). Een lokaal model houdt alles op dit apparaat.",
+          "Laat een AI-agent je gegevens lezen en bijwerken. Wat het leest, gaat naar de AI-aanbieder, tenzij het model op dit apparaat draait.",
         privacyCloud:
           "Alles wat de agent leest, zoals transacties, leveranciers en saldi, wordt naar de AI-aanbieder gestuurd (Anthropic, voor Claude).",
         privacyLocal:
@@ -459,6 +558,11 @@ export const connectAgent: AreaTranslations = {
     layout: {
       nav: {
         connectAgent: "AI முகவரை இணை",
+        aiProvidersHint:
+          "பரிவர்த்தனைகளை வகைப்படுத்த உங்கள் சொந்த AI விசையைப் பயன்படுத்துங்கள்",
+        connectAgentHint:
+          "AI முகவருடன் உங்கள் தரவை ஆய்வு செய்யுங்கள், உரையாடுங்கள், விவாதியுங்கள்",
+        aiAndAgents: "AI மற்றும் முகவர்கள்",
         connectAgentShort: "முகவரை இணை",
       },
     },
@@ -502,6 +606,29 @@ export const connectAgent: AreaTranslations = {
         appGet: "Claude செயலியைப் பெறு",
         terminalNote:
           "இதை சாதாரண டெர்மினலில் ஒட்டுங்கள், Claude Code-க்குள் அல்ல.",
+        codexTitle: "Codex",
+        codexBlurb: "OpenAI Codex பயன்படுத்துபவர்களுக்கு.",
+        codexFound: "இந்த கணினியில் Codex உள்ளது.",
+        codexSetupButton: "எனக்காக Codex ஐ அமை",
+        codexSetupReady:
+          "முடிந்தது. Codex ஐத் திறந்து உங்கள் பணம் பற்றிக் கேளுங்கள்.",
+        codexSetupFailed:
+          "அது வேலை செய்யவில்லை. கீழே உள்ள படிகளைப் பயன்படுத்துங்கள்.",
+        codexNodeMissing:
+          "Node 18 அல்லது புதியது தேவை. நிறுவி மீண்டும் முயலுங்கள்.",
+        codexNotFound: "இந்த கணினியில் Codex ஐக் காண முடியவில்லை.",
+        codexGet: "Codex ஐப் பெறு",
+        codexInstallNote: "நிறுவி, திரும்பி வந்து அமை என்பதை அழுத்துங்கள்.",
+        copyInstall: "நிறுவல் கட்டளையை நகலெடு",
+        copyConfig: "கட்டமைப்பை நகலெடு",
+        codexConfigNote: "அல்லது இதை ~/.codex/config.toml இல் சேர்க்கவும்",
+        codexPrivacy: "Codex படிப்பது OpenAI க்கு அனுப்பப்படும்.",
+        hubSwitch: "AI அம்சங்கள்",
+        hubSwitchHint: "அணைத்தால் AI மறைந்து முகவர் அணுகல் தடுக்கப்படும்.",
+        hubOffTitle: "AI அணைந்துள்ளது",
+        hubOffBody:
+          "எந்த AI வழங்குநருக்கும் எதுவும் அனுப்பப்படாது; எந்த முகவரும் இணைய முடியாது.",
+        hubTurnOn: "AI ஐ இயக்கு",
         codePrivacy: "Claude படிப்பவை Anthropic-க்கு அனுப்பப்படும்.",
         codeTitle: "Claude Code",
         confirm: "துண்டி",
@@ -541,7 +668,7 @@ export const connectAgent: AreaTranslations = {
         outdatedDesktop:
           "இந்த டெஸ்க்டாப் பதிப்பால் இன்னும் முகவர்களை இணைக்க முடியாது. இதைப் பயன்படுத்த டெஸ்க்டாப் பயன்பாட்டைப் புதுப்பிக்கவும் அல்லது மீண்டும் உருவாக்கவும்.",
         pageIntro:
-          "Claude போன்ற AI முகவர் உங்கள் பண மேலாளரைப் படிக்கவும் புதுப்பிக்கவும் அனுமதியுங்கள். பயன்பாட்டுடனான இணைப்பு இந்தக் கணினியிலேயே இருக்கும். முகவர் படிப்பவை அதன் AI வழங்குநருக்கு (Claude-க்கு Anthropic) அனுப்பப்படும். உள்ளூர் மாதிரி அனைத்தையும் இந்தச் சாதனத்திலேயே வைத்திருக்கும்.",
+          "AI முகவர் உங்கள் தரவைப் படித்து புதுப்பிக்கட்டும். மாதிரி இந்தச் சாதனத்தில் இயங்காவிட்டால், அது படிப்பது அதன் AI வழங்குநருக்கு அனுப்பப்படும்.",
         privacyCloud:
           "பரிவர்த்தனைகள், விற்பனையாளர்கள், இருப்புகள் போன்று முகவர் படிக்கும் அனைத்தும் AI வழங்குநருக்கு (Claude-க்கு Anthropic) அனுப்பப்படும்.",
         privacyLocal:

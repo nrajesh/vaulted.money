@@ -1,7 +1,15 @@
+import { defaultModel } from "@/constants/aiDefaultModels";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +35,7 @@ import { useDataProvider } from "@/context/DataProviderContext";
 import { AIProvider } from "@/types/dataProvider";
 import { buildGeminiUrl } from "@/hooks/useAutoCategorize";
 import { readAiApiKeyFromStorage } from "@/constants/aiApiKeyStorage";
+import { fetchProviderModels } from "@/utils/aiModels";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -138,6 +147,43 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   }, [provider, form, isOpen]);
 
   const [isTesting, setIsTesting] = React.useState(false);
+  const [models, setModels] = React.useState<string[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = React.useState(false);
+
+  // Asks the provider which models this key can use, so the list is never stale.
+  const handleLoadModels = async () => {
+    const values = form.getValues();
+    const apiKey = provider?.id ? readAiApiKeyFromStorage(provider.id) : "";
+    if (!apiKey) {
+      showError(
+        t("aiProviders.dialog.needKey", {
+          defaultValue:
+            "Please save the provider and set an API key in Settings first to test.",
+        }),
+      );
+      return;
+    }
+    setIsLoadingModels(true);
+    try {
+      const found = await fetchProviderModels(values, apiKey);
+      setModels(found ?? []);
+      showSuccess(
+        t("aiProviders.dialog.modelsLoaded", {
+          count: found?.length ?? 0,
+          defaultValue: "{{count}} models found",
+        }),
+      );
+    } catch (error: unknown) {
+      showError(
+        t("aiProviders.dialog.modelsFailed", {
+          message: error instanceof Error ? error.message : String(error),
+          defaultValue: "Could not load models: {{message}}",
+        }),
+      );
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
 
   const handleTestConnection = async () => {
     const values = form.getValues();
@@ -199,7 +245,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
               }
             : values.type === "ANTHROPIC"
               ? {
-                  model: values.model || "claude-3-haiku-20240307",
+                  model: values.model || defaultModel("ANTHROPIC"),
                   max_tokens: 10,
                   messages: [
                     {
@@ -209,9 +255,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                   ],
                 }
               : {
-                  model:
-                    values.model ||
-                    (values.type === "OPENAI" ? "gpt-4o" : undefined),
+                  model: values.model || defaultModel(values.type),
                   messages: [
                     {
                       role: "user",
@@ -342,7 +386,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -353,12 +397,10 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         defaultValue: "API Type",
                       })}
                     </FormLabel>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    <Select
                       value={field.value}
-                      onChange={(e) => {
-                        const newType = e.target
-                          .value as keyof typeof PROVIDER_DOCS;
+                      onValueChange={(value) => {
+                        const newType = value as keyof typeof PROVIDER_DOCS;
                         field.onChange(newType);
 
                         // Auto-fill endpoint if current is empty or matches another provider's default
@@ -374,17 +416,24 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         }
                       }}
                     >
-                      <option value="OPENAI">OpenAI</option>
-                      <option value="GEMINI">Google Gemini</option>
-                      <option value="ANTHROPIC">Anthropic</option>
-                      <option value="MISTRAL">Mistral</option>
-                      <option value="PERPLEXITY">Perplexity</option>
-                      <option value="CUSTOM">
-                        {t("aiProviders.dialog.customOption", {
-                          defaultValue: "Custom (OpenAI Compatible)",
-                        })}
-                      </option>
-                    </select>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="OPENAI">OpenAI</SelectItem>
+                        <SelectItem value="GEMINI">Google Gemini</SelectItem>
+                        <SelectItem value="ANTHROPIC">Anthropic</SelectItem>
+                        <SelectItem value="MISTRAL">Mistral</SelectItem>
+                        <SelectItem value="PERPLEXITY">Perplexity</SelectItem>
+                        <SelectItem value="CUSTOM">
+                          {t("aiProviders.dialog.customOption", {
+                            defaultValue: "Custom (OpenAI Compatible)",
+                          })}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     {PROVIDER_DOCS[field.value as keyof typeof PROVIDER_DOCS]
                       ?.url && (
                       <a
@@ -395,7 +444,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[10px] text-indigo-500 hover:underline inline-block mt-1"
+                        className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline inline-block mt-1"
                       >
                         {t("aiProviders.dialog.docs", {
                           defaultValue: "View Documentation & Models →",
@@ -412,19 +461,51 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                 name="model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {t("aiProviders.dialog.model", {
-                        defaultValue: "Model ID (Optional)",
-                      })}
-                    </FormLabel>
+                    <div className="flex items-center justify-between gap-2">
+                      <FormLabel>
+                        {t("aiProviders.dialog.model", {
+                          defaultValue: "Model ID (Optional)",
+                        })}
+                      </FormLabel>
+                      {form.watch("type") !== "PERPLEXITY" && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          disabled={isLoadingModels}
+                          onClick={handleLoadModels}
+                        >
+                          {isLoadingModels && (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          )}
+                          {isLoadingModels
+                            ? t("aiProviders.dialog.loadingModels", {
+                                defaultValue: "Loading…",
+                              })
+                            : t("aiProviders.dialog.loadModels", {
+                                defaultValue: "Load models",
+                              })}
+                        </Button>
+                      )}
+                    </div>
                     <FormControl>
                       <Input
-                        placeholder={t("aiProviders.dialog.modelPlaceholder", {
-                          defaultValue: "e.g., gpt-4o, llama3",
-                        })}
+                        list="provider-models"
+                        placeholder={
+                          defaultModel(form.watch("type")) ??
+                          t("aiProviders.dialog.modelPlaceholder", {
+                            defaultValue: "e.g., gpt-4o, llama3",
+                          })
+                        }
                         {...field}
                       />
                     </FormControl>
+                    <datalist id="provider-models">
+                      {models.map((id) => (
+                        <option key={id} value={id} />
+                      ))}
+                    </datalist>
                     <FormMessage />
                   </FormItem>
                 )}

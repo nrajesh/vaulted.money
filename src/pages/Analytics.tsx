@@ -81,7 +81,10 @@ const Analytics = () => {
         <SearchFilterBar />
       </div>
       <div className="tour-analytics-chart">
-        <AnalyticsChartView transactions={filteredTransactions} />
+        <AnalyticsChartView
+          transactions={filteredTransactions}
+          filterDateRange={dateRange}
+        />
       </div>
     </div>
   );
