@@ -450,12 +450,16 @@ export function ConversationalSearchInput({
           ))}
         </CommandGroup>
 
+        {/* Always offered: cmdk trims item values but not what was typed, so a
+            trailing space would otherwise filter this row out. */}
         <CommandGroup
+          forceMount
           heading={t("filters.conversational.search", {
             defaultValue: "Search",
           })}
         >
           <CommandItem
+            forceMount
             value={"search-" + input}
             onSelect={() => handleGenericSearch()}
           >
@@ -602,28 +606,30 @@ export function ConversationalSearchInput({
             }}
           />
           <CommandList>
-            <CommandEmpty>
-              <div
-                className="flex flex-col items-center gap-2 p-2"
-                onClick={() => handleGenericSearch()}
-              >
-                <span className="text-muted-foreground">
-                  {t("filters.conversational.searchText", {
-                    input,
-                    defaultValue: `Search Text "${input}"`,
-                  })}
-                </span>
-                <Button
-                  size="sm"
-                  variant="secondary"
+            {step !== "ROOT" && (
+              <CommandEmpty>
+                <div
+                  className="flex flex-col items-center gap-2 p-2"
                   onClick={() => handleGenericSearch()}
                 >
-                  {t("filters.conversational.search", {
-                    defaultValue: "Search",
-                  })}
-                </Button>
-              </div>
-            </CommandEmpty>
+                  <span className="text-muted-foreground">
+                    {t("filters.conversational.searchText", {
+                      input,
+                      defaultValue: `Search Text "${input}"`,
+                    })}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleGenericSearch()}
+                  >
+                    {t("filters.conversational.search", {
+                      defaultValue: "Search",
+                    })}
+                  </Button>
+                </div>
+              </CommandEmpty>
+            )}
             {renderStepContent()}
           </CommandList>
           {(input || applied.length > 0) && (
