@@ -57,6 +57,12 @@ describe("findCodex", () => {
     );
   });
 
+  it("finds the newer Codex location inside the ChatGPT app", () => {
+    const newer =
+      "/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex";
+    expect(findCodex(makeDeps({ isRunnable: (p) => p === newer }))).toBe(newer);
+  });
+
   it("reports it missing when it is not installed", () => {
     expect(detectCodex(makeDeps())).toEqual({ cli: false });
   });
