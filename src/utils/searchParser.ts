@@ -19,6 +19,7 @@ import {
   setDay,
 } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { findFuzzyPhrase } from "@/utils/fuzzyMatch";
 
 const MONTH_PREFIXES = [
   "jan",
@@ -35,6 +36,105 @@ const MONTH_PREFIXES = [
   "dec",
 ];
 
+const FULL_MONTH_NAMES = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+/** Index of a month written as a full name, 3-letter abbreviation or "sept". */
+const monthIndexOf = (word: string): number => {
+  const w = word.toLowerCase();
+  if (w === "sept") return 8;
+  return FULL_MONTH_NAMES.findIndex(
+    (name, i) => w === name || w === MONTH_PREFIXES[i],
+  );
+};
+
+/**
+ * Words that mean something to the parser. They are never taken for a
+ * misspelled name, however close they are to one.
+ */
+const FUZZY_IGNORED_WORDS: ReadonlySet<string> = new Set([
+  ...FULL_MONTH_NAMES,
+  ...MONTH_PREFIXES,
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+  "today",
+  "yesterday",
+  "tomorrow",
+  "income",
+  "incomes",
+  "expense",
+  "expenses",
+  "spent",
+  "spending",
+  "transaction",
+  "transactions",
+  "account",
+  "accounts",
+  "checking",
+  "savings",
+  "investment",
+  "credit",
+  "between",
+  "since",
+  "before",
+  "after",
+  "until",
+  "above",
+  "below",
+  "under",
+  "over",
+  "largest",
+  "biggest",
+  "highest",
+  "smallest",
+  "lowest",
+  "bottom",
+  "quarter",
+  "decade",
+  "century",
+  // Filler words dropped from the search text further down.
+  "all",
+  "show",
+  "list",
+  "item",
+  "items",
+  "with",
+  "from",
+  "for",
+  "during",
+]);
+
+/**
+ * Start of an open-ended range ("before 2019"). The filter state needs a real
+ * `from` date, so "no start" is this very early date; use `isOpenRangeStart`
+ * to show it as "until X" instead of as a date in 1900.
+ */
+export const OPEN_RANGE_START = new Date(1900, 0, 1, 12);
+export const isOpenRangeStart = (date: Date): boolean =>
+  date.getFullYear() <= OPEN_RANGE_START.getFullYear();
+
+/** Regex alternation of month names and abbreviations, for building patterns. */
+const MONTH_PATTERN = [...FULL_MONTH_NAMES, ...MONTH_PREFIXES, "sept"].join(
+  "|",
+);
+
 export interface ParsedFilterState {
   searchTerm: string; // The remaining text that wasn't parsed into a structured filter
   selectedAccounts: string[] | undefined;
@@ -48,6 +148,24 @@ export interface ParsedFilterState {
   transactionType?: "income" | "expense";
   sortOrder?: "largest" | "smallest";
   isAllTime?: boolean;
+  /**
+   * Names that were matched despite a typo (only when `fuzzy` is on), so the
+   * UI can say "matched 'starbuks' to Starbucks".
+   */
+  fuzzyMatches?: {
+    kind: "account" | "category" | "subCategory" | "vendor";
+    slug: string;
+    typed: string;
+  }[];
+}
+
+export interface ParseOptions {
+  /**
+   * Also match names with typos. Off by default: callers that apply the result
+   * as the user types would silently narrow results on a wrong guess, so only
+   * callers that show the interpretation for confirmation turn it on.
+   */
+  fuzzy?: boolean;
 }
 
 interface SearchContext {
@@ -60,6 +178,7 @@ interface SearchContext {
 export const parseSearchQuery = (
   query: string,
   context: SearchContext,
+  options: ParseOptions = {},
 ): ParsedFilterState => {
   const result: ParsedFilterState = {
     searchTerm: query,
@@ -115,17 +234,16 @@ export const parseSearchQuery = (
     // the range, last day when it closes it).
     const monthYear = s.match(/^([a-z]{3,9})\.?\s+(\d{4})$/);
     if (monthYear) {
-      const monthIndex = MONTH_PREFIXES.findIndex((m) =>
-        monthYear[1].startsWith(m),
-      );
+      const monthIndex = monthIndexOf(monthYear[1]);
       if (monthIndex >= 0) {
         const first = new Date(parseInt(monthYear[2], 10), monthIndex, 1, 12);
         return asRangeEnd ? endOfMonth(first) : first;
       }
     }
 
-    // "2020": the whole year.
-    const yearOnly = s.match(/^(\d{4})$/);
+    // "2020": the whole year. Only plausible years, so "between 1000 and 1500"
+    // stays an amount.
+    const yearOnly = s.match(/^((?:19|20)\d{2})$/);
     if (yearOnly) {
       const year = parseInt(yearOnly[1], 10);
       return asRangeEnd ? new Date(year, 11, 31, 12) : new Date(year, 0, 1, 12);
@@ -136,14 +254,74 @@ export const parseSearchQuery = (
   // "Between X and Y". The second part stops at the end of a date-like phrase
   // (a word, an optional year) so "dec 2021" is read whole, not as "dec".
   const betweenRegex =
-    /\bbetween\s+(.+?)\s+and\s+([a-z]{3,9}\.?\s+\d{4}|[\w/.-]+)/i;
+    /\bbetween\s+(.+?)\s+(?:and|to|through|thru|until|-|–)\s+([a-z]{3,9}\.?\s+\d{4}|[\w/.-]+)/i;
   const betweenMatch = remainingQuery.match(betweenRegex);
-  if (betweenMatch) {
-    const d1 = parseSimpleDate(betweenMatch[1]);
-    const d2 = parseSimpleDate(betweenMatch[2], true);
-    if (d1 && d2) {
-      result.dateRange = { from: d1 < d2 ? d1 : d2, to: d1 < d2 ? d2 : d1 };
+  // "amount between 2000 and 2050" or "between $2000 and $2050" are money.
+  const looksLikeMoney =
+    /\bamount\s+between\b|[$€£₹]\s*\d/i.test(betweenMatch?.[0] ?? "") ||
+    /\bamount\s+between\b/i.test(remainingQuery);
+  if (betweenMatch && !looksLikeMoney) {
+    // Each end may be a whole month or year, so take the earliest start and
+    // the latest end whichever order they were typed in.
+    const firstStart = parseSimpleDate(betweenMatch[1]);
+    const firstEnd = parseSimpleDate(betweenMatch[1], true);
+    const secondStart = parseSimpleDate(betweenMatch[2]);
+    const secondEnd = parseSimpleDate(betweenMatch[2], true);
+    if (firstStart && firstEnd && secondStart && secondEnd) {
+      result.dateRange = {
+        from: firstStart < secondStart ? firstStart : secondStart,
+        to: firstEnd > secondEnd ? firstEnd : secondEnd,
+      };
       remainingQuery = remainingQuery.replace(betweenMatch[0], "").trim();
+    }
+  }
+
+  // Years with no "between": "2016 to 2024", "from 2016 - 2024".
+  if (!result.dateRange) {
+    const yearRangeMatch = remainingQuery.match(
+      /\b(?:from\s+)?((?:19|20)\d{2})\s*(?:to|through|thru|until|-|–)\s*((?:19|20)\d{2})\b/i,
+    );
+    if (yearRangeMatch) {
+      const first = parseInt(yearRangeMatch[1], 10);
+      const second = parseInt(yearRangeMatch[2], 10);
+      result.dateRange = {
+        from: new Date(Math.min(first, second), 0, 1, 12),
+        to: new Date(Math.max(first, second), 11, 31, 12),
+      };
+      remainingQuery = remainingQuery.replace(yearRangeMatch[0], "").trim();
+    }
+  }
+
+  // One-sided limits: "since 2020", "after mar 2024", "before 2019",
+  // "until 01/06/2024". The date is a year, month and year, or DD/MM/YYYY.
+  if (!result.dateRange) {
+    const boundMatch = remainingQuery.match(
+      new RegExp(
+        `\\b(since|after|before|until|till)\\s+(\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{4}|(?:${MONTH_PATTERN})\\.?\\s+\\d{4}|(?:19|20)\\d{2})\\b`,
+        "i",
+      ),
+    );
+    if (boundMatch) {
+      const keyword = boundMatch[1].toLowerCase();
+      const periodStart = parseSimpleDate(boundMatch[2]);
+      const periodEnd = parseSimpleDate(boundMatch[2], true);
+      if (periodStart && periodEnd) {
+        const longAgo = new Date(OPEN_RANGE_START);
+        if (keyword === "since") {
+          result.dateRange = { from: periodStart, to: today };
+        } else if (keyword === "after") {
+          const from = addDays(periodEnd, 1);
+          result.dateRange = {
+            from,
+            to: from > today ? addYears(from, 100) : today,
+          };
+        } else if (keyword === "before") {
+          result.dateRange = { from: longAgo, to: subDays(periodStart, 1) };
+        } else {
+          result.dateRange = { from: longAgo, to: periodEnd };
+        }
+        remainingQuery = remainingQuery.replace(boundMatch[0], "").trim();
+      }
     }
   }
 
@@ -504,10 +682,8 @@ export const parseSearchQuery = (
   }
 
   // --- 1.2 Explicit Month Range ("Nov 2025 to Jan 2026", "Nov - Jan") ---
-  const monthNames =
-    "jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december";
   const monthRangeRegex = new RegExp(
-    `\\b(${monthNames})\\s*(\\d{4})?\\s*(?:-|to)\\s*(${monthNames})\\s*(\\d{4})?\\b`,
+    `\\b(${MONTH_PATTERN})\\s*(\\d{4})?\\s*(?:-|to)\\s*(${MONTH_PATTERN})\\s*(\\d{4})?\\b`,
     "i",
   );
   const monthRangeMatch = remainingQuery.match(monthRangeRegex);
@@ -518,24 +694,8 @@ export const parseSearchQuery = (
     const toMonthName = monthRangeMatch[3].toLowerCase();
     const toYearStr = monthRangeMatch[4];
 
-    const getMonthIndex = (name: string) =>
-      [
-        "jan",
-        "feb",
-        "mar",
-        "apr",
-        "may",
-        "jun",
-        "jul",
-        "aug",
-        "sep",
-        "oct",
-        "nov",
-        "dec",
-      ].findIndex((m) => name.startsWith(m));
-
-    const fromMonth = getMonthIndex(fromMonthName);
-    const toMonth = getMonthIndex(toMonthName);
+    const fromMonth = monthIndexOf(fromMonthName);
+    const toMonth = monthIndexOf(toMonthName);
 
     if (fromMonth >= 0 && toMonth >= 0) {
       let fromYear = fromYearStr
@@ -581,27 +741,15 @@ export const parseSearchQuery = (
 
   // Match Month YYYY (e.g. August 2025, Aug 2025)
   // Needs to be robust to handle full names and abbreviations.
-  const monthYearRegex =
-    /\b(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)\s+(\d{4})\b/i;
+  const monthYearRegex = new RegExp(
+    `\\b(${MONTH_PATTERN})\\s+(\\d{4})\\b`,
+    "i",
+  );
   const monthYearMatch = remainingQuery.match(monthYearRegex);
   if (monthYearMatch) {
     const monthName = monthYearMatch[1].toLowerCase();
     const year = parseInt(monthYearMatch[2], 10);
-    // Map month name to index
-    const monthIndex = [
-      "jan",
-      "feb",
-      "mar",
-      "apr",
-      "may",
-      "jun",
-      "jul",
-      "aug",
-      "sep",
-      "oct",
-      "nov",
-      "dec",
-    ].findIndex((m) => monthName.startsWith(m));
+    const monthIndex = monthIndexOf(monthName);
 
     if (monthIndex >= 0) {
       const startDate = new Date(year, monthIndex, 1, 12, 0, 0); // Noon
@@ -692,34 +840,53 @@ export const parseSearchQuery = (
     remainingQuery = remainingQuery.replace(relativeMatch[0], "").trim();
   }
 
-  // --- 3. Amount Parsing (>, <, over, under) ---
-  // Regex for specific amount patterns (simple integers/decimals)
-  const amountRegex =
-    /(?:amount|spending|cost|value|transfers)?\s*(?:>|>=|<|<=|over|under|above|below|more than|less than)\s*(\$)?\s*(\d+(?:\.\d{1,2})?)/i;
-  const match = remainingQuery.match(amountRegex);
+  // --- 3. Amount Parsing ---
+  // "over 50", "> $1,000", "under 20k", "at least 100", "between 50 and 100".
+  const AMOUNT = String.raw`(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)(?:\s?(k)\b)?`;
+  const CURRENCY = String.raw`[$€£₹]?\s*`;
+  const toAmount = (digits: string, thousands?: string) =>
+    parseFloat(digits.replace(/,/g, "")) * (thousands ? 1000 : 1);
 
-  if (match) {
-    const fullMatch = match[0].toLowerCase();
-    const value = parseFloat(match[2]);
-
-    if (
-      fullMatch.includes(">") ||
-      fullMatch.includes("over") ||
-      fullMatch.includes("above") ||
-      fullMatch.includes("more than")
-    ) {
-      result.minAmount = value;
-    } else if (
-      fullMatch.includes("<") ||
-      fullMatch.includes("under") ||
-      fullMatch.includes("below") ||
-      fullMatch.includes("less than")
-    ) {
-      result.maxAmount = value;
+  const amountBetweenMatch = remainingQuery.match(
+    new RegExp(
+      String.raw`\b(?:amount\s+)?between\s+${CURRENCY}${AMOUNT}\s*(?:and|to|-|–)\s*${CURRENCY}${AMOUNT}`,
+      "i",
+    ),
+  );
+  if (amountBetweenMatch) {
+    const first = toAmount(amountBetweenMatch[1], amountBetweenMatch[2]);
+    const second = toAmount(amountBetweenMatch[3], amountBetweenMatch[4]);
+    result.minAmount = Math.min(first, second);
+    result.maxAmount = Math.max(first, second);
+    remainingQuery = remainingQuery.replace(amountBetweenMatch[0], "").trim();
+  } else {
+    const minOperators = [
+      ">",
+      ">=",
+      "over",
+      "above",
+      "more than",
+      "greater than",
+      "exceeding",
+      "at least",
+      "no less than",
+    ];
+    const amountMatch = remainingQuery.match(
+      new RegExp(
+        String.raw`(?:amount|spending|cost|value|transfers)?\s*(>=|<=|>|<|over|under|above|below|more than|less than|greater than|exceeding|at least|at most|no more than|no less than)\s*${CURRENCY}${AMOUNT}`,
+        "i",
+      ),
+    );
+    if (amountMatch) {
+      const value = toAmount(amountMatch[2], amountMatch[3]);
+      if (minOperators.includes(amountMatch[1].toLowerCase())) {
+        result.minAmount = value;
+      } else {
+        result.maxAmount = value;
+      }
+      // Remove amount part from query to prevent it being used as text search
+      remainingQuery = remainingQuery.replace(amountMatch[0], "").trim();
     }
-
-    // Remove amount part from query to prevent it being used as text search
-    remainingQuery = remainingQuery.replace(match[0], "").trim();
   }
 
   // --- 2. Entity Matching (Fuzzy/Exact) ---
@@ -1026,6 +1193,87 @@ export const parseSearchQuery = (
     }
   });
 
+  // 2.2 Typos. Whatever the exact matching above left over may still be a
+  // misspelled name ("starbuks", "grocries"). Collect every plausible match
+  // first and only then remove them, so each match's position refers to the
+  // same text.
+  if (options.fuzzy) {
+    const fuzzySpans: { start: number; end: number }[] = [];
+    const candidates: {
+      kind: NonNullable<ParsedFilterState["fuzzyMatches"]>[number]["kind"];
+      slug: string;
+      match: NonNullable<ReturnType<typeof findFuzzyPhrase>>;
+    }[] = [];
+    const collect = (
+      kind: (typeof candidates)[number]["kind"],
+      entities: { name: string; slug: string }[],
+      alreadyMatched: string[],
+    ) => {
+      for (const entity of entities) {
+        if (alreadyMatched.includes(entity.slug)) continue;
+        const match = findFuzzyPhrase(
+          remainingQuery,
+          entity.name,
+          FUZZY_IGNORED_WORDS,
+        );
+        if (match) candidates.push({ kind, slug: entity.slug, match });
+      }
+    };
+    collect("category", context.categories, result.selectedCategories);
+    collect("subCategory", context.subCategories, result.selectedSubCategories);
+    collect("vendor", context.vendors, result.selectedVendors);
+    collect("account", context.accounts, result.selectedAccounts ?? []);
+
+    // Best match first. Where two names fit the same words equally well
+    // (two vendors one letter apart) the choice would be a coin flip, so skip.
+    candidates.sort((a, b) => a.match.distance - b.match.distance);
+    const taken: { start: number; end: number }[] = [];
+    const overlaps = (m: { start: number; end: number }) =>
+      taken.some((t) => m.start < t.end && t.start < m.end);
+    for (const candidate of candidates) {
+      if (overlaps(candidate.match)) continue;
+      const rivals = candidates.filter(
+        (other) =>
+          other !== candidate &&
+          other.match.distance === candidate.match.distance &&
+          other.match.start < candidate.match.end &&
+          candidate.match.start < other.match.end,
+      );
+      // Claim the words either way, so a rival cannot take them after we
+      // decided the choice was a coin flip.
+      taken.push(candidate.match);
+      if (rivals.length > 0) continue;
+      if (candidate.kind === "category") {
+        result.selectedCategories.push(candidate.slug);
+      } else if (candidate.kind === "subCategory") {
+        result.selectedSubCategories.push(candidate.slug);
+      } else if (candidate.kind === "vendor") {
+        result.selectedVendors.push(candidate.slug);
+      } else {
+        result.selectedAccounts = [
+          ...(result.selectedAccounts ?? []),
+          candidate.slug,
+        ];
+      }
+      (result.fuzzyMatches ??= []).push({
+        kind: candidate.kind,
+        slug: candidate.slug,
+        typed: candidate.match.typed,
+      });
+      fuzzySpans.push(candidate.match);
+    }
+    // Remove from the end so earlier positions stay valid.
+    fuzzySpans
+      .sort((a, b) => b.start - a.start)
+      .forEach((span) => {
+        remainingQuery =
+          remainingQuery.slice(0, span.start) +
+          " " +
+          remainingQuery.slice(span.end);
+      });
+    remainingQuery = remainingQuery.replace(/\s+/g, " ").trim();
+  }
+
   // --- 4. Special Keywords ("All Transactions", "All Expenses", "Income") ---
 
   if (lowerQuery.includes("all transactions")) {
@@ -1046,15 +1294,18 @@ export const parseSearchQuery = (
   }
 
   // Transaction Type Parsing
-  if (/\b(expenses|expense)\b/i.test(remainingQuery)) {
+  // "spending on gas" and "earned in 2023" read as expense / income.
+  const expenseWords = /\b(expenses|expense|spent|spending|spend)\b/i;
+  const incomeWords = /\b(incomes|income|earned|earnings|earning)\b/i;
+  if (expenseWords.test(remainingQuery)) {
     result.transactionType = "expense";
     remainingQuery = remainingQuery
-      .replace(/\b(expenses|expense)\b/gi, "")
+      .replace(new RegExp(expenseWords, "gi"), "")
       .trim();
-  } else if (/\b(incomes|income)\b/i.test(remainingQuery)) {
+  } else if (incomeWords.test(remainingQuery)) {
     result.transactionType = "income";
     remainingQuery = remainingQuery
-      .replace(/\b(incomes|income)\b/gi, "")
+      .replace(new RegExp(incomeWords, "gi"), "")
       .trim();
   }
 
@@ -1075,7 +1326,7 @@ export const parseSearchQuery = (
   // Clean up remaining query (remove dangling & , and, and filler words)
   let cleanSearchTerm = remainingQuery
     .replace(
-      /\b(and|&|all|transactions?|items?|show|me|list|my|in|account(?:s)?|with|for|of|from)\b/gi,
+      /\b(and|&|all|transactions?|items?|show|me|list|my|in|on|at|during|account(?:s)?|with|for|of|from)\b/gi,
       " ",
     )
     .replace(/\s+/g, " ") // Collapse spaces

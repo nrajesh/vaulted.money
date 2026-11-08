@@ -153,30 +153,39 @@ export const SearchFilterBar = () => {
     );
   }, [vendors, transactions, accounts]);
 
+  // Stable references: the search box memoises its parse on these lists.
+  const categoryOptions = React.useMemo(
+    () => categories.map((c) => ({ name: c.name, slug: slugify(c.name) })),
+    [categories],
+  );
+  const subCategoryOptions = React.useMemo(() => {
+    const unique = new Map();
+    subCategories?.forEach((s) => {
+      const slug = slugify(s.name);
+      if (!unique.has(slug)) {
+        unique.set(slug, { name: s.name, slug });
+      }
+    });
+    return Array.from(unique.values());
+  }, [subCategories]);
+  const accountOptions = React.useMemo(
+    () =>
+      accounts.map((a) => ({
+        name: a.name,
+        slug: slugify(a.name),
+        type: a.type,
+      })),
+    [accounts],
+  );
+
   return (
     <div className="w-full space-y-4">
       {/* Conversational / Structured Search Input */}
       <ConversationalSearchInput
         onUpdate={handleConversationalUpdate}
-        categories={categories.map((c) => ({
-          name: c.name,
-          slug: slugify(c.name),
-        }))}
-        subCategories={(() => {
-          const unique = new Map();
-          subCategories?.forEach((s) => {
-            const slug = slugify(s.name);
-            if (!unique.has(slug)) {
-              unique.set(slug, { name: s.name, slug });
-            }
-          });
-          return Array.from(unique.values());
-        })()}
-        accounts={accounts.map((a) => ({
-          name: a.name,
-          slug: slugify(a.name),
-          type: a.type,
-        }))}
+        categories={categoryOptions}
+        subCategories={subCategoryOptions}
+        accounts={accountOptions}
         vendors={aggregatedVendors}
       />
 

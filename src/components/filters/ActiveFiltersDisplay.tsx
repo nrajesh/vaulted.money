@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { isOpenRangeStart } from "@/utils/searchParser";
 
 export const ActiveFiltersDisplay = () => {
   const { t } = useTranslation();
@@ -46,8 +47,12 @@ export const ActiveFiltersDisplay = () => {
     const sameYear = dateRange.from.getFullYear() === toDate.getFullYear();
     const fromStr = format(dateRange.from, sameYear ? "MMM d" : "MMM d, yyyy");
     const toStr = format(toDate, "MMM d, yyyy"); // Fallback to from if to is undefined
-    const label =
-      fromStr === toStr
+    const label = isOpenRangeStart(dateRange.from)
+      ? t("filters.active.dateUntil", {
+          date: toStr,
+          defaultValue: `Date: until ${toStr}`,
+        })
+      : fromStr === toStr
         ? t("filters.active.dateSingle", {
             date: fromStr,
             defaultValue: `Date: ${fromStr}`,
