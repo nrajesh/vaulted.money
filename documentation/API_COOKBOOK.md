@@ -92,6 +92,15 @@ curl -s -H "$AUTH" $VM/ledgers/$LEDGER/vendors/unused | jq '.unused_found'
 curl -H "$AUTH" -H "$JSON" -X POST $VM/ledgers/$LEDGER/vendors/cleanup -d '{"confirm_delete":true}'
 ```
 
+### Turn a sentence into a query
+
+```bash
+curl -s -H "$AUTH" -G $VM/ledgers/$LEDGER/search/interpret \
+  --data-urlencode "q=expenses over 20 at starbuks 2 weeks from today" | jq '.filters, .params, .unmapped'
+```
+
+`filters` is what the app's search box would build (typos corrected, listed under `corrections`). `params` is the matching query for `GET /transactions`, with amounts already converted to its signed ones, and `unmapped` says what that endpoint cannot express. Add `&today=2026-11-08` to make relative dates repeatable.
+
 ### Move to another computer
 
 ```bash

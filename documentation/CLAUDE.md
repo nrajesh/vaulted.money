@@ -102,6 +102,9 @@ Parsing nested key paths (e.g. `"category.name"`) inside a sort comparison runs 
 **Sortable column headers**
 Keep `aria-sort` on the `<th>` element; move the click handler to a child `<button type="button">` that fills the cell. Use flex utilities (`justify-end`) for alignment. Mixing both on `<th>` breaks semantic structure.
 
+**Text contrast is measured, not eyeballed**
+Light-only colours (`text-slate-400`, `text-green-500`, `text-indigo-100` on the near-white dark-mode primary button) and `opacity-*` fades fell below 4.5:1 in one theme while looking fine in the other. Pair every text colour with a `dark:` colour, do not fade text to show an inactive state, and check both themes. See "Text Contrast" in `documentation/UI_UX_STANDARDS.md`.
+
 **TooltipProvider is already mounted in Layout**
 `Layout.tsx` wraps the authenticated app in a `TooltipProvider`. Do not add a local one — use `Tooltip`, `TooltipTrigger`, and `TooltipContent` directly inside any authenticated route.
 
@@ -109,6 +112,20 @@ Keep `aria-sort` on the `<th>` element; move the click handler to a child `<butt
 `Combobox` fields render as `<input>` elements, not `button[role='combobox']`. Target them by placeholder text (e.g. `"Search accounts..."`). Select results via `role="option"` or `[cmdk-item]`.
 
 ---
+
+## Search — lessons learned
+
+These came from reworking natural-language search.
+
+**One parser, no second one.** `src/utils/searchParser.ts` is the only place a typed query is read. Do not add another parser for a screen; add the phrase to it with a row in `src/tests/searchParserQueries.test.ts` (tests run it on a fixed "today"). `src/utils/searchFilters.ts` only applies results.
+
+**The search box and the API share `interpretQuery`.** Anything the box can understand, `GET /ledgers/{id}/search/interpret` must report the same way. Change the shared code (`searchInterpretation.ts`), never one side. A change to what a phrase means is an API change: update the route tests, Postman assertions and `documentation/API.md`.
+
+**Never apply a guess silently.** Typo matching is opt-in (`fuzzy: true`) and only used where the user confirms the result. Suggestions are applied only when picked, one piece at a time. Say how filters combine (AND across kinds).
+
+**Stemming can hurt typos.** Compare a typed word both as written and singularised ("grocies" stems to "grocy", which is further from "groceries").
+
+**Dates written with `new Date(y, m, d, 12)`; today comes from `options.now`.** Order matters in the parser: "2 weeks from today" must be read before the bare word "today" is removed.
 
 ## Security — lessons learned
 

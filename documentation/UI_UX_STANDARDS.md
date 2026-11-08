@@ -36,11 +36,22 @@ Search belongs above the table/list surface, not inside the table header, card b
 
 Use one search/filter area per screen:
 
-- Transactions, Dashboard, and Reports: shared transaction filter bar.
-- Scheduled: scheduled transaction search/filter bar.
-- Management modules: `app-filter-panel` with the module search input.
+- Transactions, Dashboard, Analytics, Reports, and Scheduled: the shared `TransactionSearchBox` (the search box, its "Understood as" suggestions, and the chips for what is applied). Scheduled passes its own filter state and a placeholder; nothing else differs.
+- Management modules: `app-filter-panel` with the module search input. The Accounts list reads its query with the same parser (`filterAccounts` in `src/utils/searchFilters.ts`).
 
-Active filter chips should sit with the filter control, before the table shell.
+Active filter chips sit with the filter control, before the table shell, and every applied filter (date, accounts, categories, vendors, amount, income/expense, top-N, text) has a chip that removes it.
+
+The suggestion list never applies anything on its own. Picking a piece applies only that piece and keeps the rest on offer; **Apply all** takes what is left and **Clear** / **Done** end the interaction. Say how filters combine in the interface (every kind must match; several of one kind match either).
+
+## Text Contrast
+
+Every piece of text meets WCAG AA (4.5:1, or 3:1 for large text) in **both** themes.
+
+- Pair every light-mode text colour with a `dark:` colour. A colour that is fine on white (`text-green-500`) can be unreadable on a dark card, and the dark theme's `destructive` red is far too dark to use as text on a dark surface (use `text-red-600 dark:text-red-400`).
+- Use `-700` for green, emerald and amber text on light surfaces, and `-600` for red, rose, blue and indigo. `text-slate-400` is not body text in light mode.
+- Do not fade rows or text with `opacity-*` to mean "inactive" or "future": it drops text below 4.5:1. Use italics, a tint or a dashed border (as future transactions and ended schedules do).
+- Pale brand colours are for fills and icons. For text on a tint use `--brand-accent-text`.
+- Chart legends use the foreground colour, not the series colour.
 
 ## Tables And Lists
 
@@ -80,6 +91,7 @@ Before shipping a module screen, check:
 - The title, action panel, search/filter area, and table shell are vertically ordered.
 - Import appears before export, and both sit after maintenance actions.
 - Search is above the data shell.
+- Text passes 4.5:1 in light and dark mode (see Text Contrast), including empty and "inactive" states.
 - Selectable tables show a zero-selection toolbar.
 - Mobile bulk actions do not create horizontal scrolling.
 - Selected mobile rows/cards have a full perimeter highlight.

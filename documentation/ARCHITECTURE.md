@@ -131,9 +131,29 @@ Key points:
 - **Off by default.** The user turns it on in Settings, which stores the port and a generated token in `api-config.json` (mode `0600`) under the app data folder.
 - **Loopback only, no browser access.** Requests carrying an `Origin` header are refused, so web pages cannot call it.
 - **One route table.** `src/api/routes/index.ts` is the source of truth for the router, the generated `/openapi.json`, and the Postman coverage test.
-- **Shared logic with the UI.** Renames, transfer detection, duplicate detection and AI categorization live in shared code (the rename and delete methods on `DataProvider`, `src/utils/transactionMaintenance.ts`, `useAutoCategorize`) so the UI and the API behave the same.
+- **Shared logic with the UI.** Searching is one of these: `GET /ledgers/{id}/search/interpret` calls the same `interpretQuery` as the search box (see Search below). Renames, transfer detection, duplicate detection and AI categorization live in shared code (the rename and delete methods on `DataProvider`, `src/utils/transactionMaintenance.ts`, `useAutoCategorize`) so the UI and the API behave the same.
 - **Safe by default.** Secrets (AI keys, backup password hashes) are never returned. Deletions need `confirm_delete`, restores need `confirm_replace`, bulk operations support `dry_run`, and AI use is opt-in per request.
 - **Not available on web or mobile**, which cannot host a local server.
+
+### Search
+
+One parser reads every typed query, whichever screen or channel it comes from:
+
+```mermaid
+flowchart LR
+  Q[Typed phrase] --> P["parseSearchQuery<br/>(searchParser.ts)"]
+  E["Names: accounts, vendors,<br/>categories (buildSearchEntities)"] --> P
+  P --> I["interpretQuery / buildInterpretation<br/>(searchInterpretation.ts)"]
+  I --> U["Search box: suggestion rows<br/>and chips"]
+  I --> A["API: /search/interpret<br/>filters, params, unmapped"]
+  P --> L["Accounts list<br/>(filterAccounts)"]
+```
+
+- `src/utils/searchParser.ts` turns text into a filter: dates (relative, ranges, "since", "2 weeks from today", year or month first), amounts, income/expense, "top N", and names. Names match exactly, then by singular/plural, then (only when the caller shows the result for confirmation) with typos, using `src/utils/fuzzyMatch.ts`.
+- `src/utils/searchInterpretation.ts` splits the result into pieces the user can accept one at a time, and describes it as plain JSON for the API. The search box and the API both call `interpretQuery`, so they cannot disagree.
+- `src/utils/searchFilters.ts` applies the text part (word by word) and the Accounts-list search. There is no second parser.
+- Filters combine with AND across kinds; several values of one kind match either.
+- Typo matching is off unless asked for, so a screen that applies results as you type never guesses.
 
 ### Native Mobile Architecture
 

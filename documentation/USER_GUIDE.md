@@ -48,6 +48,23 @@ Transactions are the heart of the app. A useful transaction usually has:
 
 Expenses are stored as negative amounts. Income is stored as positive amounts.
 
+## Searching And Filtering
+
+The search box above your transactions, on the Dashboard, Analytics, Reports and Scheduled screens, understands plain sentences. Type what you want and the box lists what it understood, for example:
+
+- `groceries over 50 last month`
+- `starbuks expenses since 2020` (typos are fine)
+- `between 2025 jul and sep`, `2 weeks from today`, `in 3 months`
+- `€100`, `between 10 and 20`, `top 5 expenses`
+
+Each understood piece is its own row with an icon: date, amount, income or expense, account, category, vendor and leftover text. Pick one to apply it, and the others stay on offer until you press **Done** or **Clear**. **Apply all** takes whatever is left. Applied filters show as chips under the box; click a chip to remove it. Nothing is applied until you pick it.
+
+How filters combine: **a transaction must match every filter you apply** (for example the vendor *and* the date). Several of the same kind, such as two vendors, match either. The box does not read "or" between different kinds of filter.
+
+Names match singular and plural ("grocery" finds Groceries) and tolerate small typos; a name matched that way is marked "matched ...". If you press Enter without choosing, **Search Text** looks for your words in the vendor, category, account and remarks.
+
+The Accounts list has its own search with the same reading: `negative`, `savings`, `over 1000`, `between 100 and 500`, or part of a name.
+
 ## CSV Import
 
 Use CSV import when you already have bank history. The app lets you map CSV columns to fields like date, amount, account, vendor, category, and notes.
@@ -71,6 +88,8 @@ Vaulted Money can use a provider you configure to help categorize transactions. 
 Supported provider types include Gemini, OpenAI, Anthropic, Mistral, Perplexity, and custom OpenAI-compatible endpoints.
 
 API keys stay local and are not exported in backups. You must re-enter keys on a new device.
+
+The **AI & agents** page has a master **AI features** switch and two tabs: **AI Providers** and **Connect agent**. Connecting an agent (Claude, Codex, a local model) needs the desktop app, so on the web the second tab is greyed out and says so.
 
 ## Backups
 
