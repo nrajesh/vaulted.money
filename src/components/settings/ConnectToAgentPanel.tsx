@@ -322,7 +322,7 @@ const ConnectToAgentPanel = ({
 
           <ol
             aria-label={t("settings.agent.steps", { defaultValue: "Steps" })}
-            className="grid gap-2 text-sm sm:grid-cols-2"
+            className="grid gap-2 text-sm sm:grid-cols-3"
           >
             {stepTitles.map((title, index) => {
               const done = index === 0 && status.enabled;
@@ -389,7 +389,7 @@ const ConnectToAgentPanel = ({
                 aria-label={t("settings.agent.chooseTitle", {
                   defaultValue: "How do you want to chat?",
                 })}
-                className="grid h-auto w-full items-stretch gap-2 bg-transparent p-0 sm:grid-cols-3"
+                className="grid h-auto w-full items-stretch gap-2 bg-transparent p-0 grid-cols-2 sm:grid-cols-4"
               >
                 {choiceCard(
                   "claude-app",
