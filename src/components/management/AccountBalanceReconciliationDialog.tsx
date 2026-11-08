@@ -202,7 +202,7 @@ const AccountBalanceReconciliationDialog: React.FC<
                     />
                   </TableCell>
                   <TableCell
-                    className={`text-right ${row.difference === 0 ? "text-green-600" : "text-orange-600"}`}
+                    className={`text-right ${row.difference === 0 ? "text-green-700 dark:text-green-400" : "text-orange-700 dark:text-orange-400"}`}
                   >
                     {row.difference > 0 ? "+" : ""}
                     {formatCurrency(row.difference, row.currency)}

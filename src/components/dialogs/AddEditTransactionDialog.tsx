@@ -92,7 +92,7 @@ const MobileSelectionRow = ({
     </span>
     <span
       className={`min-w-0 max-w-[58%] truncate text-right text-base ${
-        value ? "text-muted-foreground" : "text-muted-foreground/70"
+        value ? "text-muted-foreground" : "text-muted-foreground"
       }`}
     >
       {displayValue(value, placeholder)}

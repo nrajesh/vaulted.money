@@ -45,7 +45,7 @@ export const MonthlyTrends = ({
             </defs>
             <XAxis
               dataKey="date"
-              tick={{ fill: "currentColor", fontSize: 10, opacity: 0.5 }} // Use currentColor to adapt to text color
+              tick={{ fill: "currentColor", fontSize: 10, opacity: 0.75 }} // Use currentColor to adapt to text color
               axisLine={false}
               tickLine={false}
               interval={Math.floor(data.length / 5)}

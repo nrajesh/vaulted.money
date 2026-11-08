@@ -255,7 +255,7 @@ export function BudgetCard({
         />
         <div className="text-sm">
           {remaining >= 0 ? (
-            <span className="text-green-600 font-medium">
+            <span className="text-green-700 dark:text-green-400 font-medium">
               {t("budgets.card.remaining", {
                 amount: formatCurrency(remaining, budget.currency),
                 defaultValue: "{{amount}} remaining",
@@ -373,7 +373,7 @@ function GoalCard({
             className="flex items-center gap-2 cursor-pointer hover:underline hover:text-emerald-600 transition-colors text-emerald-900 dark:text-emerald-100"
             onClick={onTitleClick}
           >
-            <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <Target className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
             {(budget.budget_scope || "category") !== "category" &&
             budget.budget_scope_name
               ? budget.budget_scope_name

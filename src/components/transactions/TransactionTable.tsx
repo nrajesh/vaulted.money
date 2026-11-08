@@ -154,7 +154,7 @@ const TransactionRow = React.memo(
         <ContextMenuTrigger asChild>
           <TableRow
             data-state={isSelected ? "selected" : undefined}
-            className={`group ${isSelected ? "bg-muted" : ""} cursor-pointer hover:bg-muted/50 ${isFuture ? "opacity-70 italic text-slate-500 bg-slate-50/50 dark:bg-slate-900/50" : ""}`}
+            className={`group ${isSelected ? "bg-muted" : ""} cursor-pointer hover:bg-muted/50 ${isFuture ? "italic text-slate-500 bg-slate-50/50 dark:bg-slate-900/50" : ""}`}
             onDoubleClick={(e) => {
               if (onRowDoubleClick && !transaction.is_projected) {
                 onRowDoubleClick(transaction, e);
@@ -232,7 +232,7 @@ const TransactionRow = React.memo(
                       }
                     }}
                   >
-                    <CalendarClock className="h-4 w-4 text-blue-500" />
+                    <CalendarClock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </button>
                 )}
               </div>
@@ -256,7 +256,7 @@ const TransactionRow = React.memo(
               {renderCell("remarks", transaction.remarks)}
             </TableCell>
             <TableCell
-              className={`text-right font-medium ${transaction.amount < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}
+              className={`text-right font-medium ${transaction.amount < 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-400"}`}
             >
               {renderCell("amount", transaction.amount)}
             </TableCell>
@@ -395,9 +395,7 @@ const TransactionMobileCard = React.memo(
         <ContextMenuTrigger asChild>
           <div
             className={`app-mobile-row ${isSelected ? "app-row-selected" : ""} ${
-              isFuture
-                ? "opacity-70 italic bg-slate-50/50 dark:bg-slate-900/50"
-                : ""
+              isFuture ? "italic bg-slate-50/50 dark:bg-slate-900/50" : ""
             }`}
             onClick={(e) => {
               if (onRowDoubleClick && !transaction.is_projected) {
@@ -454,7 +452,7 @@ const TransactionMobileCard = React.memo(
                     <span
                       className={
                         !accountCurrencyMap?.has(transaction.account)
-                          ? "italic text-slate-400"
+                          ? "italic text-slate-500 dark:text-slate-400"
                           : ""
                       }
                     >
@@ -489,7 +487,7 @@ const TransactionMobileCard = React.memo(
               </div>
               <div className="flex max-w-[42%] shrink-0 flex-col items-end gap-2">
                 <div
-                  className={`max-w-full truncate text-right text-base font-bold sm:text-lg ${transaction.amount < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}
+                  className={`max-w-full truncate text-right text-base font-bold sm:text-lg ${transaction.amount < 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-400"}`}
                 >
                   {formattedAmount}
                 </div>
@@ -524,7 +522,7 @@ const TransactionMobileCard = React.memo(
                     })}
                     className="rounded-full bg-blue-100 p-1.5 dark:bg-blue-900/30"
                   >
-                    <CalendarClock className="h-3.5 w-3.5 text-blue-500" />
+                    <CalendarClock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   </button>
                 )}
               </div>

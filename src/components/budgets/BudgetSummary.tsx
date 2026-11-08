@@ -73,7 +73,8 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
   const currency = budgets[0]?.currency || "USD";
 
   const remaining = totalTarget - totalSpent;
-  const remainingColor = remaining >= 0 ? "text-green-600" : "text-red-600";
+  const remainingColor =
+    remaining >= 0 ? "text-green-700 dark:text-green-400" : "text-red-600";
 
   return (
     <div className="tour-budget-summary-cards grid gap-4 md:grid-cols-3">

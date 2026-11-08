@@ -403,7 +403,7 @@ const ScheduledBackups = () => {
             })}
             <br />
             <span className="text-muted-foreground font-medium flex items-center gap-1 mt-1">
-              <ShieldCheck className="h-4 w-4 text-green-500" />
+              <ShieldCheck className="h-4 w-4 text-green-700 dark:text-green-400" />
               {t("backup.create.runsInBackground", {
                 defaultValue:
                   "Backups run automatically in the background while the application is running.",
@@ -643,9 +643,9 @@ const ScheduledBackups = () => {
                         <TooltipTrigger asChild>
                           <div className="flex justify-center">
                             {b.isActive ? (
-                              <CheckCircle className="h-5 w-5 text-green-500" />
+                              <CheckCircle className="h-5 w-5 text-green-700 dark:text-green-400" />
                             ) : (
-                              <XCircle className="h-5 w-5 text-red-500" />
+                              <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                             )}
                           </div>
                         </TooltipTrigger>
@@ -699,7 +699,7 @@ const ScheduledBackups = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => verifyPermission(b)}
-                              className="text-amber-500 hover:text-amber-600"
+                              className="text-amber-700 dark:text-amber-400 hover:text-amber-600"
                               aria-label={t("backup.active.verify", {
                                 defaultValue: "Verify permission",
                               })}
@@ -720,7 +720,7 @@ const ScheduledBackups = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(b.id)}
-                            className="text-red-500 hover:text-red-600"
+                            className="text-red-600 dark:text-red-400 hover:text-red-600"
                             aria-label={t("backup.active.delete", {
                               defaultValue: "Delete schedule",
                             })}

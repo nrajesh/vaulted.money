@@ -70,7 +70,7 @@ export const TransactionPageHeader: React.FC<TransactionPageHeaderProps> = ({
           <Button
             variant="outline"
             onClick={onCleanUpDuplicates}
-            className="h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 bg-amber-50 px-2 text-amber-600 hover:bg-amber-100 hover:text-amber-700 border-amber-200 sm:flex-none sm:px-3 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800"
+            className="h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 bg-amber-50 px-2 text-amber-700 hover:bg-amber-100 hover:text-amber-700 border-amber-200 sm:flex-none sm:px-3 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800"
             title={t("transactions.header.cleanupDuplicates", {
               defaultValue: "Cleanup Duplicates",
             })}

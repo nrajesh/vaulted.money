@@ -179,7 +179,7 @@ export function ScheduledTransactionsTable({
       "ScheduledTransactionsTable: accountCurrencyMap is missing from context.",
     );
     return (
-      <div className="p-4 text-red-500">
+      <div className="p-4 text-red-600 dark:text-red-400">
         {t("scheduled.table.contextError", {
           defaultValue: "Error loading table context.",
         })}
@@ -273,7 +273,7 @@ export function ScheduledTransactionsTable({
                 key={transaction.id || `sched-txn-${index}`}
                 className={`app-mobile-row flex flex-col gap-3 bg-white/50 backdrop-blur-sm dark:bg-black/20 ${
                   selectedIds.has(transaction.id) ? "app-row-selected" : ""
-                } ${isEnded(transaction) ? "opacity-70" : ""}`}
+                } ${isEnded(transaction) ? "italic bg-slate-50/50 dark:bg-slate-900/50" : ""}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -296,7 +296,7 @@ export function ScheduledTransactionsTable({
                             })}
                         </span>
                         {transaction.transfer_id && (
-                          <Link className="h-3.5 w-3.5 text-blue-500" />
+                          <Link className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                         )}
                       </div>
                       <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 truncate">
@@ -354,7 +354,7 @@ export function ScheduledTransactionsTable({
 
                   <div className="flex flex-col items-end shrink-0 gap-2">
                     <span
-                      className={`font-bold text-lg ${transaction.amount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                      className={`font-bold text-lg ${transaction.amount > 0 ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                     >
                       {formatCurrency(
                         transaction.amount,
@@ -488,7 +488,7 @@ export function ScheduledTransactionsTable({
                   <ContextMenu key={transaction.id || `sched-txn-${index}`}>
                     <ContextMenuTrigger asChild>
                       <TableRow
-                        className={`group cursor-pointer hover:bg-muted/50 ${selectedIds.has(transaction.id) ? "bg-muted" : ""} ${isEnded(transaction) ? "opacity-70" : ""}`}
+                        className={`group cursor-pointer hover:bg-muted/50 ${selectedIds.has(transaction.id) ? "bg-muted" : ""} ${isEnded(transaction) ? "italic bg-slate-50/50 dark:bg-slate-900/50" : ""}`}
                         onDoubleClick={() => onEdit && onEdit(transaction)}
                       >
                         <TableCell
@@ -529,7 +529,7 @@ export function ScheduledTransactionsTable({
                                   defaultValue: "Unlink Pair",
                                 })}
                               >
-                                <Link className="h-3.5 w-3.5 text-blue-500 group-hover/link:text-red-500" />
+                                <Link className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 group-hover/link:text-red-500" />
                               </button>
                             )}
                             <button
@@ -591,7 +591,7 @@ export function ScheduledTransactionsTable({
                           )}
                         </TableCell>
                         <TableCell
-                          className={`text-right font-medium ${transaction.amount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                          className={`text-right font-medium ${transaction.amount > 0 ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                         >
                           {formatCurrency(
                             transaction.amount,

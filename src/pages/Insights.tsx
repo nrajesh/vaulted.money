@@ -459,7 +459,7 @@ export default function Insights() {
               ? "bg-red-100 text-red-600 dark:bg-red-900/30"
               : trend.direction === "increasing" && trend.type === "Account"
                 ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
-                : "bg-green-100 text-green-600 dark:bg-green-900/30",
+                : "bg-green-100 text-green-700 dark:text-green-400 dark:bg-green-900/30",
           )}
         >
           {trend.direction === "increasing" ? (
@@ -496,7 +496,7 @@ export default function Insights() {
             ? "text-slate-600 dark:text-slate-400"
             : trend.diff > 0
               ? "text-red-600 dark:text-red-400"
-              : "text-emerald-600 dark:text-emerald-400",
+              : "text-emerald-700 dark:text-emerald-400",
         )}
       >
         {trend.type === "Account" ? (
@@ -561,11 +561,11 @@ export default function Insights() {
                         {item.budget.category_name}
                       </CardTitle>
                       {item.status === "critical" ? (
-                        <AlertTriangle className="h-5 w-5 text-red-500" />
+                        <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                       ) : item.status === "warning" ? (
-                        <TrendingUp className="h-5 w-5 text-yellow-500" />
+                        <TrendingUp className="h-5 w-5 text-yellow-700 dark:text-yellow-400" />
                       ) : (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <CheckCircle2 className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
                       )}
                     </div>
                     <CardDescription>
@@ -659,7 +659,7 @@ export default function Insights() {
           {/* Account Trends */}
           <div className="app-section-card p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
+              <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div className="flex flex-col">
                 <h2 className="app-section-title">Top Account Activity</h2>
                 <span className="text-xs text-muted-foreground">
@@ -689,7 +689,7 @@ export default function Insights() {
           {/* Vendor Trends */}
           <div className="app-section-card p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="h-5 w-5 text-yellow-500" />
+              <Lightbulb className="h-5 w-5 text-yellow-700 dark:text-yellow-400" />
               <div className="flex flex-col">
                 <h2 className="app-section-title">Top Vendor Spending</h2>
                 <span className="text-xs text-muted-foreground">

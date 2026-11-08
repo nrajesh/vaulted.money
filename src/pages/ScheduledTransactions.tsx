@@ -323,7 +323,7 @@ const ScheduledTransactionsPage = () => {
                 variant="outline"
                 className="border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900 dark:hover:bg-indigo-950"
               >
-                <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />{" "}
+                <Sparkles className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" />{" "}
                 {t("scheduled.header.autoSchedule", {
                   defaultValue: "Auto-Schedule",
                 })}

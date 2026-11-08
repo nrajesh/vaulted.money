@@ -30,11 +30,11 @@ export const MetricCard = ({
   const colorStyles = {
     blue: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
     emerald:
-      "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
     violet:
       "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
     amber:
-      "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     rose: "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400",
   };
 
@@ -63,7 +63,9 @@ export const MetricCard = ({
               {title}
             </h3>
             {subtitle && (
-              <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {subtitle}
+              </p>
             )}
           </div>
           {Icon && (

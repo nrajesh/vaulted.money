@@ -129,10 +129,10 @@ const NetWorthStatement: React.FC<NetWorthStatementProps> = ({
               <ThemedCardTitle className="text-sm font-medium">
                 Total Assets
               </ThemedCardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <TrendingUp className="h-4 w-4 text-green-700 dark:text-green-400" />
             </ThemedCardHeader>
             <ThemedCardContent>
-              <div className="text-2xl font-bold text-green-500">
+              <div className="text-2xl font-bold text-green-700 dark:text-green-400">
                 {formatCurrency(assets)}
               </div>
             </ThemedCardContent>
@@ -142,10 +142,10 @@ const NetWorthStatement: React.FC<NetWorthStatementProps> = ({
               <ThemedCardTitle className="text-sm font-medium">
                 Total Liabilities
               </ThemedCardTitle>
-              <TrendingDown className="h-4 w-4 text-red-500" />
+              <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
             </ThemedCardHeader>
             <ThemedCardContent>
-              <div className="text-2xl font-bold text-red-500">
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {formatCurrency(liabilities)}
               </div>
             </ThemedCardContent>

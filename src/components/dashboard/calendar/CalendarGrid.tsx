@@ -195,7 +195,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 onClick={() => onSelectDate(day)}
                 className={cn(
                   "relative flex h-full min-h-[4.1rem] cursor-pointer flex-col items-center justify-between rounded-2xl border px-1 py-2 text-center transition-colors hover:bg-muted/50 sm:min-h-[5rem] sm:px-2 sm:py-2.5",
-                  !isCurrentMonth && "text-muted-foreground/80",
+                  !isCurrentMonth && "text-muted-foreground/90",
                   !isSelected && "border-transparent",
                   bgClass,
                 )}
@@ -221,7 +221,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     !isCurrentMonth &&
                       !isSelected &&
                       !isToday &&
-                      "text-muted-foreground/80",
+                      "text-muted-foreground/90",
                   )}
                 >
                   {format(day, "d")}

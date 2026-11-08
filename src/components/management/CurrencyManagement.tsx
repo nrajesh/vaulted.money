@@ -156,7 +156,7 @@ export const CurrencyManagement = () => {
               <ThemedCardDescription>
                 Manage exchange rates relative to your base currency (
                 {selectedCurrency}).
-                <span className="block mt-2 max-w-xs text-xs leading-snug text-muted-foreground/80">
+                <span className="block mt-2 max-w-xs text-xs leading-snug text-muted-foreground">
                   Data sourced from{" "}
                   <a
                     href={FRANKFURTER_WEB_URL}

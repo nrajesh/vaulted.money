@@ -302,7 +302,7 @@ export function SmartBudgetDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wand2 className="h-5 w-5 text-purple-500" />
+            <Wand2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             {t("budgets.smart.title", {
               defaultValue: "Smart Budget Creation",
             })}

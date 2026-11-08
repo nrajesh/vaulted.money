@@ -91,7 +91,7 @@ export default function DonationPage() {
               </Badge>
             </div>
             <ThemedCardTitle className="flex items-center gap-3 text-2xl text-emerald-900 dark:text-emerald-100">
-              <Smartphone className="h-6 w-6 text-emerald-600" />
+              <Smartphone className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
               Scan to Pay
             </ThemedCardTitle>
             <ThemedCardDescription>

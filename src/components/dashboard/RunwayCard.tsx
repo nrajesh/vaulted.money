@@ -57,14 +57,14 @@ export const RunwayCard = () => {
                 defaultValue: "Financial Runway",
               })}
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {t("dashboard.runway.subtitle", {
                 defaultValue: "Based on fixed expenses + recent spending",
               })}
             </p>
           </div>
           <div
-            className={`p-2 rounded-full ${isInfinite ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : runwayMonths < 3 ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"}`}
+            className={`p-2 rounded-full ${isInfinite ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : runwayMonths < 3 ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"}`}
           >
             {isInfinite ? (
               <InfinityIcon className="w-5 h-5" />
@@ -83,7 +83,7 @@ export const RunwayCard = () => {
               : formatDuration(runwayMonths)}
           </div>
           <p
-            className={`mt-1 text-sm font-medium ${isInfinite ? "text-emerald-500" : runwayMonths < 6 ? "text-amber-500" : "text-slate-500 dark:text-slate-400"}`}
+            className={`mt-1 text-sm font-medium ${isInfinite ? "text-emerald-700 dark:text-emerald-400" : runwayMonths < 6 ? "text-amber-700 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"}`}
           >
             {isInfinite
               ? t("dashboard.runway.savingsGrowing", {
@@ -108,7 +108,7 @@ export const RunwayCard = () => {
 
           <div className="grid grid-cols-2 gap-2">
             <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
                 {t("dashboard.runway.fixedCost", {
                   defaultValue: "Fixed Cost",
                 })}
@@ -118,7 +118,7 @@ export const RunwayCard = () => {
               </div>
             </div>
             <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
                 {t("dashboard.runway.avgSpending", {
                   defaultValue: "Avg Spending",
                 })}
@@ -129,7 +129,7 @@ export const RunwayCard = () => {
             </div>
           </div>
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               {t("dashboard.runway.totalSavings", {
                 defaultValue: "Total Savings",
               })}

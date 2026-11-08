@@ -63,8 +63,8 @@ const HomeHeroDemo = () => {
       {/* Editable Device config */}
       <div className="relative mb-3 flex items-center justify-center gap-3 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
         <div className="flex items-center gap-2">
-          <Smartphone className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
-          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+          <Smartphone className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             {t("home.hero.demoDimensions", { defaultValue: "Dimensions" })}
           </span>
           <input
@@ -85,7 +85,7 @@ const HomeHeroDemo = () => {
             placeholder="W"
             className="w-14 bg-transparent text-right text-xs text-slate-500 focus:outline-none dark:text-slate-300"
           />
-          <span className="text-xs text-slate-400 dark:text-slate-500">×</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">×</span>
           <input
             type="number"
             value={deviceHeight}
@@ -104,7 +104,7 @@ const HomeHeroDemo = () => {
             placeholder="H"
             className="w-14 bg-transparent text-xs text-slate-500 focus:outline-none dark:text-slate-300"
           />
-          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             px
           </span>
         </div>
@@ -144,7 +144,7 @@ const HomeHeroDemo = () => {
         </div>
       </div>
 
-      <p className="mt-3 text-center text-[11px] leading-5 text-slate-400 dark:text-slate-500">
+      <p className="mt-3 text-center text-[11px] leading-5 text-slate-500 dark:text-slate-400">
         Live app preview · rendered at {Math.round(PREVIEW_SCALE * 100)}% scale
       </p>
     </div>

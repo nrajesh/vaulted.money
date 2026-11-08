@@ -112,7 +112,11 @@ const TrendsAndAnalytics: React.FC<TrendsAndAnalyticsProps> = ({
               wrapperStyle={{ fontSize: "11px" }}
               iconSize={8}
               formatter={(value) => (
-                <span style={{ fontSize: "11px" }}>{value}</span>
+                <span
+                  style={{ fontSize: "11px", color: "hsl(var(--foreground))" }}
+                >
+                  {value}
+                </span>
               )}
             />
             <Bar dataKey="income" fill="#22c55e" name="Income" />
