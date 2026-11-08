@@ -600,7 +600,7 @@ const LedgerEntryPage = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
               aria-label={t("home.actions.home", { defaultValue: "Home" })}
             >
               <Home className="h-5 w-5 text-slate-600 dark:text-gray-300" />
@@ -613,7 +613,7 @@ const LedgerEntryPage = () => {
               asChild
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
             >
               <Link
                 to="/"
@@ -631,7 +631,7 @@ const LedgerEntryPage = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
               onClick={startTour}
               aria-label={t("helpTour.start")}
             >
@@ -642,7 +642,7 @@ const LedgerEntryPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+            className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
             onClick={() =>
               setTheme(resolvedTheme === "dark" ? "light" : "dark")
             }
@@ -656,19 +656,19 @@ const LedgerEntryPage = () => {
               <Moon className="h-5 w-5 text-slate-600" />
             )}
           </Button>
-          <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700" />
+          <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input" />
         </div>
 
         {/* ── Mobile overflow menu (matches Layout's MobileHeaderActionsMenu) ── */}
         <div className="flex items-center gap-2 sm:hidden">
           <LanguageSwitcher />
-          <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700" />
+          <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
                 aria-label={t("ledgerEntry.moreActions", {
                   defaultValue: "More actions",
                 })}
@@ -772,7 +772,7 @@ const LedgerEntryPage = () => {
                 })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-11 rounded-xl border-slate-200 bg-background/70 pl-10 pr-11 dark:border-slate-700"
+                className="h-11 rounded-xl border-slate-200 bg-background/70 pl-10 pr-11 dark:border-input"
               />
               {searchTerm && (
                 <Button
@@ -1068,7 +1068,7 @@ const LedgerEntryPage = () => {
                   // like the main call to action.
                   ledgers.length === 0
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-red-400/40 dark:text-red-400 dark:hover:text-red-300",
+                    : "border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-red-400/70 dark:text-red-400 dark:hover:text-red-300",
                 )}
               >
                 <RotateCcw className="mt-0.5 h-5 w-5" />

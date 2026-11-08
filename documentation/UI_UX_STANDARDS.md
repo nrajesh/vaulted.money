@@ -57,6 +57,8 @@ Every piece of text meets WCAG AA (4.5:1, or 3:1 for large text) in **both** the
 - Pale brand colours are for fills and icons. For text on a tint use `--brand-accent-text`.
 - Chart legends use the foreground colour, not the series colour.
 
+Boundaries need contrast too (WCAG 1.4.11): the outline of an input, select, search box or outline button, and the off state of a switch, reach **3:1** against the page. They use `--input`, which is deliberately separate from the quieter `--border` used for cards and table rules. Measure both text and outlines when checking a theme; in dark mode `--input` was once 1.05:1, so the search box had no visible edge.
+
 ## Tables And Lists
 
 Every selectable data surface should include:

@@ -105,6 +105,9 @@ Keep `aria-sort` on the `<th>` element; move the click handler to a child `<butt
 **Text contrast is measured, not eyeballed**
 Light-only colours (`text-slate-400`, `text-green-500`, `text-indigo-100` on the near-white dark-mode primary button) and `opacity-*` fades fell below 4.5:1 in one theme while looking fine in the other. Pair every text colour with a `dark:` colour, do not fade text to show an inactive state, and check both themes. See "Text Contrast" in `documentation/UI_UX_STANDARDS.md`.
 
+**Measure outlines, not just text**
+A text-only contrast pass missed that dark-mode form controls had no visible edge (`--input` 1.05:1 against the page). Control outlines (inputs, selects, the search box, outline buttons, switch tracks) need 3:1 (WCAG 1.4.11); keep `--input` separate from the quieter `--border` for cards.
+
 **TooltipProvider is already mounted in Layout**
 `Layout.tsx` wraps the authenticated app in a `TooltipProvider`. Do not add a local one — use `Tooltip`, `TooltipTrigger`, and `TooltipContent` directly inside any authenticated route.
 

@@ -504,7 +504,7 @@ function GoalCard({
             <Button
               variant="outline"
               size="icon"
-              className="border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+              className="border-emerald-300 dark:border-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
               onClick={() => onEdit(budget)}
               aria-label={t("budgets.card.edit", {
                 defaultValue: "Edit budget",

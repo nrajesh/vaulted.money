@@ -70,7 +70,7 @@ export const TransactionPageHeader: React.FC<TransactionPageHeaderProps> = ({
           <Button
             variant="outline"
             onClick={onCleanUpDuplicates}
-            className="h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 bg-amber-50 px-2 text-amber-700 hover:bg-amber-100 hover:text-amber-700 border-amber-200 sm:flex-none sm:px-3 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800"
+            className="h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 bg-amber-50 px-2 text-amber-700 hover:bg-amber-100 hover:text-amber-700 border-amber-200 sm:flex-none sm:px-3 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 dark:text-amber-400 dark:border-amber-600"
             title={t("transactions.header.cleanupDuplicates", {
               defaultValue: "Cleanup Duplicates",
             })}
@@ -90,7 +90,7 @@ export const TransactionPageHeader: React.FC<TransactionPageHeaderProps> = ({
               variant="outline"
               onClick={onBulkCategorize}
               disabled={!isBulkCategorizeEnabled}
-              className="tour-bulk-categorize h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 bg-purple-50 px-2 text-purple-600 hover:bg-purple-100 hover:text-purple-700 border-purple-200 sm:flex-none sm:px-3 dark:bg-purple-950/20 dark:hover:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800"
+              className="tour-bulk-categorize h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 bg-purple-50 px-2 text-purple-600 hover:bg-purple-100 hover:text-purple-700 border-purple-200 sm:flex-none sm:px-3 dark:bg-purple-950/20 dark:hover:bg-purple-950/40 dark:text-purple-400 dark:border-purple-500"
               title={t("transactions.header.categorizeMissing", {
                 defaultValue: "Categorize Missing",
               })}
@@ -109,7 +109,7 @@ export const TransactionPageHeader: React.FC<TransactionPageHeaderProps> = ({
           <Button
             variant="outline"
             onClick={onImportClick}
-            className="h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 border-slate-300 px-2 hover:border-slate-400 hover:bg-slate-100 sm:flex-none sm:px-3 dark:border-slate-700 dark:hover:border-sky-500/70 dark:hover:bg-sky-950/40 dark:hover:text-sky-100"
+            className="h-auto min-w-0 flex-col justify-center gap-1 py-2 sm:h-10 sm:flex-row sm:gap-0 sm:py-0 border-slate-300 px-2 hover:border-slate-400 hover:bg-slate-100 sm:flex-none sm:px-3 dark:border-input dark:hover:border-sky-500/70 dark:hover:bg-sky-950/40 dark:hover:text-sky-100"
             title={t("transactions.header.importCsv", {
               defaultValue: "Import CSV",
             })}

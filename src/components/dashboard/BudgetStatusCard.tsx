@@ -52,7 +52,7 @@ export const BudgetStatusCard = () => {
           <Button
             size="sm"
             variant="outline"
-            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950"
+            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950"
           >
             {t("dashboard.budgetStatus.create", {
               defaultValue: "Create Budget",

@@ -148,7 +148,7 @@ const SettingsPage = () => {
               value={selectedCurrency}
               onValueChange={handleCurrencyChange}
             >
-              <SelectTrigger className="w-full sm:w-[180px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100">
+              <SelectTrigger className="w-full sm:w-[180px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100">
                 <SelectValue
                   placeholder={t("dialogs.missingCurrency.selectCurrency", {
                     defaultValue: "Select currency",
@@ -234,7 +234,7 @@ const SettingsPage = () => {
                   )
                 }
                 min="0"
-                className="w-[100px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                className="w-[100px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100"
               />
               <span className="text-sm text-muted-foreground">
                 {t("settings.cards.future.months", { defaultValue: "months" })}
@@ -286,7 +286,7 @@ const SettingsPage = () => {
                 variant="outline"
                 size="sm"
                 asChild
-                className="hidden sm:flex border-indigo-200 dark:border-indigo-800"
+                className="hidden sm:flex border-indigo-200 dark:border-indigo-500"
               >
                 <Link to="/ai-providers" className="flex items-center gap-2">
                   <Brain className="h-4 w-4" />
@@ -309,7 +309,7 @@ const SettingsPage = () => {
                   value={aiConfig.provider?.id || "NONE"}
                   onValueChange={handleProviderChange}
                 >
-                  <SelectTrigger className="w-full sm:w-[300px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100">
+                  <SelectTrigger className="w-full sm:w-[300px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100">
                     <SelectValue
                       placeholder={t("settings.ai.selectProvider", {
                         defaultValue: "Select an AI Provider",
@@ -370,7 +370,7 @@ const SettingsPage = () => {
                             }),
                           );
                       }}
-                      className="w-full bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                      className="w-full bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100"
                     />
                     <p className="text-xs text-muted-foreground">
                       {aiConfig.provider.type === "OPENAI" && (

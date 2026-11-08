@@ -93,12 +93,17 @@ export function ConversationalSearchInput({
   // Pieces the user has already taken. They stay applied (and show as chips
   // outside); the rest of the suggestion stays open so more can be picked.
   const [applied, setApplied] = React.useState<string[]>([]);
+  // While the last word is still being typed ("ove" on its way to "over"),
+  // what is left over is not a finished piece of text, so it is not offered.
+  const lastWordFinished = /\s$/.test(input);
   const remaining = React.useMemo(
     () =>
       interpretation?.items.filter(
-        (item) => !applied.includes(partKey(item.part)),
+        (item) =>
+          !applied.includes(partKey(item.part)) &&
+          (item.part.kind !== "text" || lastWordFinished),
       ) ?? [],
-    [interpretation, applied],
+    [interpretation, applied, lastWordFinished],
   );
 
   const handleSelectType = (nextStep: SearchStep) => {
@@ -445,12 +450,16 @@ export function ConversationalSearchInput({
           ))}
         </CommandGroup>
 
+        {/* Always offered: cmdk trims item values but not what was typed, so a
+            trailing space would otherwise filter this row out. */}
         <CommandGroup
+          forceMount
           heading={t("filters.conversational.search", {
             defaultValue: "Search",
           })}
         >
           <CommandItem
+            forceMount
             value={"search-" + input}
             onSelect={() => handleGenericSearch()}
           >
@@ -597,28 +606,30 @@ export function ConversationalSearchInput({
             }}
           />
           <CommandList>
-            <CommandEmpty>
-              <div
-                className="flex flex-col items-center gap-2 p-2"
-                onClick={() => handleGenericSearch()}
-              >
-                <span className="text-muted-foreground">
-                  {t("filters.conversational.searchText", {
-                    input,
-                    defaultValue: `Search Text "${input}"`,
-                  })}
-                </span>
-                <Button
-                  size="sm"
-                  variant="secondary"
+            {step !== "ROOT" && (
+              <CommandEmpty>
+                <div
+                  className="flex flex-col items-center gap-2 p-2"
                   onClick={() => handleGenericSearch()}
                 >
-                  {t("filters.conversational.search", {
-                    defaultValue: "Search",
-                  })}
-                </Button>
-              </div>
-            </CommandEmpty>
+                  <span className="text-muted-foreground">
+                    {t("filters.conversational.searchText", {
+                      input,
+                      defaultValue: `Search Text "${input}"`,
+                    })}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleGenericSearch()}
+                  >
+                    {t("filters.conversational.search", {
+                      defaultValue: "Search",
+                    })}
+                  </Button>
+                </div>
+              </CommandEmpty>
+            )}
             {renderStepContent()}
           </CommandList>
           {(input || applied.length > 0) && (

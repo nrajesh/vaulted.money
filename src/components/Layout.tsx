@@ -388,7 +388,7 @@ export const SettingsHeaderButton = ({
       asChild
       variant="ghost"
       size="icon"
-      className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+      className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
     >
       <Link to="/settings" aria-label={label}>
         <BookOpen className="h-5 w-5 text-slate-600 dark:text-gray-300" />
@@ -418,7 +418,7 @@ export const MobileHeaderActionsMenu = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
           aria-label="More actions"
         >
           <MoreHorizontal className="h-5 w-5 text-slate-600 dark:text-gray-300" />
@@ -908,7 +908,7 @@ const Layout = () => {
       >
         <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
           <div className="flex min-w-0 items-center gap-3">
-            <SidebarTrigger className="h-10 w-10 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-gray-700 dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
+            <SidebarTrigger className="h-10 w-10 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
               <img
                 src={resolvedTheme === "dark" ? logoDark : logoLight}
                 alt=""
@@ -931,7 +931,7 @@ const Layout = () => {
                 disabled
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
               >
                 <Home className="h-5 w-5 text-slate-600 dark:text-gray-300" />
                 <span className="sr-only">
@@ -943,7 +943,7 @@ const Layout = () => {
                 asChild
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
               >
                 <Link
                   to="/"
@@ -962,7 +962,7 @@ const Layout = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
                 onClick={startTour}
                 aria-label={t("helpTour.start")}
               >
@@ -973,7 +973,7 @@ const Layout = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
               onClick={() =>
                 setTheme(resolvedTheme === "light" ? "dark" : "light")
               }
@@ -990,12 +990,12 @@ const Layout = () => {
                 {t("layout.toggleTheme", { defaultValue: "Toggle theme" })}
               </span>
             </Button>
-            <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700" />
+            <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input" />
             {!isHomepageMobilePreview && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
                 onClick={logout}
                 aria-label={t("layout.nav.logout", {
                   defaultValue: "Log out",
@@ -1010,7 +1010,7 @@ const Layout = () => {
           </div>
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher showLanguageSettings />
-            <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700" />
+            <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input" />
             <MobileHeaderActionsMenu
               displayName={displayName}
               hasTourForCurrentRoute={hasTourForCurrentRoute}
