@@ -83,7 +83,7 @@ export const RunwayCard = () => {
               : formatDuration(runwayMonths)}
           </div>
           <p
-            className={`mt-1 text-sm font-medium ${isInfinite ? "text-emerald-500" : runwayMonths < 6 ? "text-amber-500" : "text-slate-500"}`}
+            className={`mt-1 text-sm font-medium ${isInfinite ? "text-emerald-500" : runwayMonths < 6 ? "text-amber-500" : "text-slate-500 dark:text-slate-400"}`}
           >
             {isInfinite
               ? t("dashboard.runway.savingsGrowing", {
@@ -98,7 +98,7 @@ export const RunwayCard = () => {
 
         {/* Breakdown Progress Bar or Mini Stats */}
         <div className="mt-6 space-y-3">
-          <div className="flex justify-between text-xs text-slate-500">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>
               {t("dashboard.runway.monthlyStats", {
                 defaultValue: "Monthly Stats",

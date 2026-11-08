@@ -722,7 +722,7 @@ export function ScheduledTransactionsTable({
                 />
               </PaginationItem>
               <PaginationItem>
-                <span className="px-4 text-sm text-slate-500">
+                <span className="px-4 text-sm text-slate-500 dark:text-slate-400">
                   {t("scheduled.table.pageOf", {
                     page: currentPage,
                     total: totalPages,

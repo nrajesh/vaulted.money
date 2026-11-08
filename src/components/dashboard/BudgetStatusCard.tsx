@@ -42,7 +42,7 @@ export const BudgetStatusCard = () => {
         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
           {t("dashboard.budgetStatus.none", { defaultValue: "No Budgets Set" })}
         </h3>
-        <p className="text-xs text-slate-500 mt-1 mb-4 max-w-[200px]">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4 max-w-[200px]">
           {t("dashboard.budgetStatus.noneHint", {
             defaultValue:
               "Set up spending limits to track your financial goals.",
@@ -89,7 +89,7 @@ export const BudgetStatusCard = () => {
             </p>
           </div>
           <div
-            className={`text-xs font-bold px-2 py-1 rounded-full ${isOverBudget ? "bg-rose-100 text-rose-600" : "bg-blue-100 text-blue-600"}`}
+            className={`text-xs font-bold px-2 py-1 rounded-full ${isOverBudget ? "bg-rose-100 text-rose-700" : "bg-blue-100 text-blue-700"}`}
           >
             {t("dashboard.budgetStatus.used", {
               percent: percentage.toFixed(0),

@@ -262,7 +262,7 @@ const SettingsPage = () => {
                 </ThemedCardDescription>
                 <Link
                   to="/privacy"
-                  className="mt-2 inline-flex text-xs text-indigo-600 hover:underline"
+                  className="mt-2 inline-flex text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   {t("settings.ai.privacy", {
                     defaultValue: "Review privacy policy →",
@@ -274,7 +274,7 @@ const SettingsPage = () => {
                   })}{" "}
                   <Link
                     to="/connect-agent"
-                    className="text-indigo-600 hover:underline"
+                    className="text-indigo-600 dark:text-indigo-400 hover:underline"
                   >
                     {t("settings.ai.connectAgentLink", {
                       defaultValue: "Connect an AI agent",
@@ -334,7 +334,7 @@ const SettingsPage = () => {
                 </Select>
                 <Link
                   to="/ai-providers"
-                  className="sm:hidden text-xs text-indigo-600 hover:underline block mt-1"
+                  className="sm:hidden text-xs text-indigo-600 dark:text-indigo-400 hover:underline block mt-1"
                 >
                   {t("settings.ai.manageProvidersLink", {
                     defaultValue: "Manage Providers →",

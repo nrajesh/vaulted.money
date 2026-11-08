@@ -217,7 +217,7 @@ export function BudgetCard({
           <br />
           {formattedStartDate} - {formattedEndDate}
           <br />
-          <span className="text-xs text-slate-500 dark:text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {t("budgets.card.scope", {
               scope:
                 budget.account_scope === "GROUP"
@@ -262,7 +262,7 @@ export function BudgetCard({
               })}
             </span>
           ) : (
-            <span className="text-red-600 font-medium">
+            <span className="text-red-600 dark:text-red-400 font-medium">
               {t("budgets.card.over", {
                 amount: formatCurrency(Math.abs(remaining), budget.currency),
                 defaultValue: "{{amount}} over budget",

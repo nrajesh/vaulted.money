@@ -30,7 +30,7 @@ export const ConsolidatedMetricsCard = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800">
         {/* Net Worth */}
         <div className="flex flex-col gap-2 pt-4 md:pt-0">
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">
             <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400">
               <Wallet className="w-3.5 h-3.5" />
             </div>
@@ -43,7 +43,7 @@ export const ConsolidatedMetricsCard = ({
 
         {/* Income */}
         <div className="flex flex-col gap-2 pt-4 md:pt-0 md:pl-8">
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">
             <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded text-emerald-600 dark:text-emerald-400">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
@@ -56,7 +56,7 @@ export const ConsolidatedMetricsCard = ({
 
         {/* Expenses */}
         <div className="flex flex-col gap-2 pt-4 md:pt-0 md:pl-8">
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">
             <div className="p-1.5 bg-rose-100 dark:bg-rose-900/30 rounded text-rose-600 dark:text-rose-400">
               <TrendingDown className="w-3.5 h-3.5" />
             </div>
