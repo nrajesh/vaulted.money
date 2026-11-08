@@ -1,3 +1,4 @@
+import { defaultModel } from "@/constants/aiDefaultModels";
 import { useAIConfig } from "./useAIConfig";
 import { Category, SubCategory, AIProvider } from "@/types/dataProvider";
 import { Transaction } from "@/data/finance-data";
@@ -35,7 +36,7 @@ export const buildGeminiUrl = (
     return `${baseUrl}?key=${apiKey}`;
   }
 
-  const modelId = provider.model || "gemini-1.5-flash";
+  const modelId = provider.model || defaultModel("GEMINI");
   return `${baseUrl}${versionPath}${modelPart}/${modelId}:generateContent?key=${apiKey}`;
 };
 
@@ -170,9 +171,7 @@ export const categorizeVendorsBulk = async (
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model:
-              provider.model ||
-              (provider.type === "OPENAI" ? "gpt-4o" : undefined),
+            model: provider.model || defaultModel(provider.type),
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
             response_format:
@@ -222,7 +221,7 @@ export const categorizeVendorsBulk = async (
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model: provider.model || "llama-3.1-8b-instruct",
+            model: provider.model || defaultModel("PERPLEXITY"),
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
           }),
@@ -243,7 +242,7 @@ export const categorizeVendorsBulk = async (
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model: provider.model || "mistral-tiny",
+            model: provider.model || defaultModel("MISTRAL"),
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
             response_format: { type: "json_object" },
@@ -323,9 +322,7 @@ export const useAutoCategorize = () => {
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model:
-                provider.model ||
-                (provider.type === "OPENAI" ? "gpt-4o" : undefined),
+              model: provider.model || defaultModel(provider.type),
               messages: [{ role: "user", content: prompt }],
               temperature: 0.1,
               response_format:
@@ -376,7 +373,7 @@ export const useAutoCategorize = () => {
             "dangerously-allow-browser": "true",
           },
           body: JSON.stringify({
-            model: provider.model || "claude-3-haiku-20240307",
+            model: provider.model || defaultModel("ANTHROPIC"),
             max_tokens: 1024,
             messages: [{ role: "user", content: prompt }],
           }),
@@ -396,7 +393,7 @@ export const useAutoCategorize = () => {
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: provider.model || "llama-3.1-8b-instruct",
+              model: provider.model || defaultModel("PERPLEXITY"),
               messages: [{ role: "user", content: prompt }],
               temperature: 0.1,
             }),
@@ -417,7 +414,7 @@ export const useAutoCategorize = () => {
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: provider.model || "mistral-tiny",
+              model: provider.model || defaultModel("MISTRAL"),
               messages: [{ role: "user", content: prompt }],
               temperature: 0.1,
               response_format: { type: "json_object" },

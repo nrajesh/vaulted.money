@@ -1,0 +1,33 @@
+name: Review AI default models
+
+# Providers retire models without warning. Once a month, if the list has not
+# been reviewed for 60 days, open an issue to review src/constants/aiDefaultModels.ts.
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Open an issue when the list is stale
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          reviewed=$(grep -o 'AI_MODELS_REVIEWED = "[0-9-]*"' src/constants/aiDefaultModels.ts | grep -o '[0-9]\{4\}-[0-9-]*')
+          age_days=$(( ( $(date +%s) - $(date -d "$reviewed" +%s) ) / 86400 ))
+          echo "Last reviewed $reviewed ($age_days days ago)"
+          if [ "$age_days" -ge 60 ]; then
+            existing=$(gh issue list --state open --search "Review AI default models in:title" --json number --jq 'length')
+            if [ "$existing" = "0" ]; then
+              gh issue create \
+                --title "Review AI default models" \
+                --body "src/constants/aiDefaultModels.ts was last reviewed on $reviewed. Check each provider's model docs for retired or renamed models, update the list, and bump AI_MODELS_REVIEWED."
+            fi
+          fi

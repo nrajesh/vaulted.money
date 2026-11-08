@@ -1,3 +1,4 @@
+import { defaultModel } from "@/constants/aiDefaultModels";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -206,7 +207,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
               }
             : values.type === "ANTHROPIC"
               ? {
-                  model: values.model || "claude-3-haiku-20240307",
+                  model: values.model || defaultModel("ANTHROPIC"),
                   max_tokens: 10,
                   messages: [
                     {
@@ -216,9 +217,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                   ],
                 }
               : {
-                  model:
-                    values.model ||
-                    (values.type === "OPENAI" ? "gpt-4o" : undefined),
+                  model: values.model || defaultModel(values.type),
                   messages: [
                     {
                       role: "user",
