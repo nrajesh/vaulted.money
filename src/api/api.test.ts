@@ -647,6 +647,8 @@ describe("search interpretation", () => {
       vendors: string[];
       text: string;
       corrections: { kind: string; typed: string; name: string }[];
+      limit: number | null;
+      sort: string | null;
     };
     params: Record<string, string | number>;
     unmapped: { filter: string; reason: string }[];
@@ -735,6 +737,26 @@ describe("search interpretation", () => {
 
     const top = await interpret("top 5 groceries");
     expect(top.unmapped.map((u) => u.filter)).toContain("limit");
+  });
+
+  it("reads 'the largest expense' as one, and says it cannot be expressed", async () => {
+    const { interpret } = await setup();
+    const body = await interpret(
+      "show me the largest expense coming up in next 2 weeks",
+    );
+    expect(body.filters).toMatchObject({
+      type: "expense",
+      limit: 1,
+      sort: "largest",
+      date_range: { from: "2026-11-08", to: "2026-11-22" },
+      text: "",
+    });
+    expect(body.params).toMatchObject({
+      type: "expense",
+      from: "2026-11-08",
+      to: "2026-11-22",
+    });
+    expect(body.unmapped.map((u) => u.filter)).toContain("limit");
   });
 
   it("can switch typo matching off", async () => {

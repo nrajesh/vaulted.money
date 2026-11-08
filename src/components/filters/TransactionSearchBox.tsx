@@ -1,5 +1,8 @@
 import * as React from "react";
-import { ConversationalSearchInput } from "@/components/ui/ConversationalSearchInput";
+import {
+  ConversationalSearchInput,
+  type SearchUpdateOptions,
+} from "@/components/ui/ConversationalSearchInput";
 import {
   ActiveFilterChips,
   type ActiveFilters,
@@ -28,7 +31,10 @@ export const TransactionSearchBox = ({ filters, placeholder }: Props) => {
   const { categories, subCategories, accounts, vendors, transactions } =
     useTransactions();
 
-  const handleUpdate = (update: Partial<ParsedFilterState>) => {
+  const handleUpdate = (
+    update: Partial<ParsedFilterState>,
+    options: SearchUpdateOptions = {},
+  ) => {
     if (update.isAllTime) {
       filters.setDateRange(undefined);
     } else if (update.dateRange !== undefined) {
@@ -54,7 +60,9 @@ export const TransactionSearchBox = ({ filters, placeholder }: Props) => {
     }
     if (update.selectedAccounts !== undefined) {
       filters.setSelectedAccounts(
-        merge(filters.selectedAccounts, update.selectedAccounts),
+        options.replaceAccounts
+          ? Array.from(new Set(update.selectedAccounts))
+          : merge(filters.selectedAccounts, update.selectedAccounts),
       );
     }
     if (update.selectedVendors) {

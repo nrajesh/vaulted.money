@@ -374,3 +374,47 @@ describe("conversational queries", () => {
     ]);
   });
 });
+
+describe("one largest or smallest", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 8, 10, 0, 0));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("reads 'the largest expense coming up in next 2 weeks in checking account'", () => {
+    const parsed = parseSearchQuery(
+      "show me the largest expense coming up in next 2 weeks in checking account",
+      {
+        ...context,
+        accounts: [
+          ...context.accounts,
+          { name: "Joint Checking", slug: "joint-checking", type: "checking" },
+        ],
+      },
+    );
+    expect(parsed.limit).toBe(1);
+    expect(parsed.sortOrder).toBe("largest");
+    expect(parsed.transactionType).toBe("expense");
+    expect([ymd(parsed.dateRange?.from), ymd(parsed.dateRange?.to)]).toEqual([
+      "2026-11-08",
+      "2026-11-22",
+    ]);
+    expect(parsed.selectedAccounts).toEqual(
+      expect.arrayContaining(["primary-checking", "joint-checking"]),
+    );
+    expect(parsed.searchTerm).toBe("");
+  });
+
+  it("keeps 'top 3' working and reads 'smallest' as one", () => {
+    expect(parseSearchQuery("top 3 expenses", context)).toMatchObject({
+      limit: 3,
+      sortOrder: "largest",
+    });
+    expect(parseSearchQuery("smallest income", context)).toMatchObject({
+      limit: 1,
+      sortOrder: "smallest",
+      transactionType: "income",
+    });
+  });
+});
