@@ -135,6 +135,25 @@ Key points:
 - **Safe by default.** Secrets (AI keys, backup password hashes) are never returned. Deletions need `confirm_delete`, restores need `confirm_replace`, bulk operations support `dry_run`, and AI use is opt-in per request.
 - **Not available on web or mobile**, which cannot host a local server.
 
+### AI & Agents Hub
+
+One sidebar entry, **AI & agents**, opens two pages that share a frame (`src/components/management/AiHubLayout.tsx`): **AI Providers** (`/ai-providers`, bring-your-own-key categorization) and **Connect agent** (`/connect-agent`, for Claude, Codex or a local model). `AiAgentTabs` switches between them.
+
+```mermaid
+flowchart TB
+  S["Master switch: 'AI features'<br/>(useAiFeatures, localStorage vaulted.aiFeatures)"]
+  S -- on --> P["AI Providers page<br/>+ AI categorization (useAIConfig)"]
+  S -- on --> C["Connect agent page"]
+  S -- off --> X["Nothing is sent to a provider;<br/>Local API is switched off (setApiConfig)"]
+  C --> IPC["Electron IPC: api:get-config, api:get-connect-info,<br/>claude:detect / claude:setup-code-plugin,<br/>codex:detect / codex:setup"]
+  IPC --> MCP["mcp/server.mjs → Local API"]
+```
+
+- **The master switch is a per-device privacy choice**, not ledger data, so it lives in `localStorage`. Until the user chooses, it follows what they already use: on if an AI provider exists or the Local API is enabled, off on a fresh install. Switching it off also closes the Local API to agents. With it off, the hub shows only the switch.
+- **Connect agent needs the desktop app.** Agents reach the app through the Local API and the MCP server, which only the desktop build can host. The tab shows only where the Electron bridge exists (`getApiConfig`); on the web and mobile it is shown greyed with "Connect an agent is available in the desktop app".
+- **Setup runs in the main process.** The page asks Electron to detect Claude Code or Codex and set them up, and shows copyable configuration for Claude Desktop (`.mcpb`) and local models such as LM Studio.
+- The same tools an agent uses are described in [mcp/README.md](../mcp/README.md); the endpoints behind them in [API.md](API.md).
+
 ### Search
 
 One parser reads every typed query, whichever screen or channel it comes from:

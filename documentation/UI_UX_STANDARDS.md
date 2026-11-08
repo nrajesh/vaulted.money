@@ -16,6 +16,10 @@ Every standard module should follow this order:
 
 The title/tagline must not share a row with dense action groups on mobile. Keep the title aligned to the same left edge as the filter and table shell.
 
+## AI & Agents Pages
+
+AI Providers and Connect agent are one section under the sidebar entry "AI & agents". They share `AiHubLayout`: the tab switcher, then the master **AI features** switch, then the page. That frame sits at the same place on both pages, so switching tabs never moves it. With AI off only the switch and a "Turn on AI" button show. Where a tab cannot work (Connect agent on the web) show it greyed with a one-line reason instead of hiding it.
+
 ## Action Buttons
 
 Use this order for module actions:
