@@ -1,5 +1,17 @@
 import * as React from "react";
-import { Search, Sparkles, CreditCard, Tag, Store } from "lucide-react";
+import {
+  Search,
+  Sparkles,
+  CreditCard,
+  Tag,
+  Store,
+  Calendar,
+  Banknote,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpDown,
+  Layers,
+} from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -222,6 +234,41 @@ export function ConversationalSearchInput({
   const suggestionLast =
     interpretation?.parts.some((p) => p.kind === "entity" && p.typed) ?? false;
 
+  const partIcon = (part: InterpretationPart) => {
+    const className = "mr-2 h-4 w-4 shrink-0 text-primary";
+    switch (part.kind) {
+      case "date":
+      case "allTime":
+        return <Calendar className={className} />;
+      case "amount":
+        return <Banknote className={className} />;
+      case "type":
+        return part.type === "income" ? (
+          <TrendingUp className={className} />
+        ) : (
+          <TrendingDown className={className} />
+        );
+      case "limit":
+        return <ArrowUpDown className={className} />;
+      case "accounts":
+        return <Layers className={className} />;
+      case "text":
+        return <Search className={className} />;
+      case "entity":
+        if (part.entity === "account")
+          return <CreditCard className={className} />;
+        if (part.entity === "vendor") return <Store className={className} />;
+        return <Tag className={className} />;
+    }
+  };
+
+  const acceptSuggestion = (update: Partial<ParsedFilterState>) => {
+    onUpdate(update);
+    setOpen(false);
+  };
+
+  // Every understood piece is its own row, so the user can take just one of
+  // them; with several, "apply all" comes first and is the default.
   const suggestionGroup = interpretation && (
     <CommandGroup
       forceMount
@@ -229,26 +276,34 @@ export function ConversationalSearchInput({
         defaultValue: "Understood as",
       })}
     >
-      <CommandItem
-        forceMount
-        value={"suggest-" + input}
-        onSelect={() => {
-          onUpdate(interpretation.update);
-          setOpen(false);
-        }}
-      >
-        <Sparkles className="mr-2 h-4 w-4 shrink-0 text-primary" />
-        <span className="flex flex-wrap gap-1.5">
-          {interpretation.parts.map((part, index) => (
-            <span
-              key={index}
-              className="rounded-md bg-primary/10 px-2 py-0.5 text-sm"
-            >
-              {describePart(part)}
-            </span>
-          ))}
-        </span>
-      </CommandItem>
+      {interpretation.items.length > 1 && (
+        <CommandItem
+          forceMount
+          value={"suggest-all-" + input}
+          onSelect={() => acceptSuggestion(interpretation.update)}
+        >
+          <Sparkles className="mr-2 h-4 w-4 shrink-0 text-primary" />
+          <span className="font-medium">
+            {t("filters.conversational.suggest.applyAll", {
+              count: interpretation.items.length,
+              defaultValue: "Apply all {{count}}",
+            })}
+          </span>
+        </CommandItem>
+      )}
+      {interpretation.items.map((item, index) => (
+        <CommandItem
+          key={index}
+          forceMount
+          value={`suggest-${index}-${input}`}
+          onSelect={() => acceptSuggestion(item.update)}
+        >
+          {partIcon(item.part)}
+          <span className="rounded-md bg-primary/10 px-2 py-0.5 text-sm">
+            {describePart(item.part)}
+          </span>
+        </CommandItem>
+      ))}
     </CommandGroup>
   );
 

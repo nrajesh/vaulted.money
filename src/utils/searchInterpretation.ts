@@ -34,9 +34,17 @@ export interface InterpretationContext {
   vendors: NamedEntity[];
 }
 
+/** One thing the parser understood and what accepting just it would apply. */
+export interface InterpretationItem {
+  part: InterpretationPart;
+  update: Partial<ParsedFilterState>;
+}
+
 export interface SearchInterpretation {
+  /** Each piece on its own, so the user can accept any one of them. */
+  items: InterpretationItem[];
   parts: InterpretationPart[];
-  /** What to hand to the filter bar when the user accepts the suggestion. */
+  /** What to hand to the filter bar when the user accepts everything. */
   update: Partial<ParsedFilterState>;
 }
 
@@ -54,44 +62,42 @@ export const buildInterpretation = (
   parsed: ParsedFilterState,
   context: InterpretationContext,
 ): SearchInterpretation | null => {
-  const parts: InterpretationPart[] = [];
-  const update: Partial<ParsedFilterState> = {};
+  const items: InterpretationItem[] = [];
+  const add = (part: InterpretationPart, update: Partial<ParsedFilterState>) =>
+    items.push({ part, update });
 
   if (parsed.isAllTime) {
-    parts.push({ kind: "allTime" });
-    update.isAllTime = true;
+    add({ kind: "allTime" }, { isAllTime: true });
   } else if (parsed.dateRange?.from) {
-    parts.push({
-      kind: "date",
-      from: parsed.dateRange.from,
-      to: parsed.dateRange.to,
-    });
-    update.dateRange = parsed.dateRange;
+    add(
+      { kind: "date", from: parsed.dateRange.from, to: parsed.dateRange.to },
+      { dateRange: parsed.dateRange },
+    );
   }
 
   if (parsed.minAmount !== undefined || parsed.maxAmount !== undefined) {
-    parts.push({
-      kind: "amount",
-      min: parsed.minAmount,
-      max: parsed.maxAmount,
-    });
-    update.minAmount = parsed.minAmount;
-    update.maxAmount = parsed.maxAmount;
+    add(
+      { kind: "amount", min: parsed.minAmount, max: parsed.maxAmount },
+      { minAmount: parsed.minAmount, maxAmount: parsed.maxAmount },
+    );
   }
 
   if (parsed.transactionType) {
-    parts.push({ kind: "type", type: parsed.transactionType });
-    update.transactionType = parsed.transactionType;
+    add(
+      { kind: "type", type: parsed.transactionType },
+      { transactionType: parsed.transactionType },
+    );
   }
 
   if (parsed.limit !== undefined) {
-    parts.push({
-      kind: "limit",
-      count: parsed.limit,
-      order: parsed.sortOrder ?? "largest",
-    });
-    update.limit = parsed.limit;
-    update.sortOrder = parsed.sortOrder;
+    add(
+      {
+        kind: "limit",
+        count: parsed.limit,
+        order: parsed.sortOrder ?? "largest",
+      },
+      { limit: parsed.limit, sortOrder: parsed.sortOrder },
+    );
   }
 
   const typedFor = (entity: string, slug: string) =>
@@ -102,65 +108,79 @@ export const buildInterpretation = (
     entity: "account" | "category" | "subCategory" | "vendor",
     slugs: string[],
     known: NamedEntity[],
+    field:
+      | "selectedAccounts"
+      | "selectedCategories"
+      | "selectedSubCategories"
+      | "selectedVendors",
   ) => {
-    const matched = slugs.filter((slug) => slug !== NO_MATCH);
+    const matched = slugs.filter(
+      (slug) => slug !== NO_MATCH && known.some((k) => k.slug === slug),
+    );
     // "checking" can match a dozen accounts; one badge says so without
     // filling the suggestion with names.
     if (entity === "account" && matched.length > MAX_LISTED_ACCOUNTS) {
-      parts.push({ kind: "accounts", count: matched.length });
-      return matched.filter((slug) => known.some((k) => k.slug === slug));
+      add({ kind: "accounts", count: matched.length }, { [field]: matched });
+      return;
     }
     matched.forEach((slug) => {
-      const name = known.find((k) => k.slug === slug)?.name;
-      if (name) {
-        parts.push({
-          kind: "entity",
-          entity,
-          name,
-          slug,
-          typed: typedFor(entity, slug),
-        });
-      }
+      const name = known.find((k) => k.slug === slug)!.name;
+      add(
+        { kind: "entity", entity, name, slug, typed: typedFor(entity, slug) },
+        { [field]: [slug] },
+      );
     });
-    return matched.filter((slug) => known.some((k) => k.slug === slug));
   };
 
-  const accounts = addEntities(
+  addEntities(
     "account",
     parsed.selectedAccounts ?? [],
     context.accounts,
+    "selectedAccounts",
   );
-  if (accounts.length > 0) update.selectedAccounts = accounts;
-
-  const categories = addEntities(
+  addEntities(
     "category",
     parsed.selectedCategories,
     context.categories,
+    "selectedCategories",
   );
-  if (categories.length > 0) update.selectedCategories = categories;
-
-  const subCategories = addEntities(
+  addEntities(
     "subCategory",
     parsed.selectedSubCategories,
     context.subCategories,
+    "selectedSubCategories",
   );
-  if (subCategories.length > 0) update.selectedSubCategories = subCategories;
-
-  const vendors = addEntities(
+  addEntities(
     "vendor",
     parsed.selectedVendors,
     context.vendors,
+    "selectedVendors",
   );
-  if (vendors.length > 0) update.selectedVendors = vendors;
 
   // Nothing structured: leave it to the plain "Search Text" row.
-  if (parts.length === 0) return null;
+  if (items.length === 0) return null;
 
   // Words the parser did not understand still narrow the results as text.
   if (parsed.searchTerm) {
-    parts.push({ kind: "text", text: parsed.searchTerm });
+    add(
+      { kind: "text", text: parsed.searchTerm },
+      { searchTerm: parsed.searchTerm },
+    );
   }
-  update.searchTerm = parsed.searchTerm;
 
-  return { parts, update };
+  // Accepting everything also clears an earlier text search when there is
+  // no leftover text, so the new filters are not combined with a stale one.
+  const update: Partial<ParsedFilterState> = { searchTerm: parsed.searchTerm };
+  for (const item of items) {
+    // Merge entity lists (account, category...) rather than overwrite them.
+    for (const [key, value] of Object.entries(item.update)) {
+      const existing = (update as Record<string, unknown>)[key];
+      (update as Record<string, unknown>)[key] =
+        Array.isArray(existing) && Array.isArray(value)
+          ? [...existing, ...value]
+          : value;
+    }
+  }
+
+  return { items, parts: items.map((item) => item.part), update };
 };

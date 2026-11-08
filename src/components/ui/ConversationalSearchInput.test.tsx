@@ -46,13 +46,22 @@ describe("ConversationalSearchInput suggestion", () => {
     expect(screen.getByText("Over 20")).toBeInTheDocument();
     expect(onUpdate).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByText("Over 20"));
+    await userEvent.click(screen.getByText(/Apply all 2/));
     expect(onUpdate).toHaveBeenCalledTimes(1);
     expect(onUpdate.mock.calls[0][0]).toMatchObject({
       selectedVendors: ["starbucks"],
       minAmount: 20,
       searchTerm: "",
     });
+  });
+
+  it("lets the user take just one understood piece", async () => {
+    const { onUpdate } = await openAndType("starbuks over 20");
+    await userEvent.click(await screen.findByText("Over 20"));
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+    const update = onUpdate.mock.calls[0][0];
+    expect(update).toEqual({ minAmount: 20, maxAmount: undefined });
+    expect(update.selectedVendors).toBeUndefined();
   });
 
   it("has the suggestion selected first, so Enter accepts it", async () => {

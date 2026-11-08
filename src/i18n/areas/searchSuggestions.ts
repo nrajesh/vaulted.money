@@ -13,6 +13,7 @@ export const searchSuggestions: AreaTranslations = {
       conversational: {
         suggest: {
           heading: "Understood as",
+          applyAll: "Apply all {{count}}",
           allTime: "All time",
           date: "Date: {{from}} – {{to}}",
           dateUntil: "Date: until {{date}}",
@@ -42,6 +43,7 @@ export const searchSuggestions: AreaTranslations = {
       conversational: {
         suggest: {
           heading: "Entendido como",
+          applyAll: "Aplicar los {{count}}",
           allTime: "Todo el tiempo",
           date: "Fecha: {{from}} – {{to}}",
           dateUntil: "Fecha: hasta {{date}}",
@@ -71,6 +73,7 @@ export const searchSuggestions: AreaTranslations = {
       conversational: {
         suggest: {
           heading: "理解为",
+          applyAll: "全部应用（{{count}}）",
           allTime: "全部时间",
           date: "日期：{{from}} – {{to}}",
           dateUntil: "日期：截至 {{date}}",
@@ -100,6 +103,7 @@ export const searchSuggestions: AreaTranslations = {
       conversational: {
         suggest: {
           heading: "Opgevat als",
+          applyAll: "Alle {{count}} toepassen",
           allTime: "Alle tijd",
           date: "Datum: {{from}} – {{to}}",
           dateUntil: "Datum: tot {{date}}",
@@ -129,6 +133,7 @@ export const searchSuggestions: AreaTranslations = {
       conversational: {
         suggest: {
           heading: "புரிந்துகொண்டது",
+          applyAll: "அனைத்தும் பயன்படுத்து ({{count}})",
           allTime: "எல்லா காலமும்",
           date: "தேதி: {{from}} – {{to}}",
           dateUntil: "தேதி: {{date}} வரை",
