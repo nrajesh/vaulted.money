@@ -28,6 +28,10 @@ const overlay = ({ assets, endCard }) => {
       box-shadow:0 10px 40px rgba(0,0,0,.45);opacity:0;transition:opacity .35s;max-width:80vw;text-align:center;pointer-events:none}
     #demo-caption.on{opacity:1}
     #demo-caption b{background:linear-gradient(90deg,#5eead4,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+    #demo-note{position:fixed;z-index:2147483646;transform:translateY(-50%);pointer-events:none;
+      font:600 22px/1 Inter,system-ui,sans-serif;padding:8px 16px;border-radius:999px;white-space:nowrap;
+      background:rgba(16,185,129,.18);color:#6ee7b7;border:1.5px solid rgba(16,185,129,.7);opacity:0;transition:opacity .45s}
+    #demo-note.on{opacity:1}
     #demo-cursor{position:fixed;z-index:2147483647;width:34px;height:34px;border-radius:50%;
       background:rgba(251,146,60,.5);border:3px solid #fb923c;pointer-events:none;
       transform:translate(-50%,-50%);transition:transform .08s;left:-80px;top:-80px}
@@ -36,29 +40,30 @@ const overlay = ({ assets, endCard }) => {
     #root{transition:transform .85s cubic-bezier(.6,0,.4,1),opacity .85s;transform-origin:50% 50%}
     #root.docked{transform:translateX(-19%) scale(.64);border-radius:28px;overflow:hidden;height:100vh;
       box-shadow:0 30px 90px rgba(0,0,0,.55)}
-    #root.flipped{transform:perspective(2400px) rotateY(-90deg);opacity:0}
+    #root{transition:transform .85s cubic-bezier(.6,0,.4,1),opacity 1s ease,filter 1s ease}
+    #root.flipped{opacity:0;filter:blur(26px)}
     body.stage-docked{background:radial-gradient(ellipse at 40% 30%,#1b2c4a 0%,#0a1020 75%)!important;overflow:hidden!important}
     html.stage-docked{background:radial-gradient(ellipse at 40% 30%,#1b2c4a 0%,#0a1020 75%)!important;overflow:hidden!important}
     #demo-phone{position:fixed;right:110px;top:50%;width:462px;height:932px;padding:16px;box-sizing:border-box;
       background:#05070d;border-radius:76px;box-shadow:0 30px 90px rgba(0,0,0,.6),inset 0 0 0 2px #1e293b;
       transform:translate(160%,-50%);transition:transform 1s cubic-bezier(.2,.8,.2,1);z-index:2147483640}
     #demo-phone.on{transform:translate(0,-50%)}
-    #demo-phone.off{transform:translate(160%,-50%);transition-duration:.7s}
+    #demo-phone.off{transform:translate(160%,-50%);opacity:0;filter:blur(18px);
+      transition:transform .9s cubic-bezier(.6,0,.4,1),opacity .9s ease,filter .9s ease}
     #demo-phone .screen{width:430px;height:900px;border-radius:60px;overflow:hidden;background:#fff}
     #demo-phone iframe{width:100%;height:100%;border:0;display:block}
     #demo-phone .notch{position:absolute;top:26px;left:50%;transform:translateX(-50%);width:128px;height:34px;background:#05070d;border-radius:20px}
-    #demo-end{position:fixed;inset:0;z-index:2147483645;pointer-events:none;opacity:0;
-      transform:perspective(2400px) rotateY(90deg);transform-origin:50% 50%;
-      transition:transform .85s cubic-bezier(.6,0,.4,1) .3s,opacity .85s .3s}
-    #demo-end.on{opacity:1;transform:perspective(2400px) rotateY(0)}
+    #demo-end{position:fixed;inset:0;z-index:2147483645;pointer-events:none;opacity:0;filter:blur(30px);
+      transform:scale(.985);transition:opacity 1s ease .35s,filter 1.1s ease .35s,transform 1.1s ease .35s}
+    #demo-end.on{opacity:1;filter:blur(0);transform:scale(1)}
     #demo-end .lay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:150px;font-family:Inter,system-ui,sans-serif}
     #demo-end .light{background:radial-gradient(ellipse at 50% 35%,#ffffff 0%,#f1f5f9 75%);color:#0f172a}
     #demo-end .dark{background:radial-gradient(ellipse at 50% 35%,#13293a 0%,#0a0f1c 75%);color:#f1f5f9;
       clip-path:circle(0% at 50% 50%);transition:clip-path 1.5s cubic-bezier(.65,0,.35,1)}
     #demo-end.todark .dark{clip-path:circle(150% at 50% 50%)}
-    #demo-end .col{display:flex;flex-direction:column;align-items:flex-start;gap:26px}
+    #demo-end .col{display:flex;flex-direction:column;align-items:center;gap:30px;text-align:center}
     #demo-end .brand{display:flex;align-items:center;gap:34px}
-    #demo-end img{height:230px;width:auto}
+    #demo-end img{height:210px;width:auto}
     #demo-end h1{font-size:130px;font-weight:800;letter-spacing:-.03em;margin:0;line-height:1;
       -webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:10px}
     #demo-end .light h1{background-image:linear-gradient(90deg,hsl(32 83% 66%),hsl(27 72% 62%),hsl(20 73% 56%))}
@@ -154,6 +159,24 @@ async function createStage({
       if (ms) await wait(ms);
     },
 
+    /** A small label right after the text typed in the search box ("typo-tolerant"). */
+    async noteNearInput(text) {
+      await page.evaluate((t) => {
+        const inp = document.querySelector("[cmdk-input]"); if (!inp) return;
+        const r = inp.getBoundingClientRect(); const cs = getComputedStyle(inp);
+        const ctx2d = document.createElement("canvas").getContext("2d");
+        ctx2d.font = `${cs.fontSize} ${cs.fontFamily}`;
+        const w = ctx2d.measureText(inp.value.trimEnd()).width;
+        let el = document.getElementById("demo-note");
+        if (!el) { el = document.createElement("div"); el.id = "demo-note"; document.body.appendChild(el); }
+        el.textContent = t;
+        el.style.left = r.left + parseFloat(cs.paddingLeft) + w + 28 + "px";
+        el.style.top = r.top + r.height / 2 + "px";
+        requestAnimationFrame(() => el.classList.add("on"));
+      }, text);
+    },
+    async hideNote() { await page.evaluate(() => document.getElementById("demo-note")?.classList.remove("on")); },
+
     /** Camera move, recorded for the editor: starts now, takes `ease` seconds. */
     async zoomTo(target, ease = 0.9) {
       ev.zoom.push({ t: now(), ...cam });
@@ -212,15 +235,16 @@ async function createStage({
      * phone slides in. The phone starts without the desktop's saved filters,
      * so its search starts from a clean page. Does not block: await the result.
      */
-    async preparePhone(pathname) {
-      await page.evaluate((src) => {
+    async preparePhone(pathname, { excludeTransfers = false } = {}) {
+      await page.evaluate(([src, excludeTransfers]) => {
         for (const k of Object.keys(localStorage)) {
-          if (k.startsWith("filter_") && k !== "filter_excludeTransfers") localStorage.removeItem(k);
+          if (k.startsWith("filter_")) localStorage.removeItem(k);
         }
+        if (excludeTransfers) localStorage.setItem("filter_excludeTransfers", "true");
         const phone = document.createElement("div"); phone.id = "demo-phone";
         phone.innerHTML = `<div class="screen"><iframe src="${src}"></iframe></div><div class="notch"></div>`;
         document.body.appendChild(phone);
-      }, pathname);
+      }, [pathname, excludeTransfers]);
       const handle = await page.waitForSelector("#demo-phone iframe");
       const frame = await handle.contentFrame();
       await frame.waitForSelector('[role="combobox"]', { timeout: 30000 });
@@ -242,7 +266,7 @@ async function createStage({
       await page.evaluate(() => document.getElementById("demo-phone")?.classList.add("off"));
     },
 
-    /** Page flips away; a light end card flips in. */
+    /** The page blurs out while the end card blurs in. */
     async flipToEndCard() {
       stage.mark("flip");
       await page.evaluate(() => {

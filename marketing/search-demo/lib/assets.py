@@ -15,7 +15,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")
 def crop(path):
     im = Image.open(path).convert("RGBA")
     box = im.getchannel("A").point(lambda a: 255 if a > 20 else 0).getbbox()
-    pad = 24
+    pad = 4
     l, t, r, b = box
     im = im.crop((max(0, l - pad), max(0, t - pad), min(im.width, r + pad), min(im.height, b + pad)))
     buf = io.BytesIO()

@@ -1,8 +1,12 @@
 # Search demo video (and a toolkit for the next ones)
 
-A ~35-second marketing video for natural-language search: type a sentence, see
-what it understood, pick one filter or all of them, then the same on a phone,
-(the camera pushes in on the phone as it slides in, and pulls back to reveal) and finally a card with the three points from the website and a QR code.
+A ~30-second marketing video for natural-language search: type a sentence (a
+quiet "typo-tolerant" note appears beside the misspelled word), see what it
+understood, pick one filter or all of them, then do a second search once, on a
+phone (the camera pushes in on the phone as it slides in). The caption reads
+"Search transactions" in white and, on its own line, "without AI or cloud" in
+blue; the two colours never share a line. The app blurs out into a final card
+with the three points from the website and a QR code.
 
 The finished video is `final/vaulted-money-search.mp4` (committed on purpose;
 see "Repository rules" below).
