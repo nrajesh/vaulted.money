@@ -28,24 +28,65 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
   <!-- Primary meta -->
-  <title>Vaulted Money</title>
-  <meta name="description" content="Privacy-first personal finance. Track spending, manage budgets, and understand your money — your data stays on your device, always." />
+  <title>Vaulted Money — private, local-first personal finance (open source)</title>
+  <meta name="description" content="Free, open-source budgeting and expense tracking that runs on your device. No account, no cloud. Search your ledger in plain English, import bank CSVs, set budgets and keep encrypted backups." />
+  <link rel="canonical" href="https://vaulted.money/" />
 
-  <!-- Open Graph -->
+  <!-- Open Graph. Image and URL must be absolute: link previews do not
+       resolve relative paths. -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Vaulted Money" />
-  <meta property="og:description" content="Privacy-first personal finance. Your data stays on your device, always." />
-  <meta property="og:image" content="/logo-square-dark.png" />
+  <meta property="og:site_name" content="Vaulted Money" />
+  <meta property="og:url" content="https://vaulted.money/" />
+  <meta property="og:title" content="Vaulted Money — ask your ledger, keep control" />
+  <meta property="og:description" content="Private, local-first money tracking. No account. Open source. Plain-English search that needs no AI or cloud." />
+  <meta property="og:image" content="https://vaulted.money/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Vaulted Money: Ask your ledger. Keep control. Private, local-first personal finance." />
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Vaulted Money" />
-  <meta name="twitter:description" content="Privacy-first personal finance. Your data stays on your device, always." />
-  <meta name="twitter:image" content="/logo-square-dark.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Vaulted Money — ask your ledger, keep control" />
+  <meta name="twitter:description" content="Private, local-first money tracking. No account. Open source. Plain-English search that needs no AI or cloud." />
+  <meta name="twitter:image" content="https://vaulted.money/og-image.png" />
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Vaulted Money",
+      "url": "https://vaulted.money/",
+      "image": "https://vaulted.money/og-image.png",
+      "description": "Private, local-first personal finance app. Track spending, import bank CSV exports, set budgets, run reports and search your ledger in plain English. No account; data stays on your device.",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web, Windows, macOS, Linux, Android, iOS",
+      "isAccessibleForFree": true,
+      "license": "https://opensource.org/licenses/MIT",
+      "codeRepository": "https://github.com/nrajesh/vaulted.money",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Plain-English ledger search without AI or cloud",
+        "Multiple ledgers and multi-currency balances",
+        "Bank CSV import",
+        "Budgets, reports and analytics",
+        "Encrypted backups",
+        "Works offline, no account",
+        "Desktop Local API and MCP agent connection"
+      ]
+    }
+  </script>
 </head>
 
 <body>
   <div id="root"></div>
+  <!-- Read by crawlers and previewers that do not run JavaScript. -->
+  <noscript>
+    <h1>Vaulted Money — private, local-first personal finance</h1>
+    <p>Vaulted Money is a free, open-source app for tracking income, spending, accounts and budgets. It runs on your own device: no account, no cloud, and it works offline. Search your ledger in plain English ("groceries over 50 last month") without AI, import bank CSV exports, keep separate ledgers in multiple currencies, and export encrypted backups. Available for the web, desktop (Windows, macOS, Linux), Android and iOS.</p>
+    <p><a href="https://vaulted.money/ledgers?demo=1">Try it with demo data</a> · <a href="https://github.com/nrajesh/vaulted.money">Source code on GitHub (MIT)</a> · <a href="https://vaulted.money/privacy">Privacy</a></p>
+    <p>The app itself needs JavaScript enabled.</p>
+  </noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

@@ -59,6 +59,8 @@ pnpm validate
 
 ## Main Documentation
 
+The [documentation map](README.md) shows every page, who it is for, and how the pages link to each other.
+
 | File | Purpose |
 | --- | --- |
 | [API.md](API.md) | Local API reference (desktop app). |
@@ -83,22 +85,7 @@ API keys are stored locally and are never included in exports.
 
 ## Content Security Policy
 
-Vaulted Money blocks outgoing network requests by default. If you add a new AI API domain, add it to the `aiDomains` list in `vite.config.ts`.
-
-Example:
-
-```typescript
-const aiDomains = [
-  "https://generativelanguage.googleapis.com",
-  "https://api.openai.com",
-  "https://api.anthropic.com",
-  "https://api.mistral.ai",
-  "https://api.perplexity.ai",
-  "https://api.your-custom-ai-provider.com",
-];
-```
-
-Restart the development server or rebuild the app after changing CSP domains.
+Production builds add a Content Security Policy through the `html-csp` plugin in `vite.config.ts` (build only, so the dev server's hot reload keeps working). Scripts, styles, fonts and frames are limited to the app itself. `connect-src` allows any `https:` address because users configure their own AI endpoints, so a new AI provider needs no CSP change.
 
 ## Component Guidelines
 
