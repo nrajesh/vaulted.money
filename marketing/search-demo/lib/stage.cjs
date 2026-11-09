@@ -1,0 +1,273 @@
+/**
+ * A small "stage" for recording product videos from the real app.
+ *
+ * It drives the running app (dev server) in Chromium, records the screen, and
+ * writes everything the editor needs to `events.json`: when each key was
+ * pressed, where the clicks were, which sounds to play and how the camera
+ * should zoom. `compose.py` then turns that into the finished MP4.
+ *
+ * Nothing on screen is a mock-up: it is the real app with demo data.
+ *
+ *   const stage = await createStage({ baseUrl, outDir, assets, endCard });
+ *   await stage.caption("Hello", 1500);
+ *   await stage.finish();
+ */
+const fs = require("fs");
+const path = require("path");
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Runs inside the page: caption bar, cursor, end card and device frame. */
+const overlay = ({ assets, endCard }) => {
+  const style = document.createElement("style");
+  style.textContent = `
+    #demo-caption{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);z-index:2147483646;
+      background:rgba(8,12,24,.94);color:#fff;font:600 40px/1.25 Inter,system-ui,sans-serif;letter-spacing:-.01em;
+      padding:18px 38px;border-radius:18px;border:1px solid rgba(94,234,212,.35);
+      box-shadow:0 10px 40px rgba(0,0,0,.45);opacity:0;transition:opacity .35s;max-width:80vw;text-align:center;pointer-events:none}
+    #demo-caption.on{opacity:1}
+    #demo-caption b{background:linear-gradient(90deg,#5eead4,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+    #demo-cursor{position:fixed;z-index:2147483647;width:34px;height:34px;border-radius:50%;
+      background:rgba(251,146,60,.5);border:3px solid #fb923c;pointer-events:none;
+      transform:translate(-50%,-50%);transition:transform .08s;left:-80px;top:-80px}
+    #demo-cursor.down{transform:translate(-50%,-50%) scale(.7)}
+    html{perspective:2400px;background:#0b0f19}
+    #root{transition:transform .85s cubic-bezier(.6,0,.4,1),opacity .85s;transform-origin:50% 50%}
+    #root.docked{transform:translateX(-19%) scale(.64);border-radius:28px;overflow:hidden;height:100vh;
+      box-shadow:0 30px 90px rgba(0,0,0,.55)}
+    #root.flipped{transform:perspective(2400px) rotateY(-90deg);opacity:0}
+    body.stage-docked{background:radial-gradient(ellipse at 40% 30%,#1b2c4a 0%,#0a1020 75%)!important;overflow:hidden!important}
+    html.stage-docked{background:radial-gradient(ellipse at 40% 30%,#1b2c4a 0%,#0a1020 75%)!important;overflow:hidden!important}
+    #demo-phone{position:fixed;right:110px;top:50%;width:462px;height:932px;padding:16px;box-sizing:border-box;
+      background:#05070d;border-radius:76px;box-shadow:0 30px 90px rgba(0,0,0,.6),inset 0 0 0 2px #1e293b;
+      transform:translate(160%,-50%);transition:transform 1s cubic-bezier(.2,.8,.2,1);z-index:2147483640}
+    #demo-phone.on{transform:translate(0,-50%)}
+    #demo-phone.off{transform:translate(160%,-50%);transition-duration:.7s}
+    #demo-phone .screen{width:430px;height:900px;border-radius:60px;overflow:hidden;background:#fff}
+    #demo-phone iframe{width:100%;height:100%;border:0;display:block}
+    #demo-phone .notch{position:absolute;top:26px;left:50%;transform:translateX(-50%);width:128px;height:34px;background:#05070d;border-radius:20px}
+    #demo-end{position:fixed;inset:0;z-index:2147483645;pointer-events:none;opacity:0;
+      transform:perspective(2400px) rotateY(90deg);transform-origin:50% 50%;
+      transition:transform .85s cubic-bezier(.6,0,.4,1) .3s,opacity .85s .3s}
+    #demo-end.on{opacity:1;transform:perspective(2400px) rotateY(0)}
+    #demo-end .lay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:150px;font-family:Inter,system-ui,sans-serif}
+    #demo-end .light{background:radial-gradient(ellipse at 50% 35%,#ffffff 0%,#f1f5f9 75%);color:#0f172a}
+    #demo-end .dark{background:radial-gradient(ellipse at 50% 35%,#13293a 0%,#0a0f1c 75%);color:#f1f5f9;
+      clip-path:circle(0% at 50% 50%);transition:clip-path 1.5s cubic-bezier(.65,0,.35,1)}
+    #demo-end.todark .dark{clip-path:circle(150% at 50% 50%)}
+    #demo-end .col{display:flex;flex-direction:column;align-items:flex-start;gap:26px}
+    #demo-end .brand{display:flex;align-items:center;gap:34px}
+    #demo-end img{height:230px;width:auto}
+    #demo-end h1{font-size:130px;font-weight:800;letter-spacing:-.03em;margin:0;line-height:1;
+      -webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:10px}
+    #demo-end .light h1{background-image:linear-gradient(90deg,hsl(32 83% 66%),hsl(27 72% 62%),hsl(20 73% 56%))}
+    #demo-end .dark h1{background-image:linear-gradient(90deg,hsl(183 51% 74%),hsl(187 55% 61%),hsl(199 54% 48%))}
+    #demo-end p{font-size:44px;margin:0;font-weight:600}
+    #demo-end .badges{display:flex;gap:18px;margin-top:6px}
+    #demo-end .badges span{font-size:32px;font-weight:600;padding:12px 26px;border-radius:12px;border:2px solid}
+    #demo-end .light .g{border-color:#a7f3d0;background:#ecfdf5;color:#047857}
+    #demo-end .light .b{border-color:#bae6fd;background:#f0f9ff;color:#0369a1}
+    #demo-end .light .o{border-color:#fde68a;background:#fffbeb;color:#92400e}
+    #demo-end .dark .g{border-color:rgba(4,120,87,.7);background:rgba(2,44,34,.55);color:#a7f3d0}
+    #demo-end .dark .b{border-color:rgba(3,105,161,.7);background:rgba(8,47,73,.55);color:#bae6fd}
+    #demo-end .dark .o{border-color:rgba(180,83,9,.7);background:rgba(69,26,3,.55);color:#fde68a}
+    #demo-end .qr{display:flex;flex-direction:column;align-items:center;gap:18px}
+    #demo-end .qr .tile{width:330px;height:330px;background:#fff;border-radius:26px;padding:10px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+    #demo-end .qr svg{width:100%;height:100%;display:block}
+    #demo-end .qr span{font-size:34px;font-weight:700;letter-spacing:.01em}`;
+  const layer = (cls, logo) => `<div class="lay ${cls}"><div class="col"><div class="brand"><img src="${logo}"><h1>${endCard.title}</h1></div>
+      <p>${endCard.tagline}</p>
+      <div class="badges">${endCard.badges.map((b) => `<span class="${b.cls}">${b.text}</span>`).join("")}</div></div>
+      <div class="qr"><div class="tile">${assets.qr}</div><span>${endCard.url}</span></div></div>`;
+  document.addEventListener("DOMContentLoaded", () => {
+    document.head.appendChild(style);
+    const cap = Object.assign(document.createElement("div"), { id: "demo-caption" });
+    const cur = Object.assign(document.createElement("div"), { id: "demo-cursor" });
+    const end = Object.assign(document.createElement("div"), { id: "demo-end" });
+    end.innerHTML = layer("light", assets.logoLight) + layer("dark", assets.logoDark);
+    document.body.append(cap, cur, end);
+    addEventListener("mousemove", (e) => { cur.style.left = e.clientX + "px"; cur.style.top = e.clientY + "px"; }, true);
+    addEventListener("mousedown", () => cur.classList.add("down"), true);
+    addEventListener("mouseup", () => cur.classList.remove("down"), true);
+  });
+};
+
+async function createStage({
+  baseUrl,
+  outDir,
+  assets,
+  endCard,
+  theme = "dark",
+  width = 1920,
+  height = 1080,
+  ledger = "Home Budget",
+}) {
+  fs.mkdirSync(outDir, { recursive: true });
+  const videoDir = path.join(outDir, "video");
+  fs.rmSync(videoDir, { recursive: true, force: true });
+
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({
+    viewport: { width, height },
+    recordVideo: { dir: videoDir, size: { width, height } },
+  });
+  // Only the first time: this also runs inside the phone's iframe, and must not
+  // undo a theme the video switched to with the theme button.
+  await ctx.addInitScript((th) => {
+    try { if (!localStorage.getItem("vite-ui-theme")) localStorage.setItem("vite-ui-theme", th); } catch {}
+  }, theme);
+  await ctx.addInitScript(overlay, { assets, endCard });
+
+  // Setup page: generate the demo data and open a ledger. Its recording is
+  // thrown away; the data lives in the browser profile the take shares.
+  const setup = await ctx.newPage();
+  await setup.goto(baseUrl + "/ledgers");
+  await setup.getByRole("button", { name: /generate demo data/i }).click();
+  await wait(500);
+  await setup.getByRole("button", { name: /generate|confirm|continue|yes|replace/i }).last().click();
+  await wait(8000);
+  await setup.goto(baseUrl + "/ledgers"); await wait(1500);
+  await setup.getByRole("heading", { name: ledger }).click();
+  await wait(2500);
+
+  const page = await ctx.newPage();
+  const T0 = Date.now();
+  const now = () => (Date.now() - T0) / 1000;
+  const ev = { keys: [], clicks: [], sounds: [], zoom: [], marks: {}, boxes: {} };
+  let pos = { x: width / 2, bottom: 48 };
+  let cam = { z: 1, cx: width / 2, cy: height / 2 };
+
+  const stage = {
+    page, ev, wait, now, baseUrl, width, height,
+    mark: (name) => { ev.marks[name] = now(); },
+    sound: (kind, opts = {}) => ev.sounds.push({ kind, t: now() + (opts.offset || 0), gain: opts.gain }),
+
+    /** Where captions sit; move them inside the zoom window while zoomed in. */
+    captionAt(x, bottom) { pos = { x, bottom }; },
+    async caption(html, ms = 0) {
+      await page.evaluate(([t, p]) => {
+        const c = document.getElementById("demo-caption"); if (!c) return;
+        c.style.left = p.x + "px"; c.style.bottom = p.bottom + "px";
+        if (t) { c.innerHTML = t; c.classList.add("on"); } else c.classList.remove("on");
+      }, [html, pos]);
+      if (ms) await wait(ms);
+    },
+
+    /** Camera move, recorded for the editor: starts now, takes `ease` seconds. */
+    async zoomTo(target, ease = 0.9) {
+      ev.zoom.push({ t: now(), ...cam });
+      cam = { ...cam, ...target };
+      ev.zoom.push({ t: now() + ease, ...cam });
+    },
+
+    async moveTo(locator) {
+      const b = await locator.boundingBox();
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 22 });
+      await wait(200);
+    },
+    async click(locator) {
+      await stage.moveTo(locator);
+      ev.clicks.push(now());
+      await page.mouse.down(); await wait(80); await page.mouse.up();
+    },
+    /** Types into whatever is focused, logging every key for the sound track. */
+    async type(text, delay = 40) {
+      for (const ch of text) {
+        ev.keys.push({ t: now(), space: ch === " " });
+        await page.keyboard.type(ch);
+        await wait(delay);
+      }
+    },
+
+    /** Clicks the real theme button, with a pulse ring and no colour fade. */
+    async toggleTheme() {
+      const btn = page.locator("button:has(svg.lucide-moon), button:has(svg.lucide-sun)").first();
+      await stage.moveTo(btn);
+      const b = await btn.boundingBox();
+      await page.evaluate((r) => {
+        const ring = document.createElement("div"); ring.id = "demo-ring";
+        ring.style.cssText = `position:fixed;z-index:2147483646;left:${r.x - 10}px;top:${r.y - 10}px;width:${r.width + 20}px;height:${r.height + 20}px;border-radius:50%;border:4px solid #fb923c;animation:demoPulse .9s ease-out 2;pointer-events:none`;
+        const st = document.createElement("style"); st.id = "demo-ring-style";
+        st.textContent = "@keyframes demoPulse{0%{box-shadow:0 0 0 0 rgba(251,146,60,.65)}100%{box-shadow:0 0 0 26px rgba(251,146,60,0)}}";
+        document.head.appendChild(st); document.body.appendChild(ring);
+      }, b);
+      await wait(900);
+      await page.evaluate(() => {
+        const st = document.createElement("style"); st.id = "demo-notrans";
+        st.textContent = "*,*::before,*::after{transition:none!important;animation-duration:0s!important}";
+        document.head.appendChild(st);
+      });
+      ev.clicks.push(now()); await page.mouse.down(); await wait(80); await page.mouse.up();
+      stage.mark("theme");
+      await wait(250);
+      await page.evaluate(() => { document.getElementById("demo-ring")?.remove(); document.getElementById("demo-ring-style")?.remove(); });
+      await wait(450);
+      await page.evaluate(() => document.getElementById("demo-notrans")?.remove());
+      await wait(300);
+    },
+
+    /**
+     * Loads the app in a phone-sized frame (off screen) so it is ready when the
+     * phone slides in. The phone starts without the desktop's saved filters,
+     * so its search starts from a clean page. Does not block: await the result.
+     */
+    async preparePhone(pathname) {
+      await page.evaluate((src) => {
+        for (const k of Object.keys(localStorage)) {
+          if (k.startsWith("filter_") && k !== "filter_excludeTransfers") localStorage.removeItem(k);
+        }
+        const phone = document.createElement("div"); phone.id = "demo-phone";
+        phone.innerHTML = `<div class="screen"><iframe src="${src}"></iframe></div><div class="notch"></div>`;
+        document.body.appendChild(phone);
+      }, pathname);
+      const handle = await page.waitForSelector("#demo-phone iframe");
+      const frame = await handle.contentFrame();
+      await frame.waitForSelector('[role="combobox"]', { timeout: 30000 });
+      await wait(800);
+      return frame;
+    },
+    /** Shrinks the desktop view to the left and slides the phone in on the right. */
+    async showPhone() {
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.classList.add("stage-docked");
+        document.body.classList.add("stage-docked");
+        document.getElementById("root").classList.add("docked");
+        requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("demo-phone").classList.add("on")));
+      });
+      await wait(1100);
+    },
+    async hidePhone() {
+      await page.evaluate(() => document.getElementById("demo-phone")?.classList.add("off"));
+    },
+
+    /** Page flips away; a light end card flips in. */
+    async flipToEndCard() {
+      stage.mark("flip");
+      await page.evaluate(() => {
+        document.getElementById("demo-cursor").style.display = "none";
+        document.getElementById("root").classList.add("flipped");
+        document.getElementById("demo-end").classList.add("on");
+      });
+    },
+    /** The card turns dark in a circular reveal. */
+    async revealDarkEndCard() {
+      stage.mark("toDark");
+      await page.evaluate(() => document.getElementById("demo-end").classList.add("todark"));
+    },
+
+    async finish() {
+      stage.mark("end");
+      fs.writeFileSync(path.join(outDir, "events.json"), JSON.stringify(ev, null, 1));
+      const video = await page.video().path();
+      await ctx.close();
+      await browser.close();
+      fs.copyFileSync(video, path.join(outDir, "take.webm"));
+      return path.join(outDir, "take.webm");
+    },
+  };
+  return stage;
+}
+
+module.exports = { createStage, wait };

@@ -24,6 +24,8 @@ Generated outputs that must stay out of git:
 
 Before committing, ask: *"Can this be reproduced by running a command?"* If yes, gitignore it.
 
+**One deliberate exception:** the finished marketing video(s) in `marketing/search-demo/final/` are committed so the owner can share them from the repository. Everything else a marketing tool generates (`marketing/*/out/`) stays ignored. Keep only the current cut there; a committed video stays in the history for good.
+
 ---
 
 ## Tech stack
@@ -262,6 +264,7 @@ ios/            — Capacitor iOS project (custom icons, splash, Xcode config)
 public/         — Static files served at web root
 assets/         — Source brand images (icons, splash screens)
 documentation/  — Project and developer docs
+marketing/      — Product videos and the tooling that records them (see marketing/search-demo/README.md)
 specs/          — Feature specifications
 scripts/        — Build helper scripts
 patches/        — pnpm dependency patches
