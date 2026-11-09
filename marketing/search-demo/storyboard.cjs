@@ -75,15 +75,24 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   await page.evaluate(() => { window.__demoGlow = false; }); // the default filters that return on Reset do not glow
 
   // ---- 2. switch to light by clicking the theme button -----------------
-  await caption("Start over with <br><b>one click</b>", 100);
-  await click(page.getByRole("button", { name: /^Reset$/ }));
-  await wait(1300);
+  // Cross-dissolve instead of showing the Reset click: the page fades out,
+  // is reset and the camera pulled back unseen, then fades back in.
   await caption("");
-  zoomTo(FULL, SLOW);
+  await page.evaluate(() => {
+    const f = document.createElement("div"); f.id = "demo-fade";
+    f.style.cssText = "position:fixed;inset:0;z-index:2147483645;background:#0b0f19;opacity:0;transition:opacity .7s ease;pointer-events:none";
+    document.body.appendChild(f);
+    requestAnimationFrame(() => requestAnimationFrame(() => { f.style.opacity = "1"; }));
+  });
+  await wait(900);
+  await page.getByRole("button", { name: /^Reset$/ }).evaluate((b) => b.click());
+  zoomTo(FULL, 0.05);
   stage.captionAt(960, 48);
   // The phone loads in the background while the theme is switched.
   const phoneReady = stage.preparePhone("/transactions", { excludeTransfers: true });
-  await wait(1300);
+  await wait(1200);
+  await page.evaluate(() => { document.getElementById("demo-fade").style.opacity = "0"; });
+  await wait(800);
   await caption("Light or dark<br><b>same search</b>", 200);
   await stage.toggleTheme();
   await caption("");
@@ -99,7 +108,7 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   // The zoom window is 1280x720, clamped to the right edge of the screen.
   stage.captionAt(1280, Math.max(20, 1080 - (PHONE_CAM.cy + 360) + 36));
   await stage.showPhone();
-  await caption("Works on your phone too", 1100);
+  await caption("Works on your phone too", 2300);
   await caption("");
   await click(phone.getByRole("combobox").first());
   await caption("Ask it like a person would", 100);
@@ -112,6 +121,8 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   await wait(1900);
   // Two lines, so white and blue never share a line.
   await caption("Search transactions<br><b>without AI or cloud</b>", 2400);
+  await caption("", 600);
+  await caption("Scriptable on desktop<br><b>OpenAPI + Postman</b>", 3000);
   await caption("", 500); // let the caption fade before the camera moves
 
   // ---- 4. end card: the app blurs out, the card blurs in ---------------
