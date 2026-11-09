@@ -45,7 +45,7 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   await wait(2600);
   await page.mouse.move(1100, 620);
   mark("intro");
-  await caption("Ask your budget a <b>question</b>.", 1500);
+  await caption("Ask your budget<br><b>a question</b>", 1500);
   await caption("");
 
   const combo = page.getByRole("combobox").first();
@@ -60,18 +60,18 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   await type(QUERY_1, 46);
   await wait(250);
   await stage.noteNearInput("✓ typo-tolerant"); // for viewers who miss the misspelling
-  await caption("Dates. Amounts. Even typos. <b>Understood.</b>", 2000);
+  await caption("Dates. Amounts. Even typos.<br><b>Understood</b>", 2000);
   await stage.hideNote();
   await caption("Take one filter…", 300);
   await click(page.getByRole("option", { name: /Category: Groceries/ }));
-  await wait(500);
+  await page.evaluate(() => { window.__demoGlow = true; }); // chips that pop in now glow
+  await wait(900);
   await caption("…or everything left, in one tap", 300);
   await click(page.getByRole("option", { name: /Apply all/ }));
-  sound("chime");
   mark("applied");
   zoomTo({ ...ZOOM, z: 1.45, cy: ZOOM.cy - 40 }, 1.0);
-  await wait(500);
-  await caption("Every filter is a chip you can remove", 1500);
+  await wait(900);
+  await caption("Every filter is a chip<br><b>you can remove</b>", 2000);
 
   // ---- 2. switch to light by clicking the theme button -----------------
   await click(page.getByRole("button", { name: /^Reset$/ }));
@@ -81,7 +81,7 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   // The phone loads in the background while the theme is switched.
   const phoneReady = stage.preparePhone("/transactions", { excludeTransfers: true });
   await wait(1300);
-  await caption("Light or dark. <b>Same search.</b>", 200);
+  await caption("Light or dark<br><b>same search</b>", 200);
   await stage.toggleTheme();
   await caption("");
   await click(page.locator("#exclude-transfers")); // a transfer is not an expense
@@ -91,10 +91,10 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   const phone = await phoneReady;
   sound("whoosh");
   const pb = await phone.getByRole("combobox").first().boundingBox();
-  const PHONE_CAM = { z: 1.7, cx: 1579, cy: pb.y + 120 };
+  const PHONE_CAM = { z: 1.5, cx: 1579, cy: pb.y + 120 };
   zoomTo(PHONE_CAM, 1.3); // push in on the phone as it slides in
-  // The zoom window is 1129x635, clamped to the right edge of the screen.
-  stage.captionAt(1355, Math.max(20, 1080 - (PHONE_CAM.cy + 317) + 36));
+  // The zoom window is 1280x720, clamped to the right edge of the screen.
+  stage.captionAt(1280, Math.max(20, 1080 - (PHONE_CAM.cy + 360) + 36));
   await stage.showPhone();
   await caption("Works on your phone too", 1100);
   await caption("");
@@ -102,9 +102,8 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   await caption("Ask it like a person would", 100);
   await type(QUERY_2, 14);
   await wait(300);
-  await caption("Biggest. Soonest. One account. <b>Understood.</b>", 1700);
+  await caption("Natural language<br><b>understood</b>", 1700);
   await click(phone.getByRole("option", { name: /Apply all/ }));
-  sound("chime");
   await caption("", 400);
   await wait(1900);
   // Two lines, so white and blue never share a line.

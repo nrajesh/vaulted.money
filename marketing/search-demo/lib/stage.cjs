@@ -20,14 +20,33 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Runs inside the page: caption bar, cursor, end card and device frame. */
 const overlay = ({ assets, endCard }) => {
+  // Soft glow on a suggestion when it is clicked and on every chip that appears.
+  addEventListener("mousedown", (e) => {
+    const item = e.target.closest && e.target.closest("[cmdk-item]");
+    if (item) item.classList.add("demo-glow");
+  }, true);
+  new MutationObserver((list) => {
+    if (!window.__demoGlow) return;
+    for (const m of list) for (const n of m.addedNodes) {
+      if (n.nodeType !== 1) continue;
+      const chips = n.matches?.("[role=group] .cursor-pointer") ? [n] : [...n.querySelectorAll?.("[role=group] .cursor-pointer") || []];
+      chips.forEach((c) => c.classList.add("demo-glow"));
+    }
+  }).observe(document, { childList: true, subtree: true });
   const style = document.createElement("style");
   style.textContent = `
     #demo-caption{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);z-index:2147483646;
-      background:rgba(8,12,24,.94);color:#fff;font:600 40px/1.25 Inter,system-ui,sans-serif;letter-spacing:-.01em;
-      padding:18px 38px;border-radius:18px;border:1px solid rgba(94,234,212,.35);
+      background:rgba(8,12,24,.94);color:#fff;font:600 30px/1.25 Inter,system-ui,sans-serif;letter-spacing:-.01em;
+      padding:12px 28px;border-radius:16px;border:1px solid rgba(94,234,212,.35);
       box-shadow:0 10px 40px rgba(0,0,0,.45);opacity:0;transition:opacity .35s;max-width:80vw;text-align:center;pointer-events:none}
     #demo-caption.on{opacity:1}
     #demo-caption b{background:linear-gradient(90deg,#5eead4,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+    @keyframes demoGlow{0%{box-shadow:0 0 0 0 rgba(94,234,212,.9),0 0 0 0 rgba(56,189,248,.6);outline-color:rgba(94,234,212,1)}
+      60%{box-shadow:0 0 22px 8px rgba(94,234,212,.55),0 0 46px 16px rgba(56,189,248,.3);outline-color:rgba(56,189,248,.9)}
+      100%{box-shadow:0 0 10px 3px rgba(94,234,212,.35);outline-color:rgba(94,234,212,.55)}}
+    .demo-glow{outline:2px solid #5eead4;outline-offset:2px;animation:demoGlow 1.6s ease-out both;border-radius:999px}
+    [cmdk-item].demo-glow{border-radius:8px}
+    #root.phone-blur{filter:blur(7px) brightness(.9)}
     #demo-note{position:fixed;z-index:2147483646;transform:translateY(-50%);pointer-events:none;
       font:600 22px/1 Inter,system-ui,sans-serif;padding:8px 16px;border-radius:999px;white-space:nowrap;
       background:rgba(16,185,129,.18);color:#6ee7b7;border:1.5px solid rgba(16,185,129,.7);opacity:0;transition:opacity .45s}
@@ -42,6 +61,8 @@ const overlay = ({ assets, endCard }) => {
       box-shadow:0 30px 90px rgba(0,0,0,.55)}
     #root{transition:transform .85s cubic-bezier(.6,0,.4,1),opacity 1s ease,filter 1s ease}
     #root.flipped{opacity:0;filter:blur(26px)}
+    #root.docked{filter:blur(7px) brightness(.9)}
+    #root.docked.flipped{filter:blur(26px)}
     body.stage-docked{background:radial-gradient(ellipse at 40% 30%,#1b2c4a 0%,#0a1020 75%)!important;overflow:hidden!important}
     html.stage-docked{background:radial-gradient(ellipse at 40% 30%,#1b2c4a 0%,#0a1020 75%)!important;overflow:hidden!important}
     #demo-phone{position:fixed;right:110px;top:50%;width:462px;height:932px;padding:16px;box-sizing:border-box;
@@ -109,13 +130,13 @@ async function createStage({
   ledger = "Home Budget",
 }) {
   fs.mkdirSync(outDir, { recursive: true });
-  const videoDir = path.join(outDir, "video");
-  fs.rmSync(videoDir, { recursive: true, force: true });
 
   const browser = await chromium.launch();
   const ctx = await browser.newContext({
     viewport: { width, height },
-    recordVideo: { dir: videoDir, size: { width, height } },
+    // Frames are captured at twice the pixels (see the screencast below) so the
+  // zoomed-in camera stays sharp; Playwright's own video is too small and soft.
+    deviceScaleFactor: 2,
   });
   // Only the first time: this also runs inside the phone's iframe, and must not
   // undo a theme the video switched to with the theme button.
@@ -139,6 +160,22 @@ async function createStage({
   const page = await ctx.newPage();
   const T0 = Date.now();
   const now = () => (Date.now() - T0) / 1000;
+
+  // Our own screen recording: full-quality JPEG frames at 2x, with timestamps.
+  const framesDir = path.join(outDir, "frames");
+  fs.rmSync(framesDir, { recursive: true, force: true });
+  fs.mkdirSync(framesDir, { recursive: true });
+  const frames = [];
+  const cdp = await ctx.newCDPSession(page);
+  cdp.on("Page.screencastFrame", (f) => {
+    const name = String(frames.length).padStart(6, "0") + ".jpg";
+    frames.push({ name, t: now() });
+    fs.writeFileSync(path.join(framesDir, name), Buffer.from(f.data, "base64"));
+    cdp.send("Page.screencastFrameAck", { sessionId: f.sessionId }).catch(() => {});
+  });
+  await cdp.send("Page.startScreencast", {
+    format: "jpeg", quality: 92, maxWidth: width * 2, maxHeight: height * 2, everyNthFrame: 1,
+  });
   const ev = { keys: [], clicks: [], sounds: [], zoom: [], marks: {}, boxes: {} };
   let pos = { x: width / 2, bottom: 48 };
   let cam = { z: 1, cx: width / 2, cy: height / 2 };
@@ -284,11 +321,23 @@ async function createStage({
     async finish() {
       stage.mark("end");
       fs.writeFileSync(path.join(outDir, "events.json"), JSON.stringify(ev, null, 1));
-      const video = await page.video().path();
+      await cdp.send("Page.stopScreencast").catch(() => {});
       await ctx.close();
       await browser.close();
-      fs.copyFileSync(video, path.join(outDir, "take.webm"));
-      return path.join(outDir, "take.webm");
+      // Frames arrive only when the screen changes; their gaps become durations.
+      const t0 = Math.max(0, frames[0].t);
+      let list = "ffconcat version 1.0\n";
+      frames.forEach((f, i) => {
+        const next = i + 1 < frames.length ? frames[i + 1].t : f.t + 0.5;
+        list += `file 'frames/${f.name}'\nduration ${Math.max(0.001, (next - Math.max(f.t, 0)) ).toFixed(4)}\n`;
+      });
+      list += `file 'frames/${frames[frames.length - 1].name}'\n`;
+      fs.writeFileSync(path.join(outDir, "frames.txt"), list);
+      // Video time 0 = T0: pad the start with the first frame if it came late.
+      require("child_process").execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "concat", "-safe", "0",
+        "-i", path.join(outDir, "frames.txt"), "-vf", `tpad=start_duration=${t0.toFixed(3)}:start_mode=clone,fps=30`,
+        "-c:v", "libx264", "-crf", "12", "-preset", "fast", "-pix_fmt", "yuv420p", path.join(outDir, "take.mp4")]);
+      return path.join(outDir, "take.mp4");
     },
   };
   return stage;

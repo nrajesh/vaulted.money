@@ -5,7 +5,7 @@ quiet "typo-tolerant" note appears beside the misspelled word), see what it
 understood, pick one filter or all of them, then do a second search once, on a
 phone (the camera pushes in on the phone as it slides in). The caption reads
 "Search transactions" in white and, on its own line, "without AI or cloud" in
-blue; the two colours never share a line. The app blurs out into a final card
+blue; the two colours never share a line. Chips glow softly as they pop in, the desktop is blurred behind the phone, and the sound is only soft typing and clicks (no music or hum). The app blurs out into a final card
 with the three points from the website and a QR code.
 
 The finished video is `final/vaulted-money-search.mp4` (committed on purpose;
@@ -76,3 +76,10 @@ the history for good.
 
 The Local API film (`../api-demo/`) is a different kind of video (an animated
 explainer rendered from recorded API responses) and has its own README.
+
+## Sharpness
+
+The app is captured with a Chrome screencast (`lib/stage.cjs`, JPEG frames at
+quality 92, turned into `out/take.mp4`) instead of Playwright's `recordVideo`,
+whose low bitrate made zoomed-in text soft. The capture is 1920x1080, so keep
+camera zooms at or below about 1.5x.

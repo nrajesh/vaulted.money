@@ -87,10 +87,10 @@ if FO > 0:
         put(tick(), tout(c), gain=0.8 * FO)
 for s in ev["sounds"]:
     t = tout(s["t"]); g = s.get("gain")
-    if s["kind"] == "chime" and FO > 0:       # two notes: something was applied
+    if s["kind"] == "chime" and False:  # chimes and whooshes dropped: only soft typing and clicks       # two notes: something was applied
         for j, f in enumerate([1046.5, 1318.5]):
             put(bell(f), t + 0.15 + 0.09 * j, gain=(g or 0.07) * FO)
-    elif s["kind"] == "whoosh" and FO > 0:
+    elif s["kind"] == "whoosh" and False:
         put(whoosh(1.0), t - 0.05, gain=(g or 0.13) * FO)
     elif s["kind"] == "sparkle":              # one soft rising arpeggio for the reveal
         for j, f in enumerate([523.25, 659.25, 783.99, 1046.5, 1318.5]):
@@ -101,7 +101,7 @@ tt = np.arange(n) / sr
 mid = lambda m: 440 * 2 ** ((m - 69) / 12)
 chords = [[48, 55, 59, 64], [45, 52, 55, 60], [41, 48, 52, 57], [43, 50, 55, 59]]
 seg = DUR / len(chords)
-PAD = 0.020 if FO > 0 else 0.034        # the pad is the whole sound track when there is no foley
+PAD = 0.0        # the pad is the whole sound track when there is no foley
 for ci, ch in enumerate(chords):
     e = np.zeros(n); i0 = int(ci * seg * sr); i1 = min(n, int(((ci + 1) * seg + 2.0) * sr))
     t_ = np.arange(i0, i1) / sr
@@ -111,8 +111,8 @@ for ci, ch in enumerate(chords):
         w = (np.sin(2 * np.pi * mid(m) * tt) + 0.2 * np.sin(2 * np.pi * 2 * mid(m) * tt)) * e * PAD * slow
         pan = 0.35 + 0.1 * k
         L += w * (1 - pan); R += w * pan
-peak = max(np.abs(L).max(), np.abs(R).max())
-L, R = L / peak * 0.7, R / peak * 0.7
+peak = max(np.abs(L).max(), np.abs(R).max(), 1e-9)
+L, R = np.clip(L, -0.9, 0.9), np.clip(R, -0.9, 0.9)   # no loudness boost: soft stays soft
 fade = np.clip(tt / 0.6, 0, 1) * np.clip((DUR - tt) / 1.4, 0, 1)
 L *= fade; R *= fade
 raw = os.path.join(args.dir, "audio_raw.wav")
@@ -120,7 +120,7 @@ with wave.open(raw, "wb") as w:
     w.setnchannels(2); w.setsampwidth(2); w.setframerate(sr)
     w.writeframes((np.stack([L, R], 1) * 32767).astype(np.int16).tobytes())
 audio = os.path.join(args.dir, "audio.wav")
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-af", "aecho=0.7:0.5:45:0.15,loudnorm=I=-20:TP=-1.5:LRA=7", "-ar", "44100", audio], check=True)
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-af", "aecho=0.7:0.5:45:0.15", "-ar", "44100", audio], check=True)
 
 # ------------------------------------------------------------------ camera
 frames = sorted(ev["zoom"], key=lambda z: z["t"])
@@ -151,7 +151,7 @@ vf = (f"setpts=PTS/{SPEED},fps=30,scale=3840:2160:flags=lanczos,"
 os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
 subprocess.run([
     "ffmpeg", "-v", "error", "-y", "-ss", f"{SS:.3f}", "-t", f"{DUR * SPEED:.3f}",
-    "-i", os.path.join(args.dir, "take.webm"), "-i", audio,
+    "-i", os.path.join(args.dir, "take.mp4"), "-i", audio,
     "-filter_complex", f"[0:v]{vf}[v]", "-map", "[v]", "-map", "1:a",
     "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-c:a", "aac", "-b:a", "192k",
     "-t", f"{DUR:.3f}", "-movflags", "+faststart", args.out,
