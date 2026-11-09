@@ -315,7 +315,7 @@ const ScheduledTransactionsPage = () => {
             </p>
           </div>
           <div className="app-action-panel">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
               <Button
                 onClick={handleSmartSchedule}
                 variant="outline"

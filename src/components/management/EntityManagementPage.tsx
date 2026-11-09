@@ -208,7 +208,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
           {subtitle && <div className="app-page-subtitle">{subtitle}</div>}
         </div>
         <div className="tour-entity-actions app-action-panel">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
             {BalanceReconciliationDialogComponent && (
               <Button
                 variant="outline"

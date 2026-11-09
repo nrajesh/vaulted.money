@@ -59,6 +59,11 @@ Every piece of text meets WCAG AA (4.5:1, or 3:1 for large text) in **both** the
 
 Boundaries need contrast too (WCAG 1.4.11): the outline of an input, select, search box or outline button, and the off state of a switch, reach **3:1** against the page. They use `--input`, which is deliberately separate from the quieter `--border` used for cards and table rules. Measure both text and outlines when checking a theme; in dark mode `--input` was once 1.05:1, so the search box had no visible edge.
 
+## Phones
+
+- **Rows of buttons are centred** on small screens (`flex flex-wrap justify-center`, left-aligned from `sm:` up) and share the space (`flex-1` with a small `basis`/`max-w`). Do not use an `auto-fit` grid for a row whose last item spans the full width: it keeps an empty column, so the buttons sit left with a gap at the right.
+- **A page is never wider than the screen.** The sidebar's inset area is a flex item and needs `min-w-0` (it has it); any flex or grid child that holds text needs `min-w-0` and `truncate`/wrapping too. One unwrappable line (a long remark, a long placeholder) otherwise stretches the whole page past the screen, which also makes centred content look off-centre. Check by emulating a 390 px phone and comparing `document.documentElement.scrollWidth` with the window width on every screen.
+
 ## Tables And Lists
 
 Every selectable data surface should include:

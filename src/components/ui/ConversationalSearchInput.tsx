@@ -596,21 +596,23 @@ export function ConversationalSearchInput({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between h-11 text-base text-muted-foreground bg-white/80 dark:bg-background/50 backdrop-blur-md font-normal",
+            "w-full min-w-0 justify-between h-11 text-base text-muted-foreground bg-white/80 dark:bg-background/50 backdrop-blur-md font-normal",
             className,
           )}
         >
-          {step === "ROOT"
-            ? (placeholder ??
-              t("filters.searchBar.placeholder", {
-                defaultValue: "Filter transactions...",
-              }))
-            : t("filters.conversational.filterBy", {
-                step: t(`filters.conversational.${step.toLowerCase()}`, {
-                  defaultValue: step.toLowerCase(),
-                }).toLowerCase(),
-                defaultValue: `Filter by ${step.toLowerCase()}...`,
-              })}
+          <span className="min-w-0 truncate">
+            {step === "ROOT"
+              ? (placeholder ??
+                t("filters.searchBar.placeholder", {
+                  defaultValue: "Filter transactions...",
+                }))
+              : t("filters.conversational.filterBy", {
+                  step: t(`filters.conversational.${step.toLowerCase()}`, {
+                    defaultValue: step.toLowerCase(),
+                  }).toLowerCase(),
+                  defaultValue: `Filter by ${step.toLowerCase()}...`,
+                })}
+          </span>
           <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
