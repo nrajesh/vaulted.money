@@ -1,0 +1,25 @@
+# Vaulted Money
+
+> Free, open-source (MIT) personal finance app that runs on the user's own device. No account, no cloud, works offline. Data is stored locally and leaves the device only when the user exports it.
+
+Vaulted Money tracks income, spending, accounts, categories and budgets across separate ledgers and currencies. It imports bank CSV exports, produces reports and analytics, and exports encrypted backups. Its search box understands plain English such as "groceries over 50 last month" without any AI or network call. AI features are optional and use the user's own API key. The desktop app (Windows, macOS, Linux) adds a token-protected Local API on 127.0.0.1 and an MCP server so the user's own AI agent can work with their ledger. There are also web, Android and iOS builds.
+
+## Product
+
+- [Home page](https://vaulted.money/): overview and demo video
+- [Try it with demo data](https://vaulted.money/ledgers?demo=1): opens the app with a generated sample ledger, nothing to sign up for
+- [Privacy policy](https://vaulted.money/privacy)
+
+## Documentation
+
+- [README](https://github.com/nrajesh/vaulted.money/blob/main/README.md): what it is and quick setup
+- [Getting started](https://github.com/nrajesh/vaulted.money/blob/main/documentation/GETTING_STARTED.md): first run and first ledger
+- [User guide](https://github.com/nrajesh/vaulted.money/blob/main/documentation/USER_GUIDE.md): main workflows
+- [Local API](https://github.com/nrajesh/vaulted.money/blob/main/documentation/API.md): desktop REST API reference
+- [API cookbook](https://github.com/nrajesh/vaulted.money/blob/main/documentation/API_COOKBOOK.md): recipes for scripting the app
+- [Architecture](https://github.com/nrajesh/vaulted.money/blob/main/documentation/ARCHITECTURE.md)
+- [Why Vaulted Money exists](https://github.com/nrajesh/vaulted.money/blob/main/documentation/WHY_VAULTED_MONEY.md)
+
+## Source
+
+- [GitHub repository](https://github.com/nrajesh/vaulted.money): MIT licensed
