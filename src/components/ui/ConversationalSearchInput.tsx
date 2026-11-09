@@ -38,7 +38,10 @@ import { formatDisplayDate } from "@/utils/dateFormat";
 import { useTranslation } from "react-i18next";
 
 interface ConversationalSearchInputProps {
-  onUpdate: (update: Partial<ParsedFilterState>) => void;
+  onUpdate: (
+    update: Partial<ParsedFilterState>,
+    options?: SearchUpdateOptions,
+  ) => void;
   categories: { name: string; slug: string }[];
   subCategories?: { name: string; slug: string }[];
   accounts: { name: string; slug: string; type?: string }[];
@@ -52,6 +55,20 @@ interface ConversationalSearchInputProps {
 /** Identifies a suggested piece, so one already taken is not offered again. */
 const partKey = (part: InterpretationPart): string =>
   part.kind === "entity" ? `entity:${part.entity}:${part.slug}` : part.kind;
+
+/**
+ * An account named in a sentence ("in checking account") means *only* those
+ * accounts, not those on top of whatever the page had selected. Only the first
+ * account taken in a search replaces the selection; further ones add to it
+ * (two accounts of the same kind match either).
+ */
+export interface SearchUpdateOptions {
+  replaceAccounts?: boolean;
+}
+
+const isAccountPart = (part: InterpretationPart) =>
+  part.kind === "accounts" ||
+  (part.kind === "entity" && part.entity === "account");
 
 type SearchStep = "ROOT" | "CATEGORY" | "ACCOUNT" | "VENDOR" | "DATE";
 
@@ -286,13 +303,25 @@ export function ConversationalSearchInput({
   };
 
   // Taking one piece applies it and leaves the popover open for the others.
+  const accountAlreadyTaken = () =>
+    (interpretation?.items ?? []).some(
+      (item) =>
+        isAccountPart(item.part) && applied.includes(partKey(item.part)),
+    );
+
   const takePiece = (item: InterpretationItem) => {
-    onUpdate(item.update);
+    onUpdate(item.update, {
+      replaceAccounts: isAccountPart(item.part) && !accountAlreadyTaken(),
+    });
     setApplied((previous) => [...previous, partKey(item.part)]);
   };
 
   const takeAllRemaining = () => {
-    onUpdate(mergeInterpretationUpdates(remaining));
+    onUpdate(mergeInterpretationUpdates(remaining), {
+      replaceAccounts:
+        remaining.some((item) => isAccountPart(item.part)) &&
+        !accountAlreadyTaken(),
+    });
     setOpen(false);
   };
 

@@ -71,6 +71,31 @@ describe("ConversationalSearchInput suggestion", () => {
     expect(await screen.findByText(/Text: "over"/)).toBeInTheDocument();
   });
 
+  it("lets a named account replace the page's selection, once", async () => {
+    const onUpdate = vi.fn();
+    render(
+      <ConversationalSearchInput
+        onUpdate={onUpdate}
+        {...props}
+        accounts={[
+          { name: "Joint Checking", slug: "joint-checking", type: "checking" },
+          { name: "Old Checking", slug: "old-checking", type: "checking" },
+        ]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.type(
+      await screen.findByPlaceholderText(/type to filter/i),
+      "joint checking over 20 ",
+    );
+    await userEvent.click(await screen.findByText("Over 20"));
+    // Not an account piece: nothing replaces the selection.
+    expect(onUpdate.mock.calls[0][1]).toEqual({ replaceAccounts: false });
+
+    await userEvent.click(screen.getByText(/Account: Joint Checking/));
+    expect(onUpdate.mock.calls[1][1]).toEqual({ replaceAccounts: true });
+  });
+
   it("keeps offering Search Text after a trailing space", async () => {
     await openAndType("groceries over 20 ");
     expect(

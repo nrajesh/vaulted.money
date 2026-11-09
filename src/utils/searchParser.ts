@@ -162,7 +162,7 @@ const countOf = (word: string): number => {
 
 /** Words that make a request read like a sentence but narrow nothing. */
 const FILLER_WORDS =
-  /\b(and|&|all|transactions?|items?|show|me|list|my|in|on|at|during|account(?:s)?|with|for|of|from|is|are|was|were|there|any|anything|a|an|the|did|do|does|i|have|has|had|find|get|give|what|which|how|much|many|than|to|that|this|these|those|it|its|if|can|could|would|should|please|where|when)\b/gi;
+  /\b(and|&|all|transactions?|items?|show|me|list|my|in|on|at|during|account(?:s)?|with|for|of|from|is|are|was|were|there|any|anything|a|an|the|did|do|does|i|have|has|had|find|get|give|what|which|how|much|many|than|to|that|this|these|those|it|its|if|can|could|would|should|please|where|when|coming|up)\b/gi;
 
 /** Regex alternation of month names and abbreviations, for building patterns. */
 const MONTH_PATTERN = [...FULL_MONTH_NAMES, ...MONTH_PREFIXES, "sept"].join(
@@ -924,6 +924,20 @@ export const parseSearchQuery = (
       result.sortOrder = "largest";
     }
     remainingQuery = remainingQuery.replace(relativeMatch[0], "").trim();
+  } else {
+    // "the largest expense", "my biggest purchase": no number means just one.
+    const singleMatch = remainingQuery.match(
+      /\b(largest|biggest|highest|smallest|lowest)\b/i,
+    );
+    if (singleMatch) {
+      result.limit = 1;
+      result.sortOrder = ["smallest", "lowest"].includes(
+        singleMatch[1].toLowerCase(),
+      )
+        ? "smallest"
+        : "largest";
+      remainingQuery = remainingQuery.replace(singleMatch[0], "").trim();
+    }
   }
 
   // --- 3. Amount Parsing ---
