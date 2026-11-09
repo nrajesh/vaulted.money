@@ -1,8 +1,17 @@
 # Vaulted Money
 
-_A private, local-first money manager for people who want to understand where their money goes without sending their financial life to somebody else's server._
+Local-first. No account. Open source. Search in plain English—no AI or cloud.
 
-![Vaulted Money add transaction flow](documentation/readme/add-transaction-flow.gif)
+[Watch the natural-language search demo](marketing/search-demo/final/vaulted-money-search.mp4)
+
+[Try it with demo data](https://vaulted.money/ledgers?demo=1)
+
+## How It Differs
+
+- **Private by design:** no account; your data stays local unless exported.
+- **Plain-English search:** dates, amounts, typos, and largest or smallest. No AI or cloud.
+- **Your AI agent:** connect over MCP from the desktop app.
+- **Scriptable:** desktop Local API with OpenAPI and Postman.
 
 [![CircleCI Build](https://img.shields.io/circleci/build/github/nrajesh/vaulted.money/main?logo=circleci&style=for-the-badge&token=CCIPRJ_Vr8m8ZBprdRweVA3p3Zuf1_ec111876745b6b9fe207e3e3bbbfbbf28de994d9)](https://app.circleci.com/pipelines/github/nrajesh/vaulted.money)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/nrajesh/vaulted.money)

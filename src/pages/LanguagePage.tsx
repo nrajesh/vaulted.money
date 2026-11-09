@@ -239,7 +239,7 @@ const LanguagePage = () => {
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          className="shrink-0 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text"
                           aria-label={t("language.removeCustomAria", {
                             name: option.label,
                             defaultValue: `Remove ${option.label}`,

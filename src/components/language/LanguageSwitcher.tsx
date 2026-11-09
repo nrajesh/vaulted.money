@@ -169,7 +169,7 @@ export const LanguageSwitcher = ({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    className="h-8 w-8 shrink-0 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text"
                     aria-label={t("language.removeCustomAria", {
                       name: option.label,
                       defaultValue: `Remove ${option.label}`,

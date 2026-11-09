@@ -259,7 +259,7 @@ const AlertsAndInsights: React.FC<AlertsAndInsightsProps> = ({
       <ThemedCardContent className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <h3 className="app-section-title flex items-center">
-            <AlertTriangle className="h-5 w-5 mr-2 text-destructive" />
+            <AlertTriangle className="h-5 w-5 mr-2 text-destructive-text" />
             Financial Alerts
           </h3>
           {lowBalanceAlerts.length === 0 && budgetOverrunAlerts.length === 0 ? (
@@ -301,7 +301,7 @@ const AlertsAndInsights: React.FC<AlertsAndInsightsProps> = ({
                               ? "exceed its credit limit"
                               : "have a negative balance"}{" "}
                             in{" "}
-                            <span className="font-bold text-destructive">
+                            <span className="font-bold text-destructive-text">
                               {alert.daysUntilNegative} days
                             </span>
                             .
@@ -338,7 +338,7 @@ const AlertsAndInsights: React.FC<AlertsAndInsightsProps> = ({
                         </span>{" "}
                         budget is at{" "}
                         <span
-                          className={`font-bold ${alert.percentage >= 100 ? "text-destructive" : "text-amber-700 dark:text-amber-400"}`}
+                          className={`font-bold ${alert.percentage >= 100 ? "text-destructive-text" : "text-amber-700 dark:text-amber-400"}`}
                         >
                           {alert.percentage}%
                         </span>{" "}

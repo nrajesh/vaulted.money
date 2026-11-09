@@ -38,7 +38,7 @@ const ConnectAgentPage = () => {
     );
   } else if (loadFailed || connectFailed) {
     body = (
-      <p role="alert" className="text-sm text-destructive">
+      <p role="alert" className="text-sm text-destructive-text">
         {loadFailed
           ? t("settings.api.loadFailed", {
               defaultValue:

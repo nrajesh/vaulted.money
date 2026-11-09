@@ -318,7 +318,7 @@ const ManageSubCategoriesDialog: React.FC<ManageSubCategoriesDialogProps> = ({
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-8 w-8 text-destructive"
+                                  className="h-8 w-8 text-destructive-text"
                                   onClick={() => handleDeleteClick(sub)}
                                   disabled={isLoading}
                                   aria-label="Delete sub-category"

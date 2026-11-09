@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/components/theme-provider";
 import { useTranslation } from "react-i18next";
@@ -7,22 +7,22 @@ import {
   Check,
   Copy,
   ExternalLink,
+  Maximize,
   Menu,
   Moon,
+  Search,
+  Sparkles,
   Sun,
 } from "lucide-react";
 import {
   Archive,
   BookOpen,
   Coins,
-  Database,
-  Download,
   GitFork,
   HardDrive,
   Lock,
   Receipt,
   Shield,
-  Terminal,
   Upload,
   Users,
   Wallet,
@@ -36,7 +36,8 @@ import { showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import SiteFooter from "@/components/SiteFooter";
 import BrandLockup from "@/components/BrandLockup";
-import HomeHeroDemo from "@/components/homepage/HomeHeroDemo";
+import searchDemoVideo from "../../marketing/search-demo/final/vaulted-money-search.mp4";
+import searchDemoPoster from "@/assets/search-demo-poster.svg";
 
 const webInstallCommand = `git clone https://github.com/nrajesh/vaulted.money.git
 cd vaulted.money
@@ -63,6 +64,49 @@ const HomePage = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const demoVideoRef = useRef<HTMLVideoElement>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+    const updateMotionPreference = () => {
+      setPrefersReducedMotion(motionPreference.matches);
+      if (motionPreference.matches) {
+        demoVideoRef.current?.pause();
+      } else {
+        void demoVideoRef.current?.play().catch(() => undefined);
+      }
+    };
+
+    motionPreference.addEventListener("change", updateMotionPreference);
+    return () =>
+      motionPreference.removeEventListener("change", updateMotionPreference);
+  }, []);
+
+  const openDemoFullscreen = async () => {
+    const video = demoVideoRef.current;
+    if (!video) return;
+
+    const webkitVideo = video as HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+    };
+
+    try {
+      if (video.requestFullscreen) {
+        await video.requestFullscreen();
+      } else {
+        webkitVideo.webkitEnterFullscreen?.();
+      }
+    } catch {
+      webkitVideo.webkitEnterFullscreen?.();
+    }
+  };
 
   // ── Translated data arrays (re-derived whenever language changes) ──────────
 
@@ -111,8 +155,7 @@ const HomePage = () => {
       icon: GitFork,
       title: t("home.trust.openSource.title", { defaultValue: "Open-sourced" }),
       description: t("home.trust.openSource.description", {
-        defaultValue:
-          "The code, roadmap, and privacy posture are auditable in the public repository.",
+        defaultValue: "Active development. Public code and roadmap on GitHub.",
       }),
       previewTitle: t("home.trust.openSource.previewTitle", {
         defaultValue: "Auditable source",
@@ -182,21 +225,21 @@ const HomePage = () => {
     {
       icon: Archive,
       title: t("home.usage.backup.title", {
-        defaultValue: "Back up before you rely on the browser",
+        defaultValue: "Keep a backup",
       }),
       description: t("home.usage.backup.description", {
         defaultValue:
-          "Local-first means your data is yours, but private windows, browser resets, or clearing site data can erase local storage.",
+          "Browser data can be cleared. Export a backup, or enable automatic backups where supported.",
       }),
     },
     {
-      icon: Download,
-      title: t("home.usage.automate.title", {
-        defaultValue: "Automate a backup rhythm",
+      icon: Sparkles,
+      title: t("home.usage.ai.title", {
+        defaultValue: "AI, when you choose",
       }),
-      description: t("home.usage.automate.description", {
+      description: t("home.usage.ai.description", {
         defaultValue:
-          "Use encrypted or plain JSON exports, and enable automated backups when your browser or desktop platform supports it.",
+          "AI features are optional. Use them on your terms; connect an agent from desktop.",
       }),
     },
   ];
@@ -259,79 +302,47 @@ const HomePage = () => {
 
   const roadmapMilestones = [
     {
+      window: t("home.milestones.recent", { defaultValue: "Recent release" }),
+      title: t("home.milestones.search.title", {
+        defaultValue: "Natural-language search",
+      }),
+      summary: t("home.milestones.search.summary", {
+        defaultValue:
+          "Dates, amounts, typos, largest and smallest. Search and API share one interpreter. Pick suggestions one at a time.",
+      }),
+      label: t("home.nav.search", { defaultValue: "Search" }),
+      status: t("home.status.released", { defaultValue: "Released" }),
+      accent: "blue",
+    },
+    {
+      window: t("home.milestones.recent", { defaultValue: "Recent release" }),
+      title: t("home.milestones.aiHub.title", {
+        defaultValue: "AI hub and MCP agent connections",
+      }),
+      summary: t("home.milestones.aiHub.summary", {
+        defaultValue:
+          "One switch controls AI features. Connect Claude Code, Claude Desktop, or Codex through MCP on desktop.",
+      }),
+      label: t("home.milestones.agentLabel", {
+        defaultValue: "AI & agents",
+      }),
+      status: t("home.status.released", { defaultValue: "Released" }),
+      accent: "violet",
+    },
+    {
       window: t("home.milestones.localApi.window", {
         defaultValue: "October 2026",
       }),
       title: t("home.milestones.localApi.title", {
         defaultValue: "Local API for the desktop app",
       }),
-      summary: t("home.milestones.localApi.summary", {
+      summary: t("home.milestones.localApiDetails", {
         defaultValue:
-          "The Electron desktop app can now expose an opt-in REST API on your own machine, so you can script Vaulted Money, import and export data, or build your own interface while everything stays local.",
+          "The desktop Local API includes an OpenAPI description and a ready-made Postman collection.",
       }),
-      label: "Current",
+      label: t("home.commands.desktop.label", { defaultValue: "Desktop" }),
       status: t("home.status.released", { defaultValue: "Released" }),
       accent: "emerald",
-    },
-    {
-      window: t("home.milestones.privacyRefresh.window", {
-        defaultValue: "May 2026",
-      }),
-      title: t("home.milestones.privacyRefresh.title", {
-        defaultValue: "Privacy and public branding refresh",
-      }),
-      summary: t("home.milestones.privacyRefresh.summary", {
-        defaultValue:
-          "The public-facing experience expanded with a dedicated privacy page, updated branding, and sharper trust messaging for new users.",
-      }),
-      label: "Previous",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "emerald",
-    },
-    {
-      window: t("home.milestones.brandLaunch.window", {
-        defaultValue: "April 2026",
-      }),
-      title: t("home.milestones.brandLaunch.title", {
-        defaultValue: "Vaulted Money brand and public homepage launch",
-      }),
-      summary: t("home.milestones.brandLaunch.summary", {
-        defaultValue:
-          "The app was renamed to Vaulted Money, the public homepage landed, and the install story became much clearer for web and desktop users.",
-      }),
-      label: "v1.5-v1.6",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "orange",
-    },
-    {
-      window: t("home.milestones.languageRollout.window", {
-        defaultValue: "March 2026",
-      }),
-      title: t("home.milestones.languageRollout.title", {
-        defaultValue: "Language management and localization rollout",
-      }),
-      summary: t("home.milestones.languageRollout.summary", {
-        defaultValue:
-          "Multi-language support, language management UX, and broader translation coverage shipped as a major usability milestone.",
-      }),
-      label: "v1.4 era",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "red",
-    },
-    {
-      window: t("home.milestones.coreRelease.window", {
-        defaultValue: "January 2026",
-      }),
-      title: t("home.milestones.coreRelease.title", {
-        defaultValue: "Core local-first ledger release",
-      }),
-      summary: t("home.milestones.coreRelease.summary", {
-        defaultValue:
-          "The first tagged release established the web app foundation for ledgers, transactions, categories, budgets, and local data ownership.",
-      }),
-      label: "v1.0.0",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "blue",
     },
   ];
 
@@ -352,7 +363,7 @@ const HomePage = () => {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-background pt-16 text-foreground sm:pt-24">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 px-3 shadow-sm backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/90 sm:px-4">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 px-3 shadow-sm backdrop-blur dark:border-border/80 dark:bg-slate-950/90 sm:px-4">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3">
           <Link
             to="/"
@@ -362,28 +373,40 @@ const HomePage = () => {
             <BrandLockup size="header" />
           </Link>
 
-          <nav className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white/70 p-1 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900/70 lg:flex">
+          <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 text-sm shadow-sm dark:border-border dark:bg-slate-900/70 lg:flex">
+            <a
+              href="#search"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-950/60 dark:hover:text-sky-200"
+            >
+              {t("home.nav.search", { defaultValue: "Search" })}
+            </a>
+            <a
+              href="#differences"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 transition-colors hover:bg-violet-50 hover:text-violet-700 dark:text-slate-300 dark:hover:bg-violet-950/60 dark:hover:text-violet-200"
+            >
+              {t("home.nav.differences", { defaultValue: "How it differs" })}
+            </a>
             <a
               href="#trust"
-              className="rounded-full px-4 py-2 font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-300 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-200"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-300 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-200"
             >
               {t("home.nav.trust", { defaultValue: "Trust" })}
             </a>
             <a
               href="#workflow"
-              className="rounded-full px-4 py-2 font-medium text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-950/60 dark:hover:text-sky-200"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-950/60 dark:hover:text-sky-200"
             >
               {t("home.nav.workflow", { defaultValue: "Workflow" })}
             </a>
             <a
               href="#roadmap"
-              className="rounded-full px-4 py-2 font-medium text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-700 dark:text-slate-300 dark:hover:bg-rose-950/60 dark:hover:text-rose-200"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-700 dark:text-slate-300 dark:hover:bg-rose-950/60 dark:hover:text-rose-200"
             >
               {t("home.nav.roadmap", { defaultValue: "Roadmap" })}
             </a>
             <a
               href="#install"
-              className="rounded-full px-4 py-2 font-medium text-slate-600 transition-colors hover:bg-amber-50 hover:text-amber-800 dark:text-slate-300 dark:hover:bg-amber-950/60 dark:hover:text-amber-200"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 transition-colors hover:bg-amber-50 hover:text-amber-800 dark:text-slate-300 dark:hover:bg-amber-950/60 dark:hover:text-amber-200"
             >
               {t("home.nav.install", { defaultValue: "Install" })}
             </a>
@@ -394,7 +417,7 @@ const HomePage = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full border border-slate-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-slate-700 dark:bg-slate-900/80 dark:hover:bg-slate-800 sm:h-10 sm:w-10"
+              className="h-9 w-9 rounded-full border border-slate-500 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-slate-500 dark:bg-slate-900/80 dark:hover:bg-slate-800 sm:h-10 sm:w-10"
               onClick={() =>
                 setTheme(resolvedTheme === "dark" ? "light" : "dark")
               }
@@ -409,8 +432,10 @@ const HomePage = () => {
               )}
             </Button>
             <Button asChild className="hidden h-10 rounded-md sm:inline-flex">
-              <Link to="/ledgers">
-                {t("home.actions.openApp", { defaultValue: "Open app" })}
+              <Link to="/ledgers?demo=1">
+                {t("home.hero.tryDemo", {
+                  defaultValue: "Try it with demo data",
+                })}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -420,7 +445,7 @@ const HomePage = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-full border border-slate-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-slate-700 dark:bg-slate-900/80 dark:hover:bg-slate-800 lg:hidden"
+                  className="h-9 w-9 rounded-full border border-slate-500 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-slate-500 dark:bg-slate-900/80 dark:hover:bg-slate-800 lg:hidden"
                   aria-label={t("home.nav.menu", { defaultValue: "Menu" })}
                 >
                   <Menu className="h-5 w-5 text-slate-600 dark:text-slate-300" />
@@ -428,15 +453,27 @@ const HomePage = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="flex w-[17rem] flex-col gap-0 border-l border-slate-200/60 bg-white/95 px-0 pt-12 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-950/95"
+                className="flex w-[17rem] flex-col gap-0 border-l border-slate-200/60 bg-white/95 px-0 pt-12 backdrop-blur-xl dark:border-border/60 dark:bg-slate-950/95"
               >
                 <div className="px-5 pb-4">
-                  <p className="app-gradient-title text-lg font-bold tracking-normal">
+                  <p className="text-lg font-bold tracking-normal text-[hsl(var(--brand-accent-text))] dark:text-[hsl(var(--brand-accent-soft))]">
                     Vaulted Money
                   </p>
                 </div>
-                <nav className="flex flex-col gap-0.5 border-t border-slate-200/60 px-3 pt-3 dark:border-slate-800/60">
+                <nav className="flex flex-col gap-0.5 border-t border-slate-200/60 px-3 pt-3 dark:border-border/60">
                   {[
+                    {
+                      href: "#search",
+                      label: t("home.nav.search", {
+                        defaultValue: "Search",
+                      }),
+                    },
+                    {
+                      href: "#differences",
+                      label: t("home.nav.differences", {
+                        defaultValue: "How it differs",
+                      }),
+                    },
                     {
                       href: "#trust",
                       label: t("home.nav.trust", { defaultValue: "Trust" }),
@@ -466,14 +503,16 @@ const HomePage = () => {
                     </a>
                   ))}
                 </nav>
-                <div className="mt-auto border-t border-slate-200/60 px-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4 dark:border-slate-800/60">
+                <div className="mt-auto border-t border-slate-200/60 px-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4 dark:border-border/60">
                   <Button
                     asChild
                     className="h-11 w-full rounded-lg bg-[hsl(var(--brand-accent))] text-[0.95rem] font-semibold text-white hover:bg-[hsl(var(--brand-accent-strong))]"
                     onClick={() => setMobileNavOpen(false)}
                   >
-                    <Link to="/ledgers">
-                      {t("home.actions.openApp", { defaultValue: "Open app" })}
+                    <Link to="/ledgers?demo=1">
+                      {t("home.hero.tryDemo", {
+                        defaultValue: "Try it with demo data",
+                      })}
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -485,9 +524,9 @@ const HomePage = () => {
       </header>
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,hsl(var(--background)),rgba(248,250,252,0.72))] px-4 pt-6 pb-2 dark:border-slate-800 dark:bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--secondary)/0.45))] sm:py-8 lg:py-10">
-        <div className="mx-auto grid max-w-7xl items-center gap-5 sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,42rem)]">
-          <div className="max-w-3xl">
+      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,hsl(var(--background)),rgba(248,250,252,0.72))] px-4 pt-6 pb-2 dark:border-border dark:bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--secondary)/0.45))] sm:py-8 lg:py-10">
+        <div className="mx-auto grid max-w-7xl items-center gap-7 sm:gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)]">
+          <div className="max-w-2xl">
             <div className="mb-5 flex flex-wrap items-center gap-2 text-xs font-medium">
               <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-950/50 dark:text-emerald-200">
                 {t("home.badges.private", { defaultValue: "Privacy-first" })}
@@ -500,21 +539,23 @@ const HomePage = () => {
               </span>
             </div>
 
-            <h1 className="app-gradient-title max-w-3xl text-4xl font-black leading-[1.02] tracking-normal sm:text-5xl lg:text-6xl">
-              Vaulted Money
+            <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-tight text-[hsl(var(--brand-accent-text))] sm:text-5xl dark:text-[hsl(var(--brand-accent-soft))] lg:text-6xl">
+              {t("home.hero.headline", {
+                defaultValue: "Ask your ledger. Keep control.",
+              })}
             </h1>
-            <p className="app-page-subtitle text-base sm:text-lg">
-              {t("home.hero.subtitle", {
+            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-700 dark:text-slate-200 sm:text-xl">
+              {t("home.hero.positioning", {
                 defaultValue:
-                  "A complete local-first money manager for multi-ledger, multi-currency tracking across personal, family, and business accounts.",
+                  "Private, local-first money tracking. No account. Open source. Plain-English search needs no AI or cloud.",
               })}
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="h-12 rounded-md px-5">
-                <Link to="/ledgers">
-                  {t("home.actions.startLedger", {
-                    defaultValue: "Start with ledgers",
+                <Link to="/ledgers?demo=1">
+                  {t("home.hero.tryDemo", {
+                    defaultValue: "Try it with demo data",
                   })}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -523,36 +564,177 @@ const HomePage = () => {
                 asChild
                 variant="outline"
                 size="lg"
-                className="h-12 rounded-md border-slate-300 px-5 dark:border-slate-700"
+                className="h-12 rounded-md border-slate-500 px-5 dark:border-slate-500"
               >
-                <a href="#install">
-                  <Terminal className="h-4 w-4" />
-                  {t("home.actions.install", {
-                    defaultValue: "Install locally",
-                  })}
+                <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
+                  <GitFork className="h-4 w-4" />
+                  {t("home.actions.github", { defaultValue: "View source" })}
+                  <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
             </div>
+          </div>
 
-            <div className="mt-7 hidden max-w-2xl gap-3 text-sm text-slate-600 dark:text-slate-300 sm:flex sm:flex-wrap">
-              <div className="flex items-center gap-2">
-                <Shield className="icon-brand h-4 w-4" />
-                {t("home.proof.noCloud", { defaultValue: "No cloud account" })}
-              </div>
-              <div className="flex items-center gap-2">
-                <Database className="icon-brand h-4 w-4" />
-                {t("home.proof.offline", { defaultValue: "Works offline" })}
-              </div>
-              <div className="flex items-center gap-2">
-                <GitFork className="icon-brand h-4 w-4" />
-                {t("home.proof.auditable", { defaultValue: "Auditable code" })}
+          <div className="min-w-0">
+            <div className="group relative overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-xl shadow-slate-950/10 dark:border-slate-600 dark:shadow-black/30">
+              <video
+                ref={demoVideoRef}
+                className="aspect-video w-full bg-slate-950 object-cover"
+                src={searchDemoVideo}
+                poster={searchDemoPoster}
+                aria-label={t("home.hero.videoLabel", {
+                  defaultValue: "Natural-language search demo video",
+                })}
+                autoPlay={!prefersReducedMotion}
+                loop={!prefersReducedMotion}
+                muted
+                playsInline
+                controls
+                preload={prefersReducedMotion ? "none" : "metadata"}
+              />
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent" />
+              <div className="absolute inset-x-0 bottom-14 z-10 flex items-center justify-between gap-2 px-3 sm:px-4">
+                <span className="pointer-events-none min-w-0 text-2xl font-black leading-none tracking-tight text-white drop-shadow sm:text-3xl">
+                  {t("home.hero.videoTitle", {
+                    defaultValue: "Ask. Don’t Search.",
+                  })}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="pointer-events-auto h-8 shrink-0 border-white/50 bg-slate-950/75 px-2.5 text-xs font-semibold text-white shadow-sm hover:bg-white hover:text-slate-950 sm:px-3 sm:text-sm"
+                  onClick={() => void openDemoFullscreen()}
+                  aria-label={t("home.hero.videoFullscreen", {
+                    defaultValue: "Go full screen",
+                  })}
+                >
+                  <Maximize className="h-3.5 w-3.5" />
+                  {t("home.hero.videoFullscreen", {
+                    defaultValue: "Full screen",
+                  })}
+                </Button>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="relative">
-            <HomeHeroDemo />
+      {/* ── Search examples ──────────────────────────────────────────────── */}
+      <section
+        id="search"
+        className="scroll-mt-24 border-b border-slate-200 bg-slate-50 px-4 py-10 dark:border-border dark:bg-slate-900/55 sm:scroll-mt-28 sm:py-12"
+      >
+        <div className="mx-auto grid max-w-7xl gap-7 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div>
+            <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
+              {t("home.search.title", {
+                defaultValue: "Search in plain English",
+              })}
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
+              {t("home.search.intro", {
+                defaultValue:
+                  "It understands dates, amounts, and typos. Pick suggestions one by one; the row above always shows applied filters or ‘No filters applied’.",
+              })}
+            </p>
           </div>
+          <div>
+            <p className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {t("home.search.languageLabel", {
+                defaultValue: "Search in English",
+              })}
+            </p>
+            <ul className="divide-y divide-slate-200 rounded-lg border border-slate-300 bg-white px-4 dark:divide-slate-700 dark:border-slate-600 dark:bg-slate-950">
+              {[
+                t("home.search.example1", {
+                  defaultValue: "expenses over 20 last month in groceries",
+                }),
+                t("home.search.example2", {
+                  defaultValue: "starbuks since 2020",
+                }),
+                t("home.search.example3", {
+                  defaultValue: "largest expense 2 weeks from today",
+                }),
+              ].map((query) => (
+                <li key={query} className="py-3">
+                  <code className="break-words text-sm font-medium text-slate-800 dark:text-slate-100 sm:text-base">
+                    {query}
+                  </code>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Product differences ──────────────────────────────────────────── */}
+      <section
+        id="differences"
+        className="scroll-mt-24 px-4 py-10 sm:scroll-mt-28 sm:py-12"
+      >
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-6 text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
+            {t("home.differences.title", {
+              defaultValue: "How it differs",
+            })}
+          </h2>
+          <ul className="divide-y divide-table-rule border-y border-table-rule">
+            {[
+              {
+                icon: Shield,
+                title: t("home.differences.privateTitle", {
+                  defaultValue: "Private by design",
+                }),
+                description: t("home.differences.privateDescription", {
+                  defaultValue:
+                    "No account. Your data stays local unless exported.",
+                }),
+              },
+              {
+                icon: Search,
+                title: t("home.differences.searchTitle", {
+                  defaultValue: "Plain-English search, without AI or cloud",
+                }),
+                description: t("home.differences.searchDescription", {
+                  defaultValue: "The app and API share search logic.",
+                }),
+              },
+              {
+                icon: GitFork,
+                title: t("home.differences.agentTitle", {
+                  defaultValue: "Connect your own AI agent through MCP",
+                }),
+                description: t("home.differences.agentDescription", {
+                  defaultValue: "Desktop app only.",
+                }),
+              },
+              {
+                icon: Upload,
+                title: t("home.differences.apiTitle", {
+                  defaultValue: "Script it through the Local API",
+                }),
+                description: t("home.differences.apiDescription", {
+                  defaultValue: "OpenAPI and Postman. Desktop app only.",
+                }),
+              },
+            ].map((item) => (
+              <li
+                key={item.title}
+                className="flex min-w-0 items-start gap-4 py-4 sm:items-center"
+              >
+                <item.icon className="icon-brand mt-1 h-5 w-5 shrink-0 sm:mt-0" />
+                <div className="min-w-0 sm:flex sm:flex-1 sm:items-center sm:justify-between sm:gap-8">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-50 sm:min-w-[15rem]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300 sm:mt-0 sm:max-w-2xl sm:text-right">
+                    {item.description}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -563,7 +745,7 @@ const HomePage = () => {
       >
         <div className="mx-auto max-w-7xl">
           <div className="mb-8">
-            <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
               {t("home.nav.trust", { defaultValue: "Trust" })}
             </h2>
           </div>
@@ -571,9 +753,9 @@ const HomePage = () => {
             {trustPillars.map((pillar) => (
               <article
                 key={pillar.title}
-                className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+                className="rounded-lg border border-slate-200 bg-white p-4 dark:border-border dark:bg-slate-900"
               >
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/70">
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-border dark:bg-slate-950/70">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white dark:bg-slate-900">
@@ -599,7 +781,7 @@ const HomePage = () => {
                     </p>
                   </div>
                 </div>
-                <h2 className="app-gradient-title mt-4 text-lg font-semibold">
+                <h2 className="mt-4 text-lg font-semibold text-[hsl(var(--brand-accent-text))] dark:text-[hsl(var(--brand-accent-soft))]">
                   {pillar.title}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -614,22 +796,22 @@ const HomePage = () => {
       {/* ── Workflow ──────────────────────────────────────────────────────── */}
       <section
         id="workflow"
-        className="scroll-mt-24 border-y border-slate-200 bg-slate-50 px-4 py-10 dark:border-slate-800 dark:bg-slate-900/55 sm:scroll-mt-28 sm:py-12"
+        className="scroll-mt-24 border-y border-slate-200 bg-slate-50 px-4 py-10 dark:border-border dark:bg-slate-900/55 sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
               {t("home.nav.workflow", { defaultValue: "Workflow" })}
             </h2>
             <p className="mt-4 text-xl font-medium text-slate-800 dark:text-slate-200">
               {t("home.workflow.title", {
-                defaultValue: "Everything needed to run a personal ledger.",
+                defaultValue: "Personal, family, or business.",
               })}
             </p>
             <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
               {t("home.workflow.description", {
                 defaultValue:
-                  "Create a ledger, import CSV files, reconcile accounts, watch budgets, schedule recurring money movement, and export backups from one local app.",
+                  "Track spending, set budgets, import CSVs, and back up your data.",
               })}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -655,7 +837,7 @@ const HomePage = () => {
             {moneyTools.map((tool) => (
               <div
                 key={tool.label}
-                className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/60"
+                className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-border dark:bg-slate-950/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800">
                   <tool.icon className="icon-brand h-5 w-5" />
@@ -670,43 +852,43 @@ const HomePage = () => {
       {/* ── Roadmap ───────────────────────────────────────────────────────── */}
       <section
         id="roadmap"
-        className="scroll-mt-24 border-y border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.98))] px-4 py-10 dark:border-slate-800 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] sm:scroll-mt-28 sm:py-12"
+        className="scroll-mt-24 border-y border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.98))] px-4 py-10 dark:border-border dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
                 {t("home.nav.roadmap", { defaultValue: "Roadmap" })}
               </h2>
               <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
-                {t("home.roadmap.description", {
-                  defaultValue:
-                    "Based on tagged releases and major shipped milestones so far.",
+                {t("home.roadmap.recentDescription", {
+                  defaultValue: "Recent releases. Built in public.",
                 })}
               </p>
             </div>
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,15rem)_1fr]">
-            <div className="rounded-xl border border-slate-200 bg-white/85 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/65">
+            <div className="rounded-xl border border-slate-200 bg-white/85 p-5 shadow-sm dark:border-border dark:bg-slate-950/65">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                 {t("home.roadmap.snapshot", { defaultValue: "Snapshot" })}
               </p>
               <p className="mt-3 text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-                {t("home.roadmap.milestoneCount", {
-                  defaultValue: "5 milestones",
+                {t("home.roadmap.shippedCount", {
+                  count: roadmapMilestones.length,
+                  defaultValue: "{{count}} shipped milestones",
                 })}
               </p>
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {t("home.roadmap.milestoneShipped", {
+                {t("home.roadmap.shippedSummary", {
                   defaultValue:
-                    "Five major items shipped in 2026, led by the desktop Local API.",
+                    "Recent additions include local natural-language search, MCP agent connections, and the desktop Local API.",
                 })}
               </p>
             </div>
 
             <div className="relative">
-              <div className="absolute left-[1.1rem] top-0 bottom-0 hidden w-px bg-slate-200 dark:bg-slate-800 sm:block" />
+              <div className="absolute left-[1.1rem] top-0 bottom-0 hidden w-px bg-slate-200 dark:bg-table-rule sm:block" />
               <div className="space-y-4">
                 {roadmapMilestones.map((item) => (
                   <article
@@ -727,7 +909,7 @@ const HomePage = () => {
                           "bg-violet-500 shadow-violet-500/25",
                       )}
                     />
-                    <div className="rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
+                    <div className="rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-border dark:bg-slate-950/70">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
@@ -775,12 +957,12 @@ const HomePage = () => {
       {/* ── Install ───────────────────────────────────────────────────────── */}
       <section
         id="install"
-        className="scroll-mt-24 border-t border-slate-200 bg-slate-950 px-4 py-10 text-slate-50 dark:border-slate-800 sm:scroll-mt-28 sm:py-12"
+        className="scroll-mt-24 border-t border-slate-200 bg-slate-950 px-4 py-10 text-slate-50 dark:border-border sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-normal text-slate-50 sm:text-4xl">
                 {t("home.nav.install", { defaultValue: "Install" })}
               </h2>
               <p className="mt-4 text-xl font-medium text-slate-300">
@@ -862,10 +1044,10 @@ const HomePage = () => {
                 <div key={item.title} className="flex gap-3">
                   <item.icon className="icon-brand mt-1 h-5 w-5 shrink-0" />
                   <div>
-                    <h2 className="app-gradient-title text-base font-semibold">
+                    <h2 className="text-base font-semibold text-[hsl(var(--brand-accent-text))] dark:text-[hsl(var(--brand-accent-soft))]">
                       {item.title}
                     </h2>
-                    <p className="mt-1 text-sm leading-6 text-amber-900/80 dark:text-amber-100/80">
+                    <p className="mt-1 text-sm leading-6 text-amber-950 dark:text-amber-100">
                       {item.description}
                     </p>
                   </div>

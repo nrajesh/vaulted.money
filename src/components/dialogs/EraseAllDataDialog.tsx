@@ -66,7 +66,7 @@ const EraseAllDataDialog: React.FC<EraseAllDataDialogProps> = ({
           <div className="space-y-2">
             <p
               role="alert"
-              className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+              className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-destructive-text dark:border-red-500 dark:bg-red-950/50"
             >
               {ledgerCount === 1
                 ? t("dialogs.eraseAll.warningOne", {

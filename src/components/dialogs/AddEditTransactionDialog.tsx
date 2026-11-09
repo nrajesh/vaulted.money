@@ -829,7 +829,7 @@ const AddEditTransactionDialog: React.FC<AddEditTransactionDialogProps> = ({
                         </div>
 
                         {mobileSummaryError && (
-                          <p className="px-1 text-sm font-medium text-destructive">
+                          <p className="px-1 text-sm font-medium text-destructive-text">
                             {mobileSummaryError}
                           </p>
                         )}

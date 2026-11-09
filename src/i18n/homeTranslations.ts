@@ -36,8 +36,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     trust: {
       privacy: {
         title: "Privacy-first",
-        description:
-          "No account required. Your financial records stay in your browser or desktop app unless you export them.",
+        description: "No account. Your data stays local unless exported.",
         previewTitle: "Local-only ledger",
         previewMeta: "Browser storage",
         previewStat: "0 accounts",
@@ -46,7 +45,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "Data-local",
         description:
-          "Vaulted Money is built around local ledgers, IndexedDB, and optional file backups instead of a hosted database.",
+          "Local ledgers, browser storage, and optional file backups.",
         previewTitle: "Backup vault",
         previewMeta: "Encrypted JSON",
         previewStat: "Auto",
@@ -54,8 +53,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "Open-sourced",
-        description:
-          "The code, roadmap, and privacy posture are auditable in the public repository.",
+        description: "Active development. Public code and roadmap on GitHub.",
         previewTitle: "Auditable source",
         previewMeta: "MIT project",
         previewStat: "Public",
@@ -63,9 +61,8 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Everything needed to run a personal ledger.",
-      description:
-        "Create a ledger, import CSV files, reconcile accounts, watch budgets, schedule recurring money movement, and export backups from one local app.",
+      title: "Personal, family, or business.",
+      description: "Track spending, set budgets, import CSVs, and back up.",
     },
     tools: {
       multiLedger: "Multi-ledger tracking",
@@ -147,19 +144,13 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "Bring your history with CSV",
-        description:
-          "Start with a ledger, then import bank exports from the Transactions screen. Mapping columns once makes future imports faster.",
+        title: "Import bank CSVs",
+        description: "Map columns once. Future imports take less time.",
       },
       backup: {
-        title: "Back up before you rely on the browser",
+        title: "Keep a backup",
         description:
-          "Local-first means your data is yours, but private windows, browser resets, or clearing site data can erase local storage.",
-      },
-      automate: {
-        title: "Automate a backup rhythm",
-        description:
-          "Use encrypted or plain JSON exports, and enable automated backups when your browser or desktop platform supports it.",
+          "Browser data can be cleared. Export a backup, or enable automatic backups where supported.",
       },
     },
     stores: {
@@ -209,7 +200,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       privacy: {
         title: "Privacidad primero",
         description:
-          "No se necesita cuenta. Tus registros financieros permanecen en tu navegador o app de escritorio a menos que los exportes.",
+          "Sin cuenta. Tus datos siguen locales, salvo que los exportes.",
         previewTitle: "Libro solo local",
         previewMeta: "Almacenamiento del navegador",
         previewStat: "0 cuentas",
@@ -218,7 +209,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "Datos locales",
         description:
-          "Vaulted Money se basa en libros locales, IndexedDB y copias de seguridad opcionales en lugar de una base de datos alojada.",
+          "Libros locales, almacenamiento del navegador y copias de seguridad opcionales.",
         previewTitle: "Bóveda de respaldo",
         previewMeta: "JSON cifrado",
         previewStat: "Auto",
@@ -227,7 +218,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       openSource: {
         title: "Código abierto",
         description:
-          "El código, la hoja de ruta y la postura de privacidad son auditables en el repositorio público.",
+          "Desarrollo activo. Código y hoja de ruta públicos en GitHub.",
         previewTitle: "Fuente auditable",
         previewMeta: "Proyecto MIT",
         previewStat: "Público",
@@ -235,9 +226,9 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Todo lo necesario para gestionar un libro personal.",
+      title: "Personal, familiar o negocio.",
       description:
-        "Crea un libro, importa archivos CSV, concilia cuentas, controla presupuestos, programa movimientos recurrentes y exporta respaldos desde una sola app local.",
+        "Controla gastos, crea presupuestos, importa CSV y haz copias.",
     },
     tools: {
       multiLedger: "Seguimiento multi-libro",
@@ -321,19 +312,14 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "Trae tu historial con CSV",
+        title: "Importa archivos CSV del banco",
         description:
-          "Comienza con un libro, luego importa extractos bancarios desde la pantalla de Transacciones. Mapear las columnas una vez hace que futuras importaciones sean más rápidas.",
+          "Asigna las columnas una vez y agiliza las próximas importaciones.",
       },
       backup: {
-        title: "Haz respaldo antes de depender del navegador",
+        title: "Guarda una copia",
         description:
-          "Local-first significa que tus datos son tuyos, pero ventanas privadas, reinicios del navegador o borrar datos del sitio pueden eliminar el almacenamiento local.",
-      },
-      automate: {
-        title: "Automatiza un ritmo de respaldo",
-        description:
-          "Usa exportaciones JSON cifradas o en texto plano, y habilita respaldos automáticos cuando tu navegador o plataforma de escritorio lo permita.",
+          "Los datos del navegador se pueden borrar. Exporta una copia o activa las automáticas si están disponibles.",
       },
     },
     stores: {
@@ -383,8 +369,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     trust: {
       privacy: {
         title: "隐私优先",
-        description:
-          "无需账户。你的财务记录保存在浏览器或桌面应用中，除非你主动导出。",
+        description: "无需账户。数据保存在本地，除非你选择导出。",
         previewTitle: "纯本地账本",
         previewMeta: "浏览器存储",
         previewStat: "0 个账户",
@@ -392,8 +377,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       dataLocal: {
         title: "数据本地",
-        description:
-          "Vaulted Money 基于本地账本、IndexedDB 和可选文件备份，而非托管数据库。",
+        description: "本地账本、浏览器存储和可选文件备份。",
         previewTitle: "备份保险库",
         previewMeta: "加密 JSON",
         previewStat: "自动",
@@ -401,7 +385,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "开源",
-        description: "代码、路线图和隐私策略均可在公开仓库中审计。",
+        description: "持续开发。代码和路线图在 GitHub 公开。",
         previewTitle: "可审计源码",
         previewMeta: "MIT 项目",
         previewStat: "公开",
@@ -409,9 +393,8 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "管理个人账本所需的一切。",
-      description:
-        "创建账本、导入 CSV 文件、对账、监控预算、安排定期资金流动，并从一个本地应用导出备份。",
+      title: "个人、家庭或生意账本。",
+      description: "追踪支出、设置预算、导入 CSV 并备份。",
     },
     tools: {
       multiLedger: "多账本追踪",
@@ -491,19 +474,13 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "用 CSV 导入你的历史记录",
-        description:
-          "从创建账本开始，然后在交易页面导入银行导出文件。映射一次列后，未来的导入会更快。",
+        title: "导入银行 CSV",
+        description: "列名只需映射一次，之后导入更快。",
       },
       backup: {
-        title: "在依赖浏览器之前做好备份",
+        title: "保留备份",
         description:
-          "本地优先意味着数据是你的，但隐私窗口、浏览器重置或清除站点数据可能会擦除本地存储。",
-      },
-      automate: {
-        title: "建立自动备份节奏",
-        description:
-          "使用加密或纯文本 JSON 导出，并在浏览器或桌面平台支持时启用自动备份。",
+          "浏览器数据可能被清除。请导出备份，或在支持的平台启用自动备份。",
       },
     },
     stores: {
@@ -553,7 +530,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       privacy: {
         title: "Privacy eerst",
         description:
-          "Geen account vereist. Je financiële gegevens blijven in je browser of desktop-app tenzij je ze exporteert.",
+          "Geen account. Je gegevens blijven lokaal, tenzij je exporteert.",
         previewTitle: "Alleen lokaal grootboek",
         previewMeta: "Browseropslag",
         previewStat: "0 accounts",
@@ -562,7 +539,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "Gegevens lokaal",
         description:
-          "Vaulted Money is gebouwd rond lokale grootboeken, IndexedDB en optionele bestandsback-ups in plaats van een gehoste database.",
+          "Lokale grootboeken, browseropslag en optionele bestandsback-ups.",
         previewTitle: "Back-up kluis",
         previewMeta: "Versleuteld JSON",
         previewStat: "Auto",
@@ -571,7 +548,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       openSource: {
         title: "Open source",
         description:
-          "De code, routekaart en privacyhouding zijn controleerbaar in de openbare repository.",
+          "Actief in ontwikkeling. Code en routekaart staan op GitHub.",
         previewTitle: "Controleerbare bron",
         previewMeta: "MIT-project",
         previewStat: "Openbaar",
@@ -579,9 +556,9 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Alles wat nodig is voor een persoonlijk grootboek.",
+      title: "Privé, familie of zakelijk.",
       description:
-        "Maak een grootboek, importeer CSV-bestanden, stem rekeningen af, bewaak budgetten, plan terugkerende geldstromen en exporteer back-ups vanuit één lokale app.",
+        "Volg uitgaven, stel budgetten in, importeer CSV en maak back-ups.",
     },
     tools: {
       multiLedger: "Meerdere grootboeken",
@@ -665,19 +642,13 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "Breng je geschiedenis mee met CSV",
-        description:
-          "Begin met een grootboek en importeer vervolgens bankexports via het Transactiescherm. Eénmaal kolommen toewijzen maakt toekomstige imports sneller.",
+        title: "Importeer bank-CSV's",
+        description: "Koppel kolommen één keer. Daarna importeer je sneller.",
       },
       backup: {
-        title: "Maak een back-up voordat je op de browser vertrouwt",
+        title: "Bewaar een back-up",
         description:
-          "Lokaal-eerst betekent dat je gegevens van jou zijn, maar privévensters, browserresets of het wissen van sitegegevens kunnen lokale opslag verwijderen.",
-      },
-      automate: {
-        title: "Automatiseer een back-up ritme",
-        description:
-          "Gebruik versleutelde of platte JSON-exports en schakel automatische back-ups in wanneer je browser of desktopplatform dit ondersteunt.",
+          "Browsergegevens kunnen worden gewist. Exporteer een back-up of schakel automatische back-ups in waar dat kan.",
       },
     },
     stores: {
@@ -728,7 +699,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       privacy: {
         title: "தனியுரிமை முதலில்",
         description:
-          "கணக்கு தேவையில்லை. நீங்கள் ஏற்றுமதி செய்யாத வரை உங்கள் நிதிப் பதிவுகள் உலாவி அல்லது டெஸ்க்டாப் பயன்பாட்டில் இருக்கும்.",
+          "கணக்கு தேவையில்லை. ஏற்றுமதி செய்யாவிட்டால் தரவு உள்ளூரிலேயே இருக்கும்.",
         previewTitle: "உள்ளமை மட்டும் லெட்ஜர்",
         previewMeta: "உலாவி சேமிப்பு",
         previewStat: "0 கணக்குகள்",
@@ -737,7 +708,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "தரவு உள்ளமை",
         description:
-          "Vaulted Money உள்ளமை லெட்ஜர்கள், IndexedDB மற்றும் விருப்ப கோப்பு காப்புப்பிரதிகளை அடிப்படையாகக் கொண்டது, ஹோஸ்ட் செய்யப்பட்ட தரவுத்தளம் அல்ல.",
+          "உள்ளூர் லெட்ஜர்கள், உலாவி சேமிப்பு, விருப்ப கோப்பு காப்புப்பிரதிகள்.",
         previewTitle: "காப்பு பெட்டகம்",
         previewMeta: "மறையாக்கப்பட்ட JSON",
         previewStat: "தானியங்கி",
@@ -746,7 +717,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       openSource: {
         title: "திறந்த மூலம்",
         description:
-          "குறியீடு, வழிப்படம் மற்றும் தனியுரிமை நிலைப்பாடு பொது களஞ்சியத்தில் தணிக்கை செய்யலாம்.",
+          "தொடர்ந்து மேம்பாடு. குறியீடும் வழிப்படமும் GitHub-இல் பொதுவில்.",
         previewTitle: "தணிக்கை செய்யக்கூடிய மூலம்",
         previewMeta: "MIT திட்டம்",
         previewStat: "பொது",
@@ -754,9 +725,9 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "தனிப்பட்ட லெட்ஜரை நிர்வகிக்க தேவையான அனைத்தும்.",
+      title: "தனிப்பட்ட, குடும்ப அல்லது வணிகம்.",
       description:
-        "லெட்ஜர் உருவாக்கு, CSV கோப்புகள் இறக்குமதி செய், கணக்குகளை சமரசம் செய், பட்ஜெட்டுகளை கண்காணி, தொடர் பண நகர்வுகளை திட்டமிடு, ஒரு உள்ளமை பயன்பாட்டிலிருந்து காப்புப்பிரதிகளை ஏற்றுமதி செய்.",
+        "செலவுகளைப் பின்தொடர், பட்ஜெட் அமை, CSV இறக்குமதி செய்து காப்பு எடு.",
     },
     tools: {
       multiLedger: "பல-லெட்ஜர் கண்காணிப்பு",
@@ -841,19 +812,14 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "CSV மூலம் உங்கள் வரலாற்றை கொண்டு வாருங்கள்",
+        title: "வங்கி CSV-களை இறக்குமதி செய்யுங்கள்",
         description:
-          "லெட்ஜரில் தொடங்கி, பரிவர்த்தனைகள் திரையில் வங்கி ஏற்றுமதிகளை இறக்குமதி செய்யுங்கள். நெடுவரிசைகளை ஒருமுறை மேப்பிங் செய்தால் எதிர்கால இறக்குமதிகள் வேகமாகும்.",
+          "நெடுவரிசைகளை ஒருமுறை வரைபடமிடுங்கள். அடுத்த இறக்குமதி வேகமாகும்.",
       },
       backup: {
-        title: "உலாவியை நம்புவதற்கு முன் காப்புப்பிரதி எடுங்கள்",
+        title: "காப்புப்பிரதி வைத்திருங்கள்",
         description:
-          "உள்ளமை-முதல் என்பது உங்கள் தரவு உங்களுடையது, ஆனால் தனிப்பட்ட சாளரங்கள், உலாவி மீட்டமைப்புகள் அல்லது தள தரவை அழிப்பது உள்ளமை சேமிப்பை நீக்கலாம்.",
-      },
-      automate: {
-        title: "காப்பு தாளத்தை தானியக்கமாக்குங்கள்",
-        description:
-          "மறையாக்கப்பட்ட அல்லது சாதாரண JSON ஏற்றுமதிகளைப் பயன்படுத்தி, உங்கள் உலாவி அல்லது டெஸ்க்டாப் தளம் ஆதரிக்கும்போது தானியங்கி காப்புப்பிரதிகளை இயக்குங்கள்.",
+          "உலாவி தரவு அழிக்கப்படலாம். காப்பை ஏற்றுமதி செய்யுங்கள் அல்லது ஆதரிக்கப்படும் இடங்களில் தானியங்கி காப்பை இயக்குங்கள்.",
       },
     },
     stores: {

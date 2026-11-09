@@ -67,8 +67,14 @@ import BrandLockup from "@/components/BrandLockup";
 
 const LedgerEntryPage = () => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const { ledgers, switchLedger, refreshLedgers, deleteLedger } = useLedger();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    ledgers,
+    isLoading: isLedgerLoading,
+    switchLedger,
+    refreshLedgers,
+    deleteLedger,
+  } = useLedger();
   const { setTheme, resolvedTheme } = useTheme();
   const { startTour, hasTourForCurrentRoute } = useTour();
   const { generateDiverseDemoData, setOperationProgress } = useTransactions();
@@ -119,6 +125,15 @@ const LedgerEntryPage = () => {
       };
     }
   }, [isHomepageMobilePreview]);
+
+  useEffect(() => {
+    if (isLedgerLoading || searchParams.get("demo") !== "1") return;
+
+    setIsGenerateConfirmOpen(true);
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("demo");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [isLedgerLoading, searchParams, setSearchParams]);
 
   const handleImportCSVClick = () => {
     csvFileInputRef.current?.click();
@@ -925,7 +940,7 @@ const LedgerEntryPage = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="hidden h-9 w-9 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive sm:inline-flex"
+                                className="hidden h-9 w-9 rounded-full text-destructive-text hover:bg-destructive/10 hover:text-destructive-text sm:inline-flex"
                                 onClick={(event) =>
                                   handleDeleteClick(ledger.id, event)
                                 }
@@ -1068,7 +1083,7 @@ const LedgerEntryPage = () => {
                   // like the main call to action.
                   ledgers.length === 0
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-red-400/70 dark:text-red-400 dark:hover:text-red-300",
+                    : "border-destructive/40 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text dark:border-red-400/70 dark:text-red-400 dark:hover:text-red-300",
                 )}
               >
                 <RotateCcw className="mt-0.5 h-5 w-5" />
