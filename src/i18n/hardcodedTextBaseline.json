@@ -43,7 +43,7 @@
   "src/pages/AcknowledgmentsPage.tsx": 1,
   "src/pages/CurrenciesPage.tsx": 2,
   "src/pages/DonationPage.tsx": 16,
-  "src/pages/HomePage.tsx": 3,
+  "src/pages/HomePage.tsx": 2,
   "src/pages/Insights.tsx": 14,
   "src/pages/LanguagePage.tsx": 4,
   "src/pages/NotFound.tsx": 2,

@@ -7,6 +7,7 @@ import {
   Check,
   Copy,
   ExternalLink,
+  Maximize,
   Menu,
   Moon,
   Search,
@@ -88,6 +89,25 @@ const HomePage = () => {
       motionPreference.removeEventListener("change", updateMotionPreference);
   }, []);
 
+  const openDemoFullscreen = async () => {
+    const video = demoVideoRef.current;
+    if (!video) return;
+
+    const webkitVideo = video as HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+    };
+
+    try {
+      if (video.requestFullscreen) {
+        await video.requestFullscreen();
+      } else {
+        webkitVideo.webkitEnterFullscreen?.();
+      }
+    } catch {
+      webkitVideo.webkitEnterFullscreen?.();
+    }
+  };
+
   // ── Translated data arrays (re-derived whenever language changes) ──────────
 
   const trustPillars = [
@@ -135,8 +155,7 @@ const HomePage = () => {
       icon: GitFork,
       title: t("home.trust.openSource.title", { defaultValue: "Open-sourced" }),
       description: t("home.trust.openSource.description", {
-        defaultValue:
-          "The code, roadmap, and privacy posture are auditable in the public repository.",
+        defaultValue: "Active development. Public code and roadmap on GitHub.",
       }),
       previewTitle: t("home.trust.openSource.previewTitle", {
         defaultValue: "Auditable source",
@@ -324,66 +343,6 @@ const HomePage = () => {
       label: t("home.commands.desktop.label", { defaultValue: "Desktop" }),
       status: t("home.status.released", { defaultValue: "Released" }),
       accent: "emerald",
-    },
-    {
-      window: t("home.milestones.privacyRefresh.window", {
-        defaultValue: "May 2026",
-      }),
-      title: t("home.milestones.privacyRefresh.title", {
-        defaultValue: "Privacy and public branding refresh",
-      }),
-      summary: t("home.milestones.privacyRefresh.summary", {
-        defaultValue:
-          "The public-facing experience expanded with a dedicated privacy page, updated branding, and sharper trust messaging for new users.",
-      }),
-      label: "Previous",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "emerald",
-    },
-    {
-      window: t("home.milestones.brandLaunch.window", {
-        defaultValue: "April 2026",
-      }),
-      title: t("home.milestones.brandLaunch.title", {
-        defaultValue: "Vaulted Money brand and public homepage launch",
-      }),
-      summary: t("home.milestones.brandLaunch.summary", {
-        defaultValue:
-          "The app was renamed to Vaulted Money, the public homepage landed, and the install story became much clearer for web and desktop users.",
-      }),
-      label: "v1.5-v1.6",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "orange",
-    },
-    {
-      window: t("home.milestones.languageRollout.window", {
-        defaultValue: "March 2026",
-      }),
-      title: t("home.milestones.languageRollout.title", {
-        defaultValue: "Language management and localization rollout",
-      }),
-      summary: t("home.milestones.languageRollout.summary", {
-        defaultValue:
-          "Multi-language support, language management UX, and broader translation coverage shipped as a major usability milestone.",
-      }),
-      label: "v1.4 era",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "red",
-    },
-    {
-      window: t("home.milestones.coreRelease.window", {
-        defaultValue: "January 2026",
-      }),
-      title: t("home.milestones.coreRelease.title", {
-        defaultValue: "Core local-first ledger release",
-      }),
-      summary: t("home.milestones.coreRelease.summary", {
-        defaultValue:
-          "The first tagged release established the web app foundation for ledgers, transactions, categories, budgets, and local data ownership.",
-      }),
-      label: "v1.0.0",
-      status: t("home.status.released", { defaultValue: "Released" }),
-      accent: "blue",
     },
   ];
 
@@ -580,13 +539,15 @@ const HomePage = () => {
               </span>
             </div>
 
-            <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-5xl dark:text-[hsl(var(--brand-accent-soft))] lg:text-6xl">
-              Vaulted Money
+            <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-tight text-[hsl(var(--brand-accent-text))] sm:text-5xl dark:text-[hsl(var(--brand-accent-soft))] lg:text-6xl">
+              {t("home.hero.headline", {
+                defaultValue: "Ask your ledger. Keep control.",
+              })}
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-700 dark:text-slate-200 sm:text-xl">
               {t("home.hero.positioning", {
                 defaultValue:
-                  "Open-source, local-first money tracking with no account. Search in plain English, without AI or cloud.",
+                  "Private, local-first money tracking. No account. Open source. Plain-English search needs no AI or cloud.",
               })}
             </p>
 
@@ -631,11 +592,29 @@ const HomePage = () => {
                 controls
                 preload={prefersReducedMotion ? "none" : "metadata"}
               />
-              <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent px-4 pb-4 pt-14 text-3xl font-black leading-none tracking-tight text-white drop-shadow sm:text-4xl">
-                {t("home.hero.videoTitle", {
-                  defaultValue: "Ask. Don’t Search.",
-                })}
-              </span>
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent" />
+              <div className="absolute inset-x-0 bottom-14 z-10 flex items-center justify-between gap-2 px-3 sm:px-4">
+                <span className="pointer-events-none min-w-0 text-2xl font-black leading-none tracking-tight text-white drop-shadow sm:text-3xl">
+                  {t("home.hero.videoTitle", {
+                    defaultValue: "Ask. Don’t Search.",
+                  })}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="pointer-events-auto h-8 shrink-0 border-white/50 bg-slate-950/75 px-2.5 text-xs font-semibold text-white shadow-sm hover:bg-white hover:text-slate-950 sm:px-3 sm:text-sm"
+                  onClick={() => void openDemoFullscreen()}
+                  aria-label={t("home.hero.videoFullscreen", {
+                    defaultValue: "Go full screen",
+                  })}
+                >
+                  <Maximize className="h-3.5 w-3.5" />
+                  {t("home.hero.videoFullscreen", {
+                    defaultValue: "Full screen",
+                  })}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -826,7 +805,7 @@ const HomePage = () => {
             </h2>
             <p className="mt-4 text-xl font-medium text-slate-800 dark:text-slate-200">
               {t("home.workflow.title", {
-                defaultValue: "Everything needed to run a personal ledger.",
+                defaultValue: "Personal, family, or business.",
               })}
             </p>
             <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
@@ -882,9 +861,8 @@ const HomePage = () => {
                 {t("home.nav.roadmap", { defaultValue: "Roadmap" })}
               </h2>
               <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
-                {t("home.roadmap.description", {
-                  defaultValue:
-                    "Based on tagged releases and major shipped milestones so far.",
+                {t("home.roadmap.recentDescription", {
+                  defaultValue: "Recent releases. Built in public.",
                 })}
               </p>
             </div>

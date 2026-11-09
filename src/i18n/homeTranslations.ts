@@ -53,7 +53,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "Open-sourced",
-        description: "Code and roadmap are public. Review them on GitHub.",
+        description: "Active development. Public code and roadmap on GitHub.",
         previewTitle: "Auditable source",
         previewMeta: "MIT project",
         previewStat: "Public",
@@ -61,7 +61,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Your money, on your terms.",
+      title: "Personal, family, or business.",
       description: "Track spending, set budgets, import CSVs, and back up.",
     },
     tools: {
@@ -217,7 +217,8 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "Código abierto",
-        description: "Código y hoja de ruta públicos. Revísalos en GitHub.",
+        description:
+          "Desarrollo activo. Código y hoja de ruta públicos en GitHub.",
         previewTitle: "Fuente auditable",
         previewMeta: "Proyecto MIT",
         previewStat: "Público",
@@ -225,7 +226,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Tu dinero, a tu manera.",
+      title: "Personal, familiar o negocio.",
       description:
         "Controla gastos, crea presupuestos, importa CSV y haz copias.",
     },
@@ -384,7 +385,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "开源",
-        description: "代码和路线图公开。可在 GitHub 查看。",
+        description: "持续开发。代码和路线图在 GitHub 公开。",
         previewTitle: "可审计源码",
         previewMeta: "MIT 项目",
         previewStat: "公开",
@@ -392,7 +393,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "按自己的方式管理资金。",
+      title: "个人、家庭或生意账本。",
       description: "追踪支出、设置预算、导入 CSV 并备份。",
     },
     tools: {
@@ -546,7 +547,8 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "Open source",
-        description: "Code en routekaart zijn openbaar. Bekijk ze op GitHub.",
+        description:
+          "Actief in ontwikkeling. Code en routekaart staan op GitHub.",
         previewTitle: "Controleerbare bron",
         previewMeta: "MIT-project",
         previewStat: "Openbaar",
@@ -554,7 +556,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Je geld, op jouw manier.",
+      title: "Privé, familie of zakelijk.",
       description:
         "Volg uitgaven, stel budgetten in, importeer CSV en maak back-ups.",
     },
@@ -715,7 +717,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       openSource: {
         title: "திறந்த மூலம்",
         description:
-          "குறியீடும் வழிப்படமும் பொதுவில் உள்ளன. GitHub-இல் பார்க்கலாம்.",
+          "தொடர்ந்து மேம்பாடு. குறியீடும் வழிப்படமும் GitHub-இல் பொதுவில்.",
         previewTitle: "தணிக்கை செய்யக்கூடிய மூலம்",
         previewMeta: "MIT திட்டம்",
         previewStat: "பொது",
@@ -723,7 +725,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "உங்கள் பணம், உங்கள் வழியில்.",
+      title: "தனிப்பட்ட, குடும்ப அல்லது வணிகம்.",
       description:
         "செலவுகளைப் பின்தொடர், பட்ஜெட் அமை, CSV இறக்குமதி செய்து காப்பு எடு.",
     },

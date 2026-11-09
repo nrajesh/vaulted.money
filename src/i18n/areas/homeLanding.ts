@@ -5,11 +5,13 @@ export const homeLanding: AreaTranslations = {
   en: {
     home: {
       hero: {
+        headline: "Ask your ledger. Keep control.",
         positioning:
-          "Local-first. No account. Open source. Search in plain English—no AI or cloud.",
+          "Private, local-first money tracking. No account. Open source. Search needs no AI or cloud.",
         tryDemo: "Try it with demo data",
         videoLabel: "Natural-language search demo video",
         videoTitle: "Ask. Don’t Search.",
+        videoFullscreen: "Full screen",
       },
       nav: {
         search: "Search",
@@ -44,6 +46,7 @@ export const homeLanding: AreaTranslations = {
         apiDescription: "OpenAPI and Postman. Desktop app only.",
       },
       roadmap: {
+        recentDescription: "Recent releases. Built in public.",
         shippedCount: "{{count}} shipped milestones",
         shippedSummary: "Shipped: search, MCP agents, desktop API.",
       },
@@ -53,12 +56,12 @@ export const homeLanding: AreaTranslations = {
         search: {
           title: "Natural-language search",
           summary:
-            "Dates, amounts, typos, largest and smallest. Search and API share one interpreter. Pick suggestions one at a time.",
+            "Dates, amounts, typos, and top results. Search box and API share logic.",
         },
         aiHub: {
           title: "AI hub and MCP agent connections",
           summary:
-            "One switch controls AI features. Connect Claude Code, Claude Desktop, or Codex through MCP on desktop.",
+            "One AI switch. Connect Claude Code, Claude Desktop, or Codex through MCP on desktop.",
         },
         localApiDetails: "Desktop Local API. OpenAPI and Postman collection.",
       },
@@ -67,11 +70,13 @@ export const homeLanding: AreaTranslations = {
   es: {
     home: {
       hero: {
+        headline: "Tu dinero, bajo tu control.",
         positioning:
-          "Local. Sin cuenta. Código abierto. Busca en lenguaje natural, sin IA ni nube.",
+          "Dinero privado y local. Sin cuenta. Código abierto. Busca sin IA ni nube.",
         tryDemo: "Pruébalo con datos de ejemplo",
         videoLabel: "Vídeo de demostración de búsqueda en lenguaje natural",
         videoTitle: "Pregunta. No busques.",
+        videoFullscreen: "Pantalla completa",
       },
       nav: {
         search: "Búsqueda",
@@ -106,6 +111,7 @@ export const homeLanding: AreaTranslations = {
         apiDescription: "OpenAPI y Postman. Solo en escritorio.",
       },
       roadmap: {
+        recentDescription: "Novedades recientes. Desarrollo público.",
         shippedCount: "{{count}} hitos publicados",
         shippedSummary:
           "Ya disponibles: búsqueda, agentes MCP y API local de escritorio.",
@@ -131,10 +137,13 @@ export const homeLanding: AreaTranslations = {
   zh: {
     home: {
       hero: {
-        positioning: "本地优先。开源。无需账户。自然语言搜索无需 AI 或云服务。",
+        headline: "用日常语言问账本。",
+        positioning:
+          "私密、本地优先的记账。无需账户，开源。搜索无需 AI 或云服务。",
         tryDemo: "用示例数据试用",
         videoLabel: "自然语言搜索演示视频",
         videoTitle: "直接提问，不用搜索",
+        videoFullscreen: "全屏",
       },
       nav: {
         search: "搜索",
@@ -166,6 +175,7 @@ export const homeLanding: AreaTranslations = {
         apiDescription: "OpenAPI 和 Postman。仅限桌面应用。",
       },
       roadmap: {
+        recentDescription: "近期更新，公开开发。",
         shippedCount: "已发布 {{count}} 项里程碑",
         shippedSummary: "已发布：搜索、MCP 助手连接和桌面本地 API。",
       },
@@ -189,11 +199,13 @@ export const homeLanding: AreaTranslations = {
   nl: {
     home: {
       hero: {
+        headline: "Je geld, onder jouw regie.",
         positioning:
-          "Lokaal. Open source. Geen account. Zoeken in gewone taal heeft geen AI of cloud nodig.",
+          "Privé en lokaal geldbeheer. Geen account. Open source. Zoeken zonder AI of cloud.",
         tryDemo: "Probeer met demodata",
         videoLabel: "Demovideo voor zoeken in gewone taal",
         videoTitle: "Vraag. Niet zoeken.",
+        videoFullscreen: "Volledig scherm",
       },
       nav: {
         search: "Zoeken",
@@ -228,6 +240,7 @@ export const homeLanding: AreaTranslations = {
         apiDescription: "OpenAPI en Postman. Alleen desktop.",
       },
       roadmap: {
+        recentDescription: "Recente updates. Open ontwikkeling.",
         shippedCount: "{{count}} mijlpalen uitgebracht",
         shippedSummary:
           "Beschikbaar: zoeken, MCP-agents en de Local API voor desktop.",
@@ -253,11 +266,13 @@ export const homeLanding: AreaTranslations = {
   ta: {
     home: {
       hero: {
+        headline: "உங்கள் லெட்ஜரைக் கேளுங்கள். கட்டுப்பாடு உங்களிடம்.",
         positioning:
-          "உள்ளூர். திறந்த மூலம். கணக்கு தேவையில்லை. இயல்பான மொழித் தேடலுக்கு AI அல்லது மேகம் தேவையில்லை.",
+          "தனிப்பட்ட, உள்ளூர் பணக் கணக்கு. கணக்கு தேவையில்லை. திறந்த மூலம். தேடலுக்கு AI அல்லது மேகம் தேவையில்லை.",
         tryDemo: "மாதிரி தரவுடன் முயற்சி செய்",
         videoLabel: "இயல்பான மொழித் தேடல் விளக்கக் காணொளி",
         videoTitle: "கேளுங்கள். தேட வேண்டாம்.",
+        videoFullscreen: "முழுத்திரை",
       },
       nav: {
         search: "தேடல்",
@@ -293,6 +308,7 @@ export const homeLanding: AreaTranslations = {
         apiDescription: "OpenAPI மற்றும் Postman. டெஸ்க்டாப்பில் மட்டும்.",
       },
       roadmap: {
+        recentDescription: "சமீபத்திய வெளியீடுகள். திறந்த மேம்பாடு.",
         shippedCount: "வெளியிடப்பட்ட {{count}} மைல்கற்கள்",
         shippedSummary: "வெளியீடு: தேடல், MCP முகவர்கள், டெஸ்க்டாப் API.",
       },
