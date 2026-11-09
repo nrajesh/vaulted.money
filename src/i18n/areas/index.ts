@@ -14,6 +14,7 @@ import { budgetDialogs } from "./budgetDialogs";
 import { aiProviderScreens } from "./aiProviderScreens";
 import { connectAgent } from "./connectAgent";
 import { searchSuggestions } from "./searchSuggestions";
+import { homeLanding } from "./homeLanding";
 import { mergeMissing } from "./merge";
 import type { AreaLanguage, AreaTranslations } from "./types";
 
@@ -35,6 +36,7 @@ export const areaTranslations: AreaTranslations[] = [
   aiProviderScreens,
   connectAgent,
   searchSuggestions,
+  homeLanding,
 ];
 
 /**

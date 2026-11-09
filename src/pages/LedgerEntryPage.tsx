@@ -67,8 +67,14 @@ import BrandLockup from "@/components/BrandLockup";
 
 const LedgerEntryPage = () => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const { ledgers, switchLedger, refreshLedgers, deleteLedger } = useLedger();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    ledgers,
+    isLoading: isLedgerLoading,
+    switchLedger,
+    refreshLedgers,
+    deleteLedger,
+  } = useLedger();
   const { setTheme, resolvedTheme } = useTheme();
   const { startTour, hasTourForCurrentRoute } = useTour();
   const { generateDiverseDemoData, setOperationProgress } = useTransactions();
@@ -119,6 +125,15 @@ const LedgerEntryPage = () => {
       };
     }
   }, [isHomepageMobilePreview]);
+
+  useEffect(() => {
+    if (isLedgerLoading || searchParams.get("demo") !== "1") return;
+
+    setIsGenerateConfirmOpen(true);
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("demo");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [isLedgerLoading, searchParams, setSearchParams]);
 
   const handleImportCSVClick = () => {
     csvFileInputRef.current?.click();
