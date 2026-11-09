@@ -17,7 +17,7 @@ const BASE = process.env.BASE_URL || "http://127.0.0.1:5199";
 const assets = JSON.parse(fs.readFileSync(path.join(OUT, "assets.json"), "utf8"));
 
 const QUERY_1 = "expenses over 20 last month in grocries ";
-const QUERY_2 = "show me the largest expense coming up in next 2 weeks in checking account ";
+const QUERY_2 = "show largest expense in 2 weeks for checking ";
 const SLOW = 1.7; // seconds for a camera pull-back: unhurried
 
 (async () => {
@@ -63,8 +63,8 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   await caption("Dates. Amounts. Even typos.<br><b>Understood</b>", 2000);
   await stage.hideNote();
   await caption("Take one filter…", 300);
-  await click(page.getByRole("option", { name: /Category: Groceries/ }));
   await page.evaluate(() => { window.__demoGlow = true; }); // chips that pop in now glow
+  await click(page.getByRole("option", { name: /Category: Groceries/ }));
   await wait(900);
   await caption("…or everything left, in one tap", 300);
   await click(page.getByRole("option", { name: /Apply all/ }));
@@ -72,9 +72,12 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   zoomTo({ ...ZOOM, z: 1.45, cy: ZOOM.cy - 40 }, 1.0);
   await wait(900);
   await caption("Every filter is a chip<br><b>you can remove</b>", 2000);
+  await page.evaluate(() => { window.__demoGlow = false; }); // the default filters that return on Reset do not glow
 
   // ---- 2. switch to light by clicking the theme button -----------------
+  await caption("Start over with <br><b>one click</b>", 100);
   await click(page.getByRole("button", { name: /^Reset$/ }));
+  await wait(1300);
   await caption("");
   zoomTo(FULL, SLOW);
   stage.captionAt(960, 48);
@@ -103,6 +106,7 @@ const SLOW = 1.7; // seconds for a camera pull-back: unhurried
   await type(QUERY_2, 14);
   await wait(300);
   await caption("Natural language<br><b>understood</b>", 1700);
+  await phone.evaluate(() => { window.__demoGlow = true; });
   await click(phone.getByRole("option", { name: /Apply all/ }));
   await caption("", 400);
   await wait(1900);

@@ -48,7 +48,7 @@ const overlay = ({ assets, endCard }) => {
     [cmdk-item].demo-glow{border-radius:8px}
     #root.phone-blur{filter:blur(7px) brightness(.9)}
     #demo-note{position:fixed;z-index:2147483646;transform:translateY(-50%);pointer-events:none;
-      font:600 22px/1 Inter,system-ui,sans-serif;padding:8px 16px;border-radius:999px;white-space:nowrap;
+      font:600 15px/1 Inter,system-ui,sans-serif;padding:5px 11px;border-radius:999px;white-space:nowrap;
       background:rgba(16,185,129,.18);color:#6ee7b7;border:1.5px solid rgba(16,185,129,.7);opacity:0;transition:opacity .45s}
     #demo-note.on{opacity:1}
     #demo-cursor{position:fixed;z-index:2147483647;width:34px;height:34px;border-radius:50%;
@@ -108,6 +108,9 @@ const overlay = ({ assets, endCard }) => {
       <div class="qr"><div class="tile">${assets.qr}</div><span>${endCard.url}</span></div></div>`;
   document.addEventListener("DOMContentLoaded", () => {
     document.head.appendChild(style);
+    // The phone is an iframe of the same app: it gets the glow styles only, not
+    // a second caption, cursor and end card.
+    if (window.top !== window) return;
     const cap = Object.assign(document.createElement("div"), { id: "demo-caption" });
     const cur = Object.assign(document.createElement("div"), { id: "demo-cursor" });
     const end = Object.assign(document.createElement("div"), { id: "demo-end" });
@@ -207,7 +210,7 @@ async function createStage({
         let el = document.getElementById("demo-note");
         if (!el) { el = document.createElement("div"); el.id = "demo-note"; document.body.appendChild(el); }
         el.textContent = t;
-        el.style.left = r.left + parseFloat(cs.paddingLeft) + w + 28 + "px";
+        el.style.left = r.left + parseFloat(cs.paddingLeft) + w + 22 + "px";
         el.style.top = r.top + r.height / 2 + "px";
         requestAnimationFrame(() => el.classList.add("on"));
       }, text);
