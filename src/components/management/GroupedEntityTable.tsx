@@ -271,7 +271,7 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      className="h-9 w-9 text-destructive-text hover:text-destructive-text hover:bg-destructive/10"
                                       onClick={() => handleDeleteClick(item)}
                                       disabled={!isDeletable(item)}
                                       aria-label={t(
@@ -572,7 +572,7 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                                               { defaultValue: "Delete" },
                                             )}
                                           >
-                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                            <Trash2 className="h-4 w-4 text-destructive-text" />
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>

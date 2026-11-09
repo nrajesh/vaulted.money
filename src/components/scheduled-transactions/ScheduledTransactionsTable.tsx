@@ -394,7 +394,7 @@ export function ScheduledTransactionsTable({
                         {onDelete && (
                           <DropdownMenuItem
                             onClick={() => onDelete(transaction.id)}
-                            className="text-destructive"
+                            className="text-destructive-text"
                           >
                             <Trash className="mr-2 h-4 w-4" />{" "}
                             {t("scheduled.table.delete", {
@@ -639,7 +639,7 @@ export function ScheduledTransactionsTable({
                               {onDelete && (
                                 <DropdownMenuItem
                                   onClick={() => onDelete(transaction.id)}
-                                  className="text-destructive"
+                                  className="text-destructive-text"
                                 >
                                   <Trash className="mr-2 h-4 w-4" />{" "}
                                   {t("scheduled.table.delete", {
@@ -686,7 +686,7 @@ export function ScheduledTransactionsTable({
                       {onDelete && (
                         <ContextMenuItem
                           onClick={() => onDelete(transaction.id)}
-                          className="text-destructive"
+                          className="text-destructive-text"
                         >
                           <Trash className="mr-2 h-4 w-4" />{" "}
                           {t("scheduled.table.delete", {

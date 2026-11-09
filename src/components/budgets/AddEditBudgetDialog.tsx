@@ -1107,7 +1107,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                                   }}
                                 >
                                   {val}
-                                  <X className="ml-1 h-3 w-3 hover:text-destructive cursor-pointer" />
+                                  <X className="ml-1 h-3 w-3 hover:text-destructive-text cursor-pointer" />
                                 </Badge>
                               ))}
                             </div>

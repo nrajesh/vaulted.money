@@ -289,7 +289,7 @@ const HomePage = () => {
       }),
       summary: t("home.milestones.search.summary", {
         defaultValue:
-          "Search understands dates, amounts, largest and smallest results, and names with small typos. Suggestions apply one at a time, and the API uses the same interpretation.",
+          "Dates, amounts, typos, largest and smallest. Search and API share one interpreter. Pick suggestions one at a time.",
       }),
       label: t("home.nav.search", { defaultValue: "Search" }),
       status: t("home.status.released", { defaultValue: "Released" }),
@@ -302,7 +302,7 @@ const HomePage = () => {
       }),
       summary: t("home.milestones.aiHub.summary", {
         defaultValue:
-          "The AI hub groups provider settings and Connect an agent behind a master AI features switch. Connect Claude Code, Claude Desktop, or Codex through MCP in the desktop app.",
+          "One switch controls AI features. Connect Claude Code, Claude Desktop, or Codex through MCP on desktop.",
       }),
       label: t("home.milestones.agentLabel", {
         defaultValue: "AI & agents",
@@ -615,7 +615,7 @@ const HomePage = () => {
           </div>
 
           <div className="min-w-0">
-            <div className="overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-xl shadow-slate-950/10 dark:border-slate-700 dark:shadow-black/30">
+            <div className="group relative overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-xl shadow-slate-950/10 dark:border-slate-700 dark:shadow-black/30">
               <video
                 ref={demoVideoRef}
                 className="aspect-video w-full bg-slate-950 object-cover"
@@ -631,6 +631,11 @@ const HomePage = () => {
                 controls
                 preload={prefersReducedMotion ? "none" : "metadata"}
               />
+              <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/30 bg-slate-950/85 px-3 py-1 text-xs font-semibold text-white opacity-100 shadow-sm transition-opacity motion-reduce:transition-none sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                {t("home.hero.videoTitle", {
+                  defaultValue: "Ask. Don’t Search.",
+                })}
+              </span>
             </div>
           </div>
         </div>
@@ -704,7 +709,7 @@ const HomePage = () => {
                 }),
                 description: t("home.differences.privateDescription", {
                   defaultValue:
-                    "No account. Your financial records stay in browser or desktop storage unless you export them.",
+                    "No account. Your data stays local unless exported.",
                 }),
               },
               {
@@ -713,8 +718,7 @@ const HomePage = () => {
                   defaultValue: "Plain-English search, without AI or cloud",
                 }),
                 description: t("home.differences.searchDescription", {
-                  defaultValue:
-                    "Search is interpreted on your device, and the search box and API share the same logic.",
+                  defaultValue: "The app and API share search logic.",
                 }),
               },
               {
@@ -723,8 +727,7 @@ const HomePage = () => {
                   defaultValue: "Connect your own AI agent through MCP",
                 }),
                 description: t("home.differences.agentDescription", {
-                  defaultValue:
-                    "Claude Code, Claude Desktop, and Codex can connect from the desktop app.",
+                  defaultValue: "Desktop app only.",
                 }),
               },
               {
@@ -733,8 +736,7 @@ const HomePage = () => {
                   defaultValue: "Script it through the Local API",
                 }),
                 description: t("home.differences.apiDescription", {
-                  defaultValue:
-                    "Desktop app only, with an OpenAPI description and a ready-made Postman collection.",
+                  defaultValue: "OpenAPI and Postman. Desktop app only.",
                 }),
               },
             ].map((item) => (
@@ -830,7 +832,7 @@ const HomePage = () => {
             <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
               {t("home.workflow.description", {
                 defaultValue:
-                  "Create a ledger, import CSV files, reconcile accounts, watch budgets, schedule recurring money movement, and export backups from one local app.",
+                  "Track spending, set budgets, import CSVs, and back up your data.",
               })}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">

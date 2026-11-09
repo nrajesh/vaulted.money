@@ -26,9 +26,11 @@
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
+    --destructive-text: 0 72% 40%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
+    --table-rule: 215 16% 58%;
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
@@ -106,11 +108,13 @@
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    --destructive-text: 0 91% 71%;
 
     --border: 217.2 32.6% 17.5%;
     /* Form-control outlines must reach 3:1 against the page (WCAG 1.4.11); the
        old value was 1.05:1, i.e. invisible. Decorative --border stays subtle. */
     --input: 215 16% 47%;
+    --table-rule: 215 16% 53%;
     --ring: 212.7 26.8% 83.9%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;

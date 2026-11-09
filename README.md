@@ -1,6 +1,6 @@
 # Vaulted Money
 
-Local-first, open-source money tracking with no account; plain-English search needs no AI or cloud.
+Local-first. No account. Open source. Search in plain English—no AI or cloud.
 
 [Watch the natural-language search demo](marketing/search-demo/final/vaulted-money-search.mp4)
 
@@ -8,10 +8,10 @@ Local-first, open-source money tracking with no account; plain-English search ne
 
 ## How It Differs
 
-- **Private by design:** no account; financial records stay in browser or desktop storage unless you export them.
-- **Plain-English search:** dates, amounts, largest or smallest results, and small typos work without AI or cloud.
-- **Connect your own AI agent:** use MCP from the desktop app.
-- **Scriptable:** the desktop-only Local API includes OpenAPI and a ready-made Postman collection.
+- **Private by design:** no account; your data stays local unless exported.
+- **Plain-English search:** dates, amounts, typos, and largest or smallest. No AI or cloud.
+- **Your AI agent:** connect over MCP from the desktop app.
+- **Scriptable:** desktop Local API with OpenAPI and Postman.
 
 [![CircleCI Build](https://img.shields.io/circleci/build/github/nrajesh/vaulted.money/main?logo=circleci&style=for-the-badge&token=CCIPRJ_Vr8m8ZBprdRweVA3p3Zuf1_ec111876745b6b9fe207e3e3bbbfbbf28de994d9)](https://app.circleci.com/pipelines/github/nrajesh/vaulted.money)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/nrajesh/vaulted.money)

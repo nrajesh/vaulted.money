@@ -36,8 +36,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     trust: {
       privacy: {
         title: "Privacy-first",
-        description:
-          "No account required. Your financial records stay in your browser or desktop app unless you export them.",
+        description: "No account. Your data stays local unless exported.",
         previewTitle: "Local-only ledger",
         previewMeta: "Browser storage",
         previewStat: "0 accounts",
@@ -46,7 +45,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "Data-local",
         description:
-          "Vaulted Money is built around local ledgers, IndexedDB, and optional file backups instead of a hosted database.",
+          "Local ledgers, browser storage, and optional file backups.",
         previewTitle: "Backup vault",
         previewMeta: "Encrypted JSON",
         previewStat: "Auto",
@@ -54,8 +53,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "Open-sourced",
-        description:
-          "The code, roadmap, and privacy posture are auditable in the public repository.",
+        description: "Code and roadmap are public. Review them on GitHub.",
         previewTitle: "Auditable source",
         previewMeta: "MIT project",
         previewStat: "Public",
@@ -63,9 +61,8 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Everything needed to run a personal ledger.",
-      description:
-        "Create a ledger, import CSV files, reconcile accounts, watch budgets, schedule recurring money movement, and export backups from one local app.",
+      title: "Your money, on your terms.",
+      description: "Track spending, set budgets, import CSVs, and back up.",
     },
     tools: {
       multiLedger: "Multi-ledger tracking",
@@ -209,7 +206,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       privacy: {
         title: "Privacidad primero",
         description:
-          "No se necesita cuenta. Tus registros financieros permanecen en tu navegador o app de escritorio a menos que los exportes.",
+          "Sin cuenta. Tus datos siguen locales, salvo que los exportes.",
         previewTitle: "Libro solo local",
         previewMeta: "Almacenamiento del navegador",
         previewStat: "0 cuentas",
@@ -218,7 +215,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "Datos locales",
         description:
-          "Vaulted Money se basa en libros locales, IndexedDB y copias de seguridad opcionales en lugar de una base de datos alojada.",
+          "Libros locales, almacenamiento del navegador y copias de seguridad opcionales.",
         previewTitle: "Bóveda de respaldo",
         previewMeta: "JSON cifrado",
         previewStat: "Auto",
@@ -226,8 +223,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "Código abierto",
-        description:
-          "El código, la hoja de ruta y la postura de privacidad son auditables en el repositorio público.",
+        description: "Código y hoja de ruta públicos. Revísalos en GitHub.",
         previewTitle: "Fuente auditable",
         previewMeta: "Proyecto MIT",
         previewStat: "Público",
@@ -235,9 +231,9 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Todo lo necesario para gestionar un libro personal.",
+      title: "Tu dinero, a tu manera.",
       description:
-        "Crea un libro, importa archivos CSV, concilia cuentas, controla presupuestos, programa movimientos recurrentes y exporta respaldos desde una sola app local.",
+        "Controla gastos, crea presupuestos, importa CSV y haz copias.",
     },
     tools: {
       multiLedger: "Seguimiento multi-libro",
@@ -383,8 +379,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     trust: {
       privacy: {
         title: "隐私优先",
-        description:
-          "无需账户。你的财务记录保存在浏览器或桌面应用中，除非你主动导出。",
+        description: "无需账户。数据保存在本地，除非你选择导出。",
         previewTitle: "纯本地账本",
         previewMeta: "浏览器存储",
         previewStat: "0 个账户",
@@ -392,8 +387,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       dataLocal: {
         title: "数据本地",
-        description:
-          "Vaulted Money 基于本地账本、IndexedDB 和可选文件备份，而非托管数据库。",
+        description: "本地账本、浏览器存储和可选文件备份。",
         previewTitle: "备份保险库",
         previewMeta: "加密 JSON",
         previewStat: "自动",
@@ -401,7 +395,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "开源",
-        description: "代码、路线图和隐私策略均可在公开仓库中审计。",
+        description: "代码和路线图公开。可在 GitHub 查看。",
         previewTitle: "可审计源码",
         previewMeta: "MIT 项目",
         previewStat: "公开",
@@ -409,9 +403,8 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "管理个人账本所需的一切。",
-      description:
-        "创建账本、导入 CSV 文件、对账、监控预算、安排定期资金流动，并从一个本地应用导出备份。",
+      title: "按自己的方式管理资金。",
+      description: "追踪支出、设置预算、导入 CSV 并备份。",
     },
     tools: {
       multiLedger: "多账本追踪",
@@ -553,7 +546,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       privacy: {
         title: "Privacy eerst",
         description:
-          "Geen account vereist. Je financiële gegevens blijven in je browser of desktop-app tenzij je ze exporteert.",
+          "Geen account. Je gegevens blijven lokaal, tenzij je exporteert.",
         previewTitle: "Alleen lokaal grootboek",
         previewMeta: "Browseropslag",
         previewStat: "0 accounts",
@@ -562,7 +555,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "Gegevens lokaal",
         description:
-          "Vaulted Money is gebouwd rond lokale grootboeken, IndexedDB en optionele bestandsback-ups in plaats van een gehoste database.",
+          "Lokale grootboeken, browseropslag en optionele bestandsback-ups.",
         previewTitle: "Back-up kluis",
         previewMeta: "Versleuteld JSON",
         previewStat: "Auto",
@@ -570,8 +563,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "Open source",
-        description:
-          "De code, routekaart en privacyhouding zijn controleerbaar in de openbare repository.",
+        description: "Code en routekaart zijn openbaar. Bekijk ze op GitHub.",
         previewTitle: "Controleerbare bron",
         previewMeta: "MIT-project",
         previewStat: "Openbaar",
@@ -579,9 +571,9 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "Alles wat nodig is voor een persoonlijk grootboek.",
+      title: "Je geld, op jouw manier.",
       description:
-        "Maak een grootboek, importeer CSV-bestanden, stem rekeningen af, bewaak budgetten, plan terugkerende geldstromen en exporteer back-ups vanuit één lokale app.",
+        "Volg uitgaven, stel budgetten in, importeer CSV en maak back-ups.",
     },
     tools: {
       multiLedger: "Meerdere grootboeken",
@@ -728,7 +720,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       privacy: {
         title: "தனியுரிமை முதலில்",
         description:
-          "கணக்கு தேவையில்லை. நீங்கள் ஏற்றுமதி செய்யாத வரை உங்கள் நிதிப் பதிவுகள் உலாவி அல்லது டெஸ்க்டாப் பயன்பாட்டில் இருக்கும்.",
+          "கணக்கு தேவையில்லை. ஏற்றுமதி செய்யாவிட்டால் தரவு உள்ளூரிலேயே இருக்கும்.",
         previewTitle: "உள்ளமை மட்டும் லெட்ஜர்",
         previewMeta: "உலாவி சேமிப்பு",
         previewStat: "0 கணக்குகள்",
@@ -737,7 +729,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       dataLocal: {
         title: "தரவு உள்ளமை",
         description:
-          "Vaulted Money உள்ளமை லெட்ஜர்கள், IndexedDB மற்றும் விருப்ப கோப்பு காப்புப்பிரதிகளை அடிப்படையாகக் கொண்டது, ஹோஸ்ட் செய்யப்பட்ட தரவுத்தளம் அல்ல.",
+          "உள்ளூர் லெட்ஜர்கள், உலாவி சேமிப்பு, விருப்ப கோப்பு காப்புப்பிரதிகள்.",
         previewTitle: "காப்பு பெட்டகம்",
         previewMeta: "மறையாக்கப்பட்ட JSON",
         previewStat: "தானியங்கி",
@@ -746,7 +738,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       openSource: {
         title: "திறந்த மூலம்",
         description:
-          "குறியீடு, வழிப்படம் மற்றும் தனியுரிமை நிலைப்பாடு பொது களஞ்சியத்தில் தணிக்கை செய்யலாம்.",
+          "குறியீடும் வழிப்படமும் பொதுவில் உள்ளன. GitHub-இல் பார்க்கலாம்.",
         previewTitle: "தணிக்கை செய்யக்கூடிய மூலம்",
         previewMeta: "MIT திட்டம்",
         previewStat: "பொது",
@@ -754,9 +746,9 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
     },
     workflow: {
-      title: "தனிப்பட்ட லெட்ஜரை நிர்வகிக்க தேவையான அனைத்தும்.",
+      title: "உங்கள் பணம், உங்கள் வழியில்.",
       description:
-        "லெட்ஜர் உருவாக்கு, CSV கோப்புகள் இறக்குமதி செய், கணக்குகளை சமரசம் செய், பட்ஜெட்டுகளை கண்காணி, தொடர் பண நகர்வுகளை திட்டமிடு, ஒரு உள்ளமை பயன்பாட்டிலிருந்து காப்புப்பிரதிகளை ஏற்றுமதி செய்.",
+        "செலவுகளைப் பின்தொடர், பட்ஜெட் அமை, CSV இறக்குமதி செய்து காப்பு எடு.",
     },
     tools: {
       multiLedger: "பல-லெட்ஜர் கண்காணிப்பு",
