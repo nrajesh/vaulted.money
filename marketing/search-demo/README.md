@@ -28,7 +28,7 @@ pnpm dev --port 5199 --host 127.0.0.1          # the app, in another terminal
 cd marketing/search-demo
 pip install pillow segno numpy                  # once
 python3 lib/assets.py --url https://vaulted.money --out out/assets.json   # logos + QR code
-node storyboard.cjs                              # records out/take.webm + out/events.json
+node make.cjs videos/search.json                 # records, mixes and writes final/vaulted-money-search.mp4
 python3 lib/compose.py --dir out --speed 1.5 --out final/vaulted-money-search.mp4
 # add  --foley 0.4  for soft keyboard clicks, ticks and chimes (default 0 = quiet background only)
 ```
@@ -41,19 +41,45 @@ under `out/` is generated and git-ignored. `BASE_URL` points at another server.
 
 | File | What it does |
 |---|---|
-| `storyboard.cjs` | The scenes of *this* video, written as plain steps (`caption`, `click`, `type`, `zoomTo`, `toggleTheme`…). |
+| `videos/*.json` | One file per video: the end card, the speed, and the list of steps. This is the only thing you write. |
+| `make.cjs` | The template runner: plays a script's steps, records, then calls `compose.py`. Nothing in it is specific to one feature. |
 | `lib/stage.cjs` | Records the app: demo data, captions, a visible cursor, camera zoom, theme button, phone frame, flip-in end card. Writes `events.json`. |
 | `lib/compose.py` | Builds the sound track: a quiet ambient pad, plus (with `--foley`) keyboard clicks for each key typed, a tick per click, chimes and whooshes; all synthesised, royalty-free, applies the zooms and speed-up, encodes 1080p. |
 | `lib/assets.py` | Crops the light and dark logos and makes the QR code for a URL. |
 
 ## A video for another feature
 
-1. Copy `storyboard.cjs` to `storyboard-<feature>.cjs` and change the scenes. The
-   stage helpers do the heavy lifting; use `caption(html, ms)`, `click(locator)`,
-   `type(text, msPerKey)`, `zoomTo({z, cx, cy}, seconds)`, `sound("chime" | "whoosh" | "sparkle")`.
-2. Mark where the film starts and ends: `mark("intro")` before the first scene.
-3. Run it, then `compose.py` with `--out final/<name>.mp4`.
-4. Look at frames before you share: `ffmpeg -ss 10 -i out.mp4 -vf "fps=1/2,scale=640:-1,tile=3x4" -frames:v 1 sheet.png`.
+Copy `videos/search.json` to `videos/<feature>.json`, change the steps, and run
+`node make.cjs videos/<feature>.json`. That records the app, builds the sound
+and writes the MP4 named by `out` (inside `final/`). Top level keys: `ledger`,
+`speed`, `foley` (0 to 1: how loud the typing and clicks are), `out`, `endCard`
+(`title`, `tagline`, up to three `badges` with `cls` g/b/o, `url`) and `steps`.
+
+A step is `{ "do": "...", ...}`, run in order. A *target* says what to click:
+`{ "role": "option", "name": "regex" }`, `{ "css": "#id" }` or `{ "text": "..." }`;
+add `"in": "phone"` to look inside the phone frame.
+
+| `do` | What it does |
+|---|---|
+| `goto` | `path`, `wait` ms: open a page of the app. |
+| `mark` | `name`: `intro` (film starts here) is required; `end` is added for you. |
+| `caption` | `text`, `ms`: a caption; `""` clears it. Write the blue part as `<b>...</b>` on its own line after `<br>`: white and blue never share a line. |
+| `check` | `text`, `ms`: a single-colour card with a check mark, for a one-line claim. |
+| `anchor` | `name`, `target`: remember where an element is, so a zoom can follow it. |
+| `zoom` | `z`, `cx`, then `anchor` + `dy` (or `cy`), `ease` seconds. `z: 1` pulls back. Captions move into view by themselves. Stay at or below about 1.5. |
+| `click`, `type` | `target`; `text`, `delay` ms per key. `"silent": true` clicks without the cursor (use inside `dissolve`). |
+| `note` / `hideNote` | A small pill beside the typed text (the "typo-tolerant" label). |
+| `glow` | `on`, optional `in`: chips that appear while on, and the suggestion clicked, glow. |
+| `theme` | Clicks the real theme button. |
+| `dissolve` | `steps`, `hold` ms: fade to dark, run the steps unseen, fade back. |
+| `phonePrepare`, `phoneLoad`, `phoneShow` | Load the app in a phone frame (`path`, `excludeTransfers`), wait for it, slide it in. |
+| `sound`, `wait`, `mouse` | `kind` whoosh/sparkle; `ms`; `x`, `y`. |
+| `end` | The finale: the app blurs into the end card, then it turns dark. |
+
+For a step the runner does not have, add a function to `steps` in `make.cjs` and
+use it from any script.
+
+Look at frames before you share: `ffmpeg -i final/x.mp4 -vf "fps=0.75,scale=480:-1,tile=5x5" -frames:v 1 sheet.png`.
 
 Tips learned making this one:
 

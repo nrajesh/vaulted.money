@@ -1,0 +1,316 @@
+{
+ "name": "search",
+ "ledger": "Home Budget",
+ "speed": 1.5,
+ "foley": 0.4,
+ "out": "final/vaulted-money-search.mp4",
+ "endCard": {
+  "title": "Vaulted Money",
+  "tagline": "Natural-language search, built in.",
+  "badges": [
+   {
+    "cls": "g",
+    "text": "Privacy-first"
+   },
+   {
+    "cls": "b",
+    "text": "Data-local"
+   },
+   {
+    "cls": "o",
+    "text": "Open-sourced"
+   }
+  ],
+  "url": "vaulted.money"
+ },
+ "steps": [
+  {
+   "do": "goto",
+   "path": "/transactions",
+   "wait": 2600
+  },
+  {
+   "do": "mouse",
+   "x": 1100,
+   "y": 620
+  },
+  {
+   "do": "mark",
+   "name": "intro"
+  },
+  {
+   "do": "caption",
+   "text": "Ask your budget<br><b>a question</b>",
+   "ms": 1500
+  },
+  {
+   "do": "caption",
+   "text": ""
+  },
+  {
+   "do": "anchor",
+   "name": "search",
+   "target": {
+    "role": "combobox"
+   }
+  },
+  {
+   "do": "zoom",
+   "z": 1.5,
+   "cx": 700,
+   "anchor": "search",
+   "dy": 250,
+   "ease": 1.1
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox"
+   }
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 300
+  },
+  {
+   "do": "caption",
+   "text": "Type it the way you'd say it",
+   "ms": 100
+  },
+  {
+   "do": "type",
+   "text": "expenses over 20 last month in grocries ",
+   "delay": 46
+  },
+  {
+   "do": "wait",
+   "ms": 250
+  },
+  {
+   "do": "note",
+   "text": "✓ typo-tolerant"
+  },
+  {
+   "do": "caption",
+   "text": "Dates. Amounts. Even typos.<br><b>Understood</b>",
+   "ms": 2000
+  },
+  {
+   "do": "hideNote"
+  },
+  {
+   "do": "caption",
+   "text": "Take one filter…",
+   "ms": 300
+  },
+  {
+   "do": "glow",
+   "on": true
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "Category: Groceries"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "caption",
+   "text": "…or everything left, in one tap",
+   "ms": 300
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "Apply all"
+   }
+  },
+  {
+   "do": "mark",
+   "name": "applied"
+  },
+  {
+   "do": "zoom",
+   "z": 1.45,
+   "cx": 700,
+   "anchor": "search",
+   "dy": 210,
+   "ease": 1.0
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "caption",
+   "text": "Every filter is a chip<br><b>you can remove</b>",
+   "ms": 2000
+  },
+  {
+   "do": "glow",
+   "on": false
+  },
+  {
+   "do": "caption",
+   "text": ""
+  },
+  {
+   "do": "dissolve",
+   "hold": 600,
+   "steps": [
+    {
+     "do": "click",
+     "silent": true,
+     "target": {
+      "role": "button",
+      "name": "^Reset$"
+     }
+    },
+    {
+     "do": "zoom",
+     "z": 1,
+     "ease": 0.05
+    },
+    {
+     "do": "phonePrepare",
+     "path": "/transactions",
+     "excludeTransfers": true
+    }
+   ]
+  },
+  {
+   "do": "caption",
+   "text": "Light or dark<br><b>same search</b>",
+   "ms": 200
+  },
+  {
+   "do": "theme"
+  },
+  {
+   "do": "caption",
+   "text": ""
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "#exclude-transfers"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "phoneLoad"
+  },
+  {
+   "do": "anchor",
+   "name": "phoneSearch",
+   "target": {
+    "role": "combobox",
+    "in": "phone"
+   }
+  },
+  {
+   "do": "sound",
+   "kind": "whoosh"
+  },
+  {
+   "do": "zoom",
+   "z": 1.5,
+   "cx": 1579,
+   "anchor": "phoneSearch",
+   "dy": 120,
+   "ease": 1.3
+  },
+  {
+   "do": "phoneShow"
+  },
+  {
+   "do": "caption",
+   "text": "Works on your phone too",
+   "ms": 2300
+  },
+  {
+   "do": "caption",
+   "text": ""
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox",
+    "in": "phone"
+   }
+  },
+  {
+   "do": "caption",
+   "text": "Ask it like a person would",
+   "ms": 100
+  },
+  {
+   "do": "type",
+   "text": "show largest expense in 2 weeks for checking ",
+   "delay": 14
+  },
+  {
+   "do": "wait",
+   "ms": 300
+  },
+  {
+   "do": "caption",
+   "text": "Natural language<br><b>understood</b>",
+   "ms": 1700
+  },
+  {
+   "do": "glow",
+   "on": true,
+   "in": "phone"
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "Apply all",
+    "in": "phone"
+   }
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 400
+  },
+  {
+   "do": "wait",
+   "ms": 1900
+  },
+  {
+   "do": "caption",
+   "text": "Search transactions<br><b>without AI or cloud</b>",
+   "ms": 2400
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 600
+  },
+  {
+   "do": "check",
+   "text": "OpenAPI / Postman API support",
+   "ms": 3800
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 500
+  },
+  {
+   "do": "end"
+  }
+ ]
+}
