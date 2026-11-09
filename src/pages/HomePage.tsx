@@ -497,7 +497,7 @@ const HomePage = () => {
                 className="flex w-[17rem] flex-col gap-0 border-l border-slate-200/60 bg-white/95 px-0 pt-12 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-950/95"
               >
                 <div className="px-5 pb-4">
-                  <p className="app-gradient-title text-lg font-bold tracking-normal">
+                  <p className="text-lg font-bold tracking-normal text-[hsl(var(--brand-accent-text))] dark:text-[hsl(var(--brand-accent-soft))]">
                     Vaulted Money
                   </p>
                 </div>
@@ -580,7 +580,7 @@ const HomePage = () => {
               </span>
             </div>
 
-            <h1 className="app-gradient-title max-w-3xl text-4xl font-black leading-[1.02] tracking-normal sm:text-5xl lg:text-6xl">
+            <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-5xl dark:text-[hsl(var(--brand-accent-soft))] lg:text-6xl">
               Vaulted Money
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-700 dark:text-slate-200 sm:text-xl">
@@ -643,7 +643,7 @@ const HomePage = () => {
       >
         <div className="mx-auto grid max-w-7xl gap-7 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <div>
-            <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
               {t("home.search.title", {
                 defaultValue: "Search in plain English",
               })}
@@ -690,7 +690,7 @@ const HomePage = () => {
         className="scroll-mt-24 px-4 py-10 sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto max-w-7xl">
-          <h2 className="app-gradient-title mb-6 text-3xl font-bold tracking-normal sm:text-4xl">
+          <h2 className="mb-6 text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
             {t("home.differences.title", {
               defaultValue: "How it differs",
             })}
@@ -764,7 +764,7 @@ const HomePage = () => {
       >
         <div className="mx-auto max-w-7xl">
           <div className="mb-8">
-            <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
               {t("home.nav.trust", { defaultValue: "Trust" })}
             </h2>
           </div>
@@ -800,7 +800,7 @@ const HomePage = () => {
                     </p>
                   </div>
                 </div>
-                <h2 className="app-gradient-title mt-4 text-lg font-semibold">
+                <h2 className="mt-4 text-lg font-semibold text-[hsl(var(--brand-accent-text))] dark:text-[hsl(var(--brand-accent-soft))]">
                   {pillar.title}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -819,7 +819,7 @@ const HomePage = () => {
       >
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
               {t("home.nav.workflow", { defaultValue: "Workflow" })}
             </h2>
             <p className="mt-4 text-xl font-medium text-slate-800 dark:text-slate-200">
@@ -876,7 +876,7 @@ const HomePage = () => {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-normal text-[hsl(var(--brand-accent-text))] sm:text-4xl dark:text-[hsl(var(--brand-accent-soft))]">
                 {t("home.nav.roadmap", { defaultValue: "Roadmap" })}
               </h2>
               <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
@@ -982,7 +982,7 @@ const HomePage = () => {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h2 className="app-gradient-title text-3xl font-bold tracking-normal sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-normal text-slate-50 sm:text-4xl">
                 {t("home.nav.install", { defaultValue: "Install" })}
               </h2>
               <p className="mt-4 text-xl font-medium text-slate-300">
@@ -1064,10 +1064,10 @@ const HomePage = () => {
                 <div key={item.title} className="flex gap-3">
                   <item.icon className="icon-brand mt-1 h-5 w-5 shrink-0" />
                   <div>
-                    <h2 className="app-gradient-title text-base font-semibold">
+                    <h2 className="text-base font-semibold text-[hsl(var(--brand-accent-text))] dark:text-[hsl(var(--brand-accent-soft))]">
                       {item.title}
                     </h2>
-                    <p className="mt-1 text-sm leading-6 text-amber-900/80 dark:text-amber-100/80">
+                    <p className="mt-1 text-sm leading-6 text-amber-950 dark:text-amber-100">
                       {item.description}
                     </p>
                   </div>
