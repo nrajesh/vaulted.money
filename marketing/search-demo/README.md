@@ -2,7 +2,7 @@
 
 A ~35-second marketing video for natural-language search: type a sentence, see
 what it understood, pick one filter or all of them, then the same on a phone,
-and finally a card with the three points from the website and a QR code.
+(the camera pushes in on the phone as it slides in, and pulls back to reveal) and finally a card with the three points from the website and a QR code.
 
 The finished video is `final/vaulted-money-search.mp4` (committed on purpose;
 see "Repository rules" below).

@@ -102,26 +102,32 @@ const QUERY_2 = "show me the largest expense coming up in next 2 weeks in checki
   await caption("");
 
   // ---- 4. the same search on a phone -----------------------------------
+  // The camera pushes in on the phone as it slides in, and pulls back out to
+  // reveal the end card.
   zoomTo(FULL, 0.9);
   await wait(800);
   const phone = await phoneReady;
   sound("whoosh");
+  const pb = await phone.getByRole("combobox").first().boundingBox();
+  const PHONE_CAM = { z: 1.7, cx: 1579, cy: pb.y + 120 };
+  zoomTo(PHONE_CAM, 1.2);
+  // The zoom window is 1129x635, clamped to the right edge of the screen.
+  stage.captionAt(1355, Math.max(20, 1080 - (PHONE_CAM.cy + 317) + 36));
   await stage.showPhone();
-  stage.captionAt(560, 44);
   await caption("Works on your phone too", 1000);
   await caption("");
-  const phoneBox = phone.getByRole("combobox").first();
-  await click(phoneBox);
+  await click(phone.getByRole("combobox").first());
   await type(QUERY_2, 12);
   await wait(300);
   await click(phone.getByRole("option", { name: /Apply all/ }));
   sound("chime");
   await wait(2300);
   await caption("Search runs on your device. <b>No AI. No cloud.</b>", 2100);
-  await caption("");
+  await caption("", 450); // let the caption fade before the camera moves
 
   // ---- 5. end card: flip in (light), then turn dark ---------------------
   await stage.hidePhone();
+  zoomTo(FULL, 1.2); // pull back as the end card flips in
   await stage.flipToEndCard();
   sound("whoosh", { gain: 0.14 });
   await wait(2200);
