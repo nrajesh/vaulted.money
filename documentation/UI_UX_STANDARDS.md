@@ -43,7 +43,7 @@ Use one search/filter area per screen:
 - Transactions, Dashboard, Analytics, Reports, and Scheduled: the shared `TransactionSearchBox` (the search box, its "Understood as" suggestions, and the chips for what is applied). Scheduled passes its own filter state and a placeholder; nothing else differs.
 - Management modules: `app-filter-panel` with the module search input. The Accounts list reads its query with the same parser (`filterAccounts` in `src/utils/searchFilters.ts`).
 
-Active filter chips sit with the filter control, before the table shell, and every applied filter (date, accounts, categories, vendors, amount, income/expense, top-N, text) has a chip that removes it.
+The applied-filters row sits **directly above** the search box and is always there: it reads "No filters applied" when empty, so nothing shifts when the first filter is added (only a long list wrapping onto more rows moves the page). It goes above the box, not below, so a pick shows where the eyes already are and the suggestion list opening under the box never covers it. Every applied filter (date, accounts, categories, vendors, amount, income/expense, top-N, text) has a chip that removes it.
 
 The suggestion list never applies anything on its own. Picking a piece applies only that piece and keeps the rest on offer; **Apply all** takes what is left and **Clear** / **Done** end the interaction. Say how filters combine in the interface (every kind must match; several of one kind match either).
 
@@ -58,6 +58,11 @@ Every piece of text meets WCAG AA (4.5:1, or 3:1 for large text) in **both** the
 - Chart legends use the foreground colour, not the series colour.
 
 Boundaries need contrast too (WCAG 1.4.11): the outline of an input, select, search box or outline button, and the off state of a switch, reach **3:1** against the page. They use `--input`, which is deliberately separate from the quieter `--border` used for cards and table rules. Measure both text and outlines when checking a theme; in dark mode `--input` was once 1.05:1, so the search box had no visible edge.
+
+## Phones
+
+- **Rows of buttons are centred** on small screens (`flex flex-wrap justify-center`, left-aligned from `sm:` up) and share the space (`flex-1` with a small `basis`/`max-w`). Do not use an `auto-fit` grid for a row whose last item spans the full width: it keeps an empty column, so the buttons sit left with a gap at the right.
+- **A page is never wider than the screen.** The sidebar's inset area is a flex item and needs `min-w-0` (it has it); any flex or grid child that holds text needs `min-w-0` and `truncate`/wrapping too. One unwrappable line (a long remark, a long placeholder) otherwise stretches the whole page past the screen, which also makes centred content look off-centre. Check by emulating a 390 px phone and comparing `document.documentElement.scrollWidth` with the window width on every screen.
 
 ## Tables And Lists
 

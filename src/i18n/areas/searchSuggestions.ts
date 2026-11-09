@@ -8,6 +8,8 @@ export const searchSuggestions: AreaTranslations = {
   en: {
     filters: {
       active: {
+        none: "No filters applied",
+        label: "Applied filters",
         amountExact: "Amount: {{amount}}",
         amountBetween: "Amount: {{min}} to {{max}}",
         amountOver: "Over {{amount}}",
@@ -51,6 +53,8 @@ export const searchSuggestions: AreaTranslations = {
   es: {
     filters: {
       active: {
+        none: "Sin filtros aplicados",
+        label: "Filtros aplicados",
         amountExact: "Importe: {{amount}}",
         amountBetween: "Importe: de {{min}} a {{max}}",
         amountOver: "Más de {{amount}}",
@@ -94,6 +98,8 @@ export const searchSuggestions: AreaTranslations = {
   zh: {
     filters: {
       active: {
+        none: "未应用任何筛选条件",
+        label: "已应用的筛选条件",
         amountExact: "金额：{{amount}}",
         amountBetween: "金额：{{min}} 至 {{max}}",
         amountOver: "超过 {{amount}}",
@@ -137,6 +143,8 @@ export const searchSuggestions: AreaTranslations = {
   nl: {
     filters: {
       active: {
+        none: "Geen filters toegepast",
+        label: "Toegepaste filters",
         amountExact: "Bedrag: {{amount}}",
         amountBetween: "Bedrag: {{min}} tot {{max}}",
         amountOver: "Meer dan {{amount}}",
@@ -180,6 +188,8 @@ export const searchSuggestions: AreaTranslations = {
   ta: {
     filters: {
       active: {
+        none: "வடிகட்டிகள் எதுவும் பயன்படுத்தப்படவில்லை",
+        label: "பயன்படுத்தப்பட்ட வடிகட்டிகள்",
         amountExact: "தொகை: {{amount}}",
         amountBetween: "தொகை: {{min}} முதல் {{max}} வரை",
         amountOver: "{{amount}}க்கு மேல்",
