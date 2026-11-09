@@ -26,6 +26,7 @@ pip install pillow segno numpy                  # once
 python3 lib/assets.py --url https://vaulted.money --out out/assets.json   # logos + QR code
 node storyboard.cjs                              # records out/take.webm + out/events.json
 python3 lib/compose.py --dir out --speed 1.5 --out final/vaulted-money-search.mp4
+# add  --foley 0.4  for soft keyboard clicks, ticks and chimes (default 0 = quiet background only)
 ```
 
 Needs Node 22, ffmpeg (libx264, aac), and Chromium through Playwright
@@ -38,7 +39,7 @@ under `out/` is generated and git-ignored. `BASE_URL` points at another server.
 |---|---|
 | `storyboard.cjs` | The scenes of *this* video, written as plain steps (`caption`, `click`, `type`, `zoomTo`, `toggleTheme`…). |
 | `lib/stage.cjs` | Records the app: demo data, captions, a visible cursor, camera zoom, theme button, phone frame, flip-in end card. Writes `events.json`. |
-| `lib/compose.py` | Builds the sound track (keyboard clicks for each key typed, a tick per click, chimes, whooshes, a very quiet pad: all synthesised, royalty-free), applies the zooms and speed-up, encodes 1080p. |
+| `lib/compose.py` | Builds the sound track: a quiet ambient pad, plus (with `--foley`) keyboard clicks for each key typed, a tick per click, chimes and whooshes; all synthesised, royalty-free, applies the zooms and speed-up, encodes 1080p. |
 | `lib/assets.py` | Crops the light and dark logos and makes the QR code for a URL. |
 
 ## A video for another feature

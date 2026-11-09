@@ -43,7 +43,7 @@ Use one search/filter area per screen:
 - Transactions, Dashboard, Analytics, Reports, and Scheduled: the shared `TransactionSearchBox` (the search box, its "Understood as" suggestions, and the chips for what is applied). Scheduled passes its own filter state and a placeholder; nothing else differs.
 - Management modules: `app-filter-panel` with the module search input. The Accounts list reads its query with the same parser (`filterAccounts` in `src/utils/searchFilters.ts`).
 
-Active filter chips sit with the filter control, before the table shell, and every applied filter (date, accounts, categories, vendors, amount, income/expense, top-N, text) has a chip that removes it.
+The applied-filters row sits **directly above** the search box and is always there: it reads "No filters applied" when empty, so nothing shifts when the first filter is added (only a long list wrapping onto more rows moves the page). It goes above the box, not below, so a pick shows where the eyes already are and the suggestion list opening under the box never covers it. Every applied filter (date, accounts, categories, vendors, amount, income/expense, top-N, text) has a chip that removes it.
 
 The suggestion list never applies anything on its own. Picking a piece applies only that piece and keeps the rest on offer; **Apply all** takes what is left and **Clear** / **Done** end the interaction. Say how filters combine in the interface (every kind must match; several of one kind match either).
 

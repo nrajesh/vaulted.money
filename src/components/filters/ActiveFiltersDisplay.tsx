@@ -1,4 +1,3 @@
-import { useTransactionFilters } from "@/hooks/transactions/useTransactionFilters";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { slugify } from "@/lib/utils";
 import { format } from "date-fns";
@@ -34,10 +33,6 @@ export interface ActiveFilters {
   sortOrder: "largest" | "smallest" | undefined;
   setSortOrder: (order: "largest" | "smallest" | undefined) => void;
 }
-
-export const ActiveFiltersDisplay = () => (
-  <ActiveFilterChips filters={useTransactionFilters()} />
-);
 
 export const ActiveFilterChips = ({ filters }: { filters: ActiveFilters }) => {
   const { t, i18n } = useTranslation();
@@ -269,11 +264,24 @@ export const ActiveFilterChips = ({ filters }: { filters: ActiveFilters }) => {
     );
   }
 
-  if (chips.length === 0) return null;
-
+  // Always shown, so the page does not jump when the first filter is applied
+  // and it is clear that "nothing" means no filters, not a missing row.
   return (
-    <div className="flex flex-wrap gap-2 text-sm px-1 items-center min-h-[32px]">
-      {chips}
+    <div
+      role="group"
+      aria-live="polite"
+      aria-label={t("filters.active.label", {
+        defaultValue: "Applied filters",
+      })}
+      className="flex min-h-[32px] flex-wrap items-center gap-2 px-1 text-sm"
+    >
+      {chips.length > 0 ? (
+        chips
+      ) : (
+        <span className="text-muted-foreground">
+          {t("filters.active.none", { defaultValue: "No filters applied" })}
+        </span>
+      )}
     </div>
   );
 };

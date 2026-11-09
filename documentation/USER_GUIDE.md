@@ -57,7 +57,7 @@ The search box above your transactions, on the Dashboard, Analytics, Reports and
 - `between 2025 jul and sep`, `2 weeks from today`, `in 3 months`
 - `€100`, `between 10 and 20`, `top 5 expenses`, `the largest expense coming up in next 2 weeks in checking account`
 
-Each understood piece is its own row with an icon: date, amount, income or expense, account, category, vendor and leftover text. Pick one to apply it, and the others stay on offer until you press **Done** or **Clear**. **Apply all** takes whatever is left. Applied filters show as chips under the box; click a chip to remove it. Nothing is applied until you pick it.
+Each understood piece is its own row with an icon: date, amount, income or expense, account, category, vendor and leftover text. Pick one to apply it, and the others stay on offer until you press **Done** or **Clear**. **Apply all** takes whatever is left. Applied filters show as chips in a row above the box (it reads "No filters applied" when there are none); click a chip to remove it. Nothing is applied until you pick it.
 
 Naming an account ("in checking account") narrows the search to that account instead of adding it to the accounts the page already has selected; naming a second account adds it. "Largest" or "smallest" with no number means just one.
 

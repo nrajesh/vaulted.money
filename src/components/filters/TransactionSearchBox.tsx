@@ -105,6 +105,9 @@ export const TransactionSearchBox = ({ filters, placeholder }: Props) => {
 
   return (
     <div className="w-full space-y-4">
+      {/* Above the box, so what was picked shows where the eyes are, and the
+          suggestion list opening below never covers it. */}
+      <ActiveFilterChips filters={filters} />
       <ConversationalSearchInput
         onUpdate={handleUpdate}
         placeholder={placeholder}
@@ -113,7 +116,6 @@ export const TransactionSearchBox = ({ filters, placeholder }: Props) => {
         accounts={entities.accounts}
         vendors={entities.vendors}
       />
-      <ActiveFilterChips filters={filters} />
     </div>
   );
 };
