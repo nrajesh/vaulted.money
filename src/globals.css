@@ -110,7 +110,7 @@
     --destructive-foreground: 210 40% 98%;
     --destructive-text: 0 91% 71%;
 
-    --border: 217.2 32.6% 17.5%;
+    --border: 215 16% 30%;
     /* Form-control outlines must reach 3:1 against the page (WCAG 1.4.11); the
        old value was 1.05:1, i.e. invisible. Decorative --border stays subtle. */
     --input: 215 16% 47%;
@@ -160,6 +160,10 @@
 @layer base {
   * {
     border-color: hsl(var(--border));
+  }
+
+  table tr {
+    border-color: hsl(var(--table-rule));
   }
 
   body {
@@ -212,15 +216,15 @@
   }
 
   .app-action-panel {
-    @apply w-full rounded-xl border border-slate-200 bg-white/60 p-3 backdrop-blur-sm dark:border-slate-800 dark:bg-black/20;
+    @apply w-full rounded-xl border border-slate-200 bg-white/60 p-3 backdrop-blur-sm dark:border-border dark:bg-black/20;
   }
 
   .app-filter-panel {
-    @apply w-full rounded-xl border border-slate-200 bg-white/50 p-3 backdrop-blur-sm dark:border-slate-800 dark:bg-black/20;
+    @apply w-full rounded-xl border border-slate-200 bg-white/50 p-3 backdrop-blur-sm dark:border-border dark:bg-black/20;
   }
 
   .app-section-card {
-    @apply w-full rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm dark:border-slate-800 dark:bg-black/20;
+    @apply w-full rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm dark:border-border dark:bg-black/20;
   }
 
   .app-table-shell {

@@ -24,6 +24,13 @@ export const homeLanding: AreaTranslations = {
         example2: "starbuks since 2020",
         example3: "largest expense 2 weeks from today",
       },
+      usage: {
+        ai: {
+          title: "AI, when you choose",
+          description:
+            "AI features are optional. Use them on your terms; connect an agent from desktop.",
+        },
+      },
       differences: {
         title: "How it differs",
         privateTitle: "Private by design",
@@ -78,6 +85,13 @@ export const homeLanding: AreaTranslations = {
         example1: "expenses over 20 last month in groceries",
         example2: "starbuks since 2020",
         example3: "largest expense 2 weeks from today",
+      },
+      usage: {
+        ai: {
+          title: "IA, cuando tú quieras",
+          description:
+            "Las funciones de IA son opcionales. Úsalas a tu manera y conecta agentes desde escritorio.",
+        },
       },
       differences: {
         title: "Qué lo hace diferente",
@@ -134,6 +148,12 @@ export const homeLanding: AreaTranslations = {
         example2: "starbuks since 2020",
         example3: "largest expense 2 weeks from today",
       },
+      usage: {
+        ai: {
+          title: "AI，由你选择",
+          description: "AI 功能可选。按自己的方式使用，也可在桌面端连接助手。",
+        },
+      },
       differences: {
         title: "产品特点",
         privateTitle: "隐私融入设计",
@@ -187,6 +207,13 @@ export const homeLanding: AreaTranslations = {
         example1: "expenses over 20 last month in groceries",
         example2: "starbuks since 2020",
         example3: "largest expense 2 weeks from today",
+      },
+      usage: {
+        ai: {
+          title: "AI, als jij dat wilt",
+          description:
+            "AI-functies zijn optioneel. Gebruik ze op jouw manier en verbind agents via de desktopapp.",
+        },
       },
       differences: {
         title: "Wat maakt het anders",
@@ -244,6 +271,13 @@ export const homeLanding: AreaTranslations = {
         example1: "expenses over 20 last month in groceries",
         example2: "starbuks since 2020",
         example3: "largest expense 2 weeks from today",
+      },
+      usage: {
+        ai: {
+          title: "நீங்கள் தேர்ந்தெடுத்தால் AI",
+          description:
+            "AI அம்சங்கள் விருப்பமானவை. உங்கள் விருப்பப்படி பயன்படுத்துங்கள்; டெஸ்க்டாப்பில் முகவரை இணைக்கலாம்.",
+        },
       },
       differences: {
         title: "இதன் வேறுபாடு",

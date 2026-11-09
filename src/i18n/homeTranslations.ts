@@ -144,19 +144,13 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "Bring your history with CSV",
-        description:
-          "Start with a ledger, then import bank exports from the Transactions screen. Mapping columns once makes future imports faster.",
+        title: "Import bank CSVs",
+        description: "Map columns once. Future imports take less time.",
       },
       backup: {
-        title: "Back up before you rely on the browser",
+        title: "Keep a backup",
         description:
-          "Local-first means your data is yours, but private windows, browser resets, or clearing site data can erase local storage.",
-      },
-      automate: {
-        title: "Automate a backup rhythm",
-        description:
-          "Use encrypted or plain JSON exports, and enable automated backups when your browser or desktop platform supports it.",
+          "Browser data can be cleared. Export a backup, or enable automatic backups where supported.",
       },
     },
     stores: {
@@ -317,19 +311,14 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "Trae tu historial con CSV",
+        title: "Importa archivos CSV del banco",
         description:
-          "Comienza con un libro, luego importa extractos bancarios desde la pantalla de Transacciones. Mapear las columnas una vez hace que futuras importaciones sean más rápidas.",
+          "Asigna las columnas una vez y agiliza las próximas importaciones.",
       },
       backup: {
-        title: "Haz respaldo antes de depender del navegador",
+        title: "Guarda una copia",
         description:
-          "Local-first significa que tus datos son tuyos, pero ventanas privadas, reinicios del navegador o borrar datos del sitio pueden eliminar el almacenamiento local.",
-      },
-      automate: {
-        title: "Automatiza un ritmo de respaldo",
-        description:
-          "Usa exportaciones JSON cifradas o en texto plano, y habilita respaldos automáticos cuando tu navegador o plataforma de escritorio lo permita.",
+          "Los datos del navegador se pueden borrar. Exporta una copia o activa las automáticas si están disponibles.",
       },
     },
     stores: {
@@ -484,19 +473,13 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "用 CSV 导入你的历史记录",
-        description:
-          "从创建账本开始，然后在交易页面导入银行导出文件。映射一次列后，未来的导入会更快。",
+        title: "导入银行 CSV",
+        description: "列名只需映射一次，之后导入更快。",
       },
       backup: {
-        title: "在依赖浏览器之前做好备份",
+        title: "保留备份",
         description:
-          "本地优先意味着数据是你的，但隐私窗口、浏览器重置或清除站点数据可能会擦除本地存储。",
-      },
-      automate: {
-        title: "建立自动备份节奏",
-        description:
-          "使用加密或纯文本 JSON 导出，并在浏览器或桌面平台支持时启用自动备份。",
+          "浏览器数据可能被清除。请导出备份，或在支持的平台启用自动备份。",
       },
     },
     stores: {
@@ -657,19 +640,13 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "Breng je geschiedenis mee met CSV",
-        description:
-          "Begin met een grootboek en importeer vervolgens bankexports via het Transactiescherm. Eénmaal kolommen toewijzen maakt toekomstige imports sneller.",
+        title: "Importeer bank-CSV's",
+        description: "Koppel kolommen één keer. Daarna importeer je sneller.",
       },
       backup: {
-        title: "Maak een back-up voordat je op de browser vertrouwt",
+        title: "Bewaar een back-up",
         description:
-          "Lokaal-eerst betekent dat je gegevens van jou zijn, maar privévensters, browserresets of het wissen van sitegegevens kunnen lokale opslag verwijderen.",
-      },
-      automate: {
-        title: "Automatiseer een back-up ritme",
-        description:
-          "Gebruik versleutelde of platte JSON-exports en schakel automatische back-ups in wanneer je browser of desktopplatform dit ondersteunt.",
+          "Browsergegevens kunnen worden gewist. Exporteer een back-up of schakel automatische back-ups in waar dat kan.",
       },
     },
     stores: {
@@ -833,19 +810,14 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     usage: {
       csv: {
-        title: "CSV மூலம் உங்கள் வரலாற்றை கொண்டு வாருங்கள்",
+        title: "வங்கி CSV-களை இறக்குமதி செய்யுங்கள்",
         description:
-          "லெட்ஜரில் தொடங்கி, பரிவர்த்தனைகள் திரையில் வங்கி ஏற்றுமதிகளை இறக்குமதி செய்யுங்கள். நெடுவரிசைகளை ஒருமுறை மேப்பிங் செய்தால் எதிர்கால இறக்குமதிகள் வேகமாகும்.",
+          "நெடுவரிசைகளை ஒருமுறை வரைபடமிடுங்கள். அடுத்த இறக்குமதி வேகமாகும்.",
       },
       backup: {
-        title: "உலாவியை நம்புவதற்கு முன் காப்புப்பிரதி எடுங்கள்",
+        title: "காப்புப்பிரதி வைத்திருங்கள்",
         description:
-          "உள்ளமை-முதல் என்பது உங்கள் தரவு உங்களுடையது, ஆனால் தனிப்பட்ட சாளரங்கள், உலாவி மீட்டமைப்புகள் அல்லது தள தரவை அழிப்பது உள்ளமை சேமிப்பை நீக்கலாம்.",
-      },
-      automate: {
-        title: "காப்பு தாளத்தை தானியக்கமாக்குங்கள்",
-        description:
-          "மறையாக்கப்பட்ட அல்லது சாதாரண JSON ஏற்றுமதிகளைப் பயன்படுத்தி, உங்கள் உலாவி அல்லது டெஸ்க்டாப் தளம் ஆதரிக்கும்போது தானியங்கி காப்புப்பிரதிகளை இயக்குங்கள்.",
+          "உலாவி தரவு அழிக்கப்படலாம். காப்பை ஏற்றுமதி செய்யுங்கள் அல்லது ஆதரிக்கப்படும் இடங்களில் தானியங்கி காப்பை இயக்குங்கள்.",
       },
     },
     stores: {

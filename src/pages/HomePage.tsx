@@ -10,13 +10,13 @@ import {
   Menu,
   Moon,
   Search,
+  Sparkles,
   Sun,
 } from "lucide-react";
 import {
   Archive,
   BookOpen,
   Coins,
-  Download,
   GitFork,
   HardDrive,
   Lock,
@@ -206,21 +206,21 @@ const HomePage = () => {
     {
       icon: Archive,
       title: t("home.usage.backup.title", {
-        defaultValue: "Back up before you rely on the browser",
+        defaultValue: "Keep a backup",
       }),
       description: t("home.usage.backup.description", {
         defaultValue:
-          "Local-first means your data is yours, but private windows, browser resets, or clearing site data can erase local storage.",
+          "Browser data can be cleared. Export a backup, or enable automatic backups where supported.",
       }),
     },
     {
-      icon: Download,
-      title: t("home.usage.automate.title", {
-        defaultValue: "Automate a backup rhythm",
+      icon: Sparkles,
+      title: t("home.usage.ai.title", {
+        defaultValue: "AI, when you choose",
       }),
-      description: t("home.usage.automate.description", {
+      description: t("home.usage.ai.description", {
         defaultValue:
-          "Use encrypted or plain JSON exports, and enable automated backups when your browser or desktop platform supports it.",
+          "AI features are optional. Use them on your terms; connect an agent from desktop.",
       }),
     },
   ];
@@ -404,7 +404,7 @@ const HomePage = () => {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-background pt-16 text-foreground sm:pt-24">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 px-3 shadow-sm backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/90 sm:px-4">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 px-3 shadow-sm backdrop-blur dark:border-border/80 dark:bg-slate-950/90 sm:px-4">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3">
           <Link
             to="/"
@@ -414,7 +414,7 @@ const HomePage = () => {
             <BrandLockup size="header" />
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900/70 lg:flex">
+          <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 text-sm shadow-sm dark:border-border dark:bg-slate-900/70 lg:flex">
             <a
               href="#search"
               className="rounded-full px-3 py-2 font-medium text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-950/60 dark:hover:text-sky-200"
@@ -494,14 +494,14 @@ const HomePage = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="flex w-[17rem] flex-col gap-0 border-l border-slate-200/60 bg-white/95 px-0 pt-12 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-950/95"
+                className="flex w-[17rem] flex-col gap-0 border-l border-slate-200/60 bg-white/95 px-0 pt-12 backdrop-blur-xl dark:border-border/60 dark:bg-slate-950/95"
               >
                 <div className="px-5 pb-4">
                   <p className="text-lg font-bold tracking-normal text-[hsl(var(--brand-accent-text))] dark:text-[hsl(var(--brand-accent-soft))]">
                     Vaulted Money
                   </p>
                 </div>
-                <nav className="flex flex-col gap-0.5 border-t border-slate-200/60 px-3 pt-3 dark:border-slate-800/60">
+                <nav className="flex flex-col gap-0.5 border-t border-slate-200/60 px-3 pt-3 dark:border-border/60">
                   {[
                     {
                       href: "#search",
@@ -544,7 +544,7 @@ const HomePage = () => {
                     </a>
                   ))}
                 </nav>
-                <div className="mt-auto border-t border-slate-200/60 px-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4 dark:border-slate-800/60">
+                <div className="mt-auto border-t border-slate-200/60 px-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4 dark:border-border/60">
                   <Button
                     asChild
                     className="h-11 w-full rounded-lg bg-[hsl(var(--brand-accent))] text-[0.95rem] font-semibold text-white hover:bg-[hsl(var(--brand-accent-strong))]"
@@ -565,7 +565,7 @@ const HomePage = () => {
       </header>
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,hsl(var(--background)),rgba(248,250,252,0.72))] px-4 pt-6 pb-2 dark:border-slate-800 dark:bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--secondary)/0.45))] sm:py-8 lg:py-10">
+      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,hsl(var(--background)),rgba(248,250,252,0.72))] px-4 pt-6 pb-2 dark:border-border dark:bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--secondary)/0.45))] sm:py-8 lg:py-10">
         <div className="mx-auto grid max-w-7xl items-center gap-7 sm:gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)]">
           <div className="max-w-2xl">
             <div className="mb-5 flex flex-wrap items-center gap-2 text-xs font-medium">
@@ -615,7 +615,7 @@ const HomePage = () => {
           </div>
 
           <div className="min-w-0">
-            <div className="group relative overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-xl shadow-slate-950/10 dark:border-slate-700 dark:shadow-black/30">
+            <div className="group relative overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-xl shadow-slate-950/10 dark:border-slate-600 dark:shadow-black/30">
               <video
                 ref={demoVideoRef}
                 className="aspect-video w-full bg-slate-950 object-cover"
@@ -631,7 +631,7 @@ const HomePage = () => {
                 controls
                 preload={prefersReducedMotion ? "none" : "metadata"}
               />
-              <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/30 bg-slate-950/85 px-3 py-1 text-xs font-semibold text-white opacity-100 shadow-sm transition-opacity motion-reduce:transition-none sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent px-4 pb-4 pt-14 text-3xl font-black leading-none tracking-tight text-white drop-shadow sm:text-4xl">
                 {t("home.hero.videoTitle", {
                   defaultValue: "Ask. Don’t Search.",
                 })}
@@ -644,7 +644,7 @@ const HomePage = () => {
       {/* ── Search examples ──────────────────────────────────────────────── */}
       <section
         id="search"
-        className="scroll-mt-24 border-b border-slate-200 bg-slate-50 px-4 py-10 dark:border-slate-800 dark:bg-slate-900/55 sm:scroll-mt-28 sm:py-12"
+        className="scroll-mt-24 border-b border-slate-200 bg-slate-50 px-4 py-10 dark:border-border dark:bg-slate-900/55 sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto grid max-w-7xl gap-7 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <div>
@@ -700,7 +700,7 @@ const HomePage = () => {
               defaultValue: "How it differs",
             })}
           </h2>
-          <ul className="divide-y divide-slate-200 border-y border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+          <ul className="divide-y divide-table-rule border-y border-table-rule">
             {[
               {
                 icon: Shield,
@@ -774,9 +774,9 @@ const HomePage = () => {
             {trustPillars.map((pillar) => (
               <article
                 key={pillar.title}
-                className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+                className="rounded-lg border border-slate-200 bg-white p-4 dark:border-border dark:bg-slate-900"
               >
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/70">
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-border dark:bg-slate-950/70">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white dark:bg-slate-900">
@@ -817,7 +817,7 @@ const HomePage = () => {
       {/* ── Workflow ──────────────────────────────────────────────────────── */}
       <section
         id="workflow"
-        className="scroll-mt-24 border-y border-slate-200 bg-slate-50 px-4 py-10 dark:border-slate-800 dark:bg-slate-900/55 sm:scroll-mt-28 sm:py-12"
+        className="scroll-mt-24 border-y border-slate-200 bg-slate-50 px-4 py-10 dark:border-border dark:bg-slate-900/55 sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
@@ -858,7 +858,7 @@ const HomePage = () => {
             {moneyTools.map((tool) => (
               <div
                 key={tool.label}
-                className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/60"
+                className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-border dark:bg-slate-950/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800">
                   <tool.icon className="icon-brand h-5 w-5" />
@@ -873,7 +873,7 @@ const HomePage = () => {
       {/* ── Roadmap ───────────────────────────────────────────────────────── */}
       <section
         id="roadmap"
-        className="scroll-mt-24 border-y border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.98))] px-4 py-10 dark:border-slate-800 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] sm:scroll-mt-28 sm:py-12"
+        className="scroll-mt-24 border-y border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.98))] px-4 py-10 dark:border-border dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -891,7 +891,7 @@ const HomePage = () => {
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,15rem)_1fr]">
-            <div className="rounded-xl border border-slate-200 bg-white/85 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/65">
+            <div className="rounded-xl border border-slate-200 bg-white/85 p-5 shadow-sm dark:border-border dark:bg-slate-950/65">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                 {t("home.roadmap.snapshot", { defaultValue: "Snapshot" })}
               </p>
@@ -910,7 +910,7 @@ const HomePage = () => {
             </div>
 
             <div className="relative">
-              <div className="absolute left-[1.1rem] top-0 bottom-0 hidden w-px bg-slate-200 dark:bg-slate-800 sm:block" />
+              <div className="absolute left-[1.1rem] top-0 bottom-0 hidden w-px bg-slate-200 dark:bg-table-rule sm:block" />
               <div className="space-y-4">
                 {roadmapMilestones.map((item) => (
                   <article
@@ -931,7 +931,7 @@ const HomePage = () => {
                           "bg-violet-500 shadow-violet-500/25",
                       )}
                     />
-                    <div className="rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
+                    <div className="rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-border dark:bg-slate-950/70">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
@@ -979,7 +979,7 @@ const HomePage = () => {
       {/* ── Install ───────────────────────────────────────────────────────── */}
       <section
         id="install"
-        className="scroll-mt-24 border-t border-slate-200 bg-slate-950 px-4 py-10 text-slate-50 dark:border-slate-800 sm:scroll-mt-28 sm:py-12"
+        className="scroll-mt-24 border-t border-slate-200 bg-slate-950 px-4 py-10 text-slate-50 dark:border-border sm:scroll-mt-28 sm:py-12"
       >
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
