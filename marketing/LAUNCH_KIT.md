@@ -68,15 +68,45 @@ r/LocalFirst.
 - openalternative.co, opensourcealternative.to, selfh.st
 - F-Droid (Android) once there is a reproducible release build
 
-## GitHub repository settings (two minutes, owner only)
+## GitHub repository settings (owner only)
 
-- **About → Website:** https://vaulted.money
-- **About → Description:** Private, local-first personal finance. No account, open source, plain-English search without AI.
-- **Topics:** personal-finance, budgeting, expense-tracker, local-first, privacy, offline-first, self-hosted, open-source, electron, capacitor, react, typescript, mcp, indexeddb
-- **Social preview image:** upload `public/og-image.png`
+The description, website link and topics are already set. Two things are left:
+
+- **Social preview image:** Settings → General → Social preview → upload `public/og-image.png`. Without it, a shared repository link shows GitHub's generic card.
+- **Topics worth adding:** `mcp`, `offline-first`, `budgeting`, `capacitor`.
 
 ## Search engines
 
 Add the site in Google Search Console and Bing Webmaster Tools and submit
 `https://vaulted.money/sitemap.xml`. Without this, new pages can take weeks to
 be indexed.
+
+## Session Replay (github.com/nrajesh/session-replay)
+
+Its README already explains itself well, so the work is getting it seen.
+
+**Repository settings:** add a social preview image (a frame from `docs/screenshots/session.png`), and the topics `claude`, `ai-coding`, `session-history`, `transcripts`.
+
+**Where its users are:** r/ClaudeAI and r/ClaudeCode, the community "awesome Claude Code" lists and plugin directories (each takes a pull request or a form), and Hacker News.
+
+**Show HN title:** Show HN: Session Replay – private, searchable replays of your Claude Code sessions
+
+**Post body:**
+
+> I kept losing track of why a change was made: which prompt, which decision,
+> which commit. Session Replay is a Claude Code plugin that turns your session
+> transcripts into local pages you can search and step through.
+>
+> - Search prompts, decisions, commits and files across every project, typos included
+> - Replay a session as a timeline of checkpoints, with the tests that ran and the commits that came out
+> - Calendar, day view and usage totals
+> - Keeps sessions after Claude Code cleans up old transcripts
+>
+> It runs on your Mac and makes no network calls: no account, no analytics, and
+> common secrets are hidden before pages are written. Needs Node.js 24. MIT.
+>
+> Install inside Claude Code:
+> `/plugin marketplace add nrajesh/session-replay` then
+> `/plugin install session-replay@session-replay`
+>
+> https://github.com/nrajesh/session-replay
