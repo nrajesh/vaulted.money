@@ -102,6 +102,14 @@ describe("ConnectToAgentPanel", () => {
   it("leaves no timer behind after unmount", async () => {
     vi.useFakeTimers();
     try {
+      // jsdom 31 starts a one-off timer of its own on the first render in a
+      // document. Render once and drop it so only this component's timers count.
+      renderPanel();
+      selectChoice(/Claude Code/);
+      await vi.advanceTimersByTimeAsync(0);
+      cleanup();
+      vi.clearAllTimers();
+
       renderPanel();
       selectChoice(/Claude Code/);
       fireEvent.click(screen.getByRole("button", { name: "Copy commands" }));
