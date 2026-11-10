@@ -72,7 +72,7 @@ r/LocalFirst.
 
 The description, website link and topics are already set. Two things are left:
 
-- **Social preview image:** Settings → General → Social preview → upload `public/og-image.png`. Without it, a shared repository link shows GitHub's generic card.
+- **Social preview image:** Settings → General → Social preview → upload `public/og-image.png`. Without it, a shared repository link shows GitHub's generic card. The same picture is what appears when someone shares vaulted.money in a chat or on social media. Light and dark versions for the README are in `documentation/readme/hero-*.png`.
 - **Topics worth adding:** `mcp`, `offline-first`, `budgeting`, `capacitor`.
 
 ## Search engines
