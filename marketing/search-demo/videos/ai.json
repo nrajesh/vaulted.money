@@ -1,0 +1,459 @@
+{
+ "name": "ai",
+ "ledger": "Home Budget",
+ "speed": 1.5,
+ "foley": 0.4,
+ "out": "final/vaulted-money-ai.mp4",
+ "aiStandIn": {
+  "port": 5198,
+  "delayMs": 2600
+ },
+ "endCard": {
+  "title": "Vaulted Money",
+  "tagline": "AI, your call.",
+  "badges": [
+   {
+    "cls": "g",
+    "text": "Off by default"
+   },
+   {
+    "cls": "b",
+    "text": "Your own key"
+   },
+   {
+    "cls": "o",
+    "text": "Open-sourced"
+   }
+  ],
+  "url": "vaulted.money"
+ },
+ "setup": [
+  {
+   "do": "goto",
+   "path": "/ai-providers",
+   "wait": 1500
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "#ai-features"
+   }
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Add AI Provider"
+   },
+   "wait": 900
+  },
+  {
+   "do": "fill",
+   "target": {
+    "css": "[role=dialog] input[name=name]"
+   },
+   "text": "Demo provider (stand-in)"
+  },
+  {
+   "do": "fill",
+   "target": {
+    "css": "[role=dialog] input[name=model]"
+   },
+   "text": "demo-model"
+  },
+  {
+   "do": "fill",
+   "target": {
+    "css": "[role=dialog] input[name=baseUrl]"
+   },
+   "text": "{{standIn}}"
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=dialog] button[role=checkbox]"
+   }
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Save Provider"
+   },
+   "wait": 1500
+  },
+  {
+   "do": "goto",
+   "path": "/settings",
+   "wait": 2000
+  },
+  {
+   "do": "fill",
+   "target": {
+    "css": ".tour-settings-ai input"
+   },
+   "text": "demo-key"
+  },
+  {
+   "do": "wait",
+   "ms": 800
+  },
+  {
+   "do": "goto",
+   "path": "/transactions",
+   "wait": 2500
+  },
+  {
+   "do": "upload",
+   "target": {
+    "css": "input[type=file]"
+   },
+   "file": "videos/data/ai-uncategorised.csv"
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "^Next$"
+   },
+   "wait": 1200
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Import Transactions"
+   },
+   "wait": 5000
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox"
+   },
+   "wait": 300
+  },
+  {
+   "do": "keys",
+   "text": "last 2 days "
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "^Date:"
+   },
+   "wait": 1200
+  },
+  {
+   "do": "goto",
+   "path": "/ai-providers",
+   "wait": 1500
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "#ai-features"
+   },
+   "wait": 800
+  }
+ ],
+ "steps": [
+  {
+   "do": "goto",
+   "path": "/ai-providers",
+   "wait": 2600
+  },
+  {
+   "do": "mouse",
+   "x": 900,
+   "y": 560
+  },
+  {
+   "do": "mark",
+   "name": "intro"
+  },
+  {
+   "do": "caption",
+   "text": "AI in your budget?<br><b>Your call</b>",
+   "ms": 1700,
+   "size": 44
+  },
+  {
+   "do": "caption",
+   "text": ""
+  },
+  {
+   "do": "anchor",
+   "name": "switch",
+   "target": {
+    "css": "#ai-features"
+   }
+  },
+  {
+   "do": "zoom",
+   "z": 1.5,
+   "cx": 640,
+   "anchor": "switch",
+   "dy": 130,
+   "ease": 1.1
+  },
+  {
+   "do": "wait",
+   "ms": 1200
+  },
+  {
+   "do": "caption",
+   "text": "Off means off<br><b>nothing is sent</b>",
+   "ms": 2400
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 300
+  },
+  {
+   "do": "caption",
+   "text": "One switch turns it on",
+   "ms": 300
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "#ai-features"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 1200
+  },
+  {
+   "do": "zoom",
+   "z": 1.5,
+   "cx": 640,
+   "cy": 560,
+   "ease": 0.9
+  },
+  {
+   "do": "wait",
+   "ms": 1100
+  },
+  {
+   "do": "caption",
+   "text": "It uses the provider<br><b>you set up</b>",
+   "ms": 2400
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 300
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 1.0
+  },
+  {
+   "do": "mouse",
+   "x": 24,
+   "y": 300
+  },
+  {
+   "do": "wait",
+   "ms": 700
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "link",
+    "name": "^Transactions$"
+   }
+  },
+  {
+   "do": "mouse",
+   "x": 900,
+   "y": 470
+  },
+  {
+   "do": "wait",
+   "ms": 1300
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox"
+   }
+  },
+  {
+   "do": "type",
+   "text": "uncategorized ",
+   "delay": 40
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "glow",
+   "on": true
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "Category: Uncategorized"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "caption",
+   "text": "Imported rows<br><b>with no category</b>",
+   "ms": 2600,
+   "size": 44
+  },
+  {
+   "do": "glow",
+   "on": false
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 300
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Categorize Missing"
+   }
+  },
+  {
+   "do": "mark",
+   "name": "categorize"
+  },
+  {
+   "do": "caption",
+   "text": "Vendor names go to<br><b>your provider</b>",
+   "ms": 2500,
+   "size": 44
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 900
+  },
+  {
+   "do": "caption",
+   "text": "None left<br><b>uncategorised</b>",
+   "ms": 2200,
+   "size": 44
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 300
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=group] .cursor-pointer",
+    "hasText": "Uncategorized"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "glowRows",
+   "target": {
+    "css": "tbody tr",
+    "hasText": "Bean & Leaf|PageTurner|Starlight|Crumb Bakery|FitZone|GreenCross|Metro Transit|Bloom Florist|Paws Vet"
+   }
+  },
+  {
+   "do": "caption",
+   "text": "Categories<br><b>filled in</b>",
+   "ms": 3000,
+   "size": 44
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 300
+  },
+  {
+   "do": "caption",
+   "text": "Light or dark<br><b>same switch</b>",
+   "ms": 200,
+   "size": 44
+  },
+  {
+   "do": "theme"
+  },
+  {
+   "do": "caption",
+   "text": ""
+  },
+  {
+   "do": "mouse",
+   "x": 24,
+   "y": 300
+  },
+  {
+   "do": "wait",
+   "ms": 700
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "link",
+    "name": "AI & agents"
+   }
+  },
+  {
+   "do": "mouse",
+   "x": 900,
+   "y": 620
+  },
+  {
+   "do": "wait",
+   "ms": 1400
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "link",
+    "name": "Connect agent"
+   }
+  },
+  {
+   "do": "mouse",
+   "x": 900,
+   "y": 960
+  },
+  {
+   "do": "wait",
+   "ms": 1200
+  },
+  {
+   "do": "caption",
+   "text": "Agents connect<br><b>in the desktop app</b>",
+   "ms": 3000,
+   "size": 44
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "ms": 500
+  },
+  {
+   "do": "end"
+  }
+ ],
+ "app": "desktop",
+ "captionSize": 30
+}

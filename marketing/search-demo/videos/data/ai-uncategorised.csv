@@ -1,0 +1,10 @@
+Date,Account,Vendor,Category,Amount,Remarks,Currency,Frequency,End Date
+{{today}},Joint Checking,Bean & Leaf Cafe,,-8.40,Flat white and croissant,EUR,,
+{{today}},Joint Checking,PageTurner Books,,-24.90,Two paperbacks,EUR,,
+{{today}},Joint Checking,Starlight Cinema,,-21.00,Two tickets,EUR,,
+{{today}},Joint Checking,Crumb Bakery,,-6.20,Sourdough loaf,EUR,,
+{{today}},Joint Checking,FitZone Gym,,-29.00,Monthly pass,EUR,,
+{{today-1}},Joint Checking,GreenCross Pharmacy,,-13.75,Cold remedies,EUR,,
+{{today-1}},Joint Checking,Metro Transit,,-32.00,Monthly top-up,EUR,,
+{{today-1}},Joint Checking,Bloom Florist,,-18.50,Birthday bouquet,EUR,,
+{{today-1}},Joint Checking,Paws Vet Clinic,,-54.00,Annual check-up,EUR,,

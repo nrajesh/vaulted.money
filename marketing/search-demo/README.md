@@ -19,6 +19,38 @@ Android apps wrap), not a picture.
 
 There is **no watch app**, so the video does not show one.
 
+## The videos
+
+| Script | Video | Title | What it shows |
+|---|---|---|---|
+| `videos/search.json` | `final/vaulted-money-search.mp4` | Search | Natural-language search, on desktop and phone. |
+| `videos/ai.json` | `final/vaulted-money-ai.mp4` | AI, Your Call | The AI switch off, then on; **Categorize Missing** on rows filtered to Uncategorized; the same in light theme, ending on the **Connect agent** tab. Filmed in the desktop app. |
+
+**AI, Your Call: what is real and what is not.** The app, the switch, the
+button, the progress window and the categories written to the rows are all the
+real app. The provider is a stand-in (`lib/standin-ai.cjs`) on this computer,
+so a take needs no key and is repeatable. The app sends it the same request a
+real provider would get, and it answers by keyword instead of with a model. The
+provider is named "Demo provider (stand-in)" on screen. Off camera, the script
+adds that provider through the real dialog, saves a made-up key in Ledger
+settings, imports nine made-up rows without a category
+(`videos/data/ai-uncategorised.csv`) through the real Import CSV dialog,
+filters the list to the last two days and turns AI off again.
+
+The captions say vendor names go to the provider, which is what the app sent
+(`out/standin-requests.json` holds the request: vendor names and the category
+list, no amounts, dates or accounts). They do not say data stays on the device,
+because with a real provider it does not. Vendors the ledger has seen before
+are matched from history without the provider (three older Lidl rows here,
+which is why the app reports 12 categorised for nine new rows). The glow on the
+rows that were filled in is a video highlight (`glowRows`), not app UI.
+
+This video is filmed in the desktop app (`"app": "desktop"`), because the
+Connect agent tab only works there; on the web it is greyed out. The video only
+opens that tab. It does not switch "Allow agents to connect" on, so no Local
+API server is started during a take. The desktop app is built for macOS,
+Windows and Linux, so the caption says "desktop app", not "Mac app".
+
 ## Make it
 
 ```bash
@@ -29,6 +61,7 @@ cd marketing/search-demo
 pip install pillow segno numpy                  # once
 python3 lib/assets.py --url https://vaulted.money --out out/assets.json   # logos + QR code
 node make.cjs videos/search.json                 # records, mixes and writes final/vaulted-money-search.mp4
+node make.cjs videos/ai.json                     # the same for final/vaulted-money-ai.mp4
 python3 lib/compose.py --dir out --speed 1.5 --out final/vaulted-money-search.mp4
 # add  --foley 0.4  for soft keyboard clicks, ticks and chimes (default 0 = quiet background only)
 ```
@@ -46,6 +79,7 @@ under `out/` is generated and git-ignored. `BASE_URL` points at another server.
 | `lib/stage.cjs` | Records the app: demo data, captions, a visible cursor, camera zoom, theme button, phone frame, flip-in end card. Writes `events.json`. |
 | `lib/compose.py` | Builds the sound track: a quiet ambient pad, plus (with `--foley`) keyboard clicks for each key typed, a tick per click, chimes and whooshes; all synthesised, royalty-free, applies the zooms and speed-up, encodes 1080p. |
 | `lib/assets.py` | Crops the light and dark logos and makes the QR code for a URL. |
+| `lib/standin-ai.cjs` | A stand-in AI provider on 127.0.0.1 for videos that show AI categorisation. |
 
 ## A video for another feature
 
@@ -54,6 +88,25 @@ Copy `videos/search.json` to `videos/<feature>.json`, change the steps, and run
 and writes the MP4 named by `out` (inside `final/`). Top level keys: `ledger`,
 `speed`, `foley` (0 to 1: how loud the typing and clicks are), `out`, `endCard`
 (`title`, `tagline`, up to three `badges` with `cls` g/b/o, `url`) and `steps`.
+
+`"app": "desktop"` films the real desktop app (Electron) instead of Chromium.
+Run `pnpm electron:compile` first. The app is started with a throwaway profile
+folder under `out/`, deleted after the take, so it never opens or changes the
+data of a Vaulted Money installed on the same computer. Its window appears on
+screen while recording; leave it alone. `captionSize` sets the caption size
+for the whole video, and a caption step's `size` for one caption (30 by
+default; about 44 reads well on a phone when the camera is pulled back).
+
+Two optional keys prepare the app before filming:
+
+- `setup`: steps run off camera on the real app, after the demo data is made
+  and before the recording starts: `goto`, `wait`, `click` (`target`), `fill`
+  (`target`, `text`), `keys` (`text`, typed into whatever has focus) and
+  `upload` (`target`, `file`). In an uploaded file `{{today}}` and
+  `{{today-1}}` become dates, so no script holds a fixed date. Say in this
+  README what a video's setup does.
+- `aiStandIn` (`port`, `delayMs`): starts the stand-in AI provider for the
+  take. `{{standIn}}` in a `fill` step becomes its address.
 
 A step is `{ "do": "...", ...}`, run in order. A *target* says what to click:
 `{ "role": "option", "name": "regex" }`, `{ "css": "#id" }` or `{ "text": "..." }`;
@@ -70,6 +123,7 @@ add `"in": "phone"` to look inside the phone frame.
 | `click`, `type` | `target`; `text`, `delay` ms per key. `"silent": true` clicks without the cursor (use inside `dissolve`). |
 | `note` / `hideNote` | A small pill beside the typed text (the "typo-tolerant" label). |
 | `glow` | `on`, optional `in`: chips that appear while on, and the suggestion clicked, glow. |
+| `glowRows` | `target`: every table row it matches glows, e.g. `{ "css": "tbody tr", "hasText": "regex" }`. |
 | `theme` | Clicks the real theme button. |
 | `dissolve` | `steps`, `hold` ms: fade to dark, run the steps unseen, fade back. |
 | `phonePrepare`, `phoneLoad`, `phoneShow` | Load the app in a phone frame (`path`, `excludeTransfers`), wait for it, slide it in. |
@@ -81,7 +135,12 @@ use it from any script.
 
 Look at frames before you share: `ffmpeg -i final/x.mp4 -vf "fps=0.75,scale=480:-1,tile=5x5" -frames:v 1 sheet.png`.
 
-Tips learned making this one:
+Tips learned making these:
+
+- The sidebar opens when the mouse is over it and its links move, so move the
+  mouse onto it (`mouse`), `wait`, then click the link by name.
+- Moving between pages by clicking in the app keeps the captions and cursor; a
+  second `goto` reloads the page and must not be used inside a `dissolve`.
 
 - Keep captions inside the zoomed area (`captionAt(x, bottom)`); a caption at the
   bottom of the screen disappears when the camera zooms in.
