@@ -1,17 +1,23 @@
-# Vaulted Money
+<p align="center">
+  <a href="https://vaulted.money/ledgers?demo=1"><img src="public/og-image.png" alt="Vaulted Money: Ask your ledger. Keep control. Private, local-first personal finance." width="820" /></a>
+</p>
 
-Local-first. No account. Open source. Search in plain English—no AI or cloud.
+<h1 align="center">Vaulted Money</h1>
 
-[Watch the natural-language search demo](marketing/search-demo/final/vaulted-money-search.mp4)
+<p align="center">
+  <b>A money tracker that lives on your device, not on someone else's server.</b><br/>
+  No account. No cloud. Open source. Search it in plain English, with no AI needed.
+</p>
 
-[Try it with demo data](https://vaulted.money/ledgers?demo=1)
-
-## How It Differs
-
-- **Private by design:** no account; your data stays local unless exported.
-- **Plain-English search:** dates, amounts, typos, and largest or smallest. No AI or cloud.
-- **Your AI agent:** connect over MCP from the desktop app.
-- **Scriptable:** desktop Local API with OpenAPI and Postman.
+<p align="center">
+  <a href="https://vaulted.money/ledgers?demo=1"><b>▶ Try it with demo data</b></a>
+  &nbsp;·&nbsp;
+  <a href="marketing/search-demo/final/vaulted-money-search.mp4">Watch the search demo</a>
+  &nbsp;·&nbsp;
+  <a href="documentation/GETTING_STARTED.md">Getting started</a>
+  &nbsp;·&nbsp;
+  <a href="documentation/README.md">All docs</a>
+</p>
 
 [![CircleCI Build](https://img.shields.io/circleci/build/github/nrajesh/vaulted.money/main?logo=circleci&style=for-the-badge&token=CCIPRJ_Vr8m8ZBprdRweVA3p3Zuf1_ec111876745b6b9fe207e3e3bbbfbbf28de994d9)](https://app.circleci.com/pipelines/github/nrajesh/vaulted.money)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/nrajesh/vaulted.money)
@@ -22,6 +28,50 @@ Local-first. No account. Open source. Search in plain English—no AI or cloud.
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Electron](https://img.shields.io/badge/Electron-191970?style=for-the-badge&logo=electron&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+## How It Differs
+
+| | Most finance apps | Vaulted Money |
+| --- | --- | --- |
+| 🔒 **Where your data lives** | On the company's servers | On your device. It leaves only when you export it. |
+| 👤 **Signing up** | Email, password, often a bank login | Nothing. Open it and start. |
+| 🔎 **Finding things** | Filters and dropdowns | Type "groceries over 50 last month". No AI or cloud involved. |
+| 🤖 **AI** | Increasingly built in by default | Off until you switch it on, with your own key or your own agent. |
+| 🧰 **Automation** | Rarely scriptable | A desktop Local API with OpenAPI and a Postman collection. |
+| 📖 **Trust** | Take their word for it | Read the code. MIT licensed. |
+
+## How It Works, In One Picture
+
+```mermaid
+flowchart LR
+    You(["👤 You"]):::ui
+
+    subgraph Device["🔒 Your device"]
+        direction LR
+        App["Vaulted Money<br/>browser, desktop or phone"]:::logic
+        Ledger[("Your ledger")]:::store
+        Backup["Encrypted backup file"]:::out
+        App <--> Ledger
+        App -- "you export" --> Backup
+    end
+
+    AI["AI provider<br/>your own key"]:::ext
+    Agent["Your AI agent<br/>desktop only"]:::ext
+
+    You --> App
+    App -. "only if you switch AI on" .-> AI
+    Agent -. "only if you allow it" .-> App
+
+    style Device fill:none,stroke:#0f766e,stroke-width:3px
+    classDef ui fill:#2563eb,stroke:#93c5fd,stroke-width:2px,color:#ffffff
+    classDef logic fill:#7c3aed,stroke:#c4b5fd,stroke-width:2px,color:#ffffff
+    classDef store fill:#15803d,stroke:#86efac,stroke-width:2px,color:#ffffff
+    classDef ext fill:#be123c,stroke:#fda4af,stroke-width:2px,color:#ffffff
+    classDef out fill:#334155,stroke:#94a3b8,stroke-width:2px,color:#ffffff
+    linkStyle default stroke:#64748b,stroke-width:2px
+```
+
+Solid arrows always happen. Dotted arrows happen only after you switch something on. There is no Vaulted Money server in the picture because there isn't one. More diagrams are in [Architecture](documentation/ARCHITECTURE.md).
 
 ## What Is Vaulted Money?
 
@@ -80,7 +130,7 @@ That starts the local web app, compiles the Electron files, and opens the deskto
 
 ## Read Next
 
-The README is intentionally short. Use these pages for the details:
+The README is intentionally short. Use these pages for the details, or open the [documentation map](documentation/README.md) to see every page and how they connect.
 
 | Page                                                           | Best For                                                                         |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -90,7 +140,8 @@ The README is intentionally short. Use these pages for the details:
 | [Developer Guide](documentation/DEVELOPER_GUIDE.md)            | Project structure, quality checks, AI provider notes, and contribution workflow. |
 | [Local API](documentation/API.md)                              | Desktop REST API for scripts: manage data and generate reports and backups.      |
 | [API cookbook](documentation/API_COOKBOOK.md)                  | Recipes for using the app without the GUI, and for building your own interface.  |
-| [Architecture](documentation/ARCHITECTURE.md)                  | Technical diagrams and system design.                                            |
+| [Architecture](documentation/ARCHITECTURE.md)                  | How it fits together, in pictures, starting with a 60-second version.            |
+| [Documentation map](documentation/README.md)                   | Every page, who it is for, and how they link to each other.                      |
 | [Why Vaulted Money Exists](documentation/WHY_VAULTED_MONEY.md) | Motivation, privacy stance, and project philosophy.                              |
 | [Support](documentation/SUPPORT.md)                            | How to get help.                                                                 |
 
