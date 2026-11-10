@@ -1,5 +1,10 @@
 <p align="center">
-  <a href="https://vaulted.money/ledgers?demo=1"><img src="public/og-image.png" alt="Vaulted Money: Ask your ledger. Keep control. Private, local-first personal finance." width="820" /></a>
+  <a href="https://vaulted.money/ledgers?demo=1">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="documentation/readme/hero-dark.png">
+      <img src="documentation/readme/hero-light.png" alt="Vaulted Money: Ask your ledger. Keep control. The app turning the sentence 'groceries over 50 last month' into date, amount and category filters." width="820" />
+    </picture>
+  </a>
 </p>
 
 <h1 align="center">Vaulted Money</h1>
