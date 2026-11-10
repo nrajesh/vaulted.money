@@ -13,6 +13,29 @@ export const homeLanding: AreaTranslations = {
         videoTitle: "Ask. Don’t Search.",
         videoFullscreen: "Full screen",
       },
+      demos: {
+        title: "See it in action",
+        intro:
+          "Short videos of the real app. Nothing loads until you press play.",
+        play: "Play video: {{title}}",
+        comingSoon: "Coming soon",
+        ai: {
+          title: "AI, Your Call",
+          body: "AI stays off until you switch it on.",
+        },
+        claude: {
+          title: "Claude, Meet Ledger",
+          body: "Claude imports years of transactions, after you approve.",
+        },
+        api: {
+          title: "Your Ledger, Scriptable",
+          body: "A documented API on your own computer.",
+        },
+        sync: {
+          title: "One Ledger, Two Devices",
+          body: "Carry a ledger through a folder you choose.",
+        },
+      },
       nav: {
         search: "Search",
         differences: "How it differs",
@@ -78,6 +101,29 @@ export const homeLanding: AreaTranslations = {
         videoLabel: "Vídeo de demostración de búsqueda en lenguaje natural",
         videoTitle: "Pregunta. No busques.",
         videoFullscreen: "Pantalla completa",
+      },
+      demos: {
+        title: "Míralo en acción",
+        intro:
+          "Vídeos cortos de la app real. Nada se carga hasta que pulsas reproducir.",
+        play: "Reproducir vídeo: {{title}}",
+        comingSoon: "Próximamente",
+        ai: {
+          title: "IA, tú decides",
+          body: "La IA sigue apagada hasta que la enciendes.",
+        },
+        claude: {
+          title: "Claude y tu libro",
+          body: "Claude importa años de movimientos, cuando tú lo apruebas.",
+        },
+        api: {
+          title: "Tu libro, programable",
+          body: "Una API documentada en tu propio ordenador.",
+        },
+        sync: {
+          title: "Un libro, dos dispositivos",
+          body: "Lleva tu libro en una carpeta que tú eliges.",
+        },
       },
       nav: {
         search: "Búsqueda",
@@ -147,6 +193,28 @@ export const homeLanding: AreaTranslations = {
         videoTitle: "直接提问，不用搜索",
         videoFullscreen: "全屏",
       },
+      demos: {
+        title: "看看实际效果",
+        intro: "真实应用的短视频。点击播放前不会加载任何内容。",
+        play: "播放视频：{{title}}",
+        comingSoon: "即将推出",
+        ai: {
+          title: "AI，由你决定",
+          body: "在你打开之前，AI 一直关闭。",
+        },
+        claude: {
+          title: "Claude 遇见账本",
+          body: "经你批准后，Claude 导入多年的交易。",
+        },
+        api: {
+          title: "账本可编程",
+          body: "运行在你自己电脑上的、有文档的 API。",
+        },
+        sync: {
+          title: "一个账本，两台设备",
+          body: "通过你选择的文件夹携带账本。",
+        },
+      },
       nav: {
         search: "搜索",
         differences: "产品特点",
@@ -208,6 +276,29 @@ export const homeLanding: AreaTranslations = {
         videoLabel: "Demovideo voor zoeken in gewone taal",
         videoTitle: "Vraag. Niet zoeken.",
         videoFullscreen: "Volledig scherm",
+      },
+      demos: {
+        title: "Zie het in actie",
+        intro:
+          "Korte video’s van de echte app. Er laadt niets tot je op afspelen drukt.",
+        play: "Video afspelen: {{title}}",
+        comingSoon: "Binnenkort",
+        ai: {
+          title: "AI, jij beslist",
+          body: "AI blijft uit tot jij het aanzet.",
+        },
+        claude: {
+          title: "Claude ontmoet je grootboek",
+          body: "Claude importeert jaren aan transacties, na jouw akkoord.",
+        },
+        api: {
+          title: "Je grootboek, scriptbaar",
+          body: "Een gedocumenteerde API op je eigen computer.",
+        },
+        sync: {
+          title: "Eén grootboek, twee apparaten",
+          body: "Neem je grootboek mee via een map die jij kiest.",
+        },
       },
       nav: {
         search: "Zoeken",
@@ -276,6 +367,29 @@ export const homeLanding: AreaTranslations = {
         videoLabel: "இயல்பான மொழித் தேடல் விளக்கக் காணொளி",
         videoTitle: "கேளுங்கள். தேட வேண்டாம்.",
         videoFullscreen: "முழுத்திரை",
+      },
+      demos: {
+        title: "செயலில் பாருங்கள்",
+        intro:
+          "உண்மையான செயலியின் குறுங்காணொளிகள். இயக்கும் வரை எதுவும் ஏற்றப்படாது.",
+        play: "காணொளியை இயக்கு: {{title}}",
+        comingSoon: "விரைவில்",
+        ai: {
+          title: "AI, உங்கள் முடிவு",
+          body: "நீங்கள் இயக்கும் வரை AI அணைந்தே இருக்கும்.",
+        },
+        claude: {
+          title: "Claude, லெட்ஜரைச் சந்தி",
+          body: "நீங்கள் ஒப்புதல் அளித்த பின் Claude பல ஆண்டுப் பரிவர்த்தனைகளை இறக்குமதி செய்கிறது.",
+        },
+        api: {
+          title: "உங்கள் லெட்ஜர், நிரலாக்கக்கூடியது",
+          body: "உங்கள் கணினியிலேயே ஆவணப்படுத்தப்பட்ட API.",
+        },
+        sync: {
+          title: "ஒரு லெட்ஜர், இரண்டு சாதனங்கள்",
+          body: "நீங்கள் தேர்ந்தெடுக்கும் கோப்புறை வழியாக லெட்ஜரை எடுத்துச் செல்லுங்கள்.",
+        },
       },
       nav: {
         search: "தேடல்",

@@ -36,6 +36,8 @@ import { showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import SiteFooter from "@/components/SiteFooter";
 import BrandLockup from "@/components/BrandLockup";
+import HomeDemoCards from "@/components/homepage/HomeDemoCards";
+import { DEMO_VIDEO_ATTRIBUTE, pauseOtherDemoVideos } from "@/utils/demoVideos";
 import searchDemoVideo from "../../marketing/search-demo/final/vaulted-money-search.mp4";
 import searchDemoPoster from "@/assets/search-demo-poster.svg";
 
@@ -579,6 +581,8 @@ const HomePage = () => {
             <div className="group relative overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-xl shadow-slate-950/10 dark:border-slate-600 dark:shadow-black/30">
               <video
                 ref={demoVideoRef}
+                {...{ [DEMO_VIDEO_ATTRIBUTE]: "" }}
+                onPlay={(event) => pauseOtherDemoVideos(event.currentTarget)}
                 className="aspect-video w-full bg-slate-950 object-cover"
                 src={searchDemoVideo}
                 poster={searchDemoPoster}
@@ -619,6 +623,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* ── Demo videos, one card per selling point ─────────────────────── */}
+      <HomeDemoCards />
 
       {/* ── Search examples ──────────────────────────────────────────────── */}
       <section
