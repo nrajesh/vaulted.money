@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/dexieDB";
 import { LocalDataProvider } from "@/providers/LocalDataProvider";
 import { handleApiRequest } from "./handleRequest";
@@ -1485,6 +1485,49 @@ describe("maintenance: transfers, duplicates, categorize, reconcile", () => {
     const noAi = await call("POST", url, { use_ai: true });
     expect(noAi.status).toBe(400);
     expect(noAi.body).toMatchObject({ error: { code: "ai_not_configured" } });
+
+    // A hosted provider still needs its key.
+    const hosted = await ok<{ id: string }>(
+      call("POST", "/ai-providers", {
+        name: "Hosted",
+        type: "OPENAI",
+        baseUrl: "https://api.openai.com/v1",
+        isDefault: true,
+      }),
+      201,
+    );
+    const noKey = await call("POST", url, { use_ai: true });
+    expect(noKey.status).toBe(400);
+    expect(noKey.body).toMatchObject({ error: { code: "ai_not_configured" } });
+    await call("DELETE", `/ai-providers/${hosted.id}`);
+
+    // A local model (custom, OpenAI-compatible) runs without a key, so the
+    // request goes ahead and carries no Authorization header.
+    await ok(
+      call("POST", "/ai-providers", {
+        name: "Local",
+        type: "CUSTOM",
+        baseUrl: "http://localhost:1234/v1",
+        isDefault: true,
+      }),
+      201,
+    );
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("server not running"));
+    try {
+      const local = await call("POST", url, { use_ai: true });
+      expect(local.status).toBe(502);
+      expect(local.body).toMatchObject({ error: { code: "ai_failed" } });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const headers = (fetchSpy.mock.calls[0][1]?.headers ?? {}) as Record<
+        string,
+        string
+      >;
+      expect(headers.Authorization).toBeUndefined();
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 
   it("reconciles account balances", async () => {

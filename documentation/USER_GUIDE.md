@@ -91,7 +91,9 @@ Supported provider types include Gemini, OpenAI, Anthropic, Mistral, Perplexity,
 
 API keys stay local and are not exported in backups. You must re-enter keys on a new device.
 
-The **AI & agents** page has a master **AI features** switch and two tabs: **AI Providers** and **Connect agent**. Connecting an agent (Claude, Codex, a local model) needs the desktop app, so on the web the second tab is greyed out and says so.
+The **AI & agents** page holds everything AI in one place: a master **AI features** switch and two bars you can open and close, each green when ready: **AI inside the app** (providers, their API keys and models, used by Auto-categorize) and **Chat with your data from an AI agent** (Claude, Codex or a local model, plus the Local API port and token). The two are independent: **Allow agents to connect** switches agent access and the Local API on and off, and does not affect AI inside the app. Connecting an agent needs the desktop app, so on the web that section says so. A model running on your own computer needs no API key: choose **Custom (OpenAI Compatible)**, enter its address, click **Load models** and select your model.
+
+**Settings** shows the open ledger's own settings first, then the ones that apply to every ledger on the device. Settings, AI & agents, Languages, Currencies and Backup also open with no ledger open: use the **Settings** button on the ledger screen.
 
 ## Backups
 

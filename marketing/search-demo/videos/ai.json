@@ -69,10 +69,11 @@
    "text": "{{standIn}}"
   },
   {
-   "do": "click",
+   "do": "fill",
    "target": {
-    "css": "[role=dialog] button[role=checkbox]"
-   }
+    "css": "[role=dialog] input[name=apiKey]"
+   },
+   "text": "demo-key"
   },
   {
    "do": "click",
@@ -81,22 +82,6 @@
     "name": "Save Provider"
    },
    "wait": 1500
-  },
-  {
-   "do": "goto",
-   "path": "/settings",
-   "wait": 2000
-  },
-  {
-   "do": "fill",
-   "target": {
-    "css": ".tour-settings-ai input"
-   },
-   "text": "demo-key"
-  },
-  {
-   "do": "wait",
-   "ms": 800
   },
   {
    "do": "goto",
@@ -426,8 +411,8 @@
   {
    "do": "click",
    "target": {
-    "role": "link",
-    "name": "Connect agent"
+    "role": "button",
+    "name": "Chat with your data from an AI agent"
    }
   },
   {

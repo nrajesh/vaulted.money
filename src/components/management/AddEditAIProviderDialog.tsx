@@ -28,15 +28,26 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { showError, showSuccess } from "@/utils/toast";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { AIProvider } from "@/types/dataProvider";
 import { buildGeminiUrl } from "@/hooks/useAutoCategorize";
-import { readAiApiKeyFromStorage } from "@/constants/aiApiKeyStorage";
-import { fetchProviderModels } from "@/utils/aiModels";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import {
+  readAiApiKeyFromStorage,
+  removeAiApiKeyFromStorage,
+  writeAiApiKeyToStorage,
+} from "@/constants/aiApiKeyStorage";
+import {
+  bearerHeader,
+  fetchProviderModels,
+  isAiReady,
+  looksLikeEmbeddingModel,
+  providerNeedsApiKey,
+} from "@/utils/aiModels";
+import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
@@ -100,6 +111,8 @@ interface AddEditAIProviderDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   provider?: AIProvider | null;
   onSuccess?: () => void;
+  /** True when no provider exists yet, so the new one is put to use at once. */
+  isFirstProvider?: boolean;
 }
 
 const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
@@ -107,6 +120,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   onOpenChange,
   provider,
   onSuccess,
+  isFirstProvider = false,
 }) => {
   const { t } = useTranslation();
   const dataProvider = useDataProvider();
@@ -141,32 +155,44 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
         baseUrl: "",
         model: "",
         description: "",
-        isDefault: false,
+        // The first provider is the one to use; nobody should have to go and
+        // switch it on somewhere else.
+        isDefault: isFirstProvider,
       });
     }
-  }, [provider, form, isOpen]);
+    // The key lives beside the provider it belongs to, never in the database.
+    setApiKey(provider?.id ? readAiApiKeyFromStorage(provider.id) : "");
+    setModels([]);
+    setTypeModelByHand(false);
+  }, [provider, form, isOpen, isFirstProvider]);
 
+  const [apiKey, setApiKey] = React.useState("");
   const [isTesting, setIsTesting] = React.useState(false);
   const [models, setModels] = React.useState<string[]>([]);
   const [isLoadingModels, setIsLoadingModels] = React.useState(false);
+  // After a list has loaded the field is a dropdown; this switches it back.
+  const [typeModelByHand, setTypeModelByHand] = React.useState(false);
+
+  // A local model has no key, so only hosted providers are stopped here.
+  const hasUsableKey = (values: z.infer<FormSchema>) => {
+    if (isAiReady(values, apiKey)) return true;
+    showError(
+      t("aiHub.dialog.needKey", {
+        defaultValue: "Enter the API key for this provider first.",
+      }),
+    );
+    return false;
+  };
 
   // Asks the provider which models this key can use, so the list is never stale.
   const handleLoadModels = async () => {
     const values = form.getValues();
-    const apiKey = provider?.id ? readAiApiKeyFromStorage(provider.id) : "";
-    if (!apiKey) {
-      showError(
-        t("aiProviders.dialog.needKey", {
-          defaultValue:
-            "Please save the provider and set an API key in Settings first to test.",
-        }),
-      );
-      return;
-    }
+    if (!hasUsableKey(values)) return;
     setIsLoadingModels(true);
     try {
       const found = await fetchProviderModels(values, apiKey);
       setModels(found ?? []);
+      setTypeModelByHand(false);
       showSuccess(
         t("aiProviders.dialog.modelsLoaded", {
           count: found?.length ?? 0,
@@ -187,17 +213,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
 
   const handleTestConnection = async () => {
     const values = form.getValues();
-    const apiKey = provider?.id ? readAiApiKeyFromStorage(provider.id) : "";
-
-    if (!apiKey) {
-      showError(
-        t("aiProviders.dialog.needKey", {
-          defaultValue:
-            "Please save the provider and set an API key in Settings first to test.",
-        }),
-      );
-      return;
-    }
+    if (!hasUsableKey(values)) return;
 
     setIsTesting(true);
     try {
@@ -226,7 +242,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
           values.type === "CUSTOM" ||
           values.type === "PERPLEXITY" ||
           values.type === "MISTRAL"
-            ? { Authorization: `Bearer ${apiKey}` }
+            ? bearerHeader(apiKey)
             : {}),
           ...(values.type === "ANTHROPIC"
             ? {
@@ -304,6 +320,12 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
     }
   };
 
+  // Keys stay in this device's local storage and never enter a backup.
+  const saveKey = (providerId: string) => {
+    if (apiKey.trim()) writeAiApiKeyToStorage(providerId, apiKey.trim());
+    else removeAiApiKeyFromStorage(providerId);
+  };
+
   const onSubmit = async (values: z.infer<FormSchema>) => {
     try {
       if (provider) {
@@ -311,13 +333,15 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
           ...values,
           id: provider.id,
         });
+        saveKey(provider.id);
         showSuccess(
           t("aiProviders.dialog.updated", {
             defaultValue: "AI Provider updated successfully!",
           }),
         );
       } else {
-        await dataProvider.addAIProvider(values);
+        const created = await dataProvider.addAIProvider(values);
+        saveKey(created.id);
         showSuccess(
           t("aiProviders.dialog.added", {
             defaultValue: "AI Provider added successfully!",
@@ -336,10 +360,17 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
     }
   };
 
+  const watchedType = form.watch("type");
+  const watchedModel = form.watch("model");
+  const keyNeeded = providerNeedsApiKey({ type: watchedType });
+  const sectionTitle = "text-sm font-semibold";
+  const hint = "text-xs text-muted-foreground";
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      {/* Header and footer stay put; only the fields scroll on short screens. */}
+      <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1.5rem)] flex-col gap-0 p-0 sm:max-w-[540px]">
+        <DialogHeader className="border-b px-5 py-4 text-left">
           <DialogTitle>
             {provider
               ? t("aiProviders.dialog.titleEdit", {
@@ -350,259 +381,388 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                 })}
           </DialogTitle>
           <DialogDescription>
-            {provider
-              ? t("aiProviders.dialog.descriptionEdit", {
-                  defaultValue:
-                    "Update the configuration for this AI model provider.",
-                })
-              : t("aiProviders.dialog.descriptionAdd", {
-                  defaultValue:
-                    "Add a new AI endpoint for auto-categorization.",
-                })}
+            {t("aiHub.dialog.intro", {
+              defaultValue:
+                "Say where the AI is, pick a model, then test it. Three short steps.",
+            })}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("aiProviders.dialog.name", {
-                      defaultValue: "Provider Name",
-                    })}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("aiProviders.dialog.namePlaceholder", {
-                        defaultValue: "e.g., Local Llama, Mistral Beta",
-                      })}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-4">
+              <section className="space-y-4">
+                <h3 className={sectionTitle}>
+                  {t("aiHub.dialog.stepWhere", {
+                    defaultValue: "1. Where the AI is",
+                  })}
+                </h3>
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("aiHub.dialog.kind", { defaultValue: "Provider" })}
+                      </FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          const newType = value as keyof typeof PROVIDER_DOCS;
+                          field.onChange(newType);
 
-            <div className="grid gap-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t("aiProviders.dialog.apiType", {
-                        defaultValue: "API Type",
-                      })}
-                    </FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => {
-                        const newType = value as keyof typeof PROVIDER_DOCS;
-                        field.onChange(newType);
+                          // Auto-fill endpoint if current is empty or matches another provider's default
+                          const currentUrl = form.getValues("baseUrl");
+                          const isDefaultUrl = Object.values(
+                            PROVIDER_DOCS,
+                          ).some((d) => d.endpoint === currentUrl);
+                          if (!currentUrl || isDefaultUrl) {
+                            form.setValue(
+                              "baseUrl",
+                              PROVIDER_DOCS[newType].endpoint,
+                            );
+                          }
+                          // Another provider has other models.
+                          setModels([]);
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="text-left [&>span]:text-left">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="CUSTOM">
+                            {t("aiHub.dialog.customOption", {
+                              defaultValue:
+                                "A model on my computer, or another OpenAI-compatible server",
+                            })}
+                          </SelectItem>
+                          <SelectItem value="OPENAI">OpenAI</SelectItem>
+                          <SelectItem value="GEMINI">Google Gemini</SelectItem>
+                          <SelectItem value="ANTHROPIC">Anthropic</SelectItem>
+                          <SelectItem value="MISTRAL">Mistral</SelectItem>
+                          <SelectItem value="PERPLEXITY">Perplexity</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                        // Auto-fill endpoint if current is empty or matches another provider's default
-                        const currentUrl = form.getValues("baseUrl");
-                        const isDefaultUrl = Object.values(PROVIDER_DOCS).some(
-                          (d) => d.endpoint === currentUrl,
-                        );
-                        if (!currentUrl || isDefaultUrl) {
-                          form.setValue(
-                            "baseUrl",
-                            PROVIDER_DOCS[newType].endpoint,
-                          );
-                        }
-                      }}
-                    >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("aiProviders.dialog.name", {
+                          defaultValue: "Provider Name",
+                        })}
+                      </FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="OPENAI">OpenAI</SelectItem>
-                        <SelectItem value="GEMINI">Google Gemini</SelectItem>
-                        <SelectItem value="ANTHROPIC">Anthropic</SelectItem>
-                        <SelectItem value="MISTRAL">Mistral</SelectItem>
-                        <SelectItem value="PERPLEXITY">Perplexity</SelectItem>
-                        <SelectItem value="CUSTOM">
-                          {t("aiProviders.dialog.customOption", {
-                            defaultValue: "Custom (OpenAI Compatible)",
+                        <Input
+                          placeholder={t("aiProviders.dialog.namePlaceholder", {
+                            defaultValue: "e.g., Local Llama, Mistral Beta",
                           })}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {PROVIDER_DOCS[field.value as keyof typeof PROVIDER_DOCS]
-                      ?.url && (
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="baseUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("aiProviders.dialog.baseUrl", {
+                          defaultValue: "Base URL (Endpoint)",
+                        })}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://api.openai.com/v1"
+                          inputMode="url"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className={hint}>
+                        {keyNeeded
+                          ? t("aiHub.dialog.urlHintHosted", {
+                              defaultValue:
+                                "Filled in for you. Change it only if you use a proxy.",
+                            })
+                          : t("aiHub.dialog.urlHintLocal", {
+                              defaultValue:
+                                "The address your model server shows. LM Studio uses http://localhost:1234/v1 and Ollama http://localhost:11434/v1.",
+                            })}
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-2">
+                  <Label htmlFor="ai-provider-api-key">
+                    {keyNeeded
+                      ? t("aiHub.dialog.apiKey", { defaultValue: "API key" })
+                      : t("aiHub.dialog.apiKeyOptional", {
+                          defaultValue:
+                            "API key (not needed for a local model)",
+                        })}
+                  </Label>
+                  <Input
+                    id="ai-provider-api-key"
+                    name="apiKey"
+                    type="password"
+                    autoComplete="off"
+                    value={apiKey}
+                    onChange={(event) => setApiKey(event.target.value)}
+                    placeholder={
+                      keyNeeded
+                        ? t("aiHub.dialog.apiKeyPlaceholder", {
+                            defaultValue: "Paste your key",
+                          })
+                        : t("aiHub.dialog.apiKeyBlank", {
+                            defaultValue: "Leave blank",
+                          })
+                    }
+                  />
+                  <p className={hint}>
+                    {t("aiHub.dialog.apiKeyHint", {
+                      defaultValue:
+                        "Stored on this device only. It is never included in backups or exports.",
+                    })}{" "}
+                    {keyNeeded && PROVIDER_DOCS[watchedType]?.url && (
                       <a
-                        href={
-                          PROVIDER_DOCS[
-                            field.value as keyof typeof PROVIDER_DOCS
-                          ].url
-                        }
+                        href={PROVIDER_DOCS[watchedType].url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline inline-block mt-1"
+                        className="underline underline-offset-4 hover:text-foreground"
                       >
-                        {t("aiProviders.dialog.docs", {
-                          defaultValue: "View Documentation & Models →",
+                        {t("aiHub.dialog.docs", {
+                          defaultValue: "Provider documentation",
                         })}
                       </a>
                     )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </p>
+                </div>
+              </section>
 
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between gap-2">
-                      <FormLabel>
-                        {t("aiProviders.dialog.model", {
-                          defaultValue: "Model ID (Optional)",
-                        })}
-                      </FormLabel>
-                      {form.watch("type") !== "PERPLEXITY" && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-xs"
-                          disabled={isLoadingModels}
-                          onClick={handleLoadModels}
-                        >
-                          {isLoadingModels && (
-                            <Loader2 className="h-3 w-3 animate-spin" />
+              <section className="space-y-4 border-t pt-5">
+                <h3 className={sectionTitle}>
+                  {t("aiHub.dialog.stepModel", {
+                    defaultValue: "2. Which model",
+                  })}
+                </h3>
+                <FormField
+                  control={form.control}
+                  name="model"
+                  render={({ field }) => {
+                    const showList = models.length > 0 && !typeModelByHand;
+                    // Keep a model that was typed earlier selectable.
+                    const options =
+                      field.value && !models.includes(field.value)
+                        ? [field.value, ...models]
+                        : models;
+                    return (
+                      <FormItem>
+                        <div className="flex items-center justify-between gap-2">
+                          <FormLabel>
+                            {t("aiHub.dialog.model", { defaultValue: "Model" })}
+                          </FormLabel>
+                          {form.watch("type") !== "PERPLEXITY" && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              disabled={isLoadingModels}
+                              onClick={handleLoadModels}
+                            >
+                              {isLoadingModels && (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              )}
+                              {isLoadingModels
+                                ? t("aiProviders.dialog.loadingModels", {
+                                    defaultValue: "Loading…",
+                                  })
+                                : t("aiProviders.dialog.loadModels", {
+                                    defaultValue: "Load models",
+                                  })}
+                            </Button>
                           )}
-                          {isLoadingModels
-                            ? t("aiProviders.dialog.loadingModels", {
-                                defaultValue: "Loading…",
-                              })
-                            : t("aiProviders.dialog.loadModels", {
-                                defaultValue: "Load models",
-                              })}
-                        </Button>
-                      )}
-                    </div>
-                    <FormControl>
-                      <Input
-                        list="provider-models"
-                        placeholder={
-                          defaultModel(form.watch("type")) ??
-                          t("aiProviders.dialog.modelPlaceholder", {
-                            defaultValue: "e.g., gpt-4o, llama3",
-                          })
-                        }
-                        {...field}
-                      />
-                    </FormControl>
-                    <datalist id="provider-models">
-                      {models.map((id) => (
-                        <option key={id} value={id} />
-                      ))}
-                    </datalist>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="baseUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("aiProviders.dialog.baseUrl", {
-                      defaultValue: "Base URL (Endpoint)",
-                    })}
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://api.openai.com/v1" {...field} />
-                  </FormControl>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t("aiProviders.dialog.baseUrlHint", {
+                        </div>
+                        {showList ? (
+                          <Select
+                            value={field.value || undefined}
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue
+                                  placeholder={t("aiHub.dialog.selectModel", {
+                                    defaultValue: "Select your model",
+                                  })}
+                                />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {options.map((id) => (
+                                <SelectItem key={id} value={id}>
+                                  {id}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <FormControl>
+                            <Input
+                              placeholder={
+                                defaultModel(form.watch("type")) ??
+                                t("aiProviders.dialog.modelPlaceholder", {
+                                  defaultValue: "e.g., gpt-4o, llama3",
+                                })
+                              }
+                              {...field}
+                            />
+                          </FormControl>
+                        )}
+                        <p
+                          className="text-xs text-muted-foreground"
+                          aria-live="polite"
+                        >
+                          {showList ? (
+                            <>
+                              {t("aiHub.dialog.modelsFoundHint", {
+                                count: models.length,
+                                defaultValue:
+                                  "{{count}} models found. Select the one to use from the list above.",
+                              })}{" "}
+                              <button
+                                type="button"
+                                className="underline underline-offset-4 hover:text-foreground"
+                                onClick={() => setTypeModelByHand(true)}
+                              >
+                                {t("aiHub.dialog.typeInstead", {
+                                  defaultValue: "Type a model name instead",
+                                })}
+                              </button>
+                            </>
+                          ) : (
+                            t("aiHub.dialog.modelHint", {
+                              defaultValue:
+                                "Click Load models to pick from a list, or type a model name. Leave it blank to use the provider's default.",
+                            })
+                          )}
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+                {looksLikeEmbeddingModel(watchedModel) && (
+                  <p className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+                    <AlertTriangle
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                      aria-hidden
+                    />
+                    {t("aiHub.providers.embeddingNote", {
                       defaultValue:
-                        "Ensure this URL is allowed in the CSP or proxy if required.",
+                        "This looks like an embedding model, which cannot answer questions or suggest categories. Pick a chat model instead.",
                     })}
                   </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("aiProviders.dialog.description", {
-                      defaultValue: "Description (Optional)",
-                    })}
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t(
-                        "aiProviders.dialog.descriptionPlaceholder",
-                        { defaultValue: "Notes about this endpoint..." },
-                      )}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isDefault"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      {t("aiProviders.dialog.setDefault", {
-                        defaultValue: "Set as default provider",
-                      })}
-                    </FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter className="flex justify-between items-center sm:justify-between">
-              <div className="flex gap-2">
-                {provider && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleTestConnection}
-                    disabled={isTesting}
-                    className="gap-2"
-                  >
-                    {isTesting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4 text-green-700 dark:text-green-400" />
-                    )}
-                    {t("aiProviders.dialog.testConnection", {
-                      defaultValue: "Test Connection",
-                    })}
-                  </Button>
                 )}
-              </div>
+              </section>
+
+              <section className="space-y-4 border-t pt-5">
+                <h3 className={sectionTitle}>
+                  {t("aiHub.dialog.stepUse", {
+                    defaultValue: "3. Use it",
+                  })}
+                </h3>
+                <FormField
+                  control={form.control}
+                  name="isDefault"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start gap-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          {t("aiHub.dialog.useThis", {
+                            defaultValue: "Use this provider in the app",
+                          })}
+                        </FormLabel>
+                        <p className={hint}>
+                          {t("aiHub.dialog.useThisHint", {
+                            defaultValue:
+                              "Auto-categorize uses one provider at a time.",
+                          })}
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t("aiProviders.dialog.description", {
+                          defaultValue: "Description (Optional)",
+                        })}
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          rows={2}
+                          className="min-h-0"
+                          placeholder={t(
+                            "aiProviders.dialog.descriptionPlaceholder",
+                            { defaultValue: "Notes about this endpoint..." },
+                          )}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </section>
+            </div>
+
+            <DialogFooter className="flex-row items-center justify-between gap-2 border-t px-5 py-3 sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleTestConnection}
+                disabled={isTesting}
+                className="gap-2"
+              >
+                {isTesting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 text-green-700 dark:text-green-400" />
+                )}
+                {t("aiProviders.dialog.testConnection", {
+                  defaultValue: "Test Connection",
+                })}
+              </Button>
               <Button type="submit">
                 {t("aiProviders.dialog.save", {
                   defaultValue: "Save Provider",

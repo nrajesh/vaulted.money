@@ -77,7 +77,7 @@ The desktop app exposes an opt-in REST API (`src/api/`, `electron/apiServer.ts`)
 
 ## AI Provider Configuration
 
-Vaulted Money supports bring-your-own-key categorization. Users manage providers inside the app under Management > AI Providers and select a default provider in Settings.
+Vaulted Money supports bring-your-own-key categorization. Users manage providers on the **AI & agents** page: the add/edit dialog holds the API key (kept in local storage, optional for a custom OpenAI-compatible endpoint such as a local model) and the list has a **Use this one** button to pick the provider in use.
 
 Provider types include Gemini, OpenAI, Anthropic, Mistral, Perplexity, and Custom OpenAI-compatible endpoints.
 

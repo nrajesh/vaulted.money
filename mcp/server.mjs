@@ -760,7 +760,7 @@ export function loadConnection(env = process.env, platform = process.platform, h
     let config;
     try { config = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
     if (!config || typeof config !== "object") continue;
-    if (config.enabled === false) throw new Error("Vaulted Money's Local API is off. Open the app, go to Settings \u2192 Local API and switch it on.");
+    if (config.enabled === false) throw new Error("Vaulted Money's Local API is off. Open the app, go to AI & agents and switch on Allow agents to connect.");
     if (typeof config.token === "string" && config.token) {
       return { token: config.token, baseUrl: env.VM_BASE_URL ?? (Number.isInteger(config.port) ? `http://127.0.0.1:${config.port}/api/v1` : DEFAULT_BASE_URL) };
     }

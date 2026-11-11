@@ -825,7 +825,7 @@ const Layout = () => {
                   <Link to="/settings">
                     <BookOpen />
                     <span>
-                      {t("layout.nav.ledger", { defaultValue: "Ledger" })}
+                      {t("layout.nav.settings", { defaultValue: "Settings" })}
                     </span>
                   </Link>
                 </SidebarMenuButton>

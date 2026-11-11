@@ -48,7 +48,6 @@
   "src/pages/LanguagePage.tsx": 4,
   "src/pages/NotFound.tsx": 2,
   "src/pages/PrivacyPolicyPage.tsx": 11,
-  "src/pages/SettingsPage.tsx": 5,
   "src/pages/reports/AdvancedReports.tsx": 2,
   "src/pages/reports/EssentialReports.tsx": 2,
   "src/pages/reports/IncomeExpenseSummary.tsx": 10,

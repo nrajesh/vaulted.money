@@ -24,7 +24,7 @@ There is **no watch app**, so the video does not show one.
 | Script | Video | Title | What it shows |
 |---|---|---|---|
 | `videos/search.json` | `final/vaulted-money-search.mp4` | Search | Natural-language search, on desktop and phone. |
-| `videos/ai.json` | `final/vaulted-money-ai.mp4` | AI, Your Call | The AI switch off, then on; **Categorize Missing** on rows filtered to Uncategorized; the same in light theme, ending on the **Connect agent** tab. Filmed in the desktop app. |
+| `videos/ai.json` | `final/vaulted-money-ai.mp4` | AI, Your Call | The AI switch off, then on; **Categorize Missing** on rows filtered to Uncategorized; the same in light theme, ending on the agent section of the **AI & agents** page. Filmed in the desktop app. |
 
 **AI, Your Call: what is real and what is not.** The app, the switch, the
 button, the progress window and the categories written to the rows are all the
@@ -46,8 +46,8 @@ which is why the app reports 12 categorised for nine new rows). The glow on the
 rows that were filled in is a video highlight (`glowRows`), not app UI.
 
 This video is filmed in the desktop app (`"app": "desktop"`), because the
-Connect agent tab only works there; on the web it is greyed out. The video only
-opens that tab. It does not switch "Allow agents to connect" on, so no Local
+agent section only works there; on the web it says it needs the desktop app. The
+video only scrolls to that section. It does not switch "Allow agents to connect" on, so no Local
 API server is started during a take. The desktop app is built for macOS,
 Windows and Linux, so the caption says "desktop app", not "Mac app".
 

@@ -12458,7 +12458,7 @@
                 }
               }
             },
-            "description": "**UI button:** Transactions → *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if no default provider has a key. This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
+            "description": "**UI button:** Transactions → *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if there is no default provider or it has no key (a custom OpenAI-compatible provider, such as a local model, needs none). This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
           },
           "response": [
             {
@@ -12492,7 +12492,7 @@
                     }
                   }
                 },
-                "description": "**UI button:** Transactions → *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if no default provider has a key. This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
+                "description": "**UI button:** Transactions → *Categorize Missing*.\n\nFor transactions with no category (or `Uncategorized`), reuses the category last used with the same vendor (case-insensitive).\n\n**AI is opt-in.** Send `\"use_ai\": true` to also ask your default AI provider about vendors with no history. That sends vendor *names* (never amounts) to the provider, and it fails with `400 ai_not_configured` if there is no default provider or it has no key (a custom OpenAI-compatible provider, such as a local model, needs none). This collection never sets it, so it cannot make an external call.\n\n```json\n{ \"dry_run\": true, \"use_ai\": false }\n```"
               },
               "status": "OK",
               "code": 200,

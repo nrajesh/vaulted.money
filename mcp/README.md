@@ -3,7 +3,7 @@
 Lets an AI agent or model runner on this computer (for example LM Studio with a local model, or Claude Code, which sends what it reads to Anthropic; any MCP client works) read and change your Vaulted Money data through the desktop app's [Local API](../documentation/API.md).
 
 - **One file, no dependencies** (`server.mjs`, Node 18+). Nothing to install.
-- **Separate process.** It calls the Local API over HTTP, so the **desktop app must be running** with _Settings → Local API_ on. The window may be closed to the tray; quitting the app stops the API. (Your data lives inside the app, so the server cannot read it without the app.)
+- **Separate process.** It calls the Local API over HTTP, so the **desktop app must be running** with **Allow agents to connect** switched on (on the _AI & agents_ page). The window may be closed to the tray; quitting the app stops the API. (Your data lives inside the app, so the server cannot read it without the app.)
 - **Local-first.** The server talks to the app only over `127.0.0.1`. The token is read from the app's config, never shown to the model.
 
 ## Why twelve tools, not 100
@@ -43,14 +43,14 @@ A CSV export or backup can be far bigger than a model should read. When a downlo
 
 ## Setup
 
-1. In the desktop app: _Settings → Local API → Connect an AI agent_ (opens the Connect to agent page) → switch on **Allow agents to connect**. The server finds the app's own config (token and port), so there is no token to copy.
+1. In the desktop app: open _AI & agents_ and switch on **Allow agents to connect**. The server finds the app's own config (token and port), so there is no token to copy.
 2. Connect your agent:
    - **Claude Desktop:** download `vaulted-money.mcpb` from the GitHub Releases page and double-click it. No Node.js needed.
-   - **Codex:** choose **Codex** on the Connect agent page and click **Set up Codex for me** (needs Node.js 18 or newer). Or use **Copy config** and paste it into `~/.codex/config.toml`.
-   - **Claude Code:** click _Set up Claude Code for me_ on the Connect agent page, or run `claude plugin marketplace add nrajesh/vaulted.money` then `claude plugin install vaulted-money@vaulted-money` in a terminal (inside Claude Code, use `/plugin ...`).
+   - **Codex:** choose **Codex** on the AI & agents page and click **Set up Codex for me** (needs Node.js 18 or newer). Or use **Copy config** and paste it into `~/.codex/config.toml`.
+   - **Claude Code:** click _Set up Claude Code for me_ on the AI & agents page, or run `claude plugin marketplace add nrajesh/vaulted.money` then `claude plugin install vaulted-money@vaulted-money` in a terminal (inside Claude Code, use `/plugin ...`).
    - **Local model (LM Studio):** use _Copy setup_ under **A private model on this computer** and paste it into `mcp.json`. Use a model with tool-calling support.
 
-Node.js 18 or newer is needed for the plugin and local-model routes. The server is started by the client when needed. It looks up the token on every request, so a new token or port is picked up without a restart. _Disconnect everything_ switches the Local API off and replaces the token, so every agent gets "Local API is off" until you switch it on again; after that they reconnect on their own, with no copy-paste. Only the desktop app has to be running.
+Node.js 18 or newer is needed for the plugin and local-model routes. The server is started by the client when needed. It looks up the token on every request, so a new token or port is picked up without a restart. Switching **Allow agents to connect** off gives every agent "Local API is off" until you switch it on again; after that they reconnect on their own, with no copy-paste. To replace the token as well, use _Generate new token_ under _Local API → Advanced_. Only the desktop app has to be running.
 
 **Privacy:** the server itself uploads nothing, but what an agent reads (transactions, vendors, balances) is sent to that agent's AI provider (Anthropic, for Claude). A local model keeps everything on your device. The claude.ai website is not supported.
 
@@ -64,7 +64,7 @@ Where the server looks for the token and port, first match wins:
 
 `VM_BASE_URL`, when set, always sets the address, even when the token comes from the app config.
 
-To use the manual route: in _Settings → Local API_ enable the API and copy the token, then `echo "<token>" > ~/.vaulted-token && chmod 600 ~/.vaulted-token`. Register the server with an absolute path to `server.mjs`. On Linux, AppImage users should copy `mcp/server.mjs` somewhere permanent and point their config at that copy, because the AppImage mounts under `/tmp/.mount_*`, a path that changes on every launch.
+To use the manual route: on the _AI & agents_ page switch on **Allow agents to connect**, then copy the token from _Local API → Advanced_, then `echo "<token>" > ~/.vaulted-token && chmod 600 ~/.vaulted-token`. Register the server with an absolute path to `server.mjs`. On Linux, AppImage users should copy `mcp/server.mjs` somewhere permanent and point their config at that copy, because the AppImage mounts under `/tmp/.mount_*`, a path that changes on every launch.
 
 **LM Studio**: Program → Install → _Edit mcp.json_:
 

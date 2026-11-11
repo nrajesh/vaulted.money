@@ -386,13 +386,13 @@ Key points:
 
 > **In plain words:** AI is a single switch, and it starts off. Switching it off also shuts the door that agents use.
 
-One sidebar entry, **AI & agents**, opens two pages that share a frame (`src/components/management/AiHubLayout.tsx`): **AI Providers** (`/ai-providers`, bring-your-own-key categorization) and **Connect agent** (`/connect-agent`, for Claude, Codex or a local model). `AiAgentTabs` switches between them.
+One sidebar entry, **AI & agents**, opens one page (`src/pages/AiHubPage.tsx`) with two sections: **AI inside the app** (bring-your-own-key or local-model categorization) and **Chat with your data from an AI agent** (Claude, Codex or a local model, plus the Local API controls). `/ai-providers` and `/connect-agent` both show it; the second scrolls to the agent section. The page reads the Local API status once (`useLocalApi`) and shares it with both the agent steps and the Local API card.
 
 ```mermaid
 flowchart TB
     S{"Master switch<br/>AI features<br/>useAiFeatures"}:::logic
-    P["AI Providers page<br/>+ AI categorization<br/>useAIConfig"]:::ui
-    C["Connect agent page"]:::ui
+    P["AI inside the app<br/>+ AI categorization<br/>useAIConfig"]:::ui
+    C["Agent section"]:::ui
     X["Nothing is sent to a provider<br/>Local API is switched off"]:::off
     IPC["Electron IPC<br/>api:get-config · api:get-connect-info<br/>claude:detect · claude:setup-code-plugin<br/>codex:detect · codex:setup"]:::native
     MCP["mcp/server.mjs<br/>talks to the Local API"]:::data
@@ -410,7 +410,7 @@ flowchart TB
 ```
 
 - **The master switch is a per-device privacy choice**, not ledger data, so it lives in `localStorage` (`vaulted.aiFeatures`). Until the user chooses, it follows what they already use: on if an AI provider exists or the Local API is enabled, off on a fresh install. Switching it off also closes the Local API to agents (`setApiConfig`). With it off, the hub shows only the switch.
-- **Connect agent needs the desktop app.** Agents reach the app through the Local API and the MCP server, which only the desktop build can host. The tab shows only where the Electron bridge exists (`getApiConfig`); on the web and mobile it is shown greyed with "Connect an agent is available in the desktop app".
+- **Connect agent needs the desktop app.** Agents reach the app through the Local API and the MCP server, which only the desktop build can host. The steps show only where the Electron bridge exists (`getApiConfig`); on the web and mobile the section says the Local API needs the desktop app.
 - **Setup runs in the main process.** The page asks Electron to detect Claude Code or Codex and set them up, and shows copyable configuration for Claude Desktop (`.mcpb`) and local models such as LM Studio.
 - The same tools an agent uses are described in [mcp/README.md](../mcp/README.md); the endpoints behind them in [API.md](API.md).
 
