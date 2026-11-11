@@ -2,7 +2,7 @@
 
 Everything the app can do, you can do over the [Local API](API.md): run your finances from scripts, a terminal or a spreadsheet, or build your own interface on top. This page is a set of working recipes. The [API reference](API.md) lists every endpoint.
 
-Setup once: run the desktop app, open **Settings → Local API**, switch it on and copy the token.
+Setup once: run the desktop app, open **AI & agents**, switch on **Allow agents to connect**, then open **Local API → Advanced** on the same page and copy the token.
 
 ```bash
 export VM="http://127.0.0.1:47821/api/v1"

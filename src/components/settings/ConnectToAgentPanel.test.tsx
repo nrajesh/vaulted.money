@@ -31,6 +31,8 @@ describe("ConnectToAgentPanel", () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(() => {
+    // The last choice is remembered; each test starts with none.
+    localStorage.clear();
     writeText.mockClear();
     vi.mocked(showError).mockClear();
     Object.defineProperty(navigator, "clipboard", {
@@ -40,16 +42,16 @@ describe("ConnectToAgentPanel", () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
+  // On by default: the chat options can only be picked with agent access on.
   const renderPanel = (
-    status = makeStatus(),
-    handlers = { onToggle: vi.fn(), onDisconnect: vi.fn() },
+    status = makeStatus({ enabled: true, running: true }),
+    handlers = { onToggle: vi.fn() },
   ) => {
     render(
       <ConnectToAgentPanel
         status={status}
         serverPath={SERVER_PATH}
         onToggle={handlers.onToggle}
-        onDisconnect={handlers.onDisconnect}
       />,
     );
     return handlers;
@@ -64,7 +66,6 @@ describe("ConnectToAgentPanel", () => {
         status={makeStatus()}
         serverPath={SERVER_PATH}
         onToggle={vi.fn()}
-        onDisconnect={vi.fn()}
       />,
     );
     expect(screen.getByText("Connect to agent")).toBeInTheDocument();
@@ -72,13 +73,28 @@ describe("ConnectToAgentPanel", () => {
     expect(container.innerHTML).not.toContain(TOKEN);
   });
 
-  it("shows Ready when the API is running", () => {
+  it("says Ready only once every step is done, not merely when the API runs", () => {
     renderPanel(makeStatus({ enabled: true, running: true }));
+    expect(screen.queryByText("Ready")).toBeNull();
+    selectChoice(/Claude Code/);
     expect(screen.getByText("Ready")).toBeInTheDocument();
   });
 
+  it("does not say Ready while the chosen agent is missing", () => {
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus({ enabled: true, running: true })}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+        localModel="missing"
+      />,
+    );
+    expect(screen.queryByText("Ready")).toBeNull();
+  });
+
   it("calls onToggle(true) when the switch is turned on", () => {
-    const { onToggle } = renderPanel();
+    const { onToggle } = renderPanel(makeStatus());
     fireEvent.click(screen.getByRole("switch"));
     expect(onToggle).toHaveBeenCalledExactlyOnceWith(true);
   });
@@ -110,8 +126,8 @@ describe("ConnectToAgentPanel", () => {
       cleanup();
       vi.clearAllTimers();
 
+      // The choice made above is remembered, so this opens on Claude Code.
       renderPanel();
-      selectChoice(/Claude Code/);
       fireEvent.click(screen.getByRole("button", { name: "Copy commands" }));
       await vi.advanceTimersByTimeAsync(0);
       cleanup();
@@ -139,10 +155,86 @@ describe("ConnectToAgentPanel", () => {
       screen.getByRole("link", { name: /opens in a new tab/ }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Claude asks you to confirm/)).toBeInTheDocument();
-    expect(screen.getByText(/Keep Vaulted Money open/)).toBeInTheDocument();
+    expect(screen.getByText("Keep Vaulted Money open.")).toBeInTheDocument();
     expect(screen.getByText(/No extra software/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy setup" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Copy commands" })).toBeNull();
+  });
+
+  it("shows no option as picked and lets none be picked while agent access is off", () => {
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus()}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+        suggestionNote="Picked to match Local Agent."
+      />,
+    );
+    for (const tab of screen.getAllByRole("tab")) {
+      expect(tab).toBeDisabled();
+      expect(tab).toHaveAttribute("aria-selected", "false");
+    }
+    expect(
+      screen.getByText("Switch on Allow agents to connect to choose one."),
+    ).toBeInTheDocument();
+    // No route's steps and no "picked to match" note either.
+    expect(screen.queryByRole("button", { name: "Copy setup" })).toBeNull();
+    expect(screen.queryByText("Picked to match Local Agent.")).toBeNull();
+  });
+
+  it("asks to switch on first, without warning about a route nobody chose", () => {
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus()}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+        localModel="embedding"
+      />,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(
+      screen.getByText(/Switch on Allow agents to connect first/),
+    ).toBeInTheDocument();
+  });
+
+  it("opens on the suggested choice and says why", () => {
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus({ enabled: true, running: true })}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+        suggestionNote="Picked to match Local Agent."
+      />,
+    );
+    expect(
+      screen.getByRole("tab", { name: /A private model/ }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getByText("Picked to match Local Agent."),
+    ).toBeInTheDocument();
+  });
+
+  it("remembers the user's own choice over the suggestion", () => {
+    renderPanel();
+    selectChoice(/Codex/);
+    cleanup();
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus({ enabled: true, running: true })}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+        suggestionNote="Picked to match Local Agent."
+      />,
+    );
+    expect(screen.getByRole("tab", { name: /Codex/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.queryByText("Picked to match Local Agent.")).toBeNull();
   });
 
   it("shows each choice's own steps and hides the others", () => {
@@ -182,7 +274,6 @@ describe("ConnectToAgentPanel", () => {
         status={makeStatus({ enabled: true, running: true })}
         serverPath={SERVER_PATH}
         onToggle={vi.fn()}
-        onDisconnect={vi.fn()}
       />,
     );
     selectChoice(/A private model/);
@@ -261,7 +352,6 @@ describe("ConnectToAgentPanel", () => {
         status={makeStatus({ enabled: false })}
         serverPath={SERVER_PATH}
         onToggle={vi.fn()}
-        onDisconnect={vi.fn()}
       />,
     );
     expect(screen.getByRole("list", { name: "Steps" }).textContent).not.toMatch(
@@ -273,6 +363,58 @@ describe("ConnectToAgentPanel", () => {
     expect(strip.textContent).toMatch(/Switch on\s*\(done\)/);
     expect(strip.textContent).toMatch(/Pick how you chat with your money/);
     expect(strip.textContent).toMatch(/Ask your first question/);
+  });
+
+  it("marks step 2 done once a way to chat is chosen, and says where to chat", () => {
+    renderPanel(makeStatus({ enabled: true, running: true }));
+    const strip = () => screen.getByRole("list", { name: "Steps" }).textContent;
+    expect(strip()).not.toMatch(/Pick how you chat with your money\s*\(done\)/);
+    expect(
+      screen.getByText(/Pick how you want to chat\. This card then says/),
+    ).toBeInTheDocument();
+
+    selectChoice(/Claude Code/);
+    expect(strip()).toMatch(/Pick how you chat with your money\s*\(done\)/);
+    expect(
+      screen.getByText(
+        /Open Claude Code, in the Claude app or by typing claude/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/The chat happens in that app, not on this page/),
+    ).toBeInTheDocument();
+  });
+
+  it("counts a choice that follows the provider already in use as step 2 done", () => {
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus({ enabled: true, running: true })}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+      />,
+    );
+    expect(screen.getByRole("list", { name: "Steps" }).textContent).toMatch(
+      /Pick how you chat with your money\s*\(done\)/,
+    );
+    expect(screen.getByText(/Open a chat in LM Studio/)).toBeInTheDocument();
+  });
+
+  it("does not tick step 2 or say where to chat while agent access is off", () => {
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus()}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+      />,
+    );
+    expect(screen.getByRole("list", { name: "Steps" }).textContent).not.toMatch(
+      /\(done\)/,
+    );
+    expect(
+      screen.getByText(/Switch on Allow agents to connect first/),
+    ).toBeInTheDocument();
   });
 
   it("lets the keyboard move between the choices", async () => {
@@ -292,38 +434,76 @@ describe("ConnectToAgentPanel", () => {
     );
   });
 
-  it("states the privacy facts plainly", () => {
+  it("states the privacy facts plainly, one point each", () => {
     renderPanel();
-    expect(screen.getByText(/sent to the AI provider/i)).toBeInTheDocument();
-    expect(screen.getByText(/local model/i, { selector: "p" })).toBeTruthy();
-    expect(screen.getByText(/claude\.ai website/i)).toBeInTheDocument();
+    const points = screen.getAllByRole("listitem").map((li) => li.textContent);
+    expect(points).toContainEqual(
+      expect.stringMatching(
+        /Claude and Codex.*sent to its maker: Anthropic or OpenAI/,
+      ),
+    );
+    expect(points).toContainEqual(
+      expect.stringMatching(
+        /A private model.*Everything stays on this computer/,
+      ),
+    );
+    expect(points).toContainEqual(
+      expect.stringMatching(
+        /Switched off.*No agent can read anything.*not the claude\.ai website/,
+      ),
+    );
   });
 
-  it("asks for confirmation before disconnecting", () => {
-    const { onDisconnect } = renderPanel(
-      makeStatus({ enabled: true, running: true }),
+  it("explains that the switch is how you disconnect", () => {
+    const { unmount } = render(
+      <ConnectToAgentPanel
+        status={makeStatus()}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+      />,
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Disconnect everything" }),
-    );
-    expect(onDisconnect).not.toHaveBeenCalled();
-    expect(screen.getByText(/cuts off every connected agent/i)).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm disconnect" }));
-    expect(onDisconnect).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByText("Off: no agent or script can reach your data."),
+    ).toBeInTheDocument();
+    unmount();
+    renderPanel(makeStatus({ enabled: true, running: true }));
+    expect(
+      screen.getByText(/Switch this off to disconnect every agent and script/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Disconnect/ })).toBeNull();
   });
 
-  it("explains the switch", () => {
-    renderPanel();
-    expect(screen.getByText(/also turns the Local API/i)).toBeInTheDocument();
+  it("turns the last step green and says Ready once there is nothing left to do", () => {
+    renderPanel(makeStatus({ enabled: true, running: true }));
+    const strip = () => screen.getByRole("list", { name: "Steps" }).textContent;
+    expect(strip()).toMatch(/Ask your first question/);
+    expect(strip()).not.toMatch(/Ready to ask/);
+    selectChoice(/Codex/);
+    expect(strip()).toMatch(/Ready to ask your first question\s*\(done\)/);
   });
 
-  it("can cancel the disconnect", () => {
-    const { onDisconnect } = renderPanel();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Disconnect everything" }),
+  it("holds every tick back while the chosen route cannot work", () => {
+    render(
+      <ConnectToAgentPanel
+        status={makeStatus({ enabled: true, running: true })}
+        serverPath={SERVER_PATH}
+        onToggle={vi.fn()}
+        suggestedChoice="local"
+        localModel="missing"
+      />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(onDisconnect).not.toHaveBeenCalled();
+    const strip = screen.getByRole("list", { name: "Steps" }).textContent;
+    expect(strip).toMatch(/Switch on\s*\(done\)/);
+    expect(strip).not.toMatch(/money\s*\(done\)/);
+    expect(strip).not.toMatch(/Ready to ask/);
+    expect(screen.getByRole("alert").textContent).toMatch(
+      /No model on this computer is set up/,
+    );
+    expect(screen.queryByText(/Open a chat in LM Studio/)).toBeNull();
+    // Another route is not held back by the missing local model.
+    selectChoice(/Codex/);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText(/Type codex in a terminal/)).toBeInTheDocument();
   });
 
   it("renders its title as a card heading", () => {

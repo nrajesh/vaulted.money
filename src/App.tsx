@@ -7,7 +7,7 @@ import {
   Route,
 } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import Layout from "@/components/Layout";
+import AppShell from "@/components/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { TransactionsProvider } from "./contexts/TransactionsContext";
@@ -30,7 +30,6 @@ const Analytics = lazy(() => import("@/pages/Analytics"));
 const CalendarView = lazy(() => import("@/pages/CalendarView"));
 const Transactions = lazy(() => import("@/pages/Transactions"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
-const ConnectAgentPage = lazy(() => import("@/pages/ConnectAgentPage"));
 const LanguagePage = lazy(() => import("@/pages/LanguagePage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Accounts = lazy(() => import("@/pages/Accounts"));
@@ -48,7 +47,7 @@ import { LedgerProvider } from "./contexts/LedgerContext";
 const DataManagementPage = lazy(() => import("@/pages/DataManagementPage"));
 const BackupPage = lazy(() => import("@/pages/BackupPage"));
 const CurrenciesPage = lazy(() => import("@/pages/CurrenciesPage"));
-const AIProviders = lazy(() => import("@/pages/AIProviders"));
+const AiHubPage = lazy(() => import("@/pages/AiHubPage"));
 import BackupManager from "@/components/backup/BackupManager";
 import ApiBridge from "@/api/ApiBridge";
 const DonationPage = lazy(() => import("@/pages/DonationPage"));
@@ -98,7 +97,7 @@ function App() {
                               path="/privacy"
                               element={<PrivacyPolicyPage />}
                             />
-                            <Route path="/" element={<Layout />}>
+                            <Route path="/" element={<AppShell />}>
                               <Route path="dashboard" element={<Index />} />
                               <Route
                                 path="calendar"
@@ -138,7 +137,7 @@ function App() {
                               />
                               <Route
                                 path="/connect-agent"
-                                element={<ConnectAgentPage />}
+                                element={<AiHubPage focus="agents" />}
                               />
                               <Route
                                 path="/language"
@@ -155,7 +154,7 @@ function App() {
                               />
                               <Route
                                 path="/ai-providers"
-                                element={<AIProviders />}
+                                element={<AiHubPage />}
                               />
                               {!Capacitor.isNativePlatform() && (
                                 <Route

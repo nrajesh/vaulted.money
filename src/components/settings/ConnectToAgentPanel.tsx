@@ -1,16 +1,19 @@
 import * as React from "react";
 import {
+  AlertTriangle,
   Bot,
   Braces,
   Check,
+  Cloud,
   Copy,
   Download,
+  Loader2,
   MessageCircle,
+  Power,
   ShieldCheck,
   Terminal,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -25,6 +28,11 @@ import {
 } from "@/components/ThemedCard";
 import { getElectronAPI, type ApiServerStatus } from "@/utils/electron";
 import { showError } from "@/utils/toast";
+import {
+  readAgentChoice,
+  writeAgentChoice,
+  type AgentChoice,
+} from "@/utils/agentChoice";
 
 const RELEASES_URL = "https://github.com/nrajesh/vaulted.money/releases/latest";
 const CLAUDE_CODE_REPOSITORY = "nrajesh/vaulted.money";
@@ -36,6 +44,7 @@ const CODEX_INSTALL_COMMAND = "npm install -g @openai/codex";
 // `claude` prefix matters: a plain terminal does not understand `/plugin`.
 const CLAUDE_CODE_COMMANDS =
   "claude plugin marketplace add nrajesh/vaulted.money\nclaude plugin install vaulted-money@vaulted-money";
+const PRIVACY_ICON = "mt-0.5 h-4 w-4 shrink-0 text-muted-foreground";
 const EXAMPLE_QUESTIONS = [
   "Where is my money going this month?",
   "Am I over budget anywhere?",
@@ -45,7 +54,21 @@ interface ConnectToAgentPanelProps {
   status: ApiServerStatus;
   serverPath: string;
   onToggle: (enabled: boolean) => void;
-  onDisconnect: () => void;
+  /**
+   * The model on this computer that is set up under "AI inside the app", as
+   * far as the private-model route depends on it: there is none ("missing"),
+   * it cannot chat ("embedding"), or it is fine. Left out when unknown.
+   */
+  localModel?: "ready" | "missing" | "embedding";
+  /** The Local API controls, shown under the switch that governs them. */
+  localApi?: React.ReactNode;
+  /**
+   * The choice that matches what is already set up in the app (for example a
+   * local model). Used until the user picks one themselves.
+   */
+  suggestedChoice?: AgentChoice | null;
+  /** Says why that choice is preselected, e.g. the provider's name. */
+  suggestionNote?: string;
 }
 
 /** A labelled copy button that shows a tick after a successful copy. */
@@ -87,7 +110,7 @@ type CopyTarget =
   | "codexConfig";
 type SetupState = "idle" | "running" | "ready" | "failed" | "not-found";
 type CodexSetupState = SetupState | "node-missing";
-type Choice = "claude-app" | "local" | "claude-code" | "codex";
+type Choice = AgentChoice;
 
 /**
  * Lets the user connect an AI agent to the Local API. Status is owned by the
@@ -98,7 +121,10 @@ const ConnectToAgentPanel = ({
   status,
   serverPath,
   onToggle,
-  onDisconnect,
+  localModel,
+  localApi,
+  suggestedChoice = null,
+  suggestionNote,
 }: ConnectToAgentPanelProps) => {
   const { t } = useTranslation();
   // `serial` restarts the reset timer when the same button is copied twice.
@@ -113,8 +139,14 @@ const ConnectToAgentPanel = ({
     const timer = window.setTimeout(() => setCopiedState(null), 1500);
     return () => window.clearTimeout(timer);
   }, [copiedState]);
-  const [confirming, setConfirming] = React.useState(false);
-  const [choice, setChoice] = React.useState<Choice>("claude-app");
+  // What the user picked last time wins; otherwise follow what they already
+  // set up in the app, so this page never contradicts it.
+  const [picked, setPicked] = React.useState<Choice | null>(readAgentChoice);
+  const choice: Choice = picked ?? suggestedChoice ?? "claude-app";
+  const setChoice = (next: Choice) => {
+    setPicked(next);
+    writeAgentChoice(next);
+  };
   // What the desktop app found on this computer. Stays null in an older build
   // that cannot look, in which case the page shows only the manual steps.
   const [detected, setDetected] = React.useState<{
@@ -254,11 +286,21 @@ const ConnectToAgentPanel = ({
   ) => (
     <TabsTrigger
       value={value}
-      className="h-auto flex-col items-start gap-1 whitespace-normal border p-3 text-left focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:border-primary data-[state=active]:ring-1 data-[state=active]:ring-primary"
+      // Styled as a button you press, with a radio mark, so it is obvious
+      // that these are choices and which one is picked.
+      // With agent access off there is nothing to choose for.
+      disabled={!status.enabled}
+      className="group h-auto cursor-pointer flex-col items-start gap-1 whitespace-normal rounded-lg border-2 border-border bg-card p-3 text-left text-foreground shadow-sm transition-colors hover:border-primary/60 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:border-border disabled:hover:bg-card"
     >
-      <span className="flex w-full items-center gap-2 text-sm font-semibold">
+      <span className="flex w-full items-start gap-2 text-sm font-semibold [&>svg]:mt-0.5 [&>svg]:shrink-0">
         {icon}
-        {title}
+        <span className="flex-1">{title}</span>
+        <span
+          aria-hidden="true"
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/60 text-transparent group-data-[state=active]:border-primary group-data-[state=active]:bg-primary group-data-[state=active]:text-primary-foreground"
+        >
+          <Check className="h-3 w-3" />
+        </span>
       </span>
       <span className="text-xs font-normal text-muted-foreground">
         {explanation}
@@ -271,12 +313,144 @@ const ConnectToAgentPanel = ({
     </TabsTrigger>
   );
 
+  // Step 2 counts as done once a way to chat is chosen, whether the user picked
+  // it here or it follows the provider they already use inside the app.
+  const choiceMade = picked !== null || suggestedChoice !== null;
+
+  // What stops the chosen route from working, if anything. While something
+  // does, nothing on the page may look finished.
+  let blocker: string | null = null;
+  if (choice === "local" && localModel === "missing") {
+    blocker = t("aiHub.chat.blockNoLocal", {
+      defaultValue:
+        "No model on this computer is set up. Add one under AI inside the app first, or pick another way to chat.",
+    });
+  } else if (choice === "local" && localModel === "embedding") {
+    blocker = t("aiHub.chat.blockEmbedding", {
+      defaultValue:
+        "Your local model is an embedding model, which cannot chat. Pick a chat model under AI inside the app first.",
+    });
+  } else if (choice === "claude-app" && detected && !detected.desktop) {
+    blocker = t("settings.agent.appNotFound", {
+      defaultValue: "We could not find the Claude app on this computer.",
+    });
+  } else if (
+    choice === "claude-code" &&
+    detected &&
+    !detected.code &&
+    !detected.desktop
+  ) {
+    // Claude Code runs in a terminal or inside the Claude app; with neither
+    // on this computer there is nowhere to chat yet.
+    blocker = t("aiHub.chat.blockNoClaudeCode", {
+      defaultValue:
+        "Claude Code is not on this computer yet. Install it, then come back.",
+    });
+  } else if (choice === "codex" && codexFound === false) {
+    blocker = t("aiHub.chat.blockNoCodex", {
+      defaultValue:
+        "Codex is not on this computer yet. Install it, then come back.",
+    });
+  } else if (
+    choice === "claude-code" &&
+    (setupState === "failed" || setupState === "not-found")
+  ) {
+    blocker = t("aiHub.chat.blockSetup", {
+      defaultValue:
+        "The setup did not finish. Use the manual steps, then come back.",
+    });
+  } else if (
+    choice === "codex" &&
+    (codexState === "failed" ||
+      codexState === "not-found" ||
+      codexState === "node-missing")
+  ) {
+    blocker = t("aiHub.chat.blockSetup", {
+      defaultValue:
+        "The setup did not finish. Use the manual steps, then come back.",
+    });
+  }
+
+  // With agent access off nothing is chosen, so there is nothing to block:
+  // the card just says to switch on first.
+  if (!status.enabled) blocker = null;
+
+  const canAsk = status.enabled && choiceMade && !blocker;
+  // The chat itself happens in the agent's app, so the last step is done as
+  // soon as everything before it is: there is nothing more to do here.
+  const stepsDone = [status.enabled, canAsk, canAsk];
+
+  // Where the conversation actually happens. The chat is in the agent's own
+  // app, never on this page, so say exactly where to go.
+  const whereToChat: Record<Choice, string> = {
+    "claude-app": t("aiHub.chat.whereClaudeApp", {
+      defaultValue:
+        "Open the Claude desktop app and start a new chat. Ask your question there.",
+    }),
+    local: t("aiHub.chat.whereLocal", {
+      defaultValue:
+        "Open a chat in LM Studio with a model that can use tools. Ask your question there.",
+    }),
+    "claude-code": t("aiHub.chat.whereClaudeCode", {
+      defaultValue:
+        "Open Claude Code, in the Claude app or by typing claude in a terminal. Ask your question there.",
+    }),
+    codex: t("aiHub.chat.whereCodex", {
+      defaultValue: "Type codex in a terminal. Ask your question there.",
+    }),
+  };
+
+  const progressBar = (
+    <span
+      aria-hidden="true"
+      className="block h-1 w-full overflow-hidden rounded-full bg-muted"
+    >
+      <span className="block h-full w-1/3 animate-[agent-progress_1.2s_ease-in-out_infinite] rounded-full bg-primary motion-reduce:w-full motion-reduce:animate-pulse" />
+    </span>
+  );
+  const setupStatus = (
+    state: CodexSetupState,
+    messages: Partial<Record<CodexSetupState, string>>,
+  ) => (
+    <div role="status" className="space-y-2 text-xs">
+      {state === "running" && progressBar}
+      {state !== "idle" && (
+        <p
+          className={
+            state === "ready"
+              ? "flex items-center gap-1.5 font-medium text-green-700 dark:text-green-400"
+              : "text-muted-foreground"
+          }
+        >
+          {state === "ready" && (
+            <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          )}
+          {messages[state]}
+        </p>
+      )}
+    </div>
+  );
+
+  const privacyPoint = (icon: React.ReactNode, title: string, body: string) => (
+    <li className="flex items-start gap-3">
+      {icon}
+      <span className="min-w-0">
+        <span className="block font-medium">{title}</span>
+        <span className="block text-muted-foreground">{body}</span>
+      </span>
+    </li>
+  );
+
   const stepTitles = [
     t("settings.agent.step1", { defaultValue: "Switch on" }),
     t("settings.agent.step2", {
       defaultValue: "Pick how you chat with your money",
     }),
-    t("settings.agent.step3", { defaultValue: "Ask your first question" }),
+    canAsk
+      ? t("aiHub.chat.readyStep", {
+          defaultValue: "Ready to ask your first question",
+        })
+      : t("settings.agent.step3", { defaultValue: "Ask your first question" }),
   ];
 
   return (
@@ -294,16 +468,20 @@ const ConnectToAgentPanel = ({
               <Bot className="h-5 w-5 text-muted-foreground" />
               {t("settings.agent.title", { defaultValue: "Connect to agent" })}
             </ThemedCardTitle>
+            {/* "Ready" is a promise that chatting will work, so it waits for
+                every step; until then the badge only says on or off. */}
             <span
               className={
-                ready
+                canAsk && ready
                   ? "rounded-full bg-green-600/15 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400"
                   : "rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
               }
             >
-              {ready
+              {canAsk && ready
                 ? t("settings.agent.ready", { defaultValue: "Ready" })
-                : t("settings.agent.off", { defaultValue: "Off" })}
+                : ready
+                  ? t("aiHub.api.on", { defaultValue: "On" })
+                  : t("settings.agent.off", { defaultValue: "Off" })}
             </span>
           </div>
           <ThemedCardDescription>
@@ -325,7 +503,7 @@ const ConnectToAgentPanel = ({
             className="grid gap-2 text-sm sm:grid-cols-3"
           >
             {stepTitles.map((title, index) => {
-              const done = index === 0 && status.enabled;
+              const done = stepsDone[index];
               return (
                 <li
                   key={title}
@@ -371,11 +549,17 @@ const ConnectToAgentPanel = ({
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {t("settings.agent.enableHint", {
-                defaultValue:
-                  "This also turns the Local API on or off for scripts, not only agents.",
-              })}
+              {status.enabled
+                ? t("aiHub.agents.switchOnHint", {
+                    defaultValue:
+                      "Switch this off to disconnect every agent and script at once.",
+                  })
+                : t("aiHub.agents.switchOffHint", {
+                    defaultValue:
+                      "Off: no agent or script can reach your data.",
+                  })}
             </p>
+            {localApi}
           </div>
 
           <div className="space-y-3">
@@ -384,7 +568,22 @@ const ConnectToAgentPanel = ({
                 defaultValue: "How do you want to chat?",
               })}
             </SubHeading>
-            <Tabs value={choice} onValueChange={(v) => setChoice(v as Choice)}>
+            <p className="text-xs text-muted-foreground">
+              {status.enabled
+                ? t("aiHub.chat.pickOne", {
+                    defaultValue: "Click one of the four options to choose it.",
+                  })
+                : t("aiHub.chat.pickLocked", {
+                    defaultValue:
+                      "Switch on Allow agents to connect to choose one.",
+                  })}
+            </p>
+            {/* Off: no option is shown as picked and none can be, so the page
+                never looks set up while nothing can connect. */}
+            <Tabs
+              value={status.enabled ? choice : ""}
+              onValueChange={(v) => setChoice(v as Choice)}
+            >
               <TabsList
                 aria-label={t("settings.agent.chooseTitle", {
                   defaultValue: "How do you want to chat?",
@@ -438,6 +637,14 @@ const ConnectToAgentPanel = ({
                   null,
                 )}
               </TabsList>
+              {status.enabled &&
+                suggestionNote &&
+                !picked &&
+                suggestedChoice === choice && (
+                  <p className="mt-2 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                    {suggestionNote}
+                  </p>
+                )}
 
               <TabsContent value="claude-app" className="space-y-3">
                 {detected && !detected.desktop && (
@@ -581,6 +788,12 @@ const ConnectToAgentPanel = ({
                           disabled={setupState === "running"}
                           onClick={runClaudeCodeSetup}
                         >
+                          {setupState === "running" && (
+                            <Loader2
+                              className="mr-2 h-4 w-4 animate-spin"
+                              aria-hidden="true"
+                            />
+                          )}
                           {t("settings.agent.codeSetupButton", {
                             defaultValue: "Set up Claude Code for me",
                           })}
@@ -613,27 +826,23 @@ const ConnectToAgentPanel = ({
                         </Button>
                       </>
                     )}
-                    <p role="status" className="text-xs text-muted-foreground">
-                      {setupState === "running" &&
-                        t("settings.agent.codeSetupRunning", {
-                          defaultValue: "Setting up. This can take a minute.",
-                        })}
-                      {setupState === "ready" &&
-                        t("settings.agent.codeSetupReady", {
-                          defaultValue:
-                            "Done. Open Claude Code and ask about your money.",
-                        })}
-                      {setupState === "failed" &&
-                        t("settings.agent.codeSetupFailed", {
-                          defaultValue:
-                            "That did not work. Use the steps below instead.",
-                        })}
-                      {setupState === "not-found" &&
-                        t("settings.agent.codeNotFound", {
-                          defaultValue:
-                            "We could not find Claude Code on this computer.",
-                        })}
-                    </p>
+                    {setupStatus(setupState, {
+                      running: t("settings.agent.codeSetupRunning", {
+                        defaultValue: "Setting up. This can take a minute.",
+                      }),
+                      ready: t("settings.agent.codeSetupReady", {
+                        defaultValue:
+                          "Done. Open Claude Code and ask about your money.",
+                      }),
+                      failed: t("settings.agent.codeSetupFailed", {
+                        defaultValue:
+                          "That did not work. Use the steps below instead.",
+                      }),
+                      "not-found": t("settings.agent.codeNotFound", {
+                        defaultValue:
+                          "We could not find Claude Code on this computer.",
+                      }),
+                    })}
                   </div>
                 )}
                 <div className="space-y-2">
@@ -742,6 +951,12 @@ const ConnectToAgentPanel = ({
                           disabled={codexState === "running"}
                           onClick={runCodexSetup}
                         >
+                          {codexState === "running" && (
+                            <Loader2
+                              className="mr-2 h-4 w-4 animate-spin"
+                              aria-hidden="true"
+                            />
+                          )}
                           {t("settings.agent.codexSetupButton", {
                             defaultValue: "Set up Codex for me",
                           })}
@@ -792,32 +1007,27 @@ const ConnectToAgentPanel = ({
                         </div>
                       </>
                     )}
-                    <p role="status" className="text-xs text-muted-foreground">
-                      {codexState === "running" &&
-                        t("settings.agent.codeSetupRunning", {
-                          defaultValue: "Setting up. This can take a minute.",
-                        })}
-                      {codexState === "ready" &&
-                        t("settings.agent.codexSetupReady", {
-                          defaultValue:
-                            "Done. Open Codex and ask about your money.",
-                        })}
-                      {codexState === "failed" &&
-                        t("settings.agent.codexSetupFailed", {
-                          defaultValue:
-                            "That did not work. Use the steps below instead.",
-                        })}
-                      {codexState === "node-missing" &&
-                        t("settings.agent.codexNodeMissing", {
-                          defaultValue:
-                            "Node 18 or newer is needed. Install it, then try again.",
-                        })}
-                      {codexState === "not-found" &&
-                        t("settings.agent.codexNotFound", {
-                          defaultValue:
-                            "We could not find Codex on this computer.",
-                        })}
-                    </p>
+                    {setupStatus(codexState, {
+                      running: t("settings.agent.codeSetupRunning", {
+                        defaultValue: "Setting up. This can take a minute.",
+                      }),
+                      ready: t("settings.agent.codexSetupReady", {
+                        defaultValue:
+                          "Done. Open Codex and ask about your money.",
+                      }),
+                      failed: t("settings.agent.codexSetupFailed", {
+                        defaultValue:
+                          "That did not work. Use the steps below instead.",
+                      }),
+                      "node-missing": t("settings.agent.codexNodeMissing", {
+                        defaultValue:
+                          "Node 18 or newer is needed. Install it, then try again.",
+                      }),
+                      "not-found": t("settings.agent.codexNotFound", {
+                        defaultValue:
+                          "We could not find Codex on this computer.",
+                      }),
+                    })}
                   </div>
                 )}
                 <div className="space-y-2">
@@ -854,22 +1064,62 @@ const ConnectToAgentPanel = ({
       </ThemedCard>
 
       <div className="space-y-4">
-        <ThemedCard>
+        <ThemedCard aria-labelledby="where-to-chat-title">
           <ThemedCardHeader>
-            <ThemedCardTitle>
+            <ThemedCardTitle id="where-to-chat-title">
               {t("settings.agent.askTitle", {
                 defaultValue: "Ask your first question",
               })}
             </ThemedCardTitle>
           </ThemedCardHeader>
-          <ThemedCardContent className="space-y-2">
+          <ThemedCardContent className="space-y-3">
+            {blocker ? (
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300"
+              >
+                <AlertTriangle
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>{blocker}</span>
+              </p>
+            ) : canAsk ? (
+              <p className="flex items-start gap-2 rounded-md bg-green-600/10 px-3 py-2 text-sm">
+                <MessageCircle
+                  className="mt-0.5 h-4 w-4 shrink-0 text-green-700 dark:text-green-400"
+                  aria-hidden="true"
+                />
+                <span>{whereToChat[choice]}</span>
+              </p>
+            ) : (
+              <p className="rounded-md bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+                {status.enabled
+                  ? t("aiHub.chat.pickFirst", {
+                      defaultValue:
+                        "Pick how you want to chat. This card then says where to ask.",
+                    })
+                  : t("aiHub.chat.switchOnFirst", {
+                      defaultValue:
+                        "Switch on Allow agents to connect first. This card then says where to ask.",
+                    })}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {t("aiHub.chat.notHere", {
+                defaultValue:
+                  "The chat happens in that app, not on this page. Keep Vaulted Money open while you chat.",
+              })}
+            </p>
             <ul className="space-y-2">
               {EXAMPLE_QUESTIONS.map((question, index) => (
                 <li
                   key={question}
-                  className="flex flex-wrap items-center gap-2"
+                  className="flex items-center justify-between gap-2 rounded-md border px-3 py-2"
                 >
-                  <span className="text-sm">&ldquo;{question}&rdquo;</span>
+                  <span className="min-w-0 text-sm">
+                    &ldquo;{question}&rdquo;
+                  </span>
                   {copyButton(
                     index === 0 ? "ask0" : "ask1",
                     question,
@@ -889,84 +1139,45 @@ const ConnectToAgentPanel = ({
           </ThemedCardContent>
         </ThemedCard>
 
-        <ThemedCard>
-          <ThemedCardContent className="pt-6">
-            <Alert>
-              <SubHeading className="mb-1 font-medium leading-none tracking-tight">
-                {t("settings.agent.privacyTitle", { defaultValue: "Privacy" })}
-              </SubHeading>
-              <AlertDescription className="space-y-1">
-                <p>
-                  {t("settings.agent.privacyCloud", {
-                    defaultValue:
-                      "Whatever the agent reads, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude).",
-                  })}
-                </p>
-                <p>
-                  {t("settings.agent.privacyLocal", {
-                    defaultValue:
-                      "A local model keeps everything on this device. This does not work in the claude.ai website.",
-                  })}
-                </p>
-              </AlertDescription>
-            </Alert>
-          </ThemedCardContent>
-        </ThemedCard>
-
-        <ThemedCard>
-          <ThemedCardContent className="pt-6">
-            {confirming ? (
-              <Alert variant="destructive">
-                <AlertDescription className="space-y-2">
-                  <p>
-                    {t("settings.agent.disconnectWarning", {
-                      defaultValue:
-                        "This switches the Local API off and replaces the token, which cuts off every connected agent and script. Switch the Local API on again to let them reconnect on their own, with no copy-paste.",
-                    })}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      aria-label={t("settings.agent.confirmDisconnect", {
-                        defaultValue: "Confirm disconnect",
-                      })}
-                      onClick={() => {
-                        setConfirming(false);
-                        onDisconnect();
-                      }}
-                    >
-                      {t("settings.agent.confirm", {
-                        defaultValue: "Disconnect",
-                      })}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      aria-label={t("common.cancel", {
-                        defaultValue: "Cancel",
-                      })}
-                      onClick={() => setConfirming(false)}
-                    >
-                      {t("common.cancel", { defaultValue: "Cancel" })}
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                aria-label={t("settings.agent.disconnect", {
-                  defaultValue: "Disconnect everything",
-                })}
-                onClick={() => setConfirming(true)}
-              >
-                {t("settings.agent.disconnect", {
-                  defaultValue: "Disconnect everything",
-                })}
-              </Button>
-            )}
+        <ThemedCard aria-labelledby="agent-privacy-title">
+          <ThemedCardContent className="space-y-3 pt-6">
+            <SubHeading
+              id="agent-privacy-title"
+              className="text-sm font-medium leading-none tracking-tight"
+            >
+              {t("settings.agent.privacyTitle", { defaultValue: "Privacy" })}
+            </SubHeading>
+            <ul className="space-y-3 text-sm">
+              {privacyPoint(
+                <Cloud className={PRIVACY_ICON} aria-hidden="true" />,
+                t("aiHub.privacy.cloudTitle", {
+                  defaultValue: "Claude and Codex",
+                }),
+                t("aiHub.privacy.cloudBody", {
+                  defaultValue:
+                    "What the agent reads (transactions, vendors, balances) is sent to its maker: Anthropic or OpenAI.",
+                }),
+              )}
+              {privacyPoint(
+                <ShieldCheck className={PRIVACY_ICON} aria-hidden="true" />,
+                t("aiHub.privacy.localTitle", {
+                  defaultValue: "A private model",
+                }),
+                t("aiHub.privacy.localBody", {
+                  defaultValue: "Everything stays on this computer.",
+                }),
+              )}
+              {privacyPoint(
+                <Power className={PRIVACY_ICON} aria-hidden="true" />,
+                t("aiHub.privacy.offTitle", {
+                  defaultValue: "Switched off",
+                }),
+                t("aiHub.privacy.offBody", {
+                  defaultValue:
+                    "No agent can read anything. Agents work with the desktop app only, not the claude.ai website.",
+                }),
+              )}
+            </ul>
           </ThemedCardContent>
         </ThemedCard>
       </div>

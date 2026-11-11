@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchProviderModels } from "./aiModels";
+import {
+  bearerHeader,
+  fetchProviderModels,
+  isAiReady,
+  looksLikeEmbeddingModel,
+  providerNeedsApiKey,
+} from "./aiModels";
 
 const reply = (body: unknown, ok = true, status = 200) =>
   vi.fn().mockResolvedValue({
@@ -93,5 +99,70 @@ describe("fetchProviderModels", () => {
         reply({}, false, 401),
       ),
     ).rejects.toThrow("401 Unauthorized");
+  });
+});
+
+describe("providers that need no key", () => {
+  it("lists a local server's models without a key and sends no auth header", async () => {
+    const fetchFn = reply({ data: [{ id: "qwen" }] });
+    const result = await fetchProviderModels(
+      { type: "CUSTOM", baseUrl: "http://localhost:1234/v1" },
+      "",
+      fetchFn,
+    );
+    expect(result).toEqual(["qwen"]);
+    expect(fetchFn).toHaveBeenCalledWith("http://localhost:1234/v1/models", {
+      headers: {},
+    });
+  });
+
+  it("only custom (OpenAI-compatible) providers can go without a key", () => {
+    expect(providerNeedsApiKey({ type: "CUSTOM" })).toBe(false);
+    for (const type of [
+      "OPENAI",
+      "GEMINI",
+      "ANTHROPIC",
+      "MISTRAL",
+      "PERPLEXITY",
+    ] as const) {
+      expect(providerNeedsApiKey({ type })).toBe(true);
+    }
+  });
+
+  it("treats a keyless custom provider as ready, and a keyless hosted one as not", () => {
+    expect(isAiReady({ type: "CUSTOM" }, "")).toBe(true);
+    expect(isAiReady({ type: "OPENAI" }, "")).toBe(false);
+    expect(isAiReady({ type: "OPENAI" }, "k")).toBe(true);
+    expect(isAiReady(null, "k")).toBe(false);
+  });
+
+  it("builds a bearer header only when there is a key", () => {
+    expect(bearerHeader("k")).toEqual({ Authorization: "Bearer k" });
+    expect(bearerHeader("")).toEqual({});
+  });
+});
+
+describe("looksLikeEmbeddingModel", () => {
+  it("spots embedding models, which cannot chat or categorise", () => {
+    for (const id of [
+      "nomic-ai/nomic-embed-text-v1.5-GGUF",
+      "text-embedding-3-small",
+      "bge-m3",
+      "intfloat/e5-large",
+    ]) {
+      expect(looksLikeEmbeddingModel(id)).toBe(true);
+    }
+  });
+
+  it("leaves chat models and blanks alone", () => {
+    for (const id of [
+      "qwen2.5-7b-instruct",
+      "gpt-5",
+      "llama3",
+      "",
+      undefined,
+    ]) {
+      expect(looksLikeEmbeddingModel(id)).toBe(false);
+    }
   });
 });

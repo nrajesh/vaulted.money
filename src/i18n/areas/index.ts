@@ -13,6 +13,15 @@ import { csvImportScreen } from "./csvImportScreen";
 import { budgetDialogs } from "./budgetDialogs";
 import { aiProviderScreens } from "./aiProviderScreens";
 import { connectAgent } from "./connectAgent";
+import {
+  aiHub,
+  aiHubBars,
+  aiHubFacts,
+  aiHubFlow,
+  aiHubLocked,
+  aiHubPoints,
+  aiHubReady,
+} from "./aiHub";
 import { searchSuggestions } from "./searchSuggestions";
 import { homeLanding } from "./homeLanding";
 import { mergeMissing } from "./merge";
@@ -35,6 +44,13 @@ export const areaTranslations: AreaTranslations[] = [
   budgetDialogs,
   aiProviderScreens,
   connectAgent,
+  aiHub,
+  aiHubFlow,
+  aiHubReady,
+  aiHubBars,
+  aiHubPoints,
+  aiHubFacts,
+  aiHubLocked,
   searchSuggestions,
   homeLanding,
 ];

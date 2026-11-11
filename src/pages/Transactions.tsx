@@ -31,6 +31,7 @@ import {
 } from "@/hooks/useAutoCategorize";
 import { useAIConfig } from "@/hooks/useAIConfig";
 import { Link } from "react-router-dom";
+import { isAiReady } from "@/utils/aiModels";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 
@@ -460,7 +461,7 @@ const Transactions = () => {
       }
 
       // Check for config before starting progress modal
-      if (!config.apiKey || !config.provider) {
+      if (!config.provider || !isAiReady(config.provider, config.apiKey)) {
         toast({
           title: t("transactions.toasts.aiNotConfigured.title", {
             defaultValue: "AI Not Configured",

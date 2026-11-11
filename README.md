@@ -181,11 +181,11 @@ Beyond basic data entry the API covers the app's clean-up tools (detect transfer
 
 You can let an AI agent such as Claude read your money manager and help with it, for example "Where is my money going this month?" or "Import this bank statement". The desktop app must be running (closing the window only hides it). Setup is one switch.
 
-1. Open **Settings → Local API → Connect an AI agent** (opens the Connect to agent page) and switch on **Allow agents to connect**. The app tells agents how to find it, so there is no token to copy.
+1. Open **AI & agents** (in the sidebar, or the Settings button on the ledger screen) and, under **Chat with your data from an AI agent**, switch on **Allow agents to connect**. The app tells agents how to find it, so there is no token to copy.
 2. Then pick your agent:
 
 - **Claude Desktop:** download `vaulted-money.mcpb` from the [Releases page](https://github.com/nrajesh/vaulted.money/releases), double-click it and confirm the install. Nothing else is needed, not even Node.js.
-- **Claude Code:** on the Connect agent page, choose **Claude Code** and click **Set up Claude Code for me**. The app finds Claude Code on your computer and sets the plugin up (or updates it), and links to the download if it is not installed. Prefer to do it yourself? Paste this into a normal terminal (needs [Node.js](https://nodejs.org/) 18 or newer), or run the two `/plugin` commands inside Claude Code:
+- **Claude Code:** on the AI & agents page, choose **Claude Code** and click **Set up Claude Code for me**. The app finds Claude Code on your computer and sets the plugin up (or updates it), and links to the download if it is not installed. Prefer to do it yourself? Paste this into a normal terminal (needs [Node.js](https://nodejs.org/) 18 or newer), or run the two `/plugin` commands inside Claude Code:
 
   ```
   claude plugin marketplace add nrajesh/vaulted.money
@@ -194,12 +194,12 @@ You can let an AI agent such as Claude read your money manager and help with it,
 
   Inside Claude Code the same two steps are `/plugin marketplace add nrajesh/vaulted.money` and `/plugin install vaulted-money@vaulted-money`.
 
-- **Codex:** on the Connect agent page, choose **Codex** and click **Set up Codex for me**. The app finds Codex on your computer and registers the server with it (needs [Node.js](https://nodejs.org/) 18 or newer). Not installed yet? The page shows the install command (`npm install -g @openai/codex`). Prefer to do it yourself? Use **Copy config** and paste it into `~/.codex/config.toml`.
+- **Codex:** on the AI & agents page, choose **Codex** and click **Set up Codex for me**. The app finds Codex on your computer and registers the server with it (needs [Node.js](https://nodejs.org/) 18 or newer). Not installed yet? The page shows the install command (`npm install -g @openai/codex`). Prefer to do it yourself? Use **Copy config** and paste it into `~/.codex/config.toml`.
 - **A local model (for example LM Studio):** use **Copy setup** under **A private model on this computer** and paste it into the app's `mcp.json`. Choose a model that supports tool calling. Needs Node.js 18 or newer.
 
 **Privacy, honestly.** The plugin and the server upload nothing. But when you ask a question, whatever the agent reads to answer it, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude). Only ask about data you are happy to share that way. A local model keeps everything on your device. The claude.ai website is not supported, because it cannot reach software on your computer.
 
-**Staying safe.** Keep your agent's approval prompts switched on for adding, deleting and importing. Deletions need an explicit confirmation, and it is wise to make a backup before you let an agent work on real data. **Disconnect everything** in the same panel switches the Local API off and replaces the token, which cuts off every connected agent and script until you switch the Local API on again. They then reconnect on their own, with no copy-paste. More detail is in the [MCP server guide](mcp/README.md).
+**Staying safe.** Keep your agent's approval prompts switched on for adding, deleting and importing. Deletions need an explicit confirmation, and it is wise to make a backup before you let an agent work on real data. Switching **Allow agents to connect** off cuts off every connected agent and script until you switch it on again. They then reconnect on their own, with no copy-paste. To lock out anything that kept a copy of the token, use **Generate new token** under **Local API → Advanced**. More detail is in the [MCP server guide](mcp/README.md).
 
 ## Support the Project
 

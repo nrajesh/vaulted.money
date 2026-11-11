@@ -18,7 +18,9 @@ The title/tagline must not share a row with dense action groups on mobile. Keep 
 
 ## AI & Agents Pages
 
-AI Providers and Connect agent are one section under the sidebar entry "AI & agents". They share `AiHubLayout`: the tab switcher, then the master **AI features** switch, then the page. That frame sits at the same place on both pages, so switching tabs never moves it. With AI off only the switch and a "Turn on AI" button show. Where a tab cannot work (Connect agent on the web) show it greyed with a one-line reason instead of hiding it.
+Everything AI is one page (`src/pages/AiHubPage.tsx`) under the sidebar entry "AI & agents": the master **AI features** switch, then two collapsible bars, "AI inside the app" and "Chat with your data from an AI agent". Each bar shows its own state, turns green only when that part can really do its job, says that it is independent of the other, and stays mounted while closed so its status stays current. Do not split AI settings across pages or put an API key anywhere but the provider dialog. Both sections read the same state, so they can never disagree; the agent steps open on the choice that matches the provider in use. With AI off only the switch and a "Turn on AI" button show. Where a section cannot work (agents on the web) say why in one line instead of hiding it.
+
+Settings that are not about one ledger must open with no ledger open. List their routes in `src/constants/ledgerFreeRoutes.ts`; `AppShell` shows them in a slim frame that leads back to the ledger list.
 
 ## Action Buttons
 

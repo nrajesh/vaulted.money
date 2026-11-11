@@ -34,35 +34,18 @@ import {
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { useDataProvider } from "@/context/DataProviderContext";
-import { AIProvider } from "@/types/dataProvider";
 import { useTranslation } from "react-i18next";
-import ApiAccessCard from "@/components/settings/ApiAccessCard";
 
 const SettingsPage = () => {
   const { t } = useTranslation();
   const { selectedCurrency, setCurrency, availableCurrencies } = useCurrency();
   const { activeLedger, updateLedgerDetails } = useLedger();
-  const dataProvider = useDataProvider();
   const syncConfig = useSyncConfig();
-  const {
-    config: aiConfig,
-    saveConfig: saveAiConfig,
-    refreshConfig: refreshAiConfig,
-  } = useAIConfig();
+  const { config: aiConfig } = useAIConfig();
 
-  const [providers, setProviders] = React.useState<AIProvider[]>([]);
   const [isManageLedgerOpen, setIsManageLedgerOpen] = React.useState(false);
   const [isCreateLedgerOpen, setIsCreateLedgerOpen] = React.useState(false);
   const [futureMonths, setFutureMonths] = React.useState<number>(2);
-
-  React.useEffect(() => {
-    const fetchProviders = async () => {
-      const data = await dataProvider.getAIProviders();
-      setProviders(data);
-    };
-    fetchProviders();
-  }, [dataProvider, aiConfig.provider]);
 
   React.useEffect(() => {
     const savedMonths = localStorage.getItem("futureMonths");
@@ -96,551 +79,364 @@ const SettingsPage = () => {
     }
   };
 
-  const handleProviderChange = async (providerId: string) => {
-    if (providerId === "NONE") {
-      const allProviders = await dataProvider.getAIProviders();
-      for (const p of allProviders) {
-        if (p.isDefault)
-          await dataProvider.updateAIProvider({ ...p, isDefault: false });
-      }
-    } else {
-      await dataProvider.setDefaultAIProvider(providerId);
-    }
-    await refreshAiConfig();
-    showSuccess(
-      t("settings.ai.preferenceUpdated", {
-        defaultValue: "AI Provider preference updated.",
-      }),
-    );
-  };
-
   return (
     <div className="page-container">
       <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
         <div>
           <h1 className="app-gradient-title app-page-title">
-            {t("settings.page.title", { defaultValue: "Ledger" })}
+            {t("layout.nav.settings", { defaultValue: "Settings" })}
           </h1>
           <p className="app-page-subtitle">
-            {t("settings.page.subtitle", {
-              defaultValue: "Manage application preferences and data",
+            {t("appSettings.subtitle", {
+              defaultValue:
+                "Settings for the open ledger come first, then the ones that apply to every ledger on this device.",
             })}
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <ThemedCard className="tour-settings-currency">
-          <ThemedCardHeader>
-            <ThemedCardTitle>
-              {t("settings.cards.currency.title", {
-                defaultValue: "Default Currency",
+      <section aria-labelledby="settings-this-ledger" className="space-y-3">
+        <h2 id="settings-this-ledger" className="text-lg font-semibold">
+          {activeLedger
+            ? t("appSettings.thisLedger", {
+                name: activeLedger.name,
+                defaultValue: "This ledger: {{name}}",
+              })
+            : t("appSettings.thisLedgerNone", {
+                defaultValue: "This ledger",
               })}
-            </ThemedCardTitle>
-            <ThemedCardDescription>
-              {t("settings.cards.currency.description", {
-                defaultValue: "Select your preferred currency for display.",
-              })}
-            </ThemedCardDescription>
-          </ThemedCardHeader>
-          <ThemedCardContent>
-            <Select
-              value={selectedCurrency}
-              onValueChange={handleCurrencyChange}
-            >
-              <SelectTrigger className="w-full sm:w-[180px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100">
-                <SelectValue
-                  placeholder={t("dialogs.missingCurrency.selectCurrency", {
-                    defaultValue: "Select currency",
-                  })}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableCurrencies.map((currency) => (
-                  <SelectItem key={currency.code} value={currency.code}>
-                    {currency.name} ({currency.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </ThemedCardContent>
-        </ThemedCard>
-
-        <ThemedCard className="tour-settings-ledger">
-          <ThemedCardHeader>
-            <ThemedCardTitle>
-              {t("settings.cards.ledger.title", {
-                defaultValue: "Ledger Settings",
-              })}
-            </ThemedCardTitle>
-            <ThemedCardDescription>
-              {t("settings.cards.ledger.description", {
-                defaultValue:
-                  "Manage your current ledger details or create a new one.",
-              })}
-            </ThemedCardDescription>
-          </ThemedCardHeader>
-          <ThemedCardContent className="grid grid-cols-2 gap-2">
-            <Button
-              onClick={() => setIsManageLedgerOpen(true)}
-              className="h-9 w-full px-2 text-xs sm:text-sm bg-primary text-primary-foreground"
-            >
-              {t("settings.cards.ledger.edit", {
-                defaultValue: "Edit Current Ledger",
-              })}
-            </Button>
-            <Button
-              onClick={() => setIsCreateLedgerOpen(true)}
-              variant="outline"
-              className="h-9 w-full px-2 text-xs sm:text-sm"
-            >
-              {t("settings.cards.ledger.create", {
-                defaultValue: "Create New Ledger",
-              })}
-            </Button>
-          </ThemedCardContent>
-        </ThemedCard>
-
-        <ThemedCard>
-          <ThemedCardHeader>
-            <ThemedCardTitle>
-              {t("settings.cards.future.title", {
-                defaultValue: "Future Transactions",
-              })}
-            </ThemedCardTitle>
-            <ThemedCardDescription>
-              {t("settings.cards.future.description", {
-                defaultValue:
-                  "Define how many months of future scheduled transactions to show.",
-              })}
-            </ThemedCardDescription>
-          </ThemedCardHeader>
-          <ThemedCardContent>
-            <div className="flex items-center space-x-2">
-              <Input
-                aria-label={t("settings.page.futureMonthsLabel", {
-                  defaultValue: "Future transaction months",
-                })}
-                type="number"
-                value={futureMonths}
-                onChange={handleFutureMonthsChange}
-                onBlur={() =>
-                  showSuccess(
-                    t("settings.page.futureMonthsSet", {
-                      months: futureMonths,
-                      defaultValue:
-                        "Future transaction view set to {{months}} months.",
-                    }),
-                  )
-                }
-                min="0"
-                className="w-[100px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100"
-              />
-              <span className="text-sm text-muted-foreground">
-                {t("settings.cards.future.months", { defaultValue: "months" })}
-              </span>
-            </div>
-          </ThemedCardContent>
-        </ThemedCard>
-
-        {/* AI Integrations Settings Card */}
-        <ThemedCard className="tour-settings-ai md:col-span-2 lg:col-span-3 border-indigo-200/50 dark:border-indigo-900/50 bg-indigo-50/10 dark:bg-indigo-950/5">
-          <ThemedCardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <ThemedCardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                  {t("settings.ai.title", {
-                    defaultValue: "AI Integrations (BYOK)",
+        </h2>
+        {activeLedger ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <ThemedCard className="tour-settings-currency">
+              <ThemedCardHeader>
+                <ThemedCardTitle>
+                  {t("settings.cards.currency.title", {
+                    defaultValue: "Default Currency",
                   })}
                 </ThemedCardTitle>
                 <ThemedCardDescription>
-                  {t("settings.ai.description", {
-                    defaultValue:
-                      "Manage your AI model providers. Keys are stored locally in your browser.",
+                  {t("settings.cards.currency.description", {
+                    defaultValue: "Select your preferred currency for display.",
                   })}
                 </ThemedCardDescription>
-                <Link
-                  to="/privacy"
-                  className="mt-2 inline-flex text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  {t("settings.ai.privacy", {
-                    defaultValue: "Review privacy policy →",
-                  })}
-                </Link>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {t("settings.ai.chatInstead", {
-                    defaultValue: "Want to chat with your data instead?",
-                  })}{" "}
-                  <Link
-                    to="/connect-agent"
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                  >
-                    {t("settings.ai.connectAgentLink", {
-                      defaultValue: "Connect an AI agent",
-                    })}
-                  </Link>
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="hidden sm:flex border-indigo-200 dark:border-indigo-500"
-              >
-                <Link to="/ai-providers" className="flex items-center gap-2">
-                  <Brain className="h-4 w-4" />
-                  {t("settings.ai.manageProviders", {
-                    defaultValue: "Manage Providers",
-                  })}
-                </Link>
-              </Button>
-            </div>
-          </ThemedCardHeader>
-          <ThemedCardContent>
-            <div className="space-y-6 max-w-xl">
-              <div className="space-y-2">
-                <Label>
-                  {t("settings.ai.defaultProvider", {
-                    defaultValue: "Default AI Provider",
-                  })}
-                </Label>
+              </ThemedCardHeader>
+              <ThemedCardContent>
                 <Select
-                  value={aiConfig.provider?.id || "NONE"}
-                  onValueChange={handleProviderChange}
+                  value={selectedCurrency}
+                  onValueChange={handleCurrencyChange}
                 >
-                  <SelectTrigger className="w-full sm:w-[300px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100">
+                  <SelectTrigger className="w-full sm:w-[180px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100">
                     <SelectValue
-                      placeholder={t("settings.ai.selectProvider", {
-                        defaultValue: "Select an AI Provider",
+                      placeholder={t("dialogs.missingCurrency.selectCurrency", {
+                        defaultValue: "Select currency",
                       })}
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="NONE">
-                      {t("settings.ai.none", {
-                        defaultValue: "None (Disabled)",
-                      })}
-                    </SelectItem>
-                    {providers.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name} (
-                        {p.model ||
-                          t("settings.ai.noModel", { defaultValue: "None" })}
-                        )
+                    {availableCurrencies.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.name} ({currency.code})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Link
-                  to="/ai-providers"
-                  className="sm:hidden text-xs text-indigo-600 dark:text-indigo-400 hover:underline block mt-1"
-                >
-                  {t("settings.ai.manageProvidersLink", {
-                    defaultValue: "Manage Providers →",
-                  })}
-                </Link>
-              </div>
+              </ThemedCardContent>
+            </ThemedCard>
 
-              {aiConfig.provider ? (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-api-key">
-                      {t("settings.ai.apiKeyFor", {
-                        name: aiConfig.provider.name,
-                        defaultValue: "API Key for {{name}}",
-                      })}
-                    </Label>
-                    <Input
-                      id="ai-api-key"
-                      type="password"
-                      placeholder={t("settings.ai.apiKeyPlaceholder", {
-                        name: aiConfig.provider.name,
-                        defaultValue: "Enter your {{name}} API key",
-                      })}
-                      value={aiConfig.apiKey}
-                      onChange={(e) =>
-                        saveAiConfig(aiConfig.provider!.id, e.target.value)
-                      }
-                      onBlur={() => {
-                        if (aiConfig.apiKey)
-                          showSuccess(
-                            t("settings.ai.keySaved", {
-                              defaultValue: "API Key saved locally.",
-                            }),
-                          );
-                      }}
-                      className="w-full bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {aiConfig.provider.type === "OPENAI" && (
-                        <span>
-                          {t("settings.ai.getKey", {
-                            defaultValue: "Get your key:",
-                          })}{" "}
-                          <a
-                            href="https://platform.openai.com/api-keys"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            OpenAI Dashboard
-                          </a>
-                        </span>
-                      )}
-                      {aiConfig.provider.type === "GEMINI" && (
-                        <span>
-                          {t("settings.ai.getKey", {
-                            defaultValue: "Get your key:",
-                          })}{" "}
-                          <a
-                            href="https://aistudio.google.com/app/apikey"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            Google AI Studio
-                          </a>
-                        </span>
-                      )}
-                      {aiConfig.provider.type === "ANTHROPIC" && (
-                        <span>
-                          {t("settings.ai.getKey", {
-                            defaultValue: "Get your key:",
-                          })}{" "}
-                          <a
-                            href="https://console.anthropic.com/settings/keys"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            Anthropic Console
-                          </a>
-                        </span>
-                      )}
-                      {aiConfig.provider.type === "MISTRAL" && (
-                        <span>
-                          {t("settings.ai.getKey", {
-                            defaultValue: "Get your key:",
-                          })}{" "}
-                          <a
-                            href="https://console.mistral.ai/api-keys/"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            Mistral Console
-                          </a>
-                        </span>
-                      )}
-                      {aiConfig.provider.type === "PERPLEXITY" && (
-                        <span>
-                          {t("settings.ai.getKey", {
-                            defaultValue: "Get your key:",
-                          })}{" "}
-                          <a
-                            href="https://www.perplexity.ai/settings/api"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            Perplexity Settings
-                          </a>
-                        </span>
-                      )}
-                    </p>
-                  </div>
-
-                  <Alert className="border-indigo-100 dark:border-indigo-900/30">
-                    <Info className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                    <AlertDescription className="text-xs font-mono">
-                      <div className="grid grid-cols-[80px_1fr] gap-x-2">
-                        <span className="opacity-60 uppercase font-bold">
-                          {t("settings.ai.model", { defaultValue: "Model" })}
-                        </span>
-                        <span>
-                          {aiConfig.provider.model ||
-                            t("settings.ai.noModelParen", {
-                              defaultValue: "(None)",
-                            })}
-                        </span>
-                        <span className="opacity-60 uppercase font-bold">
-                          {t("settings.ai.endpoint", {
-                            defaultValue: "Endpoint",
-                          })}
-                        </span>
-                        <span className="truncate">
-                          {aiConfig.provider.baseUrl}
-                        </span>
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              ) : (
-                <Alert className="bg-slate-50 dark:bg-slate-900/50">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription className="text-sm">
-                    {t("settings.ai.selectHint", {
-                      defaultValue:
-                        "Select a provider from the list or add a custom one in the management module to enable AI-powered features.",
-                    })}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </ThemedCardContent>
-        </ThemedCard>
-
-        {/* Sync Settings Card */}
-        <ThemedCard className="tour-settings-sync md:col-span-2 lg:col-span-3">
-          <ThemedCardHeader>
-            <div className="flex items-center justify-between">
-              <div>
+            <ThemedCard className="tour-settings-ledger">
+              <ThemedCardHeader>
                 <ThemedCardTitle>
-                  {t("settings.sync.title", {
-                    defaultValue: "Cross-Device Continuity",
+                  {t("settings.cards.ledger.title", {
+                    defaultValue: "Ledger Settings",
                   })}
                 </ThemedCardTitle>
                 <ThemedCardDescription>
-                  {t("settings.sync.description", {
+                  {t("settings.cards.ledger.description", {
                     defaultValue:
-                      "Keep your data in sync across devices by choosing a shared location.",
+                      "Manage your current ledger details or create a new one.",
                   })}
                 </ThemedCardDescription>
-              </div>
-              <Switch
-                aria-label={t("settings.sync.toggle", {
-                  defaultValue: "Automatically sync across devices",
+              </ThemedCardHeader>
+              <ThemedCardContent className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => setIsManageLedgerOpen(true)}
+                  className="h-9 w-full px-2 text-xs sm:text-sm bg-primary text-primary-foreground"
+                >
+                  {t("settings.cards.ledger.edit", {
+                    defaultValue: "Edit Current Ledger",
+                  })}
+                </Button>
+                <Button
+                  onClick={() => setIsCreateLedgerOpen(true)}
+                  variant="outline"
+                  className="h-9 w-full px-2 text-xs sm:text-sm"
+                >
+                  {t("settings.cards.ledger.create", {
+                    defaultValue: "Create New Ledger",
+                  })}
+                </Button>
+              </ThemedCardContent>
+            </ThemedCard>
+          </div>
+        ) : (
+          <ThemedCard>
+            <ThemedCardContent className="flex flex-wrap items-center gap-3 pt-6">
+              <span className="text-sm text-muted-foreground">
+                {t("appSettings.noLedger", {
+                  defaultValue:
+                    "No ledger is open. Open one to change its currency and details.",
                 })}
-                checked={syncConfig.config.autoSyncEnabled}
-                onCheckedChange={(checked) =>
-                  syncConfig.toggleAutoSync(checked)
-                }
-              />
-            </div>
-          </ThemedCardHeader>
-          <ThemedCardContent>
-            {syncConfig.config.autoSyncEnabled && (
-              <div className="space-y-4">
-                <Alert className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>
-                    {t("settings.sync.recommendationTitle", {
-                      defaultValue: "Recommendation",
+              </span>
+              <Button asChild variant="outline">
+                <Link to="/ledgers">
+                  {t("appSettings.chooseLedger", {
+                    defaultValue: "Choose a ledger",
+                  })}
+                </Link>
+              </Button>
+            </ThemedCardContent>
+          </ThemedCard>
+        )}
+      </section>
+
+      <section aria-labelledby="settings-all-ledgers" className="space-y-3">
+        <h2 id="settings-all-ledgers" className="text-lg font-semibold">
+          {t("appSettings.allLedgers", {
+            defaultValue: "Every ledger on this device",
+          })}
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ThemedCard>
+            <ThemedCardHeader>
+              <ThemedCardTitle>
+                {t("settings.cards.future.title", {
+                  defaultValue: "Future Transactions",
+                })}
+              </ThemedCardTitle>
+              <ThemedCardDescription>
+                {t("settings.cards.future.description", {
+                  defaultValue:
+                    "Define how many months of future scheduled transactions to show.",
+                })}
+              </ThemedCardDescription>
+            </ThemedCardHeader>
+            <ThemedCardContent>
+              <div className="flex items-center space-x-2">
+                <Input
+                  aria-label={t("settings.page.futureMonthsLabel", {
+                    defaultValue: "Future transaction months",
+                  })}
+                  type="number"
+                  value={futureMonths}
+                  onChange={handleFutureMonthsChange}
+                  onBlur={() =>
+                    showSuccess(
+                      t("settings.page.futureMonthsSet", {
+                        months: futureMonths,
+                        defaultValue:
+                          "Future transaction view set to {{months}} months.",
+                      }),
+                    )
+                  }
+                  min="0"
+                  className="w-[100px] bg-white/80 dark:bg-slate-950/50 border-slate-300 dark:border-input text-slate-900 dark:text-slate-100"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {t("settings.cards.future.months", {
+                    defaultValue: "months",
+                  })}
+                </span>
+              </div>
+            </ThemedCardContent>
+          </ThemedCard>
+
+          {/* AI lives on its own page; this card says what is set up and links there. */}
+          <ThemedCard className="tour-settings-ai md:col-span-2 lg:col-span-3 border-indigo-200/50 dark:border-indigo-900/50 bg-indigo-50/10 dark:bg-indigo-950/5">
+            <ThemedCardHeader>
+              <ThemedCardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                {t("layout.nav.aiAndAgents", { defaultValue: "AI & agents" })}
+              </ThemedCardTitle>
+              <ThemedCardDescription>
+                {t("appSettings.ai.description", {
+                  defaultValue:
+                    "Providers, API keys, local models and AI agents are all set up on one page.",
+                })}
+              </ThemedCardDescription>
+            </ThemedCardHeader>
+            <ThemedCardContent className="flex flex-wrap items-center gap-3">
+              <Button asChild>
+                <Link to="/ai-providers">
+                  {t("appSettings.ai.open", {
+                    defaultValue: "Open AI & agents",
+                  })}
+                </Link>
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {aiConfig.provider
+                  ? t("appSettings.ai.inUse", {
+                      name: aiConfig.provider.name,
+                      defaultValue: "In use: {{name}}",
+                    })
+                  : t("appSettings.ai.notSetUp", {
+                      defaultValue: "No AI provider is in use.",
                     })}
-                  </AlertTitle>
-                  <AlertDescription>
-                    {t("settings.sync.recommendation", {
+              </span>
+            </ThemedCardContent>
+          </ThemedCard>
+
+          {/* Sync Settings Card */}
+          <ThemedCard className="tour-settings-sync md:col-span-2 lg:col-span-3">
+            <ThemedCardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <ThemedCardTitle>
+                    {t("settings.sync.title", {
+                      defaultValue: "Cross-Device Continuity",
+                    })}
+                  </ThemedCardTitle>
+                  <ThemedCardDescription>
+                    {t("settings.sync.description", {
                       defaultValue:
-                        "To ensure seamless continuity, select a folder synced by a cloud provider like iCloud, Google Drive, or Dropbox. Any local folder works, but won't sync automatically to other devices.",
+                        "Keep your data in sync across devices by choosing a shared location.",
                     })}
-                  </AlertDescription>
-                </Alert>
+                  </ThemedCardDescription>
+                </div>
+                <Switch
+                  aria-label={t("settings.sync.toggle", {
+                    defaultValue: "Automatically sync across devices",
+                  })}
+                  checked={syncConfig.config.autoSyncEnabled}
+                  onCheckedChange={(checked) =>
+                    syncConfig.toggleAutoSync(checked)
+                  }
+                />
+              </div>
+            </ThemedCardHeader>
+            <ThemedCardContent>
+              {syncConfig.config.autoSyncEnabled && (
+                <div className="space-y-4">
+                  <Alert className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>
+                      {t("settings.sync.recommendationTitle", {
+                        defaultValue: "Recommendation",
+                      })}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {t("settings.sync.recommendation", {
+                        defaultValue:
+                          "To ensure seamless continuity, select a folder synced by a cloud provider like iCloud, Google Drive, or Dropbox. Any local folder works, but won't sync automatically to other devices.",
+                      })}
+                    </AlertDescription>
+                  </Alert>
 
-                <div className="space-y-2 max-w-xl">
-                  <Label>
-                    {t("settings.sync.location", {
-                      defaultValue: "Sync Location",
-                    })}
-                  </Label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={
-                        syncConfig.config.syncDirectoryHandle
-                          ? "secondary"
-                          : "outline"
-                      }
-                      onClick={async () => {
-                        if (await syncConfig.selectFolder()) {
-                          showSuccess(
-                            t("settings.sync.folderUpdated", {
-                              defaultValue: "Sync folder location updated.",
-                            }),
-                          );
-                        }
-                      }}
-                      className="flex-1 justify-start font-normal"
-                    >
-                      <FolderOpen className="mr-2 h-4 w-4" />
-                      <span className="truncate">
-                        {syncConfig.config.syncDirectoryHandle
-                          ? syncConfig.isElectron || syncConfig.isCapacitor
-                            ? (syncConfig.config
-                                .syncDirectoryHandle as unknown as string)
-                            : (
-                                syncConfig.config
-                                  .syncDirectoryHandle as FileSystemDirectoryHandle
-                              ).name
-                          : t("settings.sync.selectFolder", {
-                              defaultValue: "Select Folder",
-                            })}
-                      </span>
-                    </Button>
-
-                    {syncConfig.needsPermission && (
+                  <div className="space-y-2 max-w-xl">
+                    <Label>
+                      {t("settings.sync.location", {
+                        defaultValue: "Sync Location",
+                      })}
+                    </Label>
+                    <div className="flex gap-2">
                       <Button
-                        variant="destructive"
+                        variant={
+                          syncConfig.config.syncDirectoryHandle
+                            ? "secondary"
+                            : "outline"
+                        }
                         onClick={async () => {
-                          if (await syncConfig.requestPermission()) {
+                          if (await syncConfig.selectFolder()) {
                             showSuccess(
-                              t("settings.sync.accessRestored", {
-                                defaultValue: "Access restored to sync folder.",
+                              t("settings.sync.folderUpdated", {
+                                defaultValue: "Sync folder location updated.",
                               }),
                             );
                           }
                         }}
-                        className="animate-pulse"
+                        className="flex-1 justify-start font-normal"
                       >
-                        <ShieldAlert className="mr-2 h-4 w-4" />
-                        {t("settings.sync.grantAccess", {
-                          defaultValue: "Grant Access",
-                        })}
+                        <FolderOpen className="mr-2 h-4 w-4" />
+                        <span className="truncate">
+                          {syncConfig.config.syncDirectoryHandle
+                            ? syncConfig.isElectron || syncConfig.isCapacitor
+                              ? (syncConfig.config
+                                  .syncDirectoryHandle as unknown as string)
+                              : (
+                                  syncConfig.config
+                                    .syncDirectoryHandle as FileSystemDirectoryHandle
+                                ).name
+                            : t("settings.sync.selectFolder", {
+                                defaultValue: "Select Folder",
+                              })}
+                        </span>
                       </Button>
-                    )}
+
+                      {syncConfig.needsPermission && (
+                        <Button
+                          variant="destructive"
+                          onClick={async () => {
+                            if (await syncConfig.requestPermission()) {
+                              showSuccess(
+                                t("settings.sync.accessRestored", {
+                                  defaultValue:
+                                    "Access restored to sync folder.",
+                                }),
+                              );
+                            }
+                          }}
+                          className="animate-pulse"
+                        >
+                          <ShieldAlert className="mr-2 h-4 w-4" />
+                          {t("settings.sync.grantAccess", {
+                            defaultValue: "Grant Access",
+                          })}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </ThemedCardContent>
-        </ThemedCard>
-      </div>
+              )}
+            </ThemedCardContent>
+          </ThemedCard>
+        </div>
 
-      {/* About section */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <ApiAccessCard />
-        <ThemedCard className="md:col-span-2 lg:col-span-3">
-          <ThemedCardHeader>
-            <ThemedCardTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-muted-foreground" />
-              {t("settings.about.title", { defaultValue: "About" })}
-            </ThemedCardTitle>
-          </ThemedCardHeader>
-          <ThemedCardContent>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                to="/acknowledgments"
-                className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm hover:bg-accent transition-colors"
-              >
-                <Scale className="h-4 w-4 text-muted-foreground" />
-                {t("settings.about.licenses", {
-                  defaultValue: "Open Source Licenses",
-                })}
-              </Link>
-              {!Capacitor.isNativePlatform() && (
+        {/* About section */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <ThemedCard className="md:col-span-2 lg:col-span-3">
+            <ThemedCardHeader>
+              <ThemedCardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5 text-muted-foreground" />
+                {t("settings.about.title", { defaultValue: "About" })}
+              </ThemedCardTitle>
+            </ThemedCardHeader>
+            <ThemedCardContent>
+              <div className="flex flex-wrap gap-4">
                 <Link
-                  to="/donate"
+                  to="/acknowledgments"
                   className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm hover:bg-accent transition-colors"
                 >
-                  <Heart className="h-4 w-4 text-pink-500" />
-                  {t("settings.about.support", {
-                    defaultValue: "Support Development",
+                  <Scale className="h-4 w-4 text-muted-foreground" />
+                  {t("settings.about.licenses", {
+                    defaultValue: "Open Source Licenses",
                   })}
                 </Link>
-              )}
-            </div>
-          </ThemedCardContent>
-        </ThemedCard>
-      </div>
+                {!Capacitor.isNativePlatform() && (
+                  <Link
+                    to="/donate"
+                    className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm hover:bg-accent transition-colors"
+                  >
+                    <Heart className="h-4 w-4 text-pink-500" />
+                    {t("settings.about.support", {
+                      defaultValue: "Support Development",
+                    })}
+                  </Link>
+                )}
+              </div>
+            </ThemedCardContent>
+          </ThemedCard>
+        </div>
+      </section>
 
       <ManageLedgerDialog
         isOpen={isManageLedgerOpen}

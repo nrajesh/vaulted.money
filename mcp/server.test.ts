@@ -292,7 +292,7 @@ describe("MCP server tools", () => {
     const switchedOff = createServer({
       getConnection: () => {
         lookups++;
-        throw new Error("Vaulted Money's Local API is off. Open the app, go to Settings → Local API and switch it on.");
+        throw new Error("Vaulted Money's Local API is off. Open the app, go to AI & agents and switch on Allow agents to connect.");
       },
       fetchImpl: () => Promise.reject(new TypeError("fetch failed")),
     });
@@ -668,7 +668,7 @@ describe("MCP connection discovery", () => {
   it("says the Local API is off when the config is disabled", () => {
     const VM_CONFIG_FILE = config({ enabled: false });
     expect(() => loadConnection({ VM_CONFIG_FILE, VM_TOKEN_FILE: nowhere }, "linux", dir)).toThrow(
-      "Vaulted Money's Local API is off. Open the app, go to Settings → Local API and switch it on.",
+      "Vaulted Money's Local API is off. Open the app, go to AI & agents and switch on Allow agents to connect.",
     );
   });
 

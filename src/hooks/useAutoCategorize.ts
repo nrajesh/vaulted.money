@@ -1,5 +1,6 @@
 import { defaultModel } from "@/constants/aiDefaultModels";
 import { useAIConfig } from "./useAIConfig";
+import { bearerHeader, isAiReady } from "@/utils/aiModels";
 import { Category, SubCategory, AIProvider } from "@/types/dataProvider";
 import { Transaction } from "@/data/finance-data";
 
@@ -150,7 +151,7 @@ export const categorizeVendorsBulk = async (
   categories: Category[],
   subCategories: SubCategory[],
 ): Promise<BulkCategorizeResult> => {
-  if (!apiKey || !provider) {
+  if (!provider || !isAiReady(provider, apiKey)) {
     throw new Error("AI Provider or API Key is not configured.");
   }
   if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -168,7 +169,7 @@ export const categorizeVendorsBulk = async (
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            ...bearerHeader(apiKey),
           },
           body: JSON.stringify({
             model: provider.model || defaultModel(provider.type),
@@ -218,7 +219,7 @@ export const categorizeVendorsBulk = async (
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            ...bearerHeader(apiKey),
           },
           body: JSON.stringify({
             model: provider.model || defaultModel("PERPLEXITY"),
@@ -239,7 +240,7 @@ export const categorizeVendorsBulk = async (
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            ...bearerHeader(apiKey),
           },
           body: JSON.stringify({
             model: provider.model || defaultModel("MISTRAL"),
@@ -297,7 +298,7 @@ export const useAutoCategorize = () => {
     categories: Category[],
     subCategories: SubCategory[],
   ): Promise<CategorizeResult> => {
-    if (!config.apiKey || !config.provider) {
+    if (!config.provider || !isAiReady(config.provider, config.apiKey)) {
       throw new Error("AI Provider or API Key is not configured.");
     }
 
@@ -319,7 +320,7 @@ export const useAutoCategorize = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+              ...bearerHeader(apiKey),
             },
             body: JSON.stringify({
               model: provider.model || defaultModel(provider.type),
@@ -390,7 +391,7 @@ export const useAutoCategorize = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+              ...bearerHeader(apiKey),
             },
             body: JSON.stringify({
               model: provider.model || defaultModel("PERPLEXITY"),
@@ -411,7 +412,7 @@ export const useAutoCategorize = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+              ...bearerHeader(apiKey),
             },
             body: JSON.stringify({
               model: provider.model || defaultModel("MISTRAL"),
@@ -447,7 +448,7 @@ export const useAutoCategorize = () => {
     categories: Category[],
     subCategories: SubCategory[],
   ): Promise<BulkCategorizeResult> => {
-    if (!config.apiKey || !config.provider) {
+    if (!config.provider || !isAiReady(config.provider, config.apiKey)) {
       throw new Error("AI Provider or API Key is not configured.");
     }
     return categorizeVendorsBulk(

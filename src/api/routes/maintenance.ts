@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Transaction } from "@/types/dataProvider";
 import { readAiApiKeyFromStorage } from "@/constants/aiApiKeyStorage";
 import { categorizeVendorsBulk } from "@/hooks/useAutoCategorize";
+import { isAiReady } from "@/utils/aiModels";
 import {
   findDuplicateRecurringInstances,
   findTransferPairs,
@@ -152,11 +153,11 @@ async function categorizeMissing(ctx: RouteContext) {
     const providers = await dp.getAIProviders();
     const provider = providers.find((p) => p.isDefault);
     const apiKey = provider ? readAiApiKeyFromStorage(provider.id) : "";
-    if (!provider || !apiKey) {
+    if (!provider || !isAiReady(provider, apiKey)) {
       throw new ApiError(
         400,
         "ai_not_configured",
-        "No default AI provider with an API key is configured. Set one via /ai-providers, or call with use_ai=false.",
+        "No default AI provider is configured, or it has no API key (only custom OpenAI-compatible providers, such as a local model, work without one). Set one via /ai-providers, or call with use_ai=false.",
       );
     }
     try {

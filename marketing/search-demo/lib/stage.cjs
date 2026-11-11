@@ -14,7 +14,8 @@
  */
 const fs = require("fs");
 const path = require("path");
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
+const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
+const REPO = path.join(__dirname, "../../..");
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -44,6 +45,8 @@ const overlay = ({ assets, endCard }) => {
     @keyframes demoGlow{0%{box-shadow:0 0 0 0 rgba(94,234,212,.9),0 0 0 0 rgba(56,189,248,.6);outline-color:rgba(94,234,212,1)}
       60%{box-shadow:0 0 22px 8px rgba(94,234,212,.55),0 0 46px 16px rgba(56,189,248,.3);outline-color:rgba(56,189,248,.9)}
       100%{box-shadow:0 0 10px 3px rgba(94,234,212,.35);outline-color:rgba(94,234,212,.55)}}
+    @keyframes demoGlowRow{0%{background:rgba(94,234,212,.42)}100%{background:rgba(94,234,212,.12)}}
+    tr.demo-glow-row{outline:2px solid #5eead4;outline-offset:-2px;animation:demoGlowRow 1.8s ease-out both}
     .demo-glow{outline:2px solid #5eead4;outline-offset:2px;animation:demoGlow 1.6s ease-out both;border-radius:999px}
     [cmdk-item].demo-glow{border-radius:8px}
     #root.phone-blur{filter:blur(7px) brightness(.9)}
@@ -131,16 +134,42 @@ async function createStage({
   width = 1920,
   height = 1080,
   ledger = "Home Budget",
+  setup: prepare = null,
+  desktop = false,
 }) {
   fs.mkdirSync(outDir, { recursive: true });
 
-  const browser = await chromium.launch();
-  const ctx = await browser.newContext({
-    viewport: { width, height },
-    // Frames are captured at twice the pixels (see the screencast below) so the
-  // zoomed-in camera stays sharp; Playwright's own video is too small and soft.
-    deviceScaleFactor: 2,
-  });
+  // The app uses hash routes in the desktop app and plain paths on the web.
+  const url = (p) => baseUrl + (desktop ? "/#" : "") + p;
+  let browser = null, ctx, desktopApp = null, desktopPage = null, profileDir = null;
+  if (desktop) {
+    // The real desktop app (Electron), showing the dev server's pages. It gets
+    // a profile folder of its own under out/, so it never opens or changes the
+    // data of a Vaulted Money already installed on this computer.
+    profileDir = fs.mkdtempSync(path.join(outDir, "desktop-profile-"));
+    const env = { ...process.env, VITE_DEV_SERVER_URL: baseUrl };
+    delete env.ELECTRON_RUN_AS_NODE; // set by some editors' terminals; Electron would start as plain Node
+    desktopApp = await _electron.launch({
+      executablePath: require(path.join(REPO, "node_modules/electron")),
+      cwd: REPO, args: [".", "--user-data-dir=" + profileDir], env,
+    });
+    await wait(4000);
+    await desktopApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().forEach((w) => w.webContents.closeDevTools()));
+    await wait(800);
+    desktopPage = desktopApp.windows().find((w) => !w.url().startsWith("devtools://"));
+    ctx = desktopPage.context();
+    // The window is whatever fits the screen; film it as a 1920x1080 page.
+    const metrics = await ctx.newCDPSession(desktopPage);
+    await metrics.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 2, mobile: false });
+  } else {
+    browser = await chromium.launch();
+    ctx = await browser.newContext({
+      viewport: { width, height },
+      // Frames are captured at twice the pixels (see the screencast below) so the
+      // zoomed-in camera stays sharp; Playwright's own video is too small and soft.
+      deviceScaleFactor: 2,
+    });
+  }
   // Only the first time: this also runs inside the phone's iframe, and must not
   // undo a theme the video switched to with the theme button.
   await ctx.addInitScript((th) => {
@@ -150,17 +179,21 @@ async function createStage({
 
   // Setup page: generate the demo data and open a ledger. Its recording is
   // thrown away; the data lives in the browser profile the take shares.
-  const setup = await ctx.newPage();
-  await setup.goto(baseUrl + "/ledgers");
+  const setup = desktop ? desktopPage : await ctx.newPage();
+  await setup.goto(url("/ledgers"));
+  if (desktop) await setup.reload(); // so the overlay script added above is in the page
   await setup.getByRole("button", { name: /generate demo data/i }).click();
   await wait(500);
   await setup.getByRole("button", { name: /generate|confirm|continue|yes|replace/i }).last().click();
   await wait(8000);
-  await setup.goto(baseUrl + "/ledgers"); await wait(1500);
+  await setup.goto(url("/ledgers")); await wait(1500);
   await setup.getByRole("heading", { name: ledger }).click();
   await wait(2500);
+  // Anything else the video needs before filming (see "setup" in the README).
+  if (prepare) await prepare(setup);
 
-  const page = await ctx.newPage();
+  // The desktop app has one window, so the take is filmed in it.
+  const page = desktop ? setup : await ctx.newPage();
   const T0 = Date.now();
   const now = () => (Date.now() - T0) / 1000;
 
@@ -184,18 +217,23 @@ async function createStage({
   let cam = { z: 1, cx: width / 2, cy: height / 2 };
 
   const stage = {
-    page, ev, wait, now, baseUrl, width, height,
+    page, ev, wait, now, baseUrl, width, height, url,
     mark: (name) => { ev.marks[name] = now(); },
     sound: (kind, opts = {}) => ev.sounds.push({ kind, t: now() + (opts.offset || 0), gain: opts.gain }),
 
     /** Where captions sit; move them inside the zoom window while zoomed in. */
     captionAt(x, bottom) { pos = { x, bottom }; },
-    async caption(html, ms = 0) {
-      await page.evaluate(([t, p]) => {
+    async caption(html, ms = 0, size = 30) {
+      await page.evaluate(([t, p, size]) => {
         const c = document.getElementById("demo-caption"); if (!c) return;
+        c.style.fontSize = size + "px";
         c.style.left = p.x + "px"; c.style.bottom = p.bottom + "px";
+        // "bottom" is measured from the page, not the screen, when the page is
+        // taller than the screen (html has a perspective). Correct for that.
+        const off = innerHeight - p.bottom - c.getBoundingClientRect().bottom;
+        if (Math.abs(off) > 1) c.style.bottom = p.bottom - off + "px";
         if (t) { c.innerHTML = t; c.classList.add("on"); } else c.classList.remove("on");
-      }, [html, pos]);
+      }, [html, pos, size]);
       if (ms) await wait(ms);
     },
 
@@ -325,8 +363,13 @@ async function createStage({
       stage.mark("end");
       fs.writeFileSync(path.join(outDir, "events.json"), JSON.stringify(ev, null, 1));
       await cdp.send("Page.stopScreencast").catch(() => {});
-      await ctx.close();
-      await browser.close();
+      if (desktop) {
+        await desktopApp.close();
+        fs.rmSync(profileDir, { recursive: true, force: true });
+      } else {
+        await ctx.close();
+        await browser.close();
+      }
       // Frames arrive only when the screen changes; their gaps become durations.
       const t0 = Math.max(0, frames[0].t);
       let list = "ffconcat version 1.0\n";

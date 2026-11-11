@@ -62,8 +62,13 @@ export const useLocalApi = () => {
     apply(
       { enabled },
       enabled
-        ? t("settings.api.started", { defaultValue: "API enabled" })
-        : t("settings.api.stopped", { defaultValue: "API disabled" }),
+        ? t("aiHub.agents.switchedOn", {
+            defaultValue: "Agent access is on.",
+          })
+        : t("aiHub.agents.switchedOff", {
+            defaultValue:
+              "Agent access is off. No agent or script can connect.",
+          }),
     );
 
   const regenerate = async () => {
@@ -73,21 +78,6 @@ export const useLocalApi = () => {
       t("settings.api.tokenRegenerated", {
         defaultValue:
           "New token generated. Update any client using the old one.",
-      }),
-    );
-  };
-
-  // Agents re-read the app's config on every request, so a new token alone
-  // would be picked up at once. Switching the API off as well is what cuts
-  // them off until the user switches it on again.
-  const disconnectEverything = async () => {
-    if (!electron) return;
-    await electron.regenerateApiToken();
-    await apply(
-      { enabled: false },
-      t("settings.api.disconnected", {
-        defaultValue:
-          "Local API switched off and token replaced. Switch it on to reconnect.",
       }),
     );
   };
@@ -107,6 +97,5 @@ export const useLocalApi = () => {
     apply,
     toggleEnabled,
     regenerate,
-    disconnectEverything,
   };
 };

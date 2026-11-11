@@ -42,6 +42,7 @@ import {
 } from "./hooks/useTransactionFormLogic";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isAiReady } from "@/utils/aiModels";
 
 interface AddEditTransactionDialogProps {
   isOpen: boolean;
@@ -305,7 +306,7 @@ const AddEditTransactionDialog: React.FC<AddEditTransactionDialogProps> = ({
     }
 
     // 2. Pre-flight check before pinging AI
-    if (!config.apiKey || !config.provider) {
+    if (!config.provider || !isAiReady(config.provider, config.apiKey)) {
       toast({
         title: "AI Not Configured",
         description: (

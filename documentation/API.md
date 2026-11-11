@@ -3,7 +3,7 @@
 Vaulted Money's desktop app can expose its data over a local HTTP API, so scripts and tools on the same computer can manage ledgers, transactions and settings, and generate reports and backups.
 
 - **Desktop (Electron) only.** The web and mobile builds have no process that can listen on a socket.
-- **Off by default.** Turn it on in **Settings → Local API**.
+- **Off by default.** Turn it on from the **AI & agents** page (**Allow agents to connect**); the port and token are under **Local API → Advanced** on the same page.
 - **The app must be running.** Closing the window only hides it, so the API keeps working until you quit the app.
 - **Local-first.** The server binds to `127.0.0.1` and is never reachable from the network. The API itself sends nothing off the device, but an AI agent you connect to it sends what it reads to its AI provider (Anthropic, for Claude). A local model keeps everything on the device.
 
@@ -191,7 +191,7 @@ How each behaves:
 
 - **Detect Transfers** pairs transactions on different accounts, at most one day apart, that cancel out in the same currency or look like a transfer (swapped account/vendor, both `Transfer`, or both vendors mentioning transfer). It links them with a shared `transfer_id`. The same code runs behind the app's button.
 - **Cleanup Duplicates** removes extra copies of a recurring transaction created twice on the same day, keeping the oldest.
-- **Categorize Missing** gives uncategorized transactions the category last used with the same vendor. **AI is opt-in:** with `use_ai: true` it also asks your default AI provider about vendors with no history. That sends vendor names (never amounts) to the provider and fails with `400 ai_not_configured` if no provider and key are set. The default is `false`, so nothing leaves the device unless you ask.
+- **Categorize Missing** gives uncategorized transactions the category last used with the same vendor. **AI is opt-in:** with `use_ai: true` it also asks your default AI provider about vendors with no history. That sends vendor names (never amounts) to the provider and fails with `400 ai_not_configured` if no default provider is set, or it has no key. A custom (OpenAI-compatible) provider, such as a model running on your own computer, needs no key. The default is `false`, so nothing leaves the device unless you ask.
 - **Reconcile Balance** compares the real balance you give with the app's balance (as of `date`, default today) and creates one `Balance Adjustment` transaction (category `Adjustment`) for the difference. Accounts that already match are left alone.
 - **Duplicate suggestions** group names that are identical after ignoring case, accents, punctuation and spacing, and suggest which to keep. (The app makes you pick duplicates by hand; the merge itself is the same.)
 - **Merging** keeps the target and moves past transactions onto it. The merged-away names' recurring transactions and budgets are deleted, not moved: with duplicates there is no telling which schedule or budget you still want. Re-create any you need on the target.

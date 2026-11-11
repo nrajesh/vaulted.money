@@ -24,6 +24,7 @@ import {
   HelpCircle,
   MoreHorizontal,
   X,
+  Settings,
 } from "lucide-react";
 import {
   ImportConfig,
@@ -641,6 +642,24 @@ const LedgerEntryPage = () => {
               </Link>
             </Button>
           )}
+          {/* App-wide settings (AI, languages, backup) need no open ledger. */}
+          {!isHomepageMobilePreview && (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
+            >
+              <Link
+                to="/settings"
+                aria-label={t("layout.nav.settings", {
+                  defaultValue: "Settings",
+                })}
+              >
+                <Settings className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+              </Link>
+            </Button>
+          )}
           <LanguageSwitcher />
           {hasTourForCurrentRoute && (
             <Button
@@ -717,6 +736,17 @@ const LedgerEntryPage = () => {
                   <Link to="/">
                     <Home className="h-5 w-5" />
                     {t("home.actions.home", { defaultValue: "Home" })}
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {!isHomepageMobilePreview && (
+                <DropdownMenuItem
+                  asChild
+                  className="min-h-14 rounded-xl px-4 py-3 text-[1.05rem] font-medium text-foreground gap-3"
+                >
+                  <Link to="/settings">
+                    <Settings className="h-5 w-5" />
+                    {t("layout.nav.settings", { defaultValue: "Settings" })}
                   </Link>
                 </DropdownMenuItem>
               )}
