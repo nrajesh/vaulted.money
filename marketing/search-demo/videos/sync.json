@@ -1,0 +1,213 @@
+{
+ "name": "sync",
+ "app": "desktop",
+ "ledger": "Home Budget",
+ "speed": 1.5,
+ "foley": 0.4,
+ "out": "final/vaulted-money-sync.mp4",
+ "pickFolder": "/Users/Shared/Vaulted Sync",
+ "demoData": false,
+ "endCard": {
+  "title": "Vaulted Money",
+  "tagline": "One ledger, two devices.",
+  "badges": [
+   {
+    "cls": "g",
+    "text": "Your folder"
+   },
+   {
+    "cls": "b",
+    "text": "No account"
+   },
+   {
+    "cls": "o",
+    "text": "Open-sourced"
+   }
+  ],
+  "url": "vaulted.money"
+ },
+ "setup": [],
+ "steps": [
+  {
+   "do": "goto",
+   "path": "/ledgers",
+   "wait": 2000
+  },
+  {
+   "do": "phonePrepare",
+   "path": "/#/ledgers",
+   "waitFor": "input[placeholder]"
+  },
+  {
+   "do": "mark",
+   "name": "intro"
+  },
+  {
+   "do": "clip",
+   "file": "out/sync-a-clip.mp4",
+   "label": "Laptop",
+   "keep": true
+  },
+  {
+   "do": "dockMedia"
+  },
+  {
+   "do": "phoneOver"
+  },
+  {
+   "do": "tag",
+   "text": "Phone",
+   "x": 1470,
+   "y": 34
+  },
+  {
+   "do": "mouse",
+   "x": 1150,
+   "y": 900
+  },
+  {
+   "do": "caption",
+   "text": "Now a phone<br><b>nothing on it yet</b>",
+   "size": 44,
+   "ms": 2800
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "zoom",
+   "z": 1.12,
+   "cx": 1063,
+   "cy": 540,
+   "ease": 1.0
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "phoneGoto",
+   "path": "#/settings",
+   "wait": 2000
+  },
+  {
+   "do": "scrollTo",
+   "target": {
+    "css": ".tour-settings-sync",
+    "in": "phone"
+   },
+   "block": "center"
+  },
+  {
+   "do": "caption",
+   "text": "Same switch<br><b>same folder</b>",
+   "size": 40,
+   "ms": 1500
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": ".tour-settings-sync [role=switch]",
+    "in": "phone"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 1100
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Select Folder",
+    "in": "phone"
+   }
+  },
+  {
+   "do": "sound",
+   "kind": "sparkle"
+  },
+  {
+   "do": "wait",
+   "ms": 3200
+  },
+  {
+   "do": "caption",
+   "text": "The whole ledger arrives<br><b>read from the folder</b>",
+   "size": 40,
+   "ms": 3000
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "phoneGoto",
+   "path": "#/transactions",
+   "wait": 2400
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox",
+    "in": "phone"
+   }
+  },
+  {
+   "do": "type",
+   "text": "apples",
+   "delay": 60
+  },
+  {
+   "do": "wait",
+   "ms": 600
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "[Ss]earch",
+    "in": "phone"
+   }
+  },
+  {
+   "do": "mouse",
+   "x": 1150,
+   "y": 900
+  },
+  {
+   "do": "wait",
+   "ms": 1200
+  },
+  {
+   "do": "caption",
+   "text": "Apples and honey<br><b>on the phone too</b>",
+   "size": 40,
+   "ms": 3600
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 0.9
+  },
+  {
+   "do": "tag",
+   "text": ""
+  },
+  {
+   "do": "clearMedia"
+  },
+  {
+   "do": "end"
+  }
+ ],
+ "theme": "light"
+}

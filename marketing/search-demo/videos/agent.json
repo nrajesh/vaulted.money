@@ -1,0 +1,414 @@
+{
+ "name": "agent",
+ "app": "desktop",
+ "ledger": "Home Budget",
+ "speed": 1.5,
+ "foley": 0.4,
+ "out": "final/vaulted-money-agent.mp4",
+ "localApi": {
+  "enabled": false,
+  "port": 47919
+ },
+ "agentImport": {
+  "ledger": "My Main Ledger",
+  "currency": "EUR",
+  "file": "videos/data/claude-eight-years.csv",
+  "rows": 97
+ },
+ "endCard": {
+  "title": "Vaulted Money",
+  "tagline": "AI agent, meet ledger.",
+  "badges": [
+   {
+    "cls": "g",
+    "text": "Local LLM"
+   },
+   {
+    "cls": "b",
+    "text": "Local MCP"
+   },
+   {
+    "cls": "o",
+    "text": "Open-sourced"
+   }
+  ],
+  "url": "vaulted.money"
+ },
+ "setup": [
+  {
+   "do": "goto",
+   "path": "/ai-providers",
+   "wait": 1800
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "#ai-features"
+   },
+   "wait": 900
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Add AI Provider"
+   },
+   "wait": 900
+  },
+  {
+   "do": "fill",
+   "target": {
+    "css": "[role=dialog] input[name=name]"
+   },
+   "text": "LM Studio"
+  },
+  {
+   "do": "fill",
+   "target": {
+    "css": "[role=dialog] input[name=baseUrl]"
+   },
+   "text": "http://localhost:1234/v1"
+  },
+  {
+   "do": "fill",
+   "target": {
+    "css": "[role=dialog] input[name=model]"
+   },
+   "text": "zai-org/glm-4.7-flash"
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Save Provider"
+   },
+   "wait": 1500
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "^AI inside the app"
+   },
+   "wait": 700
+  }
+ ],
+ "steps": [
+  {
+   "do": "goto",
+   "path": "/ai-providers",
+   "wait": 2400
+  },
+  {
+   "do": "mouse",
+   "x": 1200,
+   "y": 700
+  },
+  {
+   "do": "mark",
+   "name": "intro"
+  },
+  {
+   "do": "caption",
+   "text": "Your money stays on your computer<br><b>So can the AI</b>",
+   "size": 44,
+   "ms": 2600
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "anchor",
+   "name": "bar",
+   "target": {
+    "css": "#ai-in-app"
+   }
+  },
+  {
+   "do": "zoom",
+   "z": 1.5,
+   "cx": 640,
+   "anchor": "bar",
+   "dy": 60,
+   "ease": 1.1
+  },
+  {
+   "do": "wait",
+   "ms": 1100
+  },
+  {
+   "do": "caption",
+   "text": "A model on your own machine<br><b>no key, no cloud</b>",
+   "size": 40,
+   "ms": 2800
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40,
+   "ms": 300
+  },
+  {
+   "do": "anchor",
+   "name": "switch",
+   "target": {
+    "css": "#agent-enabled"
+   }
+  },
+  {
+   "do": "zoom",
+   "z": 1.45,
+   "cx": 662,
+   "anchor": "switch",
+   "dy": 40,
+   "ease": 1.2
+  },
+  {
+   "do": "wait",
+   "ms": 1300
+  },
+  {
+   "do": "caption",
+   "text": "One switch<br><b>lets an agent in</b>",
+   "size": 40,
+   "ms": 1500
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "#agent-enabled"
+   }
+  },
+  {
+   "do": "sound",
+   "kind": "sparkle"
+  },
+  {
+   "do": "wait",
+   "ms": 1900
+  },
+  {
+   "do": "caption",
+   "text": "Three steps, all green<br><b>ready to ask</b>",
+   "size": 40,
+   "ms": 2900
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40,
+   "ms": 300
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 1.0
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "clip",
+   "file": "videos/clips/lm-studio-import.mp4",
+   "label": "LM Studio, a real recording",
+   "while": [
+    {
+     "do": "caption",
+     "text": "Ask in plain words<br><b>attach your files</b>",
+     "size": 40,
+     "ms": 4600
+    },
+    {
+     "do": "caption",
+     "text": "The agent picks the tools<br><b>you watch every call</b>",
+     "size": 40,
+     "ms": 4600
+    },
+    {
+     "do": "agentImport"
+    },
+    {
+     "do": "caption",
+     "text": "It creates the ledger<br><b>and imports the rows</b>",
+     "size": 40,
+     "ms": 4400
+    },
+    {
+     "do": "caption",
+     "text": "",
+     "size": 40
+    }
+   ],
+   "keep": true
+  },
+  {
+   "do": "goto",
+   "path": "/ledgers",
+   "wait": 1600
+  },
+  {
+   "do": "clearMedia"
+  },
+  {
+   "do": "mouse",
+   "x": 1300,
+   "y": 800
+  },
+  {
+   "do": "anchor",
+   "name": "ledger",
+   "target": {
+    "role": "heading",
+    "name": "My Main Ledger"
+   }
+  },
+  {
+   "do": "zoom",
+   "z": 1.45,
+   "cx": 960,
+   "anchor": "ledger",
+   "dy": 90,
+   "ease": 1.0
+  },
+  {
+   "do": "wait",
+   "ms": 1000
+  },
+  {
+   "do": "caption",
+   "text": "Back in the app<br><b>a new ledger</b>",
+   "size": 40,
+   "ms": 2000
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "heading",
+    "name": "My Main Ledger"
+   }
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 0.6
+  },
+  {
+   "do": "wait",
+   "ms": 1800
+  },
+  {
+   "do": "goto",
+   "path": "/transactions",
+   "wait": 2600
+  },
+  {
+   "do": "mouse",
+   "x": 900,
+   "y": 470
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox"
+   }
+  },
+  {
+   "do": "type",
+   "text": "last 8 years ",
+   "delay": 45
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "glow",
+   "on": true
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "^Date:"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 1300
+  },
+  {
+   "do": "glow",
+   "on": false
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "^Done$"
+   }
+  },
+  {
+   "do": "mouse",
+   "x": 1500,
+   "y": 640
+  },
+  {
+   "do": "wait",
+   "ms": 600
+  },
+  {
+   "do": "caption",
+   "text": "Eight years of transactions<br><b>imported by the agent</b>",
+   "size": 40,
+   "ms": 3800
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "still",
+   "file": "videos/clips/lm-studio-ask-spending.png",
+   "label": "LM Studio, a real answer",
+   "ms": 4800,
+   "keep": true,
+   "while": [
+    {
+     "do": "caption",
+     "text": "Then just ask<br><b>where the money goes</b>",
+     "size": 40
+    }
+   ]
+  },
+  {
+   "do": "still",
+   "file": "videos/clips/lm-studio-ask-budget.png",
+   "label": "LM Studio, a real answer",
+   "ms": 6000,
+   "while": [
+    {
+     "do": "caption",
+     "text": "Tables, summaries, a budget<br><b>one of many possibilities</b>",
+     "size": 40
+    }
+   ]
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "end"
+  }
+ ]
+}

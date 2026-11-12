@@ -1,0 +1,343 @@
+{
+ "name": "api",
+ "app": "desktop",
+ "ledger": "Home Budget",
+ "speed": 1.5,
+ "foley": 0.5,
+ "out": "final/vaulted-money-api.mp4",
+ "localApi": {
+  "enabled": true,
+  "port": 47919
+ },
+ "endCard": {
+  "title": "Vaulted Money",
+  "tagline": "Your ledger, scriptable.",
+  "badges": [
+   {
+    "cls": "g",
+    "text": "This computer only"
+   },
+   {
+    "cls": "b",
+    "text": "OpenAPI built in"
+   },
+   {
+    "cls": "o",
+    "text": "Open-sourced"
+   }
+  ],
+  "url": "vaulted.money"
+ },
+ "setup": [
+  {
+   "do": "goto",
+   "path": "/ai-providers",
+   "wait": 1800
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "^AI inside the app"
+   },
+   "wait": 700
+  }
+ ],
+ "steps": [
+  {
+   "do": "goto",
+   "path": "/ai-providers",
+   "wait": 2400
+  },
+  {
+   "do": "mouse",
+   "x": 1200,
+   "y": 760
+  },
+  {
+   "do": "mark",
+   "name": "intro"
+  },
+  {
+   "do": "caption",
+   "text": "Your ledger has an API<br><b>on your own computer</b>",
+   "size": 44,
+   "ms": 2600
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "anchor",
+   "name": "switch",
+   "target": {
+    "css": "#agent-enabled"
+   }
+  },
+  {
+   "do": "zoom",
+   "z": 1.45,
+   "cx": 662,
+   "anchor": "switch",
+   "dy": 90,
+   "ease": 1.1
+  },
+  {
+   "do": "wait",
+   "ms": 1100
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Local API for scripts"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "caption",
+   "text": "An address and a token<br><b>this computer only</b>",
+   "size": 40,
+   "ms": 3000
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40,
+   "ms": 300
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 0.9
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "goto",
+   "path": "/transactions",
+   "wait": 2400
+  },
+  {
+   "do": "mouse",
+   "x": 700,
+   "y": 470
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox"
+   }
+  },
+  {
+   "do": "type",
+   "text": "corner cafe",
+   "delay": 45
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "[Ss]earch"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 700
+  },
+  {
+   "do": "mouse",
+   "x": 700,
+   "y": 760
+  },
+  {
+   "do": "wait",
+   "ms": 700
+  },
+  {
+   "do": "caption",
+   "text": "No Corner Cafe yet<br><b>watch this list</b>",
+   "ms": 2200,
+   "size": 40
+  },
+  {
+   "do": "caption",
+   "text": ""
+  },
+  {
+   "do": "terminal",
+   "open": true
+  },
+  {
+   "do": "zoom",
+   "z": 1.3,
+   "cx": 1220,
+   "cy": 520,
+   "ease": 1.0
+  },
+  {
+   "do": "caption",
+   "text": "Read it<br><b>with one line</b>",
+   "size": 40
+  },
+  {
+   "do": "terminal",
+   "run": {
+    "name": "ledgers",
+    "cmd": "curl -H \"Authorization: Bearer $TOKEN\" $VM/ledgers | jq '.data[].name'",
+    "path": "/ledgers",
+    "select": "data[].name",
+    "hold": 2200
+   }
+  },
+  {
+   "do": "caption",
+   "text": "Ask for totals<br><b>plain JSON back</b>",
+   "size": 40
+  },
+  {
+   "do": "terminal",
+   "run": {
+    "name": "analytics",
+    "cmd": "curl -H \"Authorization: Bearer $TOKEN\" \"$VM/ledgers/$ID/analytics?group_by=month\" | jq .totals",
+    "path": "/ledgers/{ledgerId}/analytics?group_by=month",
+    "select": "totals",
+    "max": 10,
+    "hold": 2600
+   }
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "terminal",
+   "clear": true
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 0.9
+  },
+  {
+   "do": "wait",
+   "ms": 700
+  },
+  {
+   "do": "caption",
+   "text": "Write to it<br><b>the app updates live</b>",
+   "size": 40
+  },
+  {
+   "do": "terminal",
+   "run": {
+    "name": "add",
+    "cmd": "curl -X POST -H \"Authorization: Bearer $TOKEN\" $VM/ledgers/$ID/transactions -d '{\"date\":\"{{today}}\",\"amount\":-4.80,\"account\":\"Joint Checking\",\"vendor\":\"Corner Cafe\",\"category\":\"Dining Out\"}'",
+    "method": "POST",
+    "path": "/ledgers/{ledgerId}/transactions",
+    "body": {
+     "date": "{{today}}",
+     "amount": -4.8,
+     "account": "Joint Checking",
+     "vendor": "Corner Cafe",
+     "category": "Dining Out"
+    },
+    "pick": [
+     "id",
+     "date",
+     "vendor",
+     "category",
+     "amount",
+     "currency"
+    ],
+    "hold": 1200
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "glowRows",
+   "target": {
+    "css": "tbody tr",
+    "hasText": "Corner Cafe"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 2600
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "terminal",
+   "clear": true
+  },
+  {
+   "do": "zoom",
+   "z": 1.3,
+   "cx": 1220,
+   "cy": 520,
+   "ease": 0.9
+  },
+  {
+   "do": "caption",
+   "text": "Every endpoint documented<br><b>OpenAPI built in</b>",
+   "size": 40
+  },
+  {
+   "do": "terminal",
+   "run": {
+    "name": "openapi",
+    "cmd": "curl -H \"Authorization: Bearer $TOKEN\" $VM/openapi.json | jq '.paths | length'",
+    "path": "/openapi.json",
+    "select": "paths.length",
+    "hold": 2800
+   }
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 0.9
+  },
+  {
+   "do": "terminal",
+   "close": true
+  },
+  {
+   "do": "caption",
+   "text": "Scripts, spreadsheets, your own screens<br><b>it is your data</b>",
+   "size": 40,
+   "ms": 3000
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "end"
+  }
+ ]
+}

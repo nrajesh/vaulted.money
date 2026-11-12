@@ -70,7 +70,7 @@ const overlay = ({ assets, endCard }) => {
     html.stage-docked{background:radial-gradient(ellipse at 40% 30%,#1b2c4a 0%,#0a1020 75%)!important;overflow:hidden!important}
     #demo-phone{position:fixed;right:110px;top:50%;width:462px;height:932px;padding:16px;box-sizing:border-box;
       background:#05070d;border-radius:76px;box-shadow:0 30px 90px rgba(0,0,0,.6),inset 0 0 0 2px #1e293b;
-      transform:translate(160%,-50%);transition:transform 1s cubic-bezier(.2,.8,.2,1);z-index:2147483640}
+      transform:translate(160%,-50%);transition:transform 1s cubic-bezier(.2,.8,.2,1);z-index:2147483641}
     #demo-phone.on{transform:translate(0,-50%)}
     #demo-phone.off{transform:translate(160%,-50%);opacity:0;filter:blur(18px);
       transition:transform .9s cubic-bezier(.6,0,.4,1),opacity .9s ease,filter .9s ease}
@@ -136,6 +136,10 @@ async function createStage({
   ledger = "Home Budget",
   setup: prepare = null,
   desktop = false,
+  onProfile = null,
+  localApi = null,
+  demoData = true,
+  pickFolder = null,
 }) {
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -147,6 +151,24 @@ async function createStage({
     // a profile folder of its own under out/, so it never opens or changes the
     // data of a Vaulted Money already installed on this computer.
     profileDir = fs.mkdtempSync(path.join(outDir, "desktop-profile-"));
+    if (process.env.DEMO_LOCAL_API === "1") {
+      // Seed only this disposable profile; the installed app profile is never read.
+      fs.writeFileSync(path.join(profileDir, "api-config.json"), JSON.stringify({
+        enabled: true,
+        port: Number(process.env.DEMO_LOCAL_API_PORT || 47919),
+        token: process.env.DEMO_LOCAL_API_TOKEN || "demo-token-".padEnd(40, "x"),
+      }), { mode: 0o600 });
+    }
+    if (localApi) {
+      // A script can also seed the Local API itself, e.g. switched off on a
+      // spare port, so the video can switch it on on camera without clashing
+      // with a Vaulted Money that is already running on this computer.
+      fs.writeFileSync(path.join(profileDir, "api-config.json"), JSON.stringify({
+        enabled: Boolean(localApi.enabled),
+        port: Number(localApi.port || 47919),
+        token: localApi.token || "demo-token-".padEnd(40, "x"),
+      }), { mode: 0o600 });
+    }
     const env = { ...process.env, VITE_DEV_SERVER_URL: baseUrl };
     delete env.ELECTRON_RUN_AS_NODE; // set by some editors' terminals; Electron would start as plain Node
     desktopApp = await _electron.launch({
@@ -154,6 +176,15 @@ async function createStage({
       cwd: REPO, args: [".", "--user-data-dir=" + profileDir], env,
     });
     await wait(4000);
+    if (pickFolder) {
+      // The system's folder picker cannot be filmed or clicked by a script, so
+      // it answers with this folder. Everything after the picker is the app's
+      // own code: authorising the folder, saving it, reading and writing it.
+      fs.mkdirSync(pickFolder, { recursive: true });
+      await desktopApp.evaluate(({ dialog }, dir) => {
+        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [dir] });
+      }, pickFolder);
+    }
     await desktopApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().forEach((w) => w.webContents.closeDevTools()));
     await wait(800);
     desktopPage = desktopApp.windows().find((w) => !w.url().startsWith("devtools://"));
@@ -175,6 +206,14 @@ async function createStage({
   await ctx.addInitScript((th) => {
     try { if (!localStorage.getItem("vite-ui-theme")) localStorage.setItem("vite-ui-theme", th); } catch {}
   }, theme);
+  if (desktop) {
+    // The phone frame is a page inside the desktop app's window. Hand it the
+    // desktop bridge, so the app in the frame is the same build as the window
+    // around it (it can pick a folder, for one) instead of the website.
+    await ctx.addInitScript(() => {
+      try { if (window.top !== window && !window.electron && window.top.electron) window.electron = window.top.electron; } catch {}
+    });
+  }
   await ctx.addInitScript(overlay, { assets, endCard });
 
   // Setup page: generate the demo data and open a ledger. Its recording is
@@ -182,13 +221,19 @@ async function createStage({
   const setup = desktop ? desktopPage : await ctx.newPage();
   await setup.goto(url("/ledgers"));
   if (desktop) await setup.reload(); // so the overlay script added above is in the page
-  await setup.getByRole("button", { name: /generate demo data/i }).click();
-  await wait(500);
-  await setup.getByRole("button", { name: /generate|confirm|continue|yes|replace/i }).last().click();
-  await wait(8000);
-  await setup.goto(url("/ledgers")); await wait(1500);
-  await setup.getByRole("heading", { name: ledger }).click();
-  await wait(2500);
+  // `demoData: false` films a new install: no ledgers, nothing opened.
+  if (demoData) {
+    await setup.getByRole("button", { name: /generate demo data/i }).click();
+    await wait(500);
+    await setup.getByRole("button", { name: /generate|confirm|continue|yes|replace/i }).last().click();
+    await wait(8000);
+    await setup.goto(url("/ledgers")); await wait(1500);
+    await setup.getByRole("heading", { name: ledger }).click();
+    await wait(2500);
+  } else {
+    await wait(1500);
+  }
+  if (desktop && onProfile) await onProfile({ profileDir, configPath: path.join(profileDir, "api-config.json") });
   // Anything else the video needs before filming (see "setup" in the README).
   if (prepare) await prepare(setup);
 
@@ -313,7 +358,7 @@ async function createStage({
      * phone slides in. The phone starts without the desktop's saved filters,
      * so its search starts from a clean page. Does not block: await the result.
      */
-    async preparePhone(pathname, { excludeTransfers = false } = {}) {
+    async preparePhone(pathname, { excludeTransfers = false, waitFor = '[role="combobox"]' } = {}) {
       await page.evaluate(([src, excludeTransfers]) => {
         for (const k of Object.keys(localStorage)) {
           if (k.startsWith("filter_")) localStorage.removeItem(k);
@@ -325,7 +370,7 @@ async function createStage({
       }, [pathname, excludeTransfers]);
       const handle = await page.waitForSelector("#demo-phone iframe");
       const frame = await handle.contentFrame();
-      await frame.waitForSelector('[role="combobox"]', { timeout: 30000 });
+      await frame.waitForSelector(waitFor, { timeout: 30000 });
       await wait(800);
       return frame;
     },
@@ -350,7 +395,19 @@ async function createStage({
       await page.evaluate(() => {
         document.getElementById("demo-cursor").style.display = "none";
         document.getElementById("root").classList.add("flipped");
-        document.getElementById("demo-end").classList.add("on");
+        // The card is "fixed", but the page has a perspective, so it is laid
+        // out against the whole page, not the screen. Pin it to the part of
+        // the page in view, or a scrolled page shows it off-centre.
+        const end = document.getElementById("demo-end");
+        end.style.inset = "auto";
+        // Scrollbars would otherwise sit on top of the card's edges.
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        end.style.left = scrollX + "px";
+        end.style.top = scrollY + "px";
+        end.style.width = document.documentElement.clientWidth + "px";
+        end.style.height = document.documentElement.clientHeight + "px";
+        end.classList.add("on");
       });
     },
     /** The card turns dark in a circular reveal. */

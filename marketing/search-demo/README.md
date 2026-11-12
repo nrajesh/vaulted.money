@@ -25,6 +25,9 @@ There is **no watch app**, so the video does not show one.
 |---|---|---|---|
 | `videos/search.json` | `final/vaulted-money-search.mp4` | Search | Natural-language search, on desktop and phone. |
 | `videos/ai.json` | `final/vaulted-money-ai.mp4` | AI, Your Call | The AI switch off, then on; **Categorize Missing** on rows filtered to Uncategorized; the same in light theme, ending on the agent section of the **AI & agents** page. Filmed in the desktop app. |
+| `videos/agent.json` | `final/vaulted-money-agent.mp4` | AI agent - Meet Ledger | Switching agent access on in the desktop app, a real LM Studio recording of a local model creating a ledger and importing files through the MCP tools, the imported ledger in the app, and two real LM Studio answers. |
+| `videos/api.json` | `final/vaulted-money-api.mp4` | Your Ledger, Scriptable | The Local API address and token in the desktop app, then four requests in a terminal with the real replies; a transaction added over the API appears in the open list. |
+| `videos/sync-a.json`, then `videos/sync.json` | `final/vaulted-money-sync.mp4` | One Ledger, Two Devices | A laptop switches Cross-Device Continuity on, picks a folder and adds a purchase ("Apples and honey"); an empty phone, in the light theme, picks the same folder and receives the whole ledger, purchase included. |
 
 **AI, Your Call: what is real and what is not.** The app, the switch, the
 button, the progress window and the categories written to the rows are all the
@@ -50,6 +53,66 @@ agent section only works there; on the web it says it needs the desktop app. The
 video only scrolls to that section. It does not switch "Allow agents to connect" on, so no Local
 API server is started during a take. The desktop app is built for macOS,
 Windows and Linux, so the caption says "desktop app", not "Mac app".
+
+**AI agent - Meet Ledger: what is real and what is not.** The app scenes are
+the real desktop app with a throwaway profile. Off camera the script adds one
+custom AI provider (name "LM Studio", address `http://localhost:1234/v1`); no
+model server is contacted. On camera it switches **Allow agents to connect** on,
+which starts the real Local API in that profile on a spare port (`localApi` in
+the script, so it cannot clash with a Vaulted Money already running).
+
+The LM Studio footage (`videos/clips/lm-studio-import.mp4`) is a real screen
+recording made by the project owner: a local model (glm-4.7-flash) asked to
+create a ledger and import two files through the `vaulted-money` MCP tools. It
+was recorded in a different session from the app scenes, with different files.
+While it plays, the script does the same job for real in the filmed app,
+through the real MCP server (`agentImport`): `call_api POST /ledgers` creates
+"My Main Ledger", then `import_csv` imports `videos/data/claude-eight-years.csv`,
+a synthetic file of 97 transactions spread over eight years (dates come from
+`{{today-N}}`). The ledger and rows shown afterwards are that import, so the
+caption says "eight years of transactions" and gives no row count from the
+footage. The run fails if the import does not report 97 rows.
+
+The two answers at the end (`videos/clips/lm-studio-ask-*.png`) are real
+LM Studio screenshots (gemma, on the app's generated demo data), shown as
+pictures. Captions, labels and the cursor are recording overlays.
+
+**Your Ledger, Scriptable: what is real and what is not.** The app is the real
+desktop app with a throwaway profile whose Local API is switched on, on a spare
+port, before filming (`localApi`). The terminal window is a drawing. What it
+prints is not: each command shown is sent by the script to that profile's real
+Local API with its real token, and the reply printed is the real reply (saved
+to `out/terminal-*.json`), cut down as the `jq` filter on screen says. The
+token is shown as `$TOKEN`, the address as `$VM` and the ledger id as `$ID`.
+The transaction added with `POST` appears in the open, filtered list because
+the app refreshes after every API write; nothing is reloaded or faked for it.
+
+**One Ledger, Two Devices: what is real and what is not.** Both devices are
+the real desktop app, each with its own throwaway profile, on one machine; they
+share a real folder (`pickFolder`, `/Users/Shared/Vaulted Sync`, removed
+afterwards). The laptop is filmed first (`sync-a.json` writes
+`out/sync-a.mp4`), cut before its end card into `out/sync-a-clip.mp4`, and
+played as a clip at the start of the second take, where its last frame stays on
+the left.
+
+The "phone" is the second profile (`sync.json`, `demoData: false`, light
+theme), shown at phone size inside the recorder's phone frame. It is the
+desktop build of the app, not the iOS or Android app: the frame is handed the
+desktop bridge so that it can pick a folder. It starts with no ledgers at all.
+The system folder picker cannot be filmed or clicked by a script, so on both
+devices it is answered with the shared folder; everything after it is the
+app's own code. The purchase typed on the laptop is written to `ledger.json` in
+the folder by the app, and the phone reads that file when the folder is
+picked: nothing is copied by the script. In real use the folder would sit in a
+cloud drive; the video does not show a cloud service or a real phone.
+
+```bash
+node make.cjs videos/sync-a.json                      # computer one -> out/sync-a.mp4
+# cut it before the end card: (flip - intro) / speed from out/events.json, minus 0.25 s
+ffmpeg -y -t 26.2 -i out/sync-a.mp4 -an -c:v libx264 -crf 16 out/sync-a-clip.mp4
+node make.cjs videos/sync.json                        # computer two -> final/vaulted-money-sync.mp4
+rm -rf "/Users/Shared/Vaulted Sync"
+```
 
 ## Make it
 
@@ -107,6 +170,17 @@ Two optional keys prepare the app before filming:
   README what a video's setup does.
 - `aiStandIn` (`port`, `delayMs`): starts the stand-in AI provider for the
   take. `{{standIn}}` in a `fill` step becomes its address.
+- `localApi` (`enabled`, `port`): desktop only. Writes the Local API setting
+  into the throwaway profile before the app starts, so a video can film the
+  switch being turned on, or start with it on, without using the port of a
+  Vaulted Money already running on this computer.
+- `agentImport` (`ledger`, `currency`, `file`, `rows`): what the `agentImport`
+  step creates and imports through the real MCP server.
+- `demoData: false`: desktop only. Films a new install: no demo data is made
+  and no ledger is opened.
+- `theme` (`"light"` or `"dark"`): the theme a fresh profile starts in.
+- `pickFolder` (a path): desktop only. The folder the system folder picker
+  answers with, created if missing. Use a neutral path; it is shown on screen.
 
 A step is `{ "do": "...", ...}`, run in order. A *target* says what to click:
 `{ "role": "option", "name": "regex" }`, `{ "css": "#id" }` or `{ "text": "..." }`;
@@ -128,6 +202,15 @@ add `"in": "phone"` to look inside the phone frame.
 | `dissolve` | `steps`, `hold` ms: fade to dark, run the steps unseen, fade back. |
 | `phonePrepare`, `phoneLoad`, `phoneShow` | Load the app in a phone frame (`path`, `excludeTransfers`), wait for it, slide it in. |
 | `sound`, `wait`, `mouse` | `kind` whoosh/sparkle; `ms`; `x`, `y`. |
+| `scrollTo` | `target`, `block`: scroll an element into view, smoothly. |
+| `clip` | `file`, `label`, `while`, `keep`: play a recorded clip full screen (footage of another program, which the recorder cannot film). It is slowed by the video's `speed`, so it plays at its own pace in the result. `while` is a list of steps run as it plays. `keep` leaves it up for the next step to cover. |
+| `still` | `file`, `label`, `ms`, `while`, `keep`: show a picture in a framed card, drifting down it if it is tall. |
+| `dockMedia` | Shrink a clip left up with `keep` to the left of the screen, to make room beside it. |
+| `phoneOver`, `phoneGoto` | Show the phone over whatever is on screen (no shrinking of the app behind it); open another page inside the phone (`path`, e.g. `#/settings`). `phonePrepare` also takes `waitFor`, the selector that says the phone's page has loaded. |
+| `tag` | `text`: a small label in the top-left corner (which computer this is); `""` removes it. |
+| `clearMedia` | Fade out a clip or still left up with `keep`. |
+| `agentImport` | Through the real MCP server: create the ledger and import the file named in `agentImport`. Agent access must be on. |
+| `terminal` | `{ "open": true }`, `{ "run": { cmd, method, path, body, select, pick, max, hold } }`, `{ "clear": true }`, `{ "close": true }`: a drawn terminal that types `cmd`, sends the request to the take's real Local API and prints the real reply. `{ledgerId}` in a path is the script's ledger. |
 | `end` | The finale: the app blurs into the end card, then it turns dark. |
 
 For a step the runner does not have, add a function to `steps` in `make.cjs` and
@@ -141,6 +224,19 @@ Tips learned making these:
   mouse onto it (`mouse`), `wait`, then click the link by name.
 - Moving between pages by clicking in the app keeps the captions and cursor; a
   second `goto` reloads the page and must not be used inside a `dissolve`.
+- In the desktop app a `goto` only changes the route; the page is not
+  reloaded, so anything a step added to the page (a clip left up with `keep`)
+  is still there. Clear it with `clearMedia`.
+- With the Local API seeded on, AI features start on too. A setup step that
+  clicks the AI switch would turn them off.
+- Inside the phone frame the app hides its Settings and Home menu entries
+  (it treats any frame as the homepage preview), so move between pages with
+  `phoneGoto`.
+- The end card is pinned to the part of the page in view and hides the
+  scrollbars. Before that, a video that ended on a scrolled page showed the
+  card off-centre.
+- A caption sits at the bottom of what the camera shows. Leave room for it in
+  anything drawn there (the terminal keeps its text above it).
 
 - Keep captions inside the zoomed area (`captionAt(x, bottom)`); a caption at the
   bottom of the screen disappears when the camera zooms in.
