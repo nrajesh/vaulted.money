@@ -182,7 +182,7 @@ describe("AddEditAIProviderDialog", () => {
     expect(readAiApiKeyFromStorage("local-1")).toBe("");
   });
 
-  it("offers no local-model option on a phone, and starts a new provider as a hosted one", () => {
+  it("offers no local-model option outside the desktop app, and starts a new provider as a hosted one", () => {
     device.local = false;
     renderDialog(null);
     expect(
@@ -192,12 +192,12 @@ describe("AddEditAIProviderDialog", () => {
     expect(screen.getByLabelText("API key")).toBeInTheDocument();
   });
 
-  it("refuses a localhost address on a phone instead of failing to fetch", () => {
+  it("refuses a localhost address outside the desktop app instead of failing to fetch", () => {
     device.local = false;
     renderDialog(localProvider);
     fireEvent.click(screen.getByRole("button", { name: "Load models" }));
     expect(showError).toHaveBeenCalledWith(
-      "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+      "A model on your own computer can only be reached from the desktop app.",
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });

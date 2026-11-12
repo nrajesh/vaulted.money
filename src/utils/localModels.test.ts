@@ -1,40 +1,19 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { Capacitor } from "@capacitor/core";
+import { afterEach, describe, expect, it } from "vitest";
 import { canUseLocalModels, isLoopbackUrl } from "./localModels";
 
-const setAgent = (userAgent: string, maxTouchPoints = 0) => {
-  vi.spyOn(navigator, "userAgent", "get").mockReturnValue(userAgent);
-  Object.defineProperty(navigator, "maxTouchPoints", {
-    value: maxTouchPoints,
-    configurable: true,
-  });
-};
+const win = window as unknown as { electron?: unknown };
 
 describe("canUseLocalModels", () => {
   afterEach(() => {
-    vi.restoreAllMocks();
-    Object.defineProperty(navigator, "maxTouchPoints", {
-      value: 0,
-      configurable: true,
-    });
+    delete win.electron;
   });
 
-  it("is true on a computer", () => {
-    setAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15");
+  it("is true in the desktop app", () => {
+    win.electron = {};
     expect(canUseLocalModels()).toBe(true);
   });
 
-  it("is false in the iOS and Android apps", () => {
-    vi.spyOn(Capacitor, "isNativePlatform").mockReturnValue(true);
-    expect(canUseLocalModels()).toBe(false);
-  });
-
-  it("is false in a phone or tablet browser, including an iPad posing as a Mac", () => {
-    setAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)");
-    expect(canUseLocalModels()).toBe(false);
-    setAgent("Mozilla/5.0 (Linux; Android 15; Pixel 9)");
-    expect(canUseLocalModels()).toBe(false);
-    setAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", 5);
+  it("is false on the website and in the mobile apps, where the server cannot be reached", () => {
     expect(canUseLocalModels()).toBe(false);
   });
 });
