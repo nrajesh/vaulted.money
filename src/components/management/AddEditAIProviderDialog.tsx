@@ -127,8 +127,9 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   const dataProvider = useDataProvider();
   const formSchema = React.useMemo(() => buildFormSchema(t), [t]);
 
-  // A phone or tablet cannot reach a model on "this computer", so there the
-  // local option is not offered and a new provider starts as a hosted one.
+  // Only the desktop app can reach a model on "this computer". Everywhere
+  // else (the website, phones) the local option is not offered and a new
+  // provider starts as a hosted one.
   const localOk = React.useMemo(() => canUseLocalModels(), []);
   const startType = localOk ? "CUSTOM" : "OPENAI";
   const startUrl = localOk ? "" : PROVIDER_DOCS.OPENAI.endpoint;
@@ -186,7 +187,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
       showError(
         t("aiHub.dialog.noLocalHere", {
           defaultValue:
-            "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+            "A model on your own computer can only be reached from the desktop app.",
         }),
       );
       return false;
@@ -357,7 +358,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
       showError(
         t("aiHub.dialog.noLocalHere", {
           defaultValue:
-            "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+            "A model on your own computer can only be reached from the desktop app.",
         }),
       );
       return;

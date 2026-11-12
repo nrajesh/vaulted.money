@@ -1,22 +1,18 @@
-import { Capacitor } from "@capacitor/core";
+import { isElectron } from "@/utils/electron";
 
 /**
- * Whether this device can reach a model server running on the same machine
- * (LM Studio, Ollama at http://localhost). Only a computer can: phones and
- * tablets have no such server, and "localhost" there is the phone itself, so
- * the option would only ever end in "Failed to fetch". True in the desktop
- * app and in a desktop browser; false in the iOS/Android apps and in a mobile
- * browser.
+ * Whether this app can reach a model server running on the same computer
+ * (LM Studio, Ollama at http://localhost). Only the desktop app can.
+ *
+ * - A phone or tablet has no such server; "localhost" there is the phone.
+ * - The website cannot either: browsers refuse to let a public site call a
+ *   server on the visitor's own computer unless the visitor grants a
+ *   permission and the model server is set up to allow it (CORS), so the
+ *   option only ever ended in "nothing answered".
+ *
+ * The desktop app is not a public site, so it has neither restriction.
  */
-export const canUseLocalModels = (): boolean => {
-  if (Capacitor.isNativePlatform()) return false;
-  if (typeof navigator === "undefined") return true;
-  const agent = navigator.userAgent || "";
-  if (/Android|iPhone|iPad|iPod/i.test(agent)) return false;
-  // iPadOS reports itself as a Mac; a Mac has no touch points.
-  if (/Macintosh/i.test(agent) && navigator.maxTouchPoints > 1) return false;
-  return true;
-};
+export const canUseLocalModels = (): boolean => isElectron();
 
 /** True for an address that points back at the device itself. */
 export const isLoopbackUrl = (url: string): boolean => {

@@ -1242,7 +1242,7 @@ export const aiHubMobile: AreaTranslations = {
     aiHub: {
       dialog: {
         noLocalHere:
-          "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+          "A model on your own computer can only be reached from the desktop app.",
         customHosted: "Another OpenAI-compatible service",
         unreachable:
           "nothing answered at {{url}}. Check the server is running and allows requests from other apps (CORS).",
@@ -1257,7 +1257,7 @@ export const aiHubMobile: AreaTranslations = {
     aiHub: {
       dialog: {
         noLocalHere:
-          "No se puede acceder a un modelo en este teléfono o tableta. Los modelos locales necesitan la app de escritorio.",
+          "A un modelo en tu propio ordenador solo se puede acceder desde la app de escritorio.",
         customHosted: "Otro servicio compatible con OpenAI",
         unreachable:
           "no respondió nada en {{url}}. Comprueba que el servidor está en marcha y permite solicitudes de otras apps (CORS).",
@@ -1271,7 +1271,7 @@ export const aiHubMobile: AreaTranslations = {
   zh: {
     aiHub: {
       dialog: {
-        noLocalHere: "无法访问此手机或平板上的模型。本地模型需要使用桌面应用。",
+        noLocalHere: "只有桌面应用才能访问您自己电脑上的模型。",
         customHosted: "其他兼容 OpenAI 的服务",
         unreachable:
           "{{url}} 没有响应。请确认服务器正在运行并允许来自其他应用的请求（CORS）。",
@@ -1286,7 +1286,7 @@ export const aiHubMobile: AreaTranslations = {
     aiHub: {
       dialog: {
         noLocalHere:
-          "Een model op deze telefoon of tablet is niet bereikbaar. Lokale modellen hebben de desktop-app nodig.",
+          "Een model op je eigen computer is alleen bereikbaar vanuit de desktop-app.",
         customHosted: "Een andere OpenAI-compatibele dienst",
         unreachable:
           "er kwam geen antwoord op {{url}}. Controleer of de server draait en verzoeken van andere apps toestaat (CORS).",
@@ -1301,7 +1301,7 @@ export const aiHubMobile: AreaTranslations = {
     aiHub: {
       dialog: {
         noLocalHere:
-          "இந்தத் தொலைபேசி அல்லது டேப்லெட்டில் உள்ள மாதிரியை அணுக முடியாது. உள்ளூர் மாதிரிகளுக்கு டெஸ்க்டாப் செயலி தேவை.",
+          "உங்கள் சொந்தக் கணினியில் உள்ள மாதிரியை டெஸ்க்டாப் செயலியிலிருந்து மட்டுமே அணுக முடியும்.",
         customHosted: "OpenAI இணக்கமான வேறு சேவை",
         unreachable:
           "{{url}} இல் எதுவும் பதிலளிக்கவில்லை. சேவையகம் இயங்குகிறதா, பிற செயலிகளின் கோரிக்கைகளை அனுமதிக்கிறதா (CORS) என்று சரிபார்க்கவும்.",
