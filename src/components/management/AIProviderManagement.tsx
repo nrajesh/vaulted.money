@@ -14,6 +14,7 @@ import {
 } from "@/constants/aiApiKeyStorage";
 import { looksLikeEmbeddingModel, providerNeedsApiKey } from "@/utils/aiModels";
 import { cn } from "@/lib/utils";
+import { canUseLocalModels } from "@/utils/localModels";
 
 const TYPE_LABELS: Record<AIProvider["type"], string> = {
   OPENAI: "OpenAI",
@@ -128,10 +129,15 @@ const AIProviderManagement = ({
       <div className="tour-entity-table">
         {providers.length === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-            {t("aiHub.providers.empty", {
-              defaultValue:
-                "No provider yet. Add one to let the app suggest categories. A model on your own computer (LM Studio, Ollama) works too and needs no key.",
-            })}
+            {canUseLocalModels()
+              ? t("aiHub.providers.empty", {
+                  defaultValue:
+                    "No provider yet. Add one to let the app suggest categories. A model on your own computer (LM Studio, Ollama) works too and needs no key.",
+                })
+              : t("aiHub.providers.emptyMobile", {
+                  defaultValue:
+                    "No provider yet. Add one to let the app suggest categories. Models running on your own computer need the desktop app.",
+                })}
           </div>
         ) : (
           <ul className="grid gap-3 lg:grid-cols-2">

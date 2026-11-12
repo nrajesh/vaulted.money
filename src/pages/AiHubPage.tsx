@@ -117,7 +117,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
       defaultValue:
         "{{name}} is in use, but its model cannot chat. Pick another.",
     });
-  } else if (inUse.type === "CUSTOM") {
+  } else if (inUse.type === "CUSTOM" && !readAiApiKeyFromStorage(inUse.id)) {
     inAppStatus = t("aiHub.summary.inAppLocal", {
       name: inUse.name,
       defaultValue: "{{name}} is in use. Your own endpoint, no key needed.",

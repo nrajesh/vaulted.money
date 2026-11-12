@@ -2,7 +2,10 @@ import * as React from "react";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { slugify } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
-import { matchesTransactionText } from "@/utils/searchFilters";
+import {
+  isWithinDateRange,
+  matchesTransactionText,
+} from "@/utils/searchFilters";
 import { projectScheduledTransactions } from "@/utils/forecasting";
 
 import { Transaction } from "@/types/dataProvider";
@@ -127,13 +130,7 @@ export const useTransactionData = ({
     }
 
     if (dateRange?.from) {
-      const fromDate = dateRange.from;
-      const toDate = dateRange.to || new Date();
-      toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter((t) => {
-        const transactionDate = new Date(t.date);
-        return transactionDate >= fromDate && transactionDate <= toDate;
-      });
+      filtered = filtered.filter((t) => isWithinDateRange(t.date, dateRange));
     }
 
     if (excludeTransfers) {

@@ -1235,3 +1235,81 @@ export const aiHubLocked: AreaTranslations = {
     },
   },
 };
+
+/** Wording for devices that cannot reach a local model. Machine-written: ask a native speaker to review. */
+export const aiHubMobile: AreaTranslations = {
+  en: {
+    aiHub: {
+      dialog: {
+        noLocalHere:
+          "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+        customHosted: "Another OpenAI-compatible service",
+        unreachable:
+          "nothing answered at {{url}}. Check the server is running and allows requests from other apps (CORS).",
+      },
+      providers: {
+        emptyMobile:
+          "No provider yet. Add one to let the app suggest categories. Models running on your own computer need the desktop app.",
+      },
+    },
+  },
+  es: {
+    aiHub: {
+      dialog: {
+        noLocalHere:
+          "No se puede acceder a un modelo en este teléfono o tableta. Los modelos locales necesitan la app de escritorio.",
+        customHosted: "Otro servicio compatible con OpenAI",
+        unreachable:
+          "no respondió nada en {{url}}. Comprueba que el servidor está en marcha y permite solicitudes de otras apps (CORS).",
+      },
+      providers: {
+        emptyMobile:
+          "Aún no hay ningún proveedor. Añade uno para que la app sugiera categorías. Los modelos que se ejecutan en tu propio ordenador necesitan la app de escritorio.",
+      },
+    },
+  },
+  zh: {
+    aiHub: {
+      dialog: {
+        noLocalHere: "无法访问此手机或平板上的模型。本地模型需要使用桌面应用。",
+        customHosted: "其他兼容 OpenAI 的服务",
+        unreachable:
+          "{{url}} 没有响应。请确认服务器正在运行并允许来自其他应用的请求（CORS）。",
+      },
+      providers: {
+        emptyMobile:
+          "还没有提供商。添加一个，让应用为您建议分类。在您自己电脑上运行的模型需要使用桌面应用。",
+      },
+    },
+  },
+  nl: {
+    aiHub: {
+      dialog: {
+        noLocalHere:
+          "Een model op deze telefoon of tablet is niet bereikbaar. Lokale modellen hebben de desktop-app nodig.",
+        customHosted: "Een andere OpenAI-compatibele dienst",
+        unreachable:
+          "er kwam geen antwoord op {{url}}. Controleer of de server draait en verzoeken van andere apps toestaat (CORS).",
+      },
+      providers: {
+        emptyMobile:
+          "Nog geen provider. Voeg er een toe zodat de app categorieën kan voorstellen. Modellen op je eigen computer hebben de desktop-app nodig.",
+      },
+    },
+  },
+  ta: {
+    aiHub: {
+      dialog: {
+        noLocalHere:
+          "இந்தத் தொலைபேசி அல்லது டேப்லெட்டில் உள்ள மாதிரியை அணுக முடியாது. உள்ளூர் மாதிரிகளுக்கு டெஸ்க்டாப் செயலி தேவை.",
+        customHosted: "OpenAI இணக்கமான வேறு சேவை",
+        unreachable:
+          "{{url}} இல் எதுவும் பதிலளிக்கவில்லை. சேவையகம் இயங்குகிறதா, பிற செயலிகளின் கோரிக்கைகளை அனுமதிக்கிறதா (CORS) என்று சரிபார்க்கவும்.",
+      },
+      providers: {
+        emptyMobile:
+          "இன்னும் வழங்குநர் இல்லை. செயலி வகைகளைப் பரிந்துரைக்க ஒன்றைச் சேர்க்கவும். உங்கள் சொந்தக் கணினியில் இயங்கும் மாதிரிகளுக்கு டெஸ்க்டாப் செயலி தேவை.",
+      },
+    },
+  },
+};

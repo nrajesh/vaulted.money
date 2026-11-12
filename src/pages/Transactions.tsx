@@ -193,7 +193,12 @@ const Transactions = () => {
     let result = combinedTransactions.filter((t) => {
       if (dateRange?.from) {
         const tDate = new Date(t.date);
-        if (tDate < dateRange.from) return false;
+        // The whole first day counts. The search box hands over dates at
+        // noon, and a transaction entered today is stored at the start of the
+        // day, so comparing with noon made "today" hide it.
+        const startDate = new Date(dateRange.from);
+        startDate.setHours(0, 0, 0, 0);
+        if (tDate < startDate) return false;
         if (dateRange.to) {
           const endDate = new Date(dateRange.to);
           endDate.setHours(23, 59, 59, 999);

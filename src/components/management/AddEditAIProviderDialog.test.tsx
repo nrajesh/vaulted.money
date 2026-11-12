@@ -5,6 +5,12 @@ import { readAiApiKeyFromStorage } from "@/constants/aiApiKeyStorage";
 import { showError } from "@/utils/toast";
 import type { AIProvider } from "@/types/dataProvider";
 
+const device = vi.hoisted(() => ({ local: true }));
+vi.mock("@/utils/localModels", async (original) => ({
+  ...(await original<typeof import("@/utils/localModels")>()),
+  canUseLocalModels: () => device.local,
+}));
+
 vi.mock("@/utils/toast", () => ({ showError: vi.fn(), showSuccess: vi.fn() }));
 
 // The form's Radix checkbox measures itself with ResizeObserver, which jsdom
@@ -46,6 +52,7 @@ describe("AddEditAIProviderDialog", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    device.local = true;
     vi.mocked(showError).mockClear();
     dataProvider.addAIProvider.mockReset();
     dataProvider.updateAIProvider.mockReset();
@@ -173,5 +180,36 @@ describe("AddEditAIProviderDialog", () => {
       expect(dataProvider.updateAIProvider).toHaveBeenCalledTimes(1),
     );
     expect(readAiApiKeyFromStorage("local-1")).toBe("");
+  });
+
+  it("offers no local-model option on a phone, and starts a new provider as a hosted one", () => {
+    device.local = false;
+    renderDialog(null);
+    expect(
+      (screen.getByLabelText("Base URL (Endpoint)") as HTMLInputElement).value,
+    ).toBe("https://api.openai.com/v1");
+    expect(screen.queryByText(/A model on my computer/)).toBeNull();
+    expect(screen.getByLabelText("API key")).toBeInTheDocument();
+  });
+
+  it("refuses a localhost address on a phone instead of failing to fetch", () => {
+    device.local = false;
+    renderDialog(localProvider);
+    fireEvent.click(screen.getByRole("button", { name: "Load models" }));
+    expect(showError).toHaveBeenCalledWith(
+      "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("explains an unreachable server instead of saying Failed to fetch", async () => {
+    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderDialog(localProvider);
+    fireEvent.click(screen.getByRole("button", { name: "Load models" }));
+    await waitFor(() =>
+      expect(showError).toHaveBeenCalledWith(
+        expect.stringContaining("nothing answered at http://localhost:1234/v1"),
+      ),
+    );
   });
 });

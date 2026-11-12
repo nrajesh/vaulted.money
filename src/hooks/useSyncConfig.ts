@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SyncDirectoryConfig } from "@/types/sync";
 import { selectSyncDirectory, checkSyncPermission } from "@/utils/fs-adapter";
 import { isElectron } from "@/utils/electron";
@@ -9,6 +9,20 @@ import { toast } from "sonner";
 const SYNC_STORAGE_KEY = "vaultedmoney_sync_config";
 const LEGACY_SYNC_STORAGE_KEY = "budget_it_sync_config";
 
+/**
+ * Several parts of the app use this hook at once: the Settings card that
+ * changes the configuration and the background sync that acts on it. Each has
+ * its own copy of the state, so a change made in one is announced to the
+ * others with this event. Without it, switching sync on in Settings did
+ * nothing until the app was restarted.
+ */
+const CHANGE_EVENT = "vaulted:sync-config";
+
+const sameConfig = (a: SyncDirectoryConfig, b: SyncDirectoryConfig) =>
+  a.autoSyncEnabled === b.autoSyncEnabled &&
+  a.lastSyncTimestamp === b.lastSyncTimestamp &&
+  a.syncDirectoryHandle === b.syncDirectoryHandle;
+
 export const useSyncConfig = () => {
   const [config, setConfig] = useState<SyncDirectoryConfig>({
     syncDirectoryHandle: null,
@@ -18,6 +32,22 @@ export const useSyncConfig = () => {
 
   const [isReady, setIsReady] = useState(false);
   const [needsPermission, setNeedsPermission] = useState(false);
+  // True when this copy made the latest change, so only it announces it. A
+  // copy that merely received a change stays quiet, which rules out echoes.
+  const changedHere = useRef(false);
+
+  // Take over a change made by another copy of this hook.
+  useEffect(() => {
+    const onChange = (event: Event) => {
+      const next = (event as CustomEvent<SyncDirectoryConfig>).detail;
+      if (!next) return;
+      setConfig((prev) => (sameConfig(prev, next) ? prev : next));
+      // A folder that was just picked comes with access to it.
+      if (next.syncDirectoryHandle) setNeedsPermission(false);
+    };
+    window.addEventListener(CHANGE_EVENT, onChange);
+    return () => window.removeEventListener(CHANGE_EVENT, onChange);
+  }, []);
 
   // Load config on mount
   useEffect(() => {
@@ -63,6 +93,10 @@ export const useSyncConfig = () => {
       set(SYNC_STORAGE_KEY, config).catch((err: unknown) =>
         console.error("Failed to save sync config:", err),
       );
+      if (changedHere.current) {
+        changedHere.current = false;
+        window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: config }));
+      }
     }
   }, [config, isReady]);
 
@@ -70,6 +104,7 @@ export const useSyncConfig = () => {
     try {
       const handle = await selectSyncDirectory();
       if (handle) {
+        changedHere.current = true;
         setConfig((prev) => ({
           ...prev,
           syncDirectoryHandle: handle,
@@ -87,6 +122,7 @@ export const useSyncConfig = () => {
   };
 
   const toggleAutoSync = (enabled: boolean) => {
+    changedHere.current = true;
     setConfig((prev) => ({
       ...prev,
       autoSyncEnabled: enabled,
@@ -94,6 +130,7 @@ export const useSyncConfig = () => {
   };
 
   const updateLastSync = () => {
+    changedHere.current = true;
     setConfig((prev) => ({
       ...prev,
       lastSyncTimestamp: Date.now(),

@@ -48,6 +48,7 @@ import {
   providerNeedsApiKey,
 } from "@/utils/aiModels";
 import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
+import { canUseLocalModels, isLoopbackUrl } from "@/utils/localModels";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
@@ -126,12 +127,18 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   const dataProvider = useDataProvider();
   const formSchema = React.useMemo(() => buildFormSchema(t), [t]);
 
+  // A phone or tablet cannot reach a model on "this computer", so there the
+  // local option is not offered and a new provider starts as a hosted one.
+  const localOk = React.useMemo(() => canUseLocalModels(), []);
+  const startType = localOk ? "CUSTOM" : "OPENAI";
+  const startUrl = localOk ? "" : PROVIDER_DOCS.OPENAI.endpoint;
+
   const form = useForm<z.infer<FormSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      type: "CUSTOM",
-      baseUrl: "",
+      type: startType,
+      baseUrl: startUrl,
       model: "",
       description: "",
       isDefault: false,
@@ -151,8 +158,8 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
     } else {
       form.reset({
         name: "",
-        type: "CUSTOM",
-        baseUrl: "",
+        type: startType,
+        baseUrl: startUrl,
         model: "",
         description: "",
         // The first provider is the one to use; nobody should have to go and
@@ -164,7 +171,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
     setApiKey(provider?.id ? readAiApiKeyFromStorage(provider.id) : "");
     setModels([]);
     setTypeModelByHand(false);
-  }, [provider, form, isOpen, isFirstProvider]);
+  }, [provider, form, isOpen, isFirstProvider, startType, startUrl]);
 
   const [apiKey, setApiKey] = React.useState("");
   const [isTesting, setIsTesting] = React.useState(false);
@@ -175,6 +182,15 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
 
   // A local model has no key, so only hosted providers are stopped here.
   const hasUsableKey = (values: z.infer<FormSchema>) => {
+    if (!localOk && isLoopbackUrl(values.baseUrl)) {
+      showError(
+        t("aiHub.dialog.noLocalHere", {
+          defaultValue:
+            "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+        }),
+      );
+      return false;
+    }
     if (isAiReady(values, apiKey)) return true;
     showError(
       t("aiHub.dialog.needKey", {
@@ -202,7 +218,17 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
     } catch (error: unknown) {
       showError(
         t("aiProviders.dialog.modelsFailed", {
-          message: error instanceof Error ? error.message : String(error),
+          message:
+            // A browser says only "Failed to fetch" when nothing answers.
+            error instanceof TypeError
+              ? t("aiHub.dialog.unreachable", {
+                  url: values.baseUrl,
+                  defaultValue:
+                    "nothing answered at {{url}}. Check the server is running and allows requests from other apps (CORS).",
+                })
+              : error instanceof Error
+                ? error.message
+                : String(error),
           defaultValue: "Could not load models: {{message}}",
         }),
       );
@@ -327,6 +353,15 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   };
 
   const onSubmit = async (values: z.infer<FormSchema>) => {
+    if (!localOk && isLoopbackUrl(values.baseUrl)) {
+      showError(
+        t("aiHub.dialog.noLocalHere", {
+          defaultValue:
+            "A model on this phone or tablet cannot be reached. Local models need the desktop app.",
+        }),
+      );
+      return;
+    }
     try {
       if (provider) {
         await dataProvider.updateAIProvider({
@@ -362,7 +397,9 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
 
   const watchedType = form.watch("type");
   const watchedModel = form.watch("model");
-  const keyNeeded = providerNeedsApiKey({ type: watchedType });
+  // Where no local model can exist, a custom provider is a hosted service
+  // and is worded like one.
+  const keyNeeded = providerNeedsApiKey({ type: watchedType }) || !localOk;
   const sectionTitle = "text-sm font-semibold";
   const hint = "text-xs text-muted-foreground";
 
@@ -434,17 +471,29 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="CUSTOM">
-                            {t("aiHub.dialog.customOption", {
-                              defaultValue:
-                                "A model on my computer, or another OpenAI-compatible server",
-                            })}
-                          </SelectItem>
+                          {localOk && (
+                            <SelectItem value="CUSTOM">
+                              {t("aiHub.dialog.customOption", {
+                                defaultValue:
+                                  "A model on my computer (OpenAI-compatible)",
+                              })}
+                            </SelectItem>
+                          )}
                           <SelectItem value="OPENAI">OpenAI</SelectItem>
                           <SelectItem value="GEMINI">Google Gemini</SelectItem>
                           <SelectItem value="ANTHROPIC">Anthropic</SelectItem>
                           <SelectItem value="MISTRAL">Mistral</SelectItem>
                           <SelectItem value="PERPLEXITY">Perplexity</SelectItem>
+                          {/* On a phone the same type is still useful for a
+                              hosted service; it just is not called local. */}
+                          {!localOk && (
+                            <SelectItem value="CUSTOM">
+                              {t("aiHub.dialog.customHosted", {
+                                defaultValue:
+                                  "Another OpenAI-compatible service",
+                              })}
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
