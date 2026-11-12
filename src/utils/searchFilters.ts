@@ -84,3 +84,24 @@ export const filterAccounts = (accounts: Payee[], query: string): Payee[] => {
     );
   });
 };
+
+/**
+ * Whether a transaction's date falls inside a picked date range, counting
+ * whole days at both ends. The search box hands over dates at noon (so they
+ * never slip a day across time zones), and a transaction saved "today" is
+ * stored at the start of its day: comparing against noon made "today" hide
+ * everything entered today. An open-ended range runs up to the end of today.
+ */
+export const isWithinDateRange = (
+  date: string | Date,
+  range: { from?: Date; to?: Date },
+  now: Date = new Date(),
+): boolean => {
+  if (!range.from) return true;
+  const from = new Date(range.from);
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(range.to ?? now);
+  to.setHours(23, 59, 59, 999);
+  const value = new Date(date);
+  return value >= from && value <= to;
+};

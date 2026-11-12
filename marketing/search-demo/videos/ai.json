@@ -409,11 +409,12 @@
    "ms": 1400
   },
   {
-   "do": "click",
+   "do": "scrollTo",
    "target": {
-    "role": "button",
-    "name": "Chat with your data from an AI agent"
-   }
+    "css": "#ai-agents"
+   },
+   "block": "start",
+   "wait": 1100
   },
   {
    "do": "mouse",

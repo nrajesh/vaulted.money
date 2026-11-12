@@ -19,6 +19,7 @@ import {
   aiHubFacts,
   aiHubFlow,
   aiHubLocked,
+  aiHubMobile,
   aiHubPoints,
   aiHubReady,
 } from "./aiHub";
@@ -51,6 +52,7 @@ export const areaTranslations: AreaTranslations[] = [
   aiHubPoints,
   aiHubFacts,
   aiHubLocked,
+  aiHubMobile,
   searchSuggestions,
   homeLanding,
 ];

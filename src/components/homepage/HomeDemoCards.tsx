@@ -3,6 +3,12 @@ import { Clock, Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import aiDemoVideo from "../../../marketing/search-demo/final/vaulted-money-ai.mp4";
 import aiDemoPoster from "@/assets/ai-demo-poster.jpg";
+import agentDemoVideo from "../../../marketing/search-demo/final/vaulted-money-agent.mp4";
+import agentDemoPoster from "@/assets/agent-demo-poster.jpg";
+import apiDemoVideo from "../../../marketing/search-demo/final/vaulted-money-api.mp4";
+import apiDemoPoster from "@/assets/api-demo-poster.jpg";
+import syncDemoVideo from "../../../marketing/search-demo/final/vaulted-money-sync.mp4";
+import syncDemoPoster from "@/assets/sync-demo-poster.jpg";
 import { DEMO_VIDEO_ATTRIBUTE, pauseOtherDemoVideos } from "@/utils/demoVideos";
 
 interface DemoCard {
@@ -40,14 +46,18 @@ const HomeDemoCards = () => {
       poster: aiDemoPoster,
     },
     {
+      // The translation keys keep their first name ("claude"); the card is
+      // about any AI agent, shown with a model running on the computer.
       id: "claude",
       title: t("home.demos.claude.title", {
-        defaultValue: "Claude, Meet Ledger",
+        defaultValue: "AI agent - Meet Ledger",
       }),
       body: t("home.demos.claude.body", {
         defaultValue:
-          "Claude imports years of transactions, after you approve.",
+          "A local LLM helps in importing years of transactions. One of many possibilities with AI.",
       }),
+      video: agentDemoVideo,
+      poster: agentDemoPoster,
     },
     {
       id: "api",
@@ -57,6 +67,8 @@ const HomeDemoCards = () => {
       body: t("home.demos.api.body", {
         defaultValue: "A documented API on your own computer.",
       }),
+      video: apiDemoVideo,
+      poster: apiDemoPoster,
     },
     {
       id: "sync",
@@ -66,6 +78,8 @@ const HomeDemoCards = () => {
       body: t("home.demos.sync.body", {
         defaultValue: "Carry a ledger through a folder you choose.",
       }),
+      video: syncDemoVideo,
+      poster: syncDemoPoster,
     },
   ];
 

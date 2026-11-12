@@ -1,0 +1,323 @@
+{
+ "name": "sync-a",
+ "app": "desktop",
+ "ledger": "Home Budget",
+ "speed": 1.5,
+ "foley": 0.4,
+ "out": "out/sync-a.mp4",
+ "pickFolder": "/Users/Shared/Vaulted Sync",
+ "endCard": {
+  "title": "Vaulted Money",
+  "tagline": "One ledger, two devices.",
+  "badges": [],
+  "url": "vaulted.money"
+ },
+ "setup": [],
+ "steps": [
+  {
+   "do": "goto",
+   "path": "/settings",
+   "wait": 2400
+  },
+  {
+   "do": "mouse",
+   "x": 1200,
+   "y": 300
+  },
+  {
+   "do": "mark",
+   "name": "intro"
+  },
+  {
+   "do": "caption",
+   "text": "One ledger, two devices<br><b>no account, no server of ours</b>",
+   "size": 44,
+   "ms": 2800
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "scrollTo",
+   "target": {
+    "css": ".tour-settings-sync"
+   },
+   "block": "center"
+  },
+  {
+   "do": "anchor",
+   "name": "sync",
+   "target": {
+    "css": ".tour-settings-sync"
+   }
+  },
+  {
+   "do": "zoom",
+   "z": 1.4,
+   "cx": 700,
+   "anchor": "sync",
+   "dy": 110,
+   "ease": 1.1
+  },
+  {
+   "do": "wait",
+   "ms": 1100
+  },
+  {
+   "do": "caption",
+   "text": "Switch it on<br><b>and pick a folder</b>",
+   "size": 40,
+   "ms": 1500
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": ".tour-settings-sync [role=switch]"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 1100
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "Select Folder"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 1600
+  },
+  {
+   "do": "caption",
+   "text": "Any folder you choose<br><b>a cloud drive, a USB stick</b>",
+   "size": 40,
+   "ms": 3000
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40,
+   "ms": 300
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 0.9
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "goto",
+   "path": "/transactions",
+   "wait": 2400
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "button.bg-primary:has-text('Add Transaction'), button:has-text('Add Transaction')"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 1200
+  },
+  {
+   "do": "zoom",
+   "z": 1.5,
+   "cx": 960,
+   "cy": 590,
+   "ease": 0.9
+  },
+  {
+   "do": "caption",
+   "text": "Add a purchase<br><b>on the laptop</b>",
+   "size": 40
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=dialog] input[placeholder='Search accounts...']"
+   }
+  },
+  {
+   "do": "type",
+   "text": "Joint",
+   "delay": 45
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "Joint Checking"
+   }
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=dialog] input[placeholder='Search...']"
+   }
+  },
+  {
+   "do": "type",
+   "text": "Farmers",
+   "delay": 45
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "Farmers Market"
+   }
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=dialog] input[placeholder='Search categories...']"
+   }
+  },
+  {
+   "do": "type",
+   "text": "Groc",
+   "delay": 45
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "^Groceries"
+   }
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=dialog] input[name=amount]"
+   }
+  },
+  {
+   "do": "type",
+   "text": "12.50",
+   "delay": 60
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=dialog] input[name=remarks]"
+   }
+  },
+  {
+   "do": "type",
+   "text": "Apples and honey",
+   "delay": 40
+  },
+  {
+   "do": "wait",
+   "ms": 600
+  },
+  {
+   "do": "click",
+   "target": {
+    "css": "[role=dialog] button[type=submit]"
+   }
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "zoom",
+   "z": 1,
+   "ease": 0.8
+  },
+  {
+   "do": "wait",
+   "ms": 2200
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "combobox"
+   }
+  },
+  {
+   "do": "type",
+   "text": "today ",
+   "delay": 45
+  },
+  {
+   "do": "wait",
+   "ms": 500
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "option",
+    "name": "^Date:"
+   }
+  },
+  {
+   "do": "wait",
+   "ms": 900
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "^Done$"
+   }
+  },
+  {
+   "do": "mouse",
+   "x": 1500,
+   "y": 760
+  },
+  {
+   "do": "wait",
+   "ms": 700
+  },
+  {
+   "do": "glowRows",
+   "target": {
+    "css": "tbody tr",
+    "hasText": "Apples and honey"
+   }
+  },
+  {
+   "do": "caption",
+   "text": "Saved here<br><b>and written to the folder</b>",
+   "size": 40,
+   "ms": 3200
+  },
+  {
+   "do": "caption",
+   "text": "",
+   "size": 40
+  },
+  {
+   "do": "wait",
+   "ms": 1800
+  },
+  {
+   "do": "end"
+  }
+ ]
+}

@@ -24,8 +24,8 @@ export const homeLanding: AreaTranslations = {
           body: "AI stays off until you switch it on.",
         },
         claude: {
-          title: "Claude, Meet Ledger",
-          body: "Claude imports years of transactions, after you approve.",
+          title: "AI agent - Meet Ledger",
+          body: "A local LLM helps in importing years of transactions. One of many possibilities with AI.",
         },
         api: {
           title: "Your Ledger, Scriptable",
@@ -113,8 +113,8 @@ export const homeLanding: AreaTranslations = {
           body: "La IA sigue apagada hasta que la enciendes.",
         },
         claude: {
-          title: "Claude y tu libro",
-          body: "Claude importa años de movimientos, cuando tú lo apruebas.",
+          title: "Agente de IA y tu libro",
+          body: "Un LLM local ayuda a importar años de movimientos. Una de las muchas posibilidades de la IA.",
         },
         api: {
           title: "Tu libro, programable",
@@ -203,8 +203,8 @@ export const homeLanding: AreaTranslations = {
           body: "在你打开之前，AI 一直关闭。",
         },
         claude: {
-          title: "Claude 遇见账本",
-          body: "经你批准后，Claude 导入多年的交易。",
+          title: "AI 智能体遇见账本",
+          body: "本地 LLM 帮你导入多年的交易。这只是 AI 众多可能中的一种。",
         },
         api: {
           title: "账本可编程",
@@ -288,8 +288,8 @@ export const homeLanding: AreaTranslations = {
           body: "AI blijft uit tot jij het aanzet.",
         },
         claude: {
-          title: "Claude ontmoet je grootboek",
-          body: "Claude importeert jaren aan transacties, na jouw akkoord.",
+          title: "AI-agent ontmoet je grootboek",
+          body: "Een lokale LLM helpt bij het importeren van jaren aan transacties. Een van de vele mogelijkheden met AI.",
         },
         api: {
           title: "Je grootboek, scriptbaar",
@@ -379,8 +379,8 @@ export const homeLanding: AreaTranslations = {
           body: "நீங்கள் இயக்கும் வரை AI அணைந்தே இருக்கும்.",
         },
         claude: {
-          title: "Claude, லெட்ஜரைச் சந்தி",
-          body: "நீங்கள் ஒப்புதல் அளித்த பின் Claude பல ஆண்டுப் பரிவர்த்தனைகளை இறக்குமதி செய்கிறது.",
+          title: "AI முகவர், லெட்ஜரைச் சந்தி",
+          body: "உள்ளூர் LLM பல ஆண்டுப் பரிவர்த்தனைகளை இறக்குமதி செய்ய உதவுகிறது. AI தரும் பல சாத்தியங்களில் ஒன்று.",
         },
         api: {
           title: "உங்கள் லெட்ஜர், நிரலாக்கக்கூடியது",
