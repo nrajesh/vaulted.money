@@ -366,7 +366,7 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
           <div className="app-page-subtitle">{description}</div>
         </div>
         {!Capacitor.isNativePlatform() && (
-          <div className="tour-report-export">
+          <div>
             <ExportButtons
               onPdfExport={handlePdfExport}
               onExcelExport={handleExcelExport}
@@ -376,11 +376,11 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
         )}
       </div>
 
-      <div className="tour-report-filters">
+      <div>
         <SearchFilterBar />
       </div>
 
-      <div className="tour-report-content space-y-4" id="report-content">
+      <div className="space-y-4" id="report-content">
         {children({
           historicalFilteredTransactions,
           combinedFilteredTransactions,

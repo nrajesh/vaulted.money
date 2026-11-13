@@ -117,7 +117,6 @@ export const TransactionPageHeader: React.FC<TransactionPageHeaderProps> = ({
         </p>
       </div>
       <PageActionBar
-        className="tour-transaction-actions"
         hidePrimaryOnPhone
         primary={{
           id: "add-transaction",

@@ -22,7 +22,7 @@ export const FEATURE_HINTS = {
   },
   connectApps: {
     title: "Ask other AI apps about your money",
-    body: "In the desktop app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
+    body: "In the Mac app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
   },
 } as const;
 

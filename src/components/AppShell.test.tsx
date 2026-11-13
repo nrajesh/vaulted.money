@@ -42,7 +42,7 @@ describe("AppShell", () => {
     expect(
       screen.getByRole("link", { name: "Back to ledgers" }),
     ).toHaveAttribute("href", "/ledgers");
-    expect(screen.getByRole("link", { name: "AI & agents" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "AI assistant" })).toHaveAttribute(
       "href",
       "/ai-providers",
     );

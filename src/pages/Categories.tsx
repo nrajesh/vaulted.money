@@ -198,7 +198,7 @@ const CategoriesPage = () => {
   ];
 
   return (
-    <div className="tour-categories-list">
+    <div>
       <EntityManagementPage
         title={t("management.entities.category.title", {
           defaultValue: "Categories",

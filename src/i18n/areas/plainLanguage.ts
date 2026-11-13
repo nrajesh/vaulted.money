@@ -95,7 +95,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Ask other AI apps about your money",
-        body: "In the desktop app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
+        body: "In the Mac app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
       },
     },
     help: {
@@ -193,7 +193,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Pregunta a otras apps de IA por tu dinero",
-        body: "En la app de escritorio puedes dejar que Claude, ChatGPT y apps similares lean y actualicen tus datos. Está apagado hasta que lo actives, y lo que leen se envía a quien creó esa app.",
+        body: "En la app para Mac puedes dejar que Claude, ChatGPT y apps similares lean y actualicen tus datos. Está apagado hasta que lo actives, y lo que leen se envía a quien creó esa app.",
       },
     },
     help: {
@@ -289,7 +289,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "向其他 AI 应用询问你的财务",
-        body: "在桌面应用中，你可以让 Claude、ChatGPT 等应用读取和更新你的数据。开启前一直关闭，它们读取的内容会发送给该应用的开发方。",
+        body: "在 Mac 应用中，你可以让 Claude、ChatGPT 等应用读取和更新你的数据。开启前一直关闭，它们读取的内容会发送给该应用的开发方。",
       },
     },
     help: {
@@ -387,7 +387,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Vraag andere AI-apps naar je geld",
-        body: "In de desktop-app kun je Claude, ChatGPT en vergelijkbare apps je gegevens laten lezen en bijwerken. Het staat uit tot je het aanzet, en wat ze lezen gaat naar de maker van die app.",
+        body: "In de Mac-app kun je Claude, ChatGPT en vergelijkbare apps je gegevens laten lezen en bijwerken. Het staat uit tot je het aanzet, en wat ze lezen gaat naar de maker van die app.",
       },
     },
     help: {
@@ -484,7 +484,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "பிற AI பயன்பாடுகளிடம் உங்கள் பணம் பற்றிக் கேளுங்கள்",
-        body: "டெஸ்க்டாப் பயன்பாட்டில் Claude, ChatGPT போன்றவை உங்கள் தரவைப் படிக்கவும் புதுப்பிக்கவும் அனுமதிக்கலாம். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்; அவை படிப்பது அந்தப் பயன்பாட்டை உருவாக்கியவருக்குச் செல்லும்.",
+        body: "Mac பயன்பாட்டில் Claude, ChatGPT போன்றவை உங்கள் தரவைப் படிக்கவும் புதுப்பிக்கவும் அனுமதிக்கலாம். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்; அவை படிப்பது அந்தப் பயன்பாட்டை உருவாக்கியவருக்குச் செல்லும்.",
       },
     },
     help: {

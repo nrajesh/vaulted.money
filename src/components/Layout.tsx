@@ -58,7 +58,7 @@ import {
 
 import AddEditTransactionDialog from "@/components/dialogs/AddEditTransactionDialog";
 import { useLedger } from "@/contexts/LedgerContext";
-import { useTour } from "@/contexts/TourContext";
+import { useHelpDrawer } from "@/contexts/HelpDrawerContext";
 import { useDefaultAccountSelection } from "@/hooks/useDefaultAccountSelection";
 import { GlobalProgressDialog } from "@/components/dialogs/GlobalProgressDialog";
 import { useTranslation } from "react-i18next";
@@ -308,11 +308,9 @@ const SidebarLedgerFooter = ({
 
 type MobileHeaderActionsMenuProps = {
   displayName: string;
-  hasTourForCurrentRoute: boolean;
   logout: () => void;
   resolvedTheme?: string;
   setTheme: (theme: string) => void;
-  startTour: () => void;
   t: ReturnType<typeof useTranslation>["t"];
   isHomepageMobilePreview?: boolean;
 };
@@ -349,11 +347,9 @@ export const SettingsHeaderButton = ({
 // Exported only so tests can render the menu without the whole Layout.
 export const MobileHeaderActionsMenu = ({
   displayName,
-  hasTourForCurrentRoute,
   logout,
   resolvedTheme,
   setTheme,
-  startTour,
   t,
   isHomepageMobilePreview,
 }: MobileHeaderActionsMenuProps) => {
@@ -414,12 +410,6 @@ export const MobileHeaderActionsMenu = ({
             </Link>
           </DropdownMenuItem>
         )}
-        {hasTourForCurrentRoute && (
-          <DropdownMenuItem onClick={startTour} className={actionItemClassName}>
-            <HelpCircle className="h-5 w-5" />
-            {t("helpTour.start", { defaultValue: "Start help tour" })}
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           className={actionItemClassName}
@@ -454,7 +444,7 @@ const Layout = () => {
     new URLSearchParams(location.search).get("preview") === "homepage-mobile" ||
     (typeof window !== "undefined" && window.self !== window.top);
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
-  const { startTour, hasTourForCurrentRoute } = useTour();
+  const { openHelp } = useHelpDrawer();
 
   React.useEffect(() => {
     if (!isLoading && !activeLedger) {
@@ -509,7 +499,7 @@ const Layout = () => {
       )}
     >
       <MobileSidebarCloser />
-      <Sidebar collapsible="icon" className="tour-sidebar-nav">
+      <Sidebar collapsible="icon">
         <SidebarHeader className="pt-[env(safe-area-inset-top)]">
           <div className="flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:justify-center">
             <BrandLockup
@@ -555,11 +545,11 @@ const Layout = () => {
       >
         <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
           <div className="flex min-w-0 items-center gap-3">
-            <SidebarTrigger className="h-10 w-10 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
+            <SidebarTrigger className="aspect-square h-10 w-10 shrink-0 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
               <img
                 src={resolvedTheme === "dark" ? logoDark : logoLight}
                 alt=""
-                className="h-9 w-9 scale-[1.35] object-contain"
+                className="aspect-square h-9 w-9 shrink-0 scale-[1.35] object-contain"
               />
             </SidebarTrigger>
             <div className="min-w-0 md:hidden">
@@ -605,18 +595,19 @@ const Layout = () => {
             )}
             <LanguageSwitcher showLanguageSettings />
             <SettingsHeaderButton t={t} />
-            {hasTourForCurrentRoute && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
-                onClick={startTour}
-                aria-label={t("helpTour.start")}
-              >
-                <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
-                <span className="sr-only">{t("helpTour.start")}</span>
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
+              onClick={() => openHelp()}
+              aria-label={t("helpDrawer.open", { defaultValue: "Help" })}
+              aria-haspopup="dialog"
+            >
+              <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+              <span className="sr-only">
+                {t("helpDrawer.open", { defaultValue: "Help" })}
+              </span>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -655,16 +646,25 @@ const Layout = () => {
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2 md:hidden">
+          {/* Round icon buttons must not be squeezed into ovals at large text sizes. */}
+          <div className="flex shrink-0 items-center gap-2 md:hidden">
             <LanguageSwitcher showLanguageSettings />
-            <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input" />
+            {/* Help is one tap away; Give feedback lives inside the drawer. */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 shrink-0 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
+              onClick={() => openHelp()}
+              aria-label={t("helpDrawer.open", { defaultValue: "Help" })}
+              aria-haspopup="dialog"
+            >
+              <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+            </Button>
             <MobileHeaderActionsMenu
               displayName={displayName}
-              hasTourForCurrentRoute={hasTourForCurrentRoute}
               logout={logout}
               resolvedTheme={resolvedTheme}
               setTheme={setTheme}
-              startTour={startTour}
               t={t}
               isHomepageMobilePreview={isHomepageMobilePreview}
             />

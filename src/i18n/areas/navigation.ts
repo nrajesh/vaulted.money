@@ -8,6 +8,7 @@ import type { AreaTranslations } from "./types";
 export const navigation: AreaTranslations = {
   en: {
     nav: {
+      openAiAssistant: "Open AI assistant",
       groups: {
         everyday: "Everyday",
         plan: "Plan & understand",
@@ -46,6 +47,7 @@ export const navigation: AreaTranslations = {
   },
   es: {
     nav: {
+      openAiAssistant: "Abrir asistente de IA",
       groups: {
         everyday: "Día a día",
         plan: "Planificar y entender",
@@ -84,6 +86,7 @@ export const navigation: AreaTranslations = {
   },
   zh: {
     nav: {
+      openAiAssistant: "打开 AI 助手",
       groups: {
         everyday: "日常",
         plan: "规划与分析",
@@ -122,6 +125,7 @@ export const navigation: AreaTranslations = {
   },
   nl: {
     nav: {
+      openAiAssistant: "AI-assistent openen",
       groups: {
         everyday: "Dagelijks",
         plan: "Plannen en begrijpen",
@@ -160,6 +164,7 @@ export const navigation: AreaTranslations = {
   },
   ta: {
     nav: {
+      openAiAssistant: "AI உதவியாளரைத் திற",
       groups: {
         everyday: "அன்றாடம்",
         plan: "திட்டமிடல் மற்றும் புரிதல்",

@@ -5,7 +5,7 @@ import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useTransactions } from "@/contexts/TransactionsContext";
-import { useTour } from "@/contexts/TourContext";
+import { useHelpDrawer } from "@/contexts/HelpDrawerContext";
 import { GlobalProgressDialog } from "@/components/dialogs/GlobalProgressDialog";
 import { ThemedCard, ThemedCardContent } from "@/components/ThemedCard";
 import {
@@ -78,7 +78,7 @@ const LedgerEntryPage = () => {
     deleteLedger,
   } = useLedger();
   const { setTheme, resolvedTheme } = useTheme();
-  const { startTour, hasTourForCurrentRoute } = useTour();
+  const { openHelp } = useHelpDrawer();
   const { generateDiverseDemoData, setOperationProgress } = useTransactions();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isGenerateConfirmOpen, setIsGenerateConfirmOpen] = useState(false);
@@ -662,18 +662,19 @@ const LedgerEntryPage = () => {
             </Button>
           )}
           <LanguageSwitcher />
-          {hasTourForCurrentRoute && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
-              onClick={startTour}
-              aria-label={t("helpTour.start")}
-            >
-              <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
-              <span className="sr-only">{t("helpTour.start")}</span>
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
+            onClick={() => openHelp()}
+            aria-label={t("helpDrawer.open", { defaultValue: "Help" })}
+            aria-haspopup="dialog"
+          >
+            <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+            <span className="sr-only">
+              {t("helpDrawer.open", { defaultValue: "Help" })}
+            </span>
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -751,15 +752,13 @@ const LedgerEntryPage = () => {
                   </Link>
                 </DropdownMenuItem>
               )}
-              {hasTourForCurrentRoute && (
-                <DropdownMenuItem
-                  onClick={startTour}
-                  className="min-h-14 rounded-xl px-4 py-3 text-[1.05rem] font-medium text-foreground gap-3"
-                >
-                  <HelpCircle className="h-5 w-5" />
-                  {t("helpTour.start", { defaultValue: "Start help tour" })}
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                onClick={() => openHelp()}
+                className="min-h-14 rounded-xl px-4 py-3 text-[1.05rem] font-medium text-foreground gap-3"
+              >
+                <HelpCircle className="h-5 w-5" />
+                {t("helpDrawer.open", { defaultValue: "Help" })}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() =>
                   setTheme(resolvedTheme === "dark" ? "light" : "dark")
@@ -793,7 +792,7 @@ const LedgerEntryPage = () => {
               : "animate-in fade-in zoom-in duration-500",
           )}
         >
-          <div className="tour-ledger-title space-y-2 px-2 text-center">
+          <div className="space-y-2 px-2 text-center">
             <BrandLockup
               size="hero"
               className="justify-center"
@@ -810,7 +809,7 @@ const LedgerEntryPage = () => {
             </p>
           </div>
 
-          <div className="tour-ledger-search sticky top-[calc(0.5rem+env(safe-area-inset-top))] z-20 rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:border-slate-800/80 dark:bg-slate-950/85">
+          <div className="sticky top-[calc(0.5rem+env(safe-area-inset-top))] z-20 rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:border-slate-800/80 dark:bg-slate-950/85">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -897,7 +896,7 @@ const LedgerEntryPage = () => {
 
           <div
             className={cn(
-              "tour-ledger-list",
+              "",
               filteredLedgers.length === 0 && ledgers.length > 0
                 ? "py-10 text-center text-muted-foreground"
                 : "space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0",
@@ -1021,7 +1020,7 @@ const LedgerEntryPage = () => {
 
             <ThemedCard
               className={cn(
-                "tour-create-ledger cursor-pointer rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50/40 transition-all hover:border-emerald-500 hover:bg-emerald-100/40 dark:border-emerald-800 dark:bg-emerald-950/15 dark:hover:bg-emerald-900/25",
+                "cursor-pointer rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50/40 transition-all hover:border-emerald-500 hover:bg-emerald-100/40 dark:border-emerald-800 dark:bg-emerald-950/15 dark:hover:bg-emerald-900/25",
                 filteredLedgers.length === 0 && ledgers.length > 0
                   ? "mx-auto w-full max-w-md md:col-span-2"
                   : "",
@@ -1049,7 +1048,7 @@ const LedgerEntryPage = () => {
             </ThemedCard>
           </div>
 
-          <div className="tour-import-backup rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/40">
+          <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/40">
             <div className="mb-3">
               <h2 className="text-base font-semibold">
                 {t("ledgerEntry.setup.title", {

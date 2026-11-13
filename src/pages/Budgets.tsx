@@ -258,7 +258,6 @@ export default function BudgetsPage() {
           primary={{
             id: "create-budget",
             icon: PlusCircle,
-            className: "tour-create-budget",
             label: t("budgets.page.create", { defaultValue: "Create Budget" }),
             onSelect: () => handleOpenDialog(),
           }}
@@ -266,7 +265,6 @@ export default function BudgetsPage() {
             {
               id: "smart-create",
               icon: Wand2,
-              className: "tour-smart-budget",
               label: t("budgets.page.smartCreate", {
                 defaultValue: "Smart Create",
               }),
@@ -280,7 +278,7 @@ export default function BudgetsPage() {
       </div>
 
       <div className="space-y-6">
-        <div className="tour-budget-search-bar app-filter-panel">
+        <div className="app-filter-panel">
           <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder={t("budgets.page.search", {
@@ -318,7 +316,7 @@ export default function BudgetsPage() {
           </div>
         </div>
 
-        <div className="tour-budget-list">
+        <div>
           <BudgetSummary budgets={spendingBudgets} isLoading={isLoading} />
         </div>
 

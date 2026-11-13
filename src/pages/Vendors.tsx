@@ -116,7 +116,7 @@ const VendorsPage = () => {
   ];
 
   return (
-    <div className="tour-vendors-list">
+    <div>
       <EntityManagementPage<Payee>
         title={t("management.entities.vendor.title", {
           defaultValue: "Payees",

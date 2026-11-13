@@ -77,7 +77,7 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
     remaining >= 0 ? "text-green-700 dark:text-green-400" : "text-red-600";
 
   return (
-    <div className="tour-budget-summary-cards grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-3">
       <Card className="bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">

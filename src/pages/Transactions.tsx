@@ -700,7 +700,7 @@ const Transactions = () => {
   return (
     <div className="page-container">
       <div className="app-page-header flex flex-col gap-6">
-        <div className="tour-add-transaction">
+        <div>
           <TransactionPageHeader
             onImportClick={handleImportClick}
             onExportClick={handleExport}
@@ -717,12 +717,12 @@ const Transactions = () => {
           />
         </div>
 
-        <div className="tour-transaction-filters">
+        <div>
           <SearchFilterBar />
         </div>
       </div>
 
-      <div className="tour-transaction-list app-table-shell">
+      <div className="app-table-shell">
         <TransactionTable
           transactions={filteredTransactions}
           allData={combinedTransactions}

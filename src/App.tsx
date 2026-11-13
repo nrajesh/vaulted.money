@@ -53,8 +53,9 @@ import ApiBridge from "@/api/ApiBridge";
 const DonationPage = lazy(() => import("@/pages/DonationPage"));
 const AcknowledgmentsPage = lazy(() => import("@/pages/AcknowledgmentsPage"));
 import { ContinuitySyncManager } from "@/components/ContinuitySyncManager";
-import { TourProvider } from "./contexts/TourContext";
-import HelpTour from "./components/ui/help-tour";
+import { HelpDrawerProvider } from "./contexts/HelpDrawerContext";
+import { HelpDrawer } from "./components/help/HelpDrawer";
+import { DisplayPreferencesApplier } from "./hooks/useDisplayPreferences";
 import { isElectron } from "@/utils/electron";
 
 // ... existing imports
@@ -75,8 +76,9 @@ function App() {
                     <BackupManager />
                     <ApiBridge />
                     <Router>
-                      <TourProvider>
-                        <HelpTour />
+                      <HelpDrawerProvider>
+                        <DisplayPreferencesApplier />
+                        <HelpDrawer />
                         <Suspense fallback={<LoadingSpinner />}>
                           <Routes>
                             <Route
@@ -172,7 +174,7 @@ function App() {
                           </Routes>
                         </Suspense>
                         <ShadcnToaster />
-                      </TourProvider>
+                      </HelpDrawerProvider>
                     </Router>
                     <ContinuitySyncManager />
                   </TransactionsProvider>

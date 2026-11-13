@@ -45,7 +45,7 @@ describe("SettingsPage", () => {
     ledger.active = null;
     renderPage();
     expect(
-      screen.getByRole("link", { name: "Open AI & agents" }),
+      screen.getByRole("link", { name: "Open AI assistant" }),
     ).toHaveAttribute("href", "/ai-providers");
     expect(screen.getByText("No AI provider is in use.")).toBeInTheDocument();
     expect(screen.queryByLabelText(/API Key/i)).toBeNull();

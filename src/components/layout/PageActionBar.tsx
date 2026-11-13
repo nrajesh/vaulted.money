@@ -20,7 +20,7 @@ export interface PageAction {
   onSelect: () => void;
   disabled?: boolean;
   busy?: boolean;
-  /** Extra class, e.g. a tour anchor such as `tour-export-transactions`. */
+  /** Extra class for this action's button or menu item. */
   className?: string;
   /** Starts a new section in the Actions menu (e.g. import/export). */
   separatorBefore?: boolean;
@@ -36,7 +36,7 @@ export interface PageActionBarProps {
   hidePrimaryOnPhone?: boolean;
   /** Occasional utilities, tucked into the "Actions" menu. */
   secondary?: PageAction[];
-  /** Extra class for the bar, e.g. a tour anchor. */
+  /** Extra class for the bar. */
   className?: string;
   /** Hidden inputs (file pickers) that belong to the actions. */
   children?: ReactNode;

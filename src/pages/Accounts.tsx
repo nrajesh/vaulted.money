@@ -106,7 +106,7 @@ const AccountsPage = () => {
   ];
 
   return (
-    <div className="tour-accounts-list">
+    <div>
       <EntityManagementPage<Payee>
         title={t("management.entities.account.title", {
           defaultValue: "Accounts",

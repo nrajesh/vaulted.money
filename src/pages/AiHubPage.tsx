@@ -328,7 +328,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
           <ul
             className={cn(
               "flex flex-wrap gap-x-6 gap-y-2 px-3 pt-4 sm:px-6",
-              id === IN_APP_SECTION && "tour-ai-byok",
+              id === IN_APP_SECTION && "",
             )}
           >
             {facts.map(([factIcon, text]) => (
@@ -430,7 +430,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
             ],
             // The list brings its own full-height page frame; here it is one
             // part of a longer page.
-            <div className="tour-ai-list [&_.page-container]:min-h-0">
+            <div className="[&_.page-container]:min-h-0">
               <AIProviderManagement
                 onProvidersChange={setProviders}
                 hideHeading

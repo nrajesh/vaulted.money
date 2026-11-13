@@ -22,8 +22,13 @@ export interface InlinePreviewProps {
   body: React.ReactNode;
   /** Optional "Read more" link to the full docs on the website. */
   readMoreHref?: string;
-  /** Accessible name for the ⓘ button, e.g. "About reconciling". */
+  /** Accessible name for the trigger, e.g. "Tip: Balance not matching?". */
   triggerLabel: string;
+  /**
+   * Show the trigger as a text link (e.g. "Read more: Backups") instead of
+   * the ⓘ icon. Used for User Guide previews in the help drawer.
+   */
+  triggerText?: string;
   /** Shows a "Got it, hide this tip" button. */
   onDismiss?: () => void;
   className?: string;
@@ -46,6 +51,7 @@ export const InlinePreview = ({
   body,
   readMoreHref,
   triggerLabel,
+  triggerText,
   onDismiss,
   className,
 }: InlinePreviewProps) => {
@@ -76,11 +82,13 @@ export const InlinePreview = ({
   const trigger = (
     <Button
       type="button"
-      variant="ghost"
-      size="icon"
-      aria-label={triggerLabel}
+      variant={triggerText ? "link" : "ghost"}
+      size={triggerText ? "sm" : "icon"}
+      aria-label={triggerText ? undefined : triggerLabel}
       className={cn(
-        "h-11 w-11 shrink-0 rounded-full text-muted-foreground hover:text-foreground md:h-8 md:w-8",
+        triggerText
+          ? "h-11 px-0 text-primary md:h-8"
+          : "h-11 w-11 shrink-0 rounded-full text-muted-foreground hover:text-foreground md:h-8 md:w-8",
         className,
       )}
       // Always open on click/Enter/Space. Without preventDefault, Radix
@@ -92,7 +100,7 @@ export const InlinePreview = ({
       onPointerEnter={isMobile ? undefined : openOnHover}
       onPointerLeave={isMobile ? undefined : closeAfterHover}
     >
-      <Info className="h-4 w-4" aria-hidden="true" />
+      {triggerText ?? <Info className="h-4 w-4" aria-hidden="true" />}
     </Button>
   );
 
@@ -103,7 +111,7 @@ export const InlinePreview = ({
           href={readMoreHref}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline md:min-h-8"
+          className="app-text-link inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline md:min-h-8"
         >
           {t("help.readMore", { defaultValue: "Read more" })}
           <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />

@@ -12,7 +12,6 @@ import { MemoryRouter } from "react-router-dom";
 import React from "react";
 import i18n from "@/i18n/config";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
-import { getStepsForRoute } from "@/constants/tourSteps";
 
 const DraftFormProbe = () => {
   const { t } = useTranslation();
@@ -69,15 +68,17 @@ describe("Runtime i18n switching", () => {
     ).toBeInTheDocument();
   });
 
-  it("updates help/workflow tour content for the active language", async () => {
-    const englishSteps = getStepsForRoute("/dashboard", i18n.t.bind(i18n));
-    expect(englishSteps[0]?.content).toContain("dashboard summary");
+  it("updates help drawer content for the active language", async () => {
+    expect(i18n.t("helpDrawer.cards.glance.title")).toBe(
+      "Your money at a glance",
+    );
 
     localStorage.setItem("app-enabled-languages", JSON.stringify(["es"]));
     await i18n.changeLanguage("es");
-    const spanishSteps = getStepsForRoute("/dashboard", i18n.t.bind(i18n));
 
-    expect(spanishSteps[0]?.content).toContain("resumen del tablero");
+    expect(i18n.t("helpDrawer.cards.glance.title")).toBe(
+      "Tu dinero de un vistazo",
+    );
   });
 
   it("lists built-in languages in header menu and switches from there", async () => {

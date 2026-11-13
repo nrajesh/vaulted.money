@@ -320,7 +320,6 @@ const ScheduledTransactionsPage = () => {
             primary={{
               id: "add-scheduled",
               icon: Plus,
-              className: "tour-scheduled-add",
               label: t("scheduled.header.addScheduled", {
                 defaultValue: "Add Scheduled",
               }),
@@ -352,7 +351,7 @@ const ScheduledTransactionsPage = () => {
         />
       </div>
 
-      <div className="tour-scheduled-list app-table-shell">
+      <div className="app-table-shell">
         <ScheduledTransactionsTable
           transactions={filteredTransactions}
           onEdit={handleEdit}

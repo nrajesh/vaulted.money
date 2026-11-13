@@ -142,7 +142,7 @@ const Index = () => {
         </div>
 
         {/* Metric Cards Row 2 - Consolidated */}
-        <div className="tour-dashboard-summary">
+        <div>
           <ConsolidatedMetricsCard
             netWorth={formatCurrency(totalBalance)}
             income={formatCurrency(totalIncome)}
@@ -153,7 +153,7 @@ const Index = () => {
         {/* Main Content Grid */}
         <div className="grid gap-4 md:grid-cols-12 h-[350px] sm:h-[500px]">
           {/* Chart Section - Takes up 8 columns (approx 2/3) */}
-          <div className="tour-dashboard-charts md:col-span-8 h-full">
+          <div className="md:col-span-8 h-full">
             <StackedCategoryChart
               transactions={filteredTransactions}
               className="h-full shadow-sm"
@@ -161,7 +161,7 @@ const Index = () => {
           </div>
 
           {/* Activity Feed - Takes up 4 columns (approx 1/3) */}
-          <div className="tour-recent-transactions md:col-span-4 h-full">
+          <div className="md:col-span-4 h-full">
             <RecentActivityFeed
               transactions={filteredTransactions}
               className="h-full shadow-sm"

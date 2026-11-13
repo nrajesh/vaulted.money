@@ -218,7 +218,6 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
           {subtitle && <div className="app-page-subtitle">{subtitle}</div>}
         </div>
         <PageActionBar
-          className="tour-entity-actions"
           primary={{
             id: "add",
             icon: PlusCircle,
@@ -323,7 +322,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
         className="hidden"
         accept=".csv"
       />
-      <div className="tour-entity-search app-filter-panel">
+      <div className="app-filter-panel">
         <Input
           placeholder={
             customFilter
@@ -349,7 +348,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
             })}
           </CardTitle>
         </CardHeader>
-        <CardContent className="tour-entity-table space-y-4">
+        <CardContent className="space-y-4">
           <div
             className={`app-table-toolbar ${
               numSelected > 0

@@ -17,7 +17,7 @@ const CurrenciesPage = () => {
           </p>
         </div>
       </div>
-      <div className="tour-currencies-mgmt">
+      <div>
         <CurrencyManagement />
       </div>
     </div>

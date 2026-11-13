@@ -76,10 +76,10 @@ const Analytics = () => {
           </p>
         </div>
       </div>
-      <div className="tour-analytics-filters">
+      <div>
         <SearchFilterBar />
       </div>
-      <div className="tour-analytics-chart">
+      <div>
         <AnalyticsChartView
           transactions={filteredTransactions}
           filterDateRange={dateRange}

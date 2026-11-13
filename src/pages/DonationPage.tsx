@@ -26,7 +26,7 @@ export default function DonationPage() {
 
       <div className="grid gap-8 md:grid-cols-2 lg:gap-12 items-start">
         {/* Github Sponsors */}
-        <ThemedCard className="tour-donate-github border-pink-200 bg-pink-50/50 dark:border-pink-900/50 dark:bg-pink-950/20 h-full">
+        <ThemedCard className="border-pink-200 bg-pink-50/50 dark:border-pink-900/50 dark:bg-pink-950/20 h-full">
           <ThemedCardHeader>
             <div className="flex items-center gap-2 mb-2">
               <Badge
@@ -80,7 +80,7 @@ export default function DonationPage() {
         </ThemedCard>
 
         {/* Direct Donation (QR Codes) */}
-        <ThemedCard className="tour-donate-direct border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 h-full">
+        <ThemedCard className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 h-full">
           <ThemedCardHeader>
             <div className="flex items-center gap-2 mb-2">
               <Badge

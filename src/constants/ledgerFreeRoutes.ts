@@ -16,8 +16,8 @@ export const ledgerFreeNav: {
   },
   {
     to: "/ai-providers",
-    labelKey: "layout.nav.aiAndAgents",
-    defaultLabel: "AI & agents",
+    labelKey: "nav.items.aiAssistant",
+    defaultLabel: "AI assistant",
     alsoActive: ["/connect-agent"],
   },
   {

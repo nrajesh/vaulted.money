@@ -158,7 +158,7 @@ export default function CalendarView() {
         </div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
-        <div className="tour-calendar-grid h-full min-h-0 overflow-hidden">
+        <div className="h-full min-h-0 overflow-hidden">
           <CalendarGrid
             currentDate={currentDate}
             onDateChange={setCurrentDate}
@@ -167,7 +167,7 @@ export default function CalendarView() {
             dayData={dayData}
           />
         </div>
-        <div className="tour-calendar-daily flex h-full min-h-0 flex-col overflow-hidden">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
           <DailyTransactions
             date={selectedDate}
             transactions={combinedDailyTransactions}

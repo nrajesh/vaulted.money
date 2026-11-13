@@ -552,7 +552,7 @@ export default function Insights() {
                 <Card
                   key={item.budget.id}
                   className={cn(
-                    "tour-insights-budget border-l-4 shadow-sm transition-all hover:shadow-md cursor-pointer group relative overflow-hidden",
+                    "border-l-4 shadow-sm transition-all hover:shadow-md cursor-pointer group relative overflow-hidden",
                     item.status === "critical"
                       ? "border-l-red-500"
                       : item.status === "warning"
@@ -661,7 +661,7 @@ export default function Insights() {
 
       {/* Usage Trends Section - Split Layout */}
       {(topAccountTrends.length > 0 || topVendorTrends.length > 0) && (
-        <div className="tour-insights-trends grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           {/* Account Trends */}
           <div className="app-section-card p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
