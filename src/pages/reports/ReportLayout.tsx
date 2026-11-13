@@ -14,6 +14,7 @@ import { slugify } from "@/lib/utils";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { format } from "date-fns";
 import { saveFile } from "@/utils/backupUtils";
+import { sanitizeCSVField } from "@/utils/csvUtils";
 
 import { Transaction } from "@/types/dataProvider";
 import { Payee } from "@/components/dialogs/AddEditPayeeDialog";
@@ -309,8 +310,6 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
     }
   };
 
-  const handleExcelExport = () =>
-    showSuccess("Excel export is not yet implemented.");
   const handleCsvExport = () => {
     if (combinedFilteredTransactions.length === 0) {
       showError("No transactions to export.");
@@ -328,18 +327,22 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
       "Remarks",
     ];
 
+    // Text fields are neutralised against spreadsheet formulas (=, +, -, @)
+    // before quoting; numbers such as -100 are left as data.
+    const quoted = (value: string) =>
+      `"${sanitizeCSVField(value).replace(/"/g, '""')}"`;
     const csvContent = [
       headers.join(","),
       ...combinedFilteredTransactions.map((t) =>
         [
           format(new Date(t.date), "yyyy-MM-dd"),
-          `"${(accountNameMap.get(slugify(t.account)) || t.account).replace(/"/g, '""')}"`,
-          `"${t.vendor.replace(/"/g, '""')}"`,
-          `"${t.category.replace(/"/g, '""')}"`,
-          `"${(t.sub_category || "").replace(/"/g, '""')}"`,
+          quoted(accountNameMap.get(slugify(t.account)) || t.account),
+          quoted(t.vendor),
+          quoted(t.category),
+          quoted(t.sub_category || ""),
           t.amount,
           t.currency,
-          `"${(t.remarks || "").replace(/"/g, '""')}"`,
+          quoted(t.remarks || ""),
         ].join(","),
       ),
     ].join("\n");
@@ -369,7 +372,6 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
           <div>
             <ExportButtons
               onPdfExport={handlePdfExport}
-              onExcelExport={handleExcelExport}
               onCsvExport={handleCsvExport}
             />
           </div>

@@ -3,8 +3,8 @@ import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
-import logoDark from "@/assets/logo-dark.png";
-import logoLight from "@/assets/logo-light.png";
+import logoMarkDark from "@/assets/logo-mark-dark.png";
+import logoMarkLight from "@/assets/logo-mark-light.png";
 import {
   Building2,
   Globe,
@@ -499,7 +499,10 @@ const Layout = () => {
       )}
     >
       <MobileSidebarCloser />
-      <Sidebar collapsible="icon">
+      <Sidebar
+        collapsible="icon"
+        mobileTitle={t("nav.menuTitle", { defaultValue: "Menu" })}
+      >
         <SidebarHeader className="pt-[env(safe-area-inset-top)]">
           <div className="flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:justify-center">
             <BrandLockup
@@ -513,7 +516,7 @@ const Layout = () => {
               nameClassName="group-data-[collapsible=icon]:hidden"
             />
             <PinTrigger />
-            <SidebarTrigger className="flex md:hidden" />
+            <SidebarTrigger className="flex h-11 w-11 md:hidden" />
           </div>
         </SidebarHeader>
         <SidebarContent className="p-0">
@@ -546,10 +549,12 @@ const Layout = () => {
         <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
           <div className="flex min-w-0 items-center gap-3">
             <SidebarTrigger className="aspect-square h-10 w-10 shrink-0 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
+              {/* A tightly cropped mark, shown at its natural size: scaling a
+                  padded image with a CSS transform made it look soft. */}
               <img
-                src={resolvedTheme === "dark" ? logoDark : logoLight}
+                src={resolvedTheme === "dark" ? logoMarkDark : logoMarkLight}
                 alt=""
-                className="aspect-square h-9 w-9 shrink-0 scale-[1.35] object-contain"
+                className="aspect-square h-7 w-7 shrink-0 object-contain"
               />
             </SidebarTrigger>
             <div className="min-w-0 md:hidden">

@@ -103,6 +103,44 @@ export const plainLanguage: AreaTranslations = {
       hideTip: "Got it, hide this tip",
       aboutTip: "Tip: {{title}}",
     },
+    emptyStates: {
+      transactions: {
+        title: "No transactions to show",
+        hint: "Add one with the + button, import a bank file from Actions, or clear your filters.",
+      },
+      listItems: {
+        title: "Nothing here yet",
+        hint: "Use the Add button above, or clear your search.",
+      },
+      scheduled: {
+        title: "No upcoming bills yet",
+        hint: "Add one with Add Scheduled, or let Auto-Schedule find bills that repeat.",
+      },
+    },
+    reports: {
+      export: {
+        menu: "Export",
+        pdf: "A document to print or share",
+        csv: "Opens in Excel, Numbers or Sheets",
+      },
+    },
+    aiConsent: {
+      title: "Send payee names to {{provider}}?",
+      what: 'To suggest categories, Vaulted Money sends {{provider}} the payee names you are categorising, such as "Starbucks", and the names of your categories.',
+      notSent: "Amounts, dates, accounts and notes are never sent.",
+      policy:
+        "{{provider}} handles them under its own privacy policy. You'll only be asked once for this provider.",
+      decline: "Not now",
+      allow: "Send payee names",
+    },
+    aiHub: {
+      dialog: {
+        localMacOnly:
+          "Models running on your own computer or home network, such as LM Studio or Ollama, work in the Mac app only.",
+        noLocalNetworkHere:
+          "A model on your own computer or home network works in the Mac app only.",
+      },
+    },
   },
   es: {
     dialogs: {
@@ -201,6 +239,44 @@ export const plainLanguage: AreaTranslations = {
       hideTip: "Entendido, ocultar",
       aboutTip: "Consejo: {{title}}",
     },
+    emptyStates: {
+      transactions: {
+        title: "No hay transacciones",
+        hint: "Añade una con el botón +, importa un archivo del banco desde Acciones o quita los filtros.",
+      },
+      listItems: {
+        title: "Aún no hay nada",
+        hint: "Usa el botón Añadir de arriba o borra la búsqueda.",
+      },
+      scheduled: {
+        title: "Aún no hay próximos pagos",
+        hint: "Añade uno con Agregar programada o deja que Auto-programar encuentre facturas que se repiten.",
+      },
+    },
+    reports: {
+      export: {
+        menu: "Exportar",
+        pdf: "Un documento para imprimir o compartir",
+        csv: "Se abre en Excel, Numbers o Sheets",
+      },
+    },
+    aiConsent: {
+      title: "¿Enviar nombres de beneficiarios a {{provider}}?",
+      what: 'Para sugerir categorías, Vaulted Money envía a {{provider}} los nombres de los beneficiarios que estás categorizando, como "Starbucks", y los nombres de tus categorías.',
+      notSent: "Nunca se envían importes, fechas, cuentas ni notas.",
+      policy:
+        "{{provider}} los trata según su propia política de privacidad. Solo se te preguntará una vez por este proveedor.",
+      decline: "Ahora no",
+      allow: "Enviar nombres",
+    },
+    aiHub: {
+      dialog: {
+        localMacOnly:
+          "Los modelos que se ejecutan en tu ordenador o en tu red doméstica, como LM Studio u Ollama, solo funcionan en la app para Mac.",
+        noLocalNetworkHere:
+          "Un modelo en tu ordenador o red doméstica solo funciona en la app para Mac.",
+      },
+    },
   },
   zh: {
     dialogs: {
@@ -296,6 +372,43 @@ export const plainLanguage: AreaTranslations = {
       readMore: "了解更多",
       hideTip: "知道了，隐藏此提示",
       aboutTip: "提示：{{title}}",
+    },
+    emptyStates: {
+      transactions: {
+        title: "没有可显示的交易",
+        hint: "用 + 按钮添加一笔，从“操作”导入银行文件，或清除筛选条件。",
+      },
+      listItems: {
+        title: "这里还没有内容",
+        hint: "使用上方的添加按钮，或清除搜索。",
+      },
+      scheduled: {
+        title: "还没有即将到期的账单",
+        hint: "用“添加定期交易”添加一项，或让“自动安排”查找重复的账单。",
+      },
+    },
+    reports: {
+      export: {
+        menu: "导出",
+        pdf: "可打印或分享的文档",
+        csv: "可在 Excel、Numbers 或 Sheets 中打开",
+      },
+    },
+    aiConsent: {
+      title: "要将收款方名称发送给 {{provider}} 吗？",
+      what: "为了建议类别，Vaulted Money 会把你正在分类的收款方名称（例如“Starbucks”）以及你的类别名称发送给 {{provider}}。",
+      notSent: "金额、日期、账户和备注绝不会发送。",
+      policy:
+        "{{provider}} 将按照其自身的隐私政策处理这些信息。对于此提供商，你只会被询问一次。",
+      decline: "暂不",
+      allow: "发送收款方名称",
+    },
+    aiHub: {
+      dialog: {
+        localMacOnly:
+          "在你自己的电脑或家庭网络上运行的模型（如 LM Studio 或 Ollama）仅在 Mac 应用中可用。",
+        noLocalNetworkHere: "你电脑或家庭网络上的模型仅在 Mac 应用中可用。",
+      },
     },
   },
   nl: {
@@ -395,6 +508,45 @@ export const plainLanguage: AreaTranslations = {
       hideTip: "Begrepen, verberg tip",
       aboutTip: "Tip: {{title}}",
     },
+    emptyStates: {
+      transactions: {
+        title: "Geen transacties om te tonen",
+        hint: "Voeg er een toe met de knop +, importeer een bankbestand via Acties of wis je filters.",
+      },
+      listItems: {
+        title: "Hier staat nog niets",
+        hint: "Gebruik de knop Toevoegen hierboven of wis je zoekopdracht.",
+      },
+      scheduled: {
+        title: "Nog geen komende rekeningen",
+        hint: "Voeg er een toe met Gepland toevoegen, of laat Automatisch plannen terugkerende rekeningen vinden.",
+      },
+    },
+    reports: {
+      export: {
+        menu: "Exporteren",
+        pdf: "Een document om te printen of te delen",
+        csv: "Opent in Excel, Numbers of Sheets",
+      },
+    },
+    aiConsent: {
+      title: "Namen van begunstigden naar {{provider}} sturen?",
+      what: 'Om categorieën voor te stellen stuurt Vaulted Money {{provider}} de namen van de begunstigden die je categoriseert, zoals "Starbucks", en de namen van je categorieën.',
+      notSent:
+        "Bedragen, datums, rekeningen en notities worden nooit verstuurd.",
+      policy:
+        "{{provider}} verwerkt ze volgens zijn eigen privacybeleid. Je krijgt deze vraag maar één keer voor deze aanbieder.",
+      decline: "Niet nu",
+      allow: "Namen versturen",
+    },
+    aiHub: {
+      dialog: {
+        localMacOnly:
+          "Modellen op je eigen computer of thuisnetwerk, zoals LM Studio of Ollama, werken alleen in de Mac-app.",
+        noLocalNetworkHere:
+          "Een model op je eigen computer of thuisnetwerk werkt alleen in de Mac-app.",
+      },
+    },
   },
   ta: {
     dialogs: {
@@ -491,6 +643,45 @@ export const plainLanguage: AreaTranslations = {
       readMore: "மேலும் படிக்க",
       hideTip: "புரிந்தது, மறை",
       aboutTip: "குறிப்பு: {{title}}",
+    },
+    emptyStates: {
+      transactions: {
+        title: "காட்ட பரிவர்த்தனைகள் இல்லை",
+        hint: "+ பொத்தானால் சேர்க்கவும், செயல்களில் வங்கிக் கோப்பை இறக்கவும், அல்லது வடிகட்டிகளை அழிக்கவும்.",
+      },
+      listItems: {
+        title: "இங்கே இன்னும் எதுவும் இல்லை",
+        hint: "மேலே உள்ள சேர் பொத்தானைப் பயன்படுத்தவும், அல்லது தேடலை அழிக்கவும்.",
+      },
+      scheduled: {
+        title: "வரவிருக்கும் கட்டணங்கள் இன்னும் இல்லை",
+        hint: "அட்டவணை சேர்க்கவும் மூலம் சேர்க்கவும், அல்லது தானாக திட்டமிடு மீண்டும் வரும் கட்டணங்களைக் கண்டறியட்டும்.",
+      },
+    },
+    reports: {
+      export: {
+        menu: "ஏற்றுமதி",
+        pdf: "அச்சிட அல்லது பகிர ஒரு ஆவணம்",
+        csv: "Excel, Numbers அல்லது Sheets-இல் திறக்கும்",
+      },
+    },
+    aiConsent: {
+      title: "பெறுநர் பெயர்களை {{provider}}-க்கு அனுப்பவா?",
+      what: 'வகைகளைப் பரிந்துரைக்க, நீங்கள் வகைப்படுத்தும் பெறுநர் பெயர்களையும் (எ.கா. "Starbucks") உங்கள் வகைப் பெயர்களையும் Vaulted Money {{provider}}-க்கு அனுப்பும்.',
+      notSent:
+        "தொகைகள், தேதிகள், கணக்குகள், குறிப்புகள் ஒருபோதும் அனுப்பப்படாது.",
+      policy:
+        "{{provider}} அவற்றைத் தன் சொந்தத் தனியுரிமைக் கொள்கையின்படி கையாளும். இந்த வழங்குநருக்கு ஒருமுறை மட்டுமே கேட்கப்படும்.",
+      decline: "இப்போது வேண்டாம்",
+      allow: "பெயர்களை அனுப்பு",
+    },
+    aiHub: {
+      dialog: {
+        localMacOnly:
+          "உங்கள் கணினியிலோ வீட்டு நெட்வொர்க்கிலோ இயங்கும் LM Studio, Ollama போன்ற மாதிரிகள் Mac பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
+        noLocalNetworkHere:
+          "உங்கள் கணினி அல்லது வீட்டு நெட்வொர்க்கில் உள்ள மாதிரி Mac பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
+      },
     },
   },
 };

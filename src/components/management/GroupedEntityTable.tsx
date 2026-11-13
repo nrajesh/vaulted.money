@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/feedback/EmptyState";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
 import {
@@ -145,9 +146,7 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
           </div>
         ) : groupKeys.length === 0 ? (
           <div className="text-center p-8 border rounded-lg text-muted-foreground bg-card">
-            {t("management.status.noItems", {
-              defaultValue: "No items found.",
-            })}
+            <EmptyState kind="listItems" />
           </div>
         ) : (
           groupKeys.map((groupKey) => {
@@ -439,9 +438,7 @@ export const GroupedEntityTable = <T extends { id: string; name: string }>({
                   colSpan={columns.length + 2}
                   className="text-center py-4 text-muted-foreground"
                 >
-                  {t("management.status.noItems", {
-                    defaultValue: "No items found.",
-                  })}
+                  <EmptyState kind="listItems" />
                 </TableCell>
               </TableRow>
             ) : (

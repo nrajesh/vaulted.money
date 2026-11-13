@@ -14,6 +14,25 @@ import { isElectron } from "@/utils/electron";
  */
 export const canUseLocalModels = (): boolean => isElectron();
 
+/**
+ * True for an address on a home or office network (192.168.x, 10.x,
+ * 172.16-31.x, *.local). Phones can't reach these: the iOS app deliberately
+ * declares no local-network access, so such models are Mac-app only.
+ */
+export const isPrivateNetworkUrl = (url: string): boolean => {
+  try {
+    const { hostname } = new URL(url);
+    return (
+      /^10\./.test(hostname) ||
+      /^192\.168\./.test(hostname) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) ||
+      hostname.endsWith(".local")
+    );
+  } catch {
+    return false;
+  }
+};
+
 /** True for an address that points back at the device itself. */
 export const isLoopbackUrl = (url: string): boolean => {
   try {

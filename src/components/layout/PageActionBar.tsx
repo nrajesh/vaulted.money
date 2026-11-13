@@ -34,6 +34,8 @@ export interface PageActionBarProps {
    * floating + button already adds a transaction.
    */
   hidePrimaryOnPhone?: boolean;
+  /** Name of the menu button; "Actions" unless given (e.g. "Export"). */
+  menuLabel?: string;
   /** Occasional utilities, tucked into the "Actions" menu. */
   secondary?: PageAction[];
   /** Extra class for the bar. */
@@ -86,6 +88,7 @@ const ActionButton = ({
 export const PageActionBar = ({
   primary,
   hidePrimaryOnPhone,
+  menuLabel,
   secondary = [],
   className,
   children,
@@ -108,7 +111,7 @@ export const PageActionBar = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="h-11 gap-1.5 px-4">
-              {t("pageActions.menu", { defaultValue: "Actions" })}
+              {menuLabel ?? t("pageActions.menu", { defaultValue: "Actions" })}
               <ChevronDown className="h-4 w-4" aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>

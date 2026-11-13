@@ -1,3 +1,4 @@
+import { ensureAiConsent } from "@/utils/aiConsent";
 import { defaultModel } from "@/constants/aiDefaultModels";
 import { useAIConfig } from "./useAIConfig";
 import { bearerHeader, isAiReady } from "@/utils/aiModels";
@@ -306,6 +307,9 @@ export const useAutoCategorize = () => {
       throw new Error("You must be online to use Auto-Categorize.");
     }
 
+    // Nothing is sent until the person has allowed this provider once.
+    await ensureAiConsent(config.provider);
+
     const { provider, apiKey } = config;
     const prompt = buildPrompt(vendorName, categories, subCategories);
     let resultJson = "";
@@ -451,6 +455,7 @@ export const useAutoCategorize = () => {
     if (!config.provider || !isAiReady(config.provider, config.apiKey)) {
       throw new Error("AI Provider or API Key is not configured.");
     }
+    await ensureAiConsent(config.provider);
     return categorizeVendorsBulk(
       config.provider,
       config.apiKey,

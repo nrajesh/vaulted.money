@@ -1,33 +1,46 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { FileText, FileSpreadsheet, FileJson } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { FileText, FileSpreadsheet } from "lucide-react";
+import { PageActionBar } from "@/components/layout/PageActionBar";
 
 interface ExportButtonsProps {
   onPdfExport: () => void;
-  onExcelExport: () => void;
   onCsvExport: () => void;
 }
 
+/**
+ * The report export choices as one "Export" menu, matching the Actions menu
+ * on the list pages instead of three separate buttons.
+ */
 const ExportButtons: React.FC<ExportButtonsProps> = ({
   onPdfExport,
-  onExcelExport,
   onCsvExport,
 }) => {
+  const { t } = useTranslation();
   return (
-    <div className="flex items-center space-x-2">
-      <Button variant="outline" onClick={onPdfExport}>
-        <FileText className="mr-2 h-4 w-4" />
-        PDF
-      </Button>
-      <Button variant="outline" onClick={onExcelExport}>
-        <FileSpreadsheet className="mr-2 h-4 w-4" />
-        Excel
-      </Button>
-      <Button variant="outline" onClick={onCsvExport}>
-        <FileJson className="mr-2 h-4 w-4" />
-        CSV
-      </Button>
-    </div>
+    <PageActionBar
+      menuLabel={t("reports.export.menu", { defaultValue: "Export" })}
+      secondary={[
+        {
+          id: "pdf",
+          icon: FileText,
+          label: "PDF",
+          description: t("reports.export.pdf", {
+            defaultValue: "A document to print or share",
+          }),
+          onSelect: onPdfExport,
+        },
+        {
+          id: "csv",
+          icon: FileSpreadsheet,
+          label: "CSV",
+          description: t("reports.export.csv", {
+            defaultValue: "Opens in Excel, Numbers or Sheets",
+          }),
+          onSelect: onCsvExport,
+        },
+      ]}
+    />
   );
 };
 

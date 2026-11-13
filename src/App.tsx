@@ -55,6 +55,7 @@ const AcknowledgmentsPage = lazy(() => import("@/pages/AcknowledgmentsPage"));
 import { ContinuitySyncManager } from "@/components/ContinuitySyncManager";
 import { HelpDrawerProvider } from "./contexts/HelpDrawerContext";
 import { HelpDrawer } from "./components/help/HelpDrawer";
+import { AiConsentDialog } from "./components/dialogs/AiConsentDialog";
 import { DisplayPreferencesApplier } from "./hooks/useDisplayPreferences";
 import { isElectron } from "@/utils/electron";
 
@@ -79,6 +80,7 @@ function App() {
                       <HelpDrawerProvider>
                         <DisplayPreferencesApplier />
                         <HelpDrawer />
+                        <AiConsentDialog />
                         <Suspense fallback={<LoadingSpinner />}>
                           <Routes>
                             <Route

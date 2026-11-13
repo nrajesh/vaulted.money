@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { requestAiConsent } from "@/utils/aiConsent";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import TransactionTable from "@/components/transactions/TransactionTable";
@@ -517,6 +518,8 @@ const Transactions = () => {
       let aiMappings: BulkCategorizeResult = {};
 
       if (unknownVendors.length > 0) {
+        // Ask before the progress dialog opens, so the question isn't hidden.
+        if (!(await requestAiConsent(config.provider))) return;
         setIsBulkCategorizing(true);
         setOperationProgress({
           title: "Auto-Categorizing",

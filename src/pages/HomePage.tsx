@@ -455,6 +455,7 @@ const HomePage = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
+                srTitle={t("home.nav.menu", { defaultValue: "Menu" })}
                 className="flex w-[17rem] flex-col gap-0 border-l border-slate-200/60 bg-white/95 px-0 pt-12 backdrop-blur-xl dark:border-border/60 dark:bg-slate-950/95"
               >
                 <div className="px-5 pb-4">

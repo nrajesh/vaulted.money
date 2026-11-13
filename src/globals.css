@@ -173,6 +173,26 @@
 }
 
 /*
+ * Touch targets: on touch screens, small icon buttons get an invisible 4px
+ * margin of tappable area (40px + 8px = 48px, Apple HIG 44pt / Android 48dp)
+ * without changing their look. Neighbours 8px apart (gap-2) don't overlap.
+ */
+@layer components {
+  /* In the components layer so utilities such as \`absolute\` still win. */
+  @media (pointer: coarse) {
+    .touch-target {
+      position: relative;
+    }
+
+    .touch-target::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+    }
+  }
+}
+
+/*
  * Display settings from the help drawer (src/hooks/useDisplayPreferences.ts).
  * Tailwind sizes are in rem, so scaling the root font scales the whole UI.
  */

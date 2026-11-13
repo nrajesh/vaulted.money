@@ -1,3 +1,4 @@
+import { isAiConsentDeclined } from "@/utils/aiConsent";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -358,6 +359,8 @@ const AddEditTransactionDialog: React.FC<AddEditTransactionDialogProps> = ({
         showError("AI couldn't map to a category.");
       }
     } catch (error: unknown) {
+      // "Not now" in the AI permission dialog is a choice, not a failure.
+      if (isAiConsentDeclined(error)) return;
       const errorMessage = (error as Error).message || "Auto-categorize failed";
       const isApiKeyIssue =
         errorMessage.toLowerCase().includes("unauthorized") ||
