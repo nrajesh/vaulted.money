@@ -9,10 +9,10 @@ Before App Store / Play Store submission, newcomers must find their way by inten
 ## Goals
 
 - One navigation config feeds the desktop sidebar and the phone bottom bar.
-- Groups by intent: **Everyday** (Overview, Transactions, Accounts, Budgets), **Plan & understand** (Calendar, Upcoming bills, Reports › Simple/Detailed, Spending insights, Charts), **Organise** (Categories, Payees), **AI & connections** (AI assistant, Connect other AI apps — desktop bridge only), **More options**, folded by default (Currencies, Import & clean up, Backup, Language, Settings, Support the project — not on native).
+- Groups by intent: **Everyday** (Overview, Transactions, Accounts, Budgets), **Plan & understand** (Calendar, Upcoming bills, Reports › Simple/Detailed, Spending insights, Charts), **Organise** (Categories, Payees), **AI & connections** (AI assistant, Connect other AI apps — desktop bridge only), **More options**, folded by default (Currencies, Your data, Backup, Language, Settings, Support the project — not on native).
 - Phone bottom bar: Overview · Transactions · Accounts · Budgets · More. "More" shows as active when the current page is not one of the four.
 - One active-state rule (`isNavItemActive`) shared by every menu; Reports parent active on both report pages. "AI assistant" and "Connect other AI apps" are separate items, each active on its own page.
-- Renames (owner-approved): Dashboard→Overview, Vendors→Payees (nav label), Essential/Advanced→Simple/Detailed, Scheduled→Upcoming bills, Insights→Spending insights, Analytics→Charts, Data→Import & clean up.
+- Renames (owner-approved): Dashboard→Overview, Vendors→Payees (nav label), Essential/Advanced→Simple/Detailed, Scheduled→Upcoming bills, Insights→Spending insights, Analytics→Charts, Data→Your data.
 - Page action bars (Transactions, Accounts/Categories/Payees, Budgets, Upcoming bills): one shared `PageActionBar` — primary action button + an `Actions ▾` menu holding secondary utilities (reconcile, de-duplicate, clean up, detect transfers, categorise missing, import/export CSV, smart create, refresh). Shared spacing and 44px-tall buttons.
 - On Transactions the page "Add transaction" button hides below `md`, because the floating + button does the same thing. Other pages keep their primary button, since the floating + adds a transaction, not an account or budget.
 

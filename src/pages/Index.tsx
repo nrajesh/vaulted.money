@@ -122,11 +122,11 @@ const Index = () => {
         <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
           <div>
             <h1 className="app-gradient-title app-page-title">
-              {t("layout.nav.dashboard", { defaultValue: "Dashboard" })}
+              {t("nav.items.overview", { defaultValue: "Overview" })}
             </h1>
             <p className="app-page-subtitle">
-              {t("dashboard.header.subtitle", {
-                defaultValue: "Overview of your financial health",
+              {t("pages.overview.subtitle", {
+                defaultValue: "Where your money stands, and what's next.",
               })}
             </p>
           </div>

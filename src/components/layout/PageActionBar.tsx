@@ -1,4 +1,4 @@
-import { Fragment, type ComponentType, type ReactNode } from "react";
+import { Fragment, useId, type ComponentType, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 export interface PageAction {
   id: string;
   label: string;
+  /** One plain-language line on what the action does, shown under it. */
+  description?: string;
   icon?: ComponentType<{ className?: string }>;
   onSelect: () => void;
   disabled?: boolean;
@@ -50,9 +52,12 @@ const ActionButton = ({
   className?: string;
 }) => {
   const Icon = action.busy ? Loader2 : action.icon;
+  const descriptionId = useId();
   return (
     <Button
       variant={variant}
+      title={action.description}
+      aria-describedby={action.description ? descriptionId : undefined}
       onClick={action.onSelect}
       disabled={action.disabled || action.busy}
       className={cn("h-11 gap-2 px-4", className, action.className)}
@@ -64,6 +69,11 @@ const ActionButton = ({
         />
       )}
       {action.label}
+      {action.description && (
+        <span id={descriptionId} className="sr-only">
+          {action.description}
+        </span>
+      )}
     </Button>
   );
 };
@@ -81,6 +91,7 @@ export const PageActionBar = ({
   children,
 }: PageActionBarProps) => {
   const { t } = useTranslation();
+  const menuId = useId();
 
   return (
     <div
@@ -101,7 +112,10 @@ export const PageActionBar = ({
               <ChevronDown className="h-4 w-4" aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[14rem]">
+          <DropdownMenuContent
+            align="end"
+            className="w-[min(20rem,calc(100vw-2rem))]"
+          >
             {secondary.map((action, index) => {
               const Icon = action.busy ? Loader2 : action.icon;
               return (
@@ -112,14 +126,39 @@ export const PageActionBar = ({
                   <DropdownMenuItem
                     onSelect={action.onSelect}
                     disabled={action.disabled || action.busy}
-                    className={cn("min-h-11 gap-2", action.className)}
+                    // Name = label only; the explanation is a description.
+                    aria-labelledby={`${menuId}-${action.id}-label`}
+                    aria-describedby={
+                      action.description
+                        ? `${menuId}-${action.id}-description`
+                        : undefined
+                    }
+                    className={cn(
+                      "min-h-11 items-start gap-2 py-2",
+                      action.className,
+                    )}
                   >
                     {Icon && (
                       <Icon
-                        className={cn("h-4 w-4", action.busy && "animate-spin")}
+                        className={cn(
+                          "mt-0.5 h-4 w-4 shrink-0",
+                          action.busy && "animate-spin",
+                        )}
                       />
                     )}
-                    {action.label}
+                    <span className="flex min-w-0 flex-col">
+                      <span id={`${menuId}-${action.id}-label`}>
+                        {action.label}
+                      </span>
+                      {action.description && (
+                        <span
+                          id={`${menuId}-${action.id}-description`}
+                          className="text-xs font-normal leading-snug text-muted-foreground"
+                        >
+                          {action.description}
+                        </span>
+                      )}
+                    </span>
                   </DropdownMenuItem>
                 </Fragment>
               );

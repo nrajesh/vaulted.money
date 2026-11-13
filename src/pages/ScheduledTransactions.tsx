@@ -1,5 +1,6 @@
 import * as React from "react";
 import { PageActionBar } from "@/components/layout/PageActionBar";
+import { FeatureHint } from "@/components/help/FeatureHint";
 import { Plus, Sparkles } from "lucide-react";
 import { ScheduledTransactionsTable } from "@/components/scheduled-transactions/ScheduledTransactionsTable";
 import { useTransactions } from "@/contexts/TransactionsContext";
@@ -303,14 +304,15 @@ const ScheduledTransactionsPage = () => {
       <div className="app-page-header flex flex-col gap-6">
         <div className="app-page-header-row">
           <div>
-            <h1 className="app-gradient-title app-page-title">
-              {t("scheduled.header.title", {
-                defaultValue: "Scheduled Transactions",
-              })}
-            </h1>
+            <div className="flex items-center gap-1">
+              <h1 className="app-gradient-title app-page-title">
+                {t("nav.items.scheduled", { defaultValue: "Upcoming bills" })}
+              </h1>
+              <FeatureHint id="scheduled" />
+            </div>
             <p className="app-page-subtitle">
-              {t("scheduled.header.subtitle", {
-                defaultValue: "Manage recurring payments and transfers",
+              {t("pages.scheduled.subtitle", {
+                defaultValue: "Bills, paydays, and transfers that repeat.",
               })}
             </p>
           </div>
@@ -330,6 +332,9 @@ const ScheduledTransactionsPage = () => {
                 icon: Sparkles,
                 label: t("scheduled.header.autoSchedule", {
                   defaultValue: "Auto-Schedule",
+                }),
+                description: t("pageActions.descriptions.autoSchedule", {
+                  defaultValue: "Find bills that repeat and add them",
                 }),
                 onSelect: handleSmartSchedule,
               },

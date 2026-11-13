@@ -12,7 +12,12 @@ describe("PageActionBar", () => {
         primary={{ id: "add", label: "Add account", onSelect: onAdd }}
         secondary={[
           { id: "dedupe", label: "De-duplicate", onSelect: vi.fn() },
-          { id: "export", label: "Export CSV", onSelect: onExport },
+          {
+            id: "export",
+            label: "Export CSV",
+            description: "Save this list as a CSV file",
+            onSelect: onExport,
+          },
         ]}
       />,
     );
@@ -20,9 +25,9 @@ describe("PageActionBar", () => {
     expect(onAdd).toHaveBeenCalled();
     expect(screen.queryByText("Export CSV")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Actions" }));
-    await userEvent.click(
-      await screen.findByRole("menuitem", { name: "Export CSV" }),
-    );
+    const item = await screen.findByRole("menuitem", { name: "Export CSV" });
+    expect(item).toHaveAccessibleDescription("Save this list as a CSV file");
+    await userEvent.click(item);
     expect(onExport).toHaveBeenCalled();
   });
 

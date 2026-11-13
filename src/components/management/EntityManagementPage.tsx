@@ -77,6 +77,8 @@ interface EntityManagementPageProps<T extends { id: string; name: string }> {
   selectedEntity: T | null;
   refetch?: () => void;
   extraActions?: React.ReactNode;
+  /** Optional ⓘ tip shown beside the page title. */
+  titleHint?: React.ReactNode;
   customFilter?: (data: T[], searchTerm: string) => T[];
   DeduplicationDialogComponent?: React.FC<{
     isOpen: boolean;
@@ -132,6 +134,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
   handleExportClick,
   refetch,
   extraActions,
+  titleHint,
   customFilter,
   DeduplicationDialogComponent,
   CleanupDialogComponent,
@@ -208,7 +211,10 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
       />
       <div className="app-page-header app-page-header-row">
         <div>
-          <h2 className="app-gradient-title app-page-title">{title}</h2>
+          <div className="flex items-center gap-1">
+            <h2 className="app-gradient-title app-page-title">{title}</h2>
+            {titleHint}
+          </div>
           {subtitle && <div className="app-page-subtitle">{subtitle}</div>}
         </div>
         <PageActionBar
@@ -231,6 +237,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                     label: t("management.actions.reconcile", {
                       defaultValue: "Reconcile Balance",
                     }),
+                    description: t("pageActions.descriptions.reconcile", {
+                      defaultValue: "Match the app's balance to your bank's",
+                    }),
                     onSelect: () => setIsBalanceReconcileOpen(true),
                   },
                 ]
@@ -242,6 +251,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                     icon: Eraser,
                     label: t("management.actions.cleanup", {
                       defaultValue: "Cleanup Unused",
+                    }),
+                    description: t("pageActions.descriptions.cleanupUnused", {
+                      defaultValue: "Remove ones no transaction uses",
                     }),
                     onSelect: () => setIsCleanupOpen(true),
                   },
@@ -255,6 +267,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
                     label: t("management.actions.dedupe", {
                       defaultValue: "De-duplicate",
                     }),
+                    description: t("pageActions.descriptions.dedupe", {
+                      defaultValue: "Merge entries that are the same thing",
+                    }),
                     onSelect: () => setIsDeduplicateOpen(true),
                   },
                 ]
@@ -264,6 +279,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
               icon: Upload,
               label: t("management.actions.importCsv", {
                 defaultValue: "Import CSV",
+              }),
+              description: t("pageActions.descriptions.importList", {
+                defaultValue: "Add many at once from a CSV file",
               }),
               onSelect: handleImportClick,
               busy: isImporting,
@@ -275,6 +293,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
               label: t("management.actions.exportCsv", {
                 defaultValue: "Export CSV",
               }),
+              description: t("pageActions.descriptions.exportList", {
+                defaultValue: "Save this list as a CSV file",
+              }),
               onSelect: () => handleExportClick(data),
             },
             {
@@ -282,6 +303,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
               icon: RotateCcw,
               label: t("management.actions.refresh", {
                 defaultValue: "Refresh",
+              }),
+              description: t("pageActions.descriptions.refresh", {
+                defaultValue: "Reload the list",
               }),
               onSelect: () => void refetch?.(),
               busy: isLoading,

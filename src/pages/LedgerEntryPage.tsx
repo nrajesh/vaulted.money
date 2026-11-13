@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { FeatureHint } from "@/components/help/FeatureHint";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
@@ -801,10 +802,11 @@ const LedgerEntryPage = () => {
               }
               nameClassName={isHomepageMobilePreview ? "text-5xl" : undefined}
             />
-            <p className="app-page-subtitle mx-auto max-w-xl">
+            <p className="app-page-subtitle mx-auto flex max-w-xl items-center justify-center gap-1">
               {t("ledgerEntry.subtitle", {
                 defaultValue: "Select a budget ledger to continue.",
               })}
+              <FeatureHint id="ledger" />
             </p>
           </div>
 

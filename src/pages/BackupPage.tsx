@@ -11,9 +11,8 @@ const BackupPage = () => {
             {t("backup.page.title", { defaultValue: "Backup" })}
           </h1>
           <p className="app-page-subtitle">
-            {t("backup.page.subtitle", {
-              defaultValue:
-                "Configure automated backups for your peace of mind.",
+            {t("pages.backup.subtitle", {
+              defaultValue: "Save a copy of your data locally.",
             })}
           </p>
         </div>

@@ -151,9 +151,8 @@ export default function CalendarView() {
             {t("layout.nav.calendar", { defaultValue: "Calendar" })}
           </h1>
           <p className="app-page-subtitle max-w-2xl">
-            {t("calendar.header.subtitle", {
-              defaultValue:
-                "Explore monthly patterns and the transactions behind each day.",
+            {t("pages.calendar.subtitle", {
+              defaultValue: "See which days money comes and goes.",
             })}
           </p>
         </div>

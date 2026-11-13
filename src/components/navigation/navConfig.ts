@@ -49,7 +49,7 @@ export type NavItemId =
   | "aiAssistant"
   | "connectApps"
   | "currencies"
-  | "importCleanUp"
+  | "yourData"
   | "backup"
   | "language"
   | "settings"
@@ -237,11 +237,11 @@ export const NAV_GROUPS: NavGroup[] = [
         defaultLabel: "Currencies",
       },
       {
-        id: "importCleanUp",
+        id: "yourData",
         to: "/data-management",
         icon: DatabaseZap,
-        labelKey: "nav.items.importCleanUp",
-        defaultLabel: "Import & clean up",
+        labelKey: "nav.items.yourData",
+        defaultLabel: "Your data",
       },
       {
         id: "backup",

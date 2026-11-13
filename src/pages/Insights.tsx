@@ -32,6 +32,7 @@ import { AddEditBudgetDialog } from "@/components/budgets/AddEditBudgetDialog";
 import { isWithinInterval, format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { Account } from "@/types/dataProvider";
+import { useTranslation } from "react-i18next";
 
 interface TrendItem {
   entity: string;
@@ -48,6 +49,7 @@ interface TrendItem {
 }
 
 export default function Insights() {
+  const { t } = useTranslation();
   const { transactions, accounts, vendors } = useTransactions();
   const { activeLedger } = useLedger();
   const dataProvider = useDataProvider();
@@ -517,9 +519,13 @@ export default function Insights() {
   return (
     <div className="page-container">
       <div className="app-page-header">
-        <h1 className="app-gradient-title app-page-title">Insights</h1>
+        <h1 className="app-gradient-title app-page-title">
+          {t("nav.items.insights", { defaultValue: "Spending insights" })}
+        </h1>
         <p className="app-page-subtitle">
-          Analysis of your spending trends vs. planned budgets.
+          {t("pages.insights.subtitle", {
+            defaultValue: "Where your money went, versus your budgets.",
+          })}
         </p>
       </div>
 
@@ -691,7 +697,7 @@ export default function Insights() {
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="h-5 w-5 text-yellow-700 dark:text-yellow-400" />
               <div className="flex flex-col">
-                <h2 className="app-section-title">Top Vendor Spending</h2>
+                <h2 className="app-section-title">Top Payee Spending</h2>
                 <span className="text-xs text-muted-foreground">
                   {hasInsufficientData
                     ? "Not enough data for comparison"

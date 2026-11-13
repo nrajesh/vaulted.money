@@ -121,8 +121,8 @@ const VendorsPage = () => {
         title={t("management.entities.vendor.title", {
           defaultValue: "Payees",
         })}
-        subtitle={t("management.entities.vendor.subtitle", {
-          defaultValue: "Manage payees and merchants",
+        subtitle={t("pages.payees.subtitle", {
+          defaultValue: "Who you pay, and who pays you.",
         })}
         entityName={t("management.entities.vendor.singular", {
           defaultValue: "Payee",

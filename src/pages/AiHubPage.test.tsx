@@ -64,7 +64,7 @@ describe("AiHubPage", () => {
   it("locks the agent part outside the Mac app instead of offering a bar to open", () => {
     renderPage();
     expect(
-      screen.getByRole("heading", { level: 1, name: "AI & agents" }),
+      screen.getByRole("heading", { level: 1, name: "AI assistant" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Available ONLY in the Mac app."),

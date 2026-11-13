@@ -249,8 +249,8 @@ export default function BudgetsPage() {
             {t("budgets.page.title", { defaultValue: "Budgets" })}
           </h1>
           <p className="app-page-subtitle">
-            {t("budgets.page.subtitle", {
-              defaultValue: "Track your spending limits and goals",
+            {t("pages.budgets.subtitle", {
+              defaultValue: "Spending limits, and how much is left.",
             })}
           </p>
         </div>
@@ -269,6 +269,9 @@ export default function BudgetsPage() {
               className: "tour-smart-budget",
               label: t("budgets.page.smartCreate", {
                 defaultValue: "Smart Create",
+              }),
+              description: t("pageActions.descriptions.smartCreate", {
+                defaultValue: "Suggest budgets from your past spending",
               }),
               onSelect: () => setIsSmartBudgetOpen(true),
             },

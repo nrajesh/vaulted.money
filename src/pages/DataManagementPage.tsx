@@ -240,12 +240,11 @@ const DataManagementPage = () => {
       <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
         <div>
           <h1 className="app-gradient-title app-page-title">
-            {t("dataManagement.title", { defaultValue: "Data" })}
+            {t("nav.items.yourData", { defaultValue: "Your data" })}
           </h1>
           <p className="app-page-subtitle">
-            {t("dataManagement.subtitle", {
-              defaultValue:
-                "Export, import, and schedule backups for your data.",
+            {t("pages.yourData.subtitle", {
+              defaultValue: "Save, restore, reset, or try demo data.",
             })}
           </p>
         </div>
