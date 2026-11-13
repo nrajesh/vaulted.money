@@ -107,7 +107,7 @@ const AIProviderManagement = ({
               </li>
               <li>
                 {t("aiHub.providers.point2", {
-                  defaultValue: "Only vendor names are sent, never amounts.",
+                  defaultValue: "Only payee names are sent, never amounts.",
                 })}
               </li>
             </ul>

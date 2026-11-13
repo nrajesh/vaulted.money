@@ -70,7 +70,7 @@ const buildFormSchema = (t: TFunction) =>
     vendor: z.string().min(
       1,
       t("scheduled.dialog.errors.vendor", {
-        defaultValue: "Vendor is required",
+        defaultValue: "Payee is required",
       }),
     ),
     category: z.string().min(
@@ -353,7 +353,7 @@ export const AddEditScheduledTransactionDialog: React.FC<
                     <FormItem>
                       <FormLabel>
                         {t("scheduled.dialog.vendorAccount", {
-                          defaultValue: "Vendor / Account",
+                          defaultValue: "Payee / Account",
                         })}
                       </FormLabel>
                       <Combobox
@@ -365,13 +365,13 @@ export const AddEditScheduledTransactionDialog: React.FC<
                         onChange={field.onChange}
                         onCreate={(value) => field.onChange(value)}
                         placeholder={t("scheduled.dialog.selectVendor", {
-                          defaultValue: "Select vendor or account",
+                          defaultValue: "Select payee or account",
                         })}
                         searchPlaceholder={t("scheduled.dialog.searchVendors", {
-                          defaultValue: "Search vendors...",
+                          defaultValue: "Search payees...",
                         })}
                         emptyPlaceholder={t("scheduled.dialog.noVendor", {
-                          defaultValue: "No vendor found.",
+                          defaultValue: "No payee found.",
                         })}
                       />
                       <FormMessage />

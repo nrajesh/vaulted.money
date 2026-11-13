@@ -25,7 +25,7 @@ export const searchSuggestions: AreaTranslations = {
         done: "Done",
         suggest: {
           combineHint:
-            "Results must match every filter you pick. Several of the same kind (two vendors) match either.",
+            "Results must match every filter you pick. Several of the same kind (two payees) match either.",
           heading: "Understood as",
           amountExact: "Amount: {{amount}}",
           applyAll: "Apply all {{count}}",
@@ -43,7 +43,7 @@ export const searchSuggestions: AreaTranslations = {
           account: "Account: {{name}}",
           category: "Category: {{name}}",
           subCategory: "Sub-category: {{name}}",
-          vendor: "Vendor: {{name}}",
+          vendor: "Payee: {{name}}",
           typo: "{{name}} (matched “{{typed}}”)",
           text: 'Text: "{{text}}"',
         },
@@ -70,7 +70,7 @@ export const searchSuggestions: AreaTranslations = {
         done: "Listo",
         suggest: {
           combineHint:
-            "Los resultados deben cumplir todos los filtros que elijas. Varios del mismo tipo (dos proveedores) cumplen cualquiera.",
+            "Los resultados deben cumplir todos los filtros que elijas. Varios del mismo tipo (dos beneficiarios) cumplen cualquiera.",
           heading: "Entendido como",
           amountExact: "Importe: {{amount}}",
           applyAll: "Aplicar los {{count}}",
@@ -88,7 +88,7 @@ export const searchSuggestions: AreaTranslations = {
           account: "Cuenta: {{name}}",
           category: "Categoría: {{name}}",
           subCategory: "Subcategoría: {{name}}",
-          vendor: "Proveedor: {{name}}",
+          vendor: "Beneficiario: {{name}}",
           typo: "{{name}} (coincide con «{{typed}}»)",
           text: "Texto: «{{text}}»",
         },
@@ -115,7 +115,7 @@ export const searchSuggestions: AreaTranslations = {
         done: "完成",
         suggest: {
           combineHint:
-            "结果必须符合你选择的每个筛选条件。同一类型的多个条件（例如两个商家）满足其一即可。",
+            "结果必须符合你选择的每个筛选条件。同一类型的多个条件（例如两个收款方）满足其一即可。",
           heading: "理解为",
           amountExact: "金额：{{amount}}",
           applyAll: "全部应用（{{count}}）",
@@ -133,7 +133,7 @@ export const searchSuggestions: AreaTranslations = {
           account: "账户：{{name}}",
           category: "类别：{{name}}",
           subCategory: "子类别：{{name}}",
-          vendor: "商家：{{name}}",
+          vendor: "收款方：{{name}}",
           typo: "{{name}}（匹配“{{typed}}”）",
           text: "文本：“{{text}}”",
         },
@@ -160,7 +160,7 @@ export const searchSuggestions: AreaTranslations = {
         done: "Klaar",
         suggest: {
           combineHint:
-            "Resultaten moeten aan elk gekozen filter voldoen. Meerdere van dezelfde soort (twee leveranciers) voldoen aan een van beide.",
+            "Resultaten moeten aan elk gekozen filter voldoen. Meerdere van dezelfde soort (twee begunstigden) voldoen aan een van beide.",
           heading: "Opgevat als",
           amountExact: "Bedrag: {{amount}}",
           applyAll: "Alle {{count}} toepassen",
@@ -178,7 +178,7 @@ export const searchSuggestions: AreaTranslations = {
           account: "Rekening: {{name}}",
           category: "Categorie: {{name}}",
           subCategory: "Subcategorie: {{name}}",
-          vendor: "Leverancier: {{name}}",
+          vendor: "Begunstigde: {{name}}",
           typo: "{{name}} (komt overeen met “{{typed}}”)",
           text: "Tekst: “{{text}}”",
         },
@@ -205,7 +205,7 @@ export const searchSuggestions: AreaTranslations = {
         done: "முடிந்தது",
         suggest: {
           combineHint:
-            "நீங்கள் தேர்ந்தெடுக்கும் ஒவ்வொரு வடிகட்டியுடனும் முடிவுகள் பொருந்த வேண்டும். ஒரே வகையில் பல (இரு விற்பனையாளர்கள்) இருந்தால் ஏதேனும் ஒன்று போதும்.",
+            "நீங்கள் தேர்ந்தெடுக்கும் ஒவ்வொரு வடிகட்டியுடனும் முடிவுகள் பொருந்த வேண்டும். ஒரே வகையில் பல (இரு பெறுநர்கள்) இருந்தால் ஏதேனும் ஒன்று போதும்.",
           heading: "புரிந்துகொண்டது",
           amountExact: "தொகை: {{amount}}",
           applyAll: "அனைத்தும் பயன்படுத்து ({{count}})",
@@ -223,7 +223,7 @@ export const searchSuggestions: AreaTranslations = {
           account: "கணக்கு: {{name}}",
           category: "வகை: {{name}}",
           subCategory: "துணை வகை: {{name}}",
-          vendor: "விற்பனையாளர்: {{name}}",
+          vendor: "பெறுநர்: {{name}}",
           typo: "{{name}} (“{{typed}}” உடன் பொருந்தியது)",
           text: "உரை: “{{text}}”",
         },

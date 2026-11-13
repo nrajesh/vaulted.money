@@ -415,7 +415,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
               [
                 <Store className={FACT_ICON} aria-hidden />,
                 t("aiHub.facts.vendorNamesOnly", {
-                  defaultValue: "Sends vendor names only, never amounts",
+                  defaultValue: "Sends payee names only, never amounts",
                 }),
               ],
               [

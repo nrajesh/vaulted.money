@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageActionBar } from "@/components/layout/PageActionBar";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -18,6 +19,9 @@ import {
 } from "@/components/ui/pagination";
 import {
   PlusCircle,
+  Scale,
+  Eraser,
+  CopyMinus,
   Loader2,
   RotateCcw,
   Upload,
@@ -202,85 +206,91 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
               })
         }
       />
-      <div className="app-page-header flex flex-col items-start gap-4">
+      <div className="app-page-header app-page-header-row">
         <div>
           <h2 className="app-gradient-title app-page-title">{title}</h2>
           {subtitle && <div className="app-page-subtitle">{subtitle}</div>}
         </div>
-        <div className="tour-entity-actions app-action-panel">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            {BalanceReconciliationDialogComponent && (
-              <Button
-                variant="outline"
-                onClick={() => setIsBalanceReconcileOpen(true)}
-              >
-                {t("management.actions.reconcile", {
-                  defaultValue: "Reconcile Balance",
-                })}
-              </Button>
-            )}
-            {CleanupDialogComponent && (
-              <Button variant="outline" onClick={() => setIsCleanupOpen(true)}>
-                {t("management.actions.cleanup", {
-                  defaultValue: "Cleanup Unused",
-                })}
-              </Button>
-            )}
-            {DeduplicationDialogComponent && (
-              <Button
-                variant="outline"
-                onClick={() => setIsDeduplicateOpen(true)}
-              >
-                {t("management.actions.dedupe", {
-                  defaultValue: "De-duplicate",
-                })}
-              </Button>
-            )}
-            {extraActions}
-            <Button
-              onClick={handleImportClick}
-              variant="outline"
-              disabled={isImporting}
-            >
-              {isImporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {t("management.actions.importCsv", {
+        <PageActionBar
+          className="tour-entity-actions"
+          primary={{
+            id: "add",
+            icon: PlusCircle,
+            label: t("management.actions.add", {
+              name: entityName,
+              defaultValue: "Add {{name}}",
+            }),
+            onSelect: handleAddClick,
+          }}
+          secondary={[
+            ...(BalanceReconciliationDialogComponent
+              ? [
+                  {
+                    id: "reconcile",
+                    icon: Scale,
+                    label: t("management.actions.reconcile", {
+                      defaultValue: "Reconcile Balance",
+                    }),
+                    onSelect: () => setIsBalanceReconcileOpen(true),
+                  },
+                ]
+              : []),
+            ...(CleanupDialogComponent
+              ? [
+                  {
+                    id: "cleanup",
+                    icon: Eraser,
+                    label: t("management.actions.cleanup", {
+                      defaultValue: "Cleanup Unused",
+                    }),
+                    onSelect: () => setIsCleanupOpen(true),
+                  },
+                ]
+              : []),
+            ...(DeduplicationDialogComponent
+              ? [
+                  {
+                    id: "dedupe",
+                    icon: CopyMinus,
+                    label: t("management.actions.dedupe", {
+                      defaultValue: "De-duplicate",
+                    }),
+                    onSelect: () => setIsDeduplicateOpen(true),
+                  },
+                ]
+              : []),
+            {
+              id: "import-csv",
+              icon: Upload,
+              label: t("management.actions.importCsv", {
                 defaultValue: "Import CSV",
-              })}
-            </Button>
-            <Button onClick={() => handleExportClick(data)} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              {t("management.actions.exportCsv", {
+              }),
+              onSelect: handleImportClick,
+              busy: isImporting,
+              separatorBefore: true,
+            },
+            {
+              id: "export-csv",
+              icon: Download,
+              label: t("management.actions.exportCsv", {
                 defaultValue: "Export CSV",
-              })}
-            </Button>
-            <Button onClick={handleAddClick}>
-              <PlusCircle className="mr-2 h-4 w-4" />{" "}
-              {t("management.actions.add", {
-                name: entityName,
-                defaultValue: "Add {{name}}",
-              })}
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={async () => await refetch?.()}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RotateCcw className="h-4 w-4" />
-              )}
-              <span className="sr-only">
-                {t("management.actions.refresh", { defaultValue: "Refresh" })}
-              </span>
-            </Button>
-          </div>
-        </div>
+              }),
+              onSelect: () => handleExportClick(data),
+            },
+            {
+              id: "refresh",
+              icon: RotateCcw,
+              label: t("management.actions.refresh", {
+                defaultValue: "Refresh",
+              }),
+              onSelect: () => void refetch?.(),
+              busy: isLoading,
+              separatorBefore: true,
+            },
+          ]}
+        >
+          {extraActions}
+        </PageActionBar>
       </div>
       <input
         type="file"

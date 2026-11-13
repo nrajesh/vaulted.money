@@ -1155,7 +1155,7 @@ const ConnectToAgentPanel = ({
                 }),
                 t("aiHub.privacy.cloudBody", {
                   defaultValue:
-                    "What the agent reads (transactions, vendors, balances) is sent to its maker: Anthropic or OpenAI.",
+                    "What the agent reads (transactions, payees, balances) is sent to its maker: Anthropic or OpenAI.",
                 }),
               )}
               {privacyPoint(

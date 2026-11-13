@@ -441,7 +441,7 @@ export function ScheduledTransactionsTable({
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
                 {t("scheduled.table.headers.vendorAccount", {
-                  defaultValue: "Vendor / Account",
+                  defaultValue: "Payee / Account",
                 })}
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">

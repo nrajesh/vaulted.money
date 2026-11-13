@@ -41,7 +41,7 @@ describe("ConversationalSearchInput suggestion", () => {
 
     expect(await screen.findByText("Understood as")).toBeInTheDocument();
     expect(
-      screen.getByText(/Vendor: Starbucks \(matched “starbuks”\)/),
+      screen.getByText(/Payee: Starbucks \(matched “starbuks”\)/),
     ).toBeInTheDocument();
     expect(screen.getByText("Over 20")).toBeInTheDocument();
     expect(onUpdate).not.toHaveBeenCalled();

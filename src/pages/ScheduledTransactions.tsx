@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { PageActionBar } from "@/components/layout/PageActionBar";
 import { Plus, Sparkles } from "lucide-react";
 import { ScheduledTransactionsTable } from "@/components/scheduled-transactions/ScheduledTransactionsTable";
 import { useTransactions } from "@/contexts/TransactionsContext";
@@ -301,7 +301,7 @@ const ScheduledTransactionsPage = () => {
   return (
     <div className="page-container">
       <div className="app-page-header flex flex-col gap-6">
-        <div className="flex flex-col items-start gap-4">
+        <div className="app-page-header-row">
           <div>
             <h1 className="app-gradient-title app-page-title">
               {t("scheduled.header.title", {
@@ -314,29 +314,27 @@ const ScheduledTransactionsPage = () => {
               })}
             </p>
           </div>
-          <div className="app-action-panel">
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <Button
-                onClick={handleSmartSchedule}
-                variant="outline"
-                className="border-indigo-200 hover:bg-indigo-50 dark:border-indigo-500 dark:hover:bg-indigo-950"
-              >
-                <Sparkles className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" />{" "}
-                {t("scheduled.header.autoSchedule", {
+          <PageActionBar
+            primary={{
+              id: "add-scheduled",
+              icon: Plus,
+              className: "tour-scheduled-add",
+              label: t("scheduled.header.addScheduled", {
+                defaultValue: "Add Scheduled",
+              }),
+              onSelect: handleAdd,
+            }}
+            secondary={[
+              {
+                id: "auto-schedule",
+                icon: Sparkles,
+                label: t("scheduled.header.autoSchedule", {
                   defaultValue: "Auto-Schedule",
-                })}
-              </Button>
-              <Button
-                onClick={handleAdd}
-                className="tour-scheduled-add bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />{" "}
-                {t("scheduled.header.addScheduled", {
-                  defaultValue: "Add Scheduled",
-                })}
-              </Button>
-            </div>
-          </div>
+                }),
+                onSelect: handleSmartSchedule,
+              },
+            ]}
+          />
         </div>
 
         <ScheduledSearchFilterBar

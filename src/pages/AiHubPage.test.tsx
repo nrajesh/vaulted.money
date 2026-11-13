@@ -202,7 +202,7 @@ describe("AiHubPage", () => {
     renderPage();
     for (const fact of [
       "Powers Auto-categorize",
-      "Sends vendor names only, never amounts",
+      "Sends payee names only, never amounts",
       "Works without agent access",
       "Reads and updates your data",
       "What it reads is sent to its AI provider",

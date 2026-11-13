@@ -25,7 +25,7 @@ export const gaps: AreaTranslations = {
         },
         nothingToCategorize: {
           title: "Nada que categorizar",
-          description: "No se encontraron proveedores sin categoría.",
+          description: "No se encontraron beneficiarios sin categoría.",
         },
         aiNotConfigured: {
           title: "IA sin configurar",
@@ -108,7 +108,7 @@ export const gaps: AreaTranslations = {
         },
         nothingToCategorize: {
           title: "没有需要分类的项目",
-          description: "未发现未分类的商家。",
+          description: "未发现未分类的收款方。",
         },
         aiNotConfigured: {
           title: "未配置 AI",
@@ -186,7 +186,7 @@ export const gaps: AreaTranslations = {
         },
         fields: {
           date: "日期",
-          vendorReceiving: "商家 / 账户（收款）",
+          vendorReceiving: "收款方 / 账户（收款）",
           category: "分类",
           subCategory: "子分类",
           amountSending: "金额（转出）",
@@ -199,7 +199,7 @@ export const gaps: AreaTranslations = {
           selectAccount: "选择账户...",
           searchAccounts: "搜索账户...",
           noAccountFound: "未找到账户。",
-          selectVendorOrAccount: "选择商家或账户...",
+          selectVendorOrAccount: "选择收款方或账户...",
           searchGeneric: "搜索...",
           noResults: "未找到结果。",
           selectCategory: "选择分类...",
@@ -292,7 +292,7 @@ export const gaps: AreaTranslations = {
         },
         nothingToCategorize: {
           title: "வகைப்படுத்த எதுவும் இல்லை",
-          description: "வகைப்படுத்தப்படாத விற்பனையாளர்கள் இல்லை.",
+          description: "வகைப்படுத்தப்படாத பெறுநர்கள் இல்லை.",
         },
         aiNotConfigured: {
           title: "AI கட்டமைக்கப்படவில்லை",

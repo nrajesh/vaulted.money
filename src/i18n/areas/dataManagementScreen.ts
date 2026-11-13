@@ -22,10 +22,10 @@ export const dataManagementScreen: AreaTranslations = {
       reset: {
         title: "Reset All Data",
         description:
-          "Permanently delete all transaction, vendor, and account records.",
+          "Permanently delete all transaction, payee, and account records.",
         confirmTitle: "Are you sure you want to reset all data?",
         confirmDescription:
-          "This action cannot be undone. All your transaction, vendor, and account data for ALL ledgers will be permanently deleted.",
+          "This action cannot be undone. All your transaction, payee, and account data for ALL ledgers will be permanently deleted.",
         confirmButton: "Reset Data",
         done: "All application data has been reset.",
         failed: "Reset failed: {{message}}",
@@ -86,10 +86,10 @@ export const dataManagementScreen: AreaTranslations = {
       reset: {
         title: "Restablecer todos los datos",
         description:
-          "Elimina de forma permanente todas las transacciones, proveedores y cuentas.",
+          "Elimina de forma permanente todas las transacciones, beneficiarios y cuentas.",
         confirmTitle: "¿Seguro que quieres restablecer todos los datos?",
         confirmDescription:
-          "Esta acción no se puede deshacer. Todos los datos de transacciones, proveedores y cuentas de TODOS los libros se eliminarán de forma permanente.",
+          "Esta acción no se puede deshacer. Todos los datos de transacciones, beneficiarios y cuentas de TODOS los libros se eliminarán de forma permanente.",
         confirmButton: "Restablecer datos",
         done: "Todos los datos de la aplicación se han restablecido.",
         failed: "Error al restablecer: {{message}}",
@@ -150,10 +150,10 @@ export const dataManagementScreen: AreaTranslations = {
       },
       reset: {
         title: "重置所有数据",
-        description: "永久删除所有交易、商家和账户记录。",
+        description: "永久删除所有交易、收款方和账户记录。",
         confirmTitle: "确定要重置所有数据吗？",
         confirmDescription:
-          "此操作无法撤销。所有账本的全部交易、商家和账户数据都将被永久删除。",
+          "此操作无法撤销。所有账本的全部交易、收款方和账户数据都将被永久删除。",
         confirmButton: "重置数据",
         done: "应用的所有数据已重置。",
         failed: "重置失败：{{message}}",
@@ -211,10 +211,10 @@ export const dataManagementScreen: AreaTranslations = {
       reset: {
         title: "Alle gegevens resetten",
         description:
-          "Verwijder alle transacties, leveranciers en rekeningen definitief.",
+          "Verwijder alle transacties, begunstigden en rekeningen definitief.",
         confirmTitle: "Weet je zeker dat je alle gegevens wilt resetten?",
         confirmDescription:
-          "Dit kan niet ongedaan worden gemaakt. Alle transactie-, leveranciers- en rekeninggegevens van ALLE grootboeken worden definitief verwijderd.",
+          "Dit kan niet ongedaan worden gemaakt. Alle transactie-, begunstigden- en rekeninggegevens van ALLE grootboeken worden definitief verwijderd.",
         confirmButton: "Gegevens resetten",
         done: "Alle gegevens van de app zijn gereset.",
         failed: "Resetten mislukt: {{message}}",
@@ -277,10 +277,10 @@ export const dataManagementScreen: AreaTranslations = {
       reset: {
         title: "எல்லா தரவையும் மீட்டமை",
         description:
-          "அனைத்துப் பரிவர்த்தனை, விற்பனையாளர், கணக்குப் பதிவுகளையும் நிரந்தரமாக நீக்கு.",
+          "அனைத்துப் பரிவர்த்தனை, பெறுநர், கணக்குப் பதிவுகளையும் நிரந்தரமாக நீக்கு.",
         confirmTitle: "எல்லா தரவையும் மீட்டமைக்க விரும்புகிறீர்களா?",
         confirmDescription:
-          "இந்தச் செயலைத் திரும்பப் பெற முடியாது. அனைத்துப் பேரேடுகளின் பரிவர்த்தனை, விற்பனையாளர், கணக்குத் தரவு நிரந்தரமாக நீக்கப்படும்.",
+          "இந்தச் செயலைத் திரும்பப் பெற முடியாது. அனைத்துப் பேரேடுகளின் பரிவர்த்தனை, பெறுநர், கணக்குத் தரவு நிரந்தரமாக நீக்கப்படும்.",
         confirmButton: "தரவை மீட்டமை",
         done: "பயன்பாட்டின் எல்லா தரவும் மீட்டமைக்கப்பட்டது.",
         failed: "மீட்டமைப்பு தோல்வியடைந்தது: {{message}}",

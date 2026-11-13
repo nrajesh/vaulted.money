@@ -335,7 +335,7 @@ const DataManagementPage = () => {
             <ThemedCardDescription>
               {t("dataManagement.reset.description", {
                 defaultValue:
-                  "Permanently delete all transaction, vendor, and account records.",
+                  "Permanently delete all transaction, payee, and account records.",
               })}
             </ThemedCardDescription>
           </ThemedCardHeader>
@@ -388,7 +388,7 @@ const DataManagementPage = () => {
         })}
         description={t("dataManagement.reset.confirmDescription", {
           defaultValue:
-            "This action cannot be undone. All your transaction, vendor, and account data for ALL ledgers will be permanently deleted.",
+            "This action cannot be undone. All your transaction, payee, and account data for ALL ledgers will be permanently deleted.",
         })}
         confirmText={t("dataManagement.reset.confirmButton", {
           defaultValue: "Reset Data",

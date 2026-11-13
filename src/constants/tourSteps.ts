@@ -90,13 +90,9 @@ export const TOUR_STEPS: Record<string, Step[]> = {
       placement: "bottom",
     },
     {
-      target: ".tour-bulk-categorize",
-      content: "Got a lot of uncategorized items? Let AI sort them for you!",
-      placement: "bottom",
-    },
-    {
-      target: ".tour-export-transactions",
-      content: "You can also export your filtered views to CSV at any time.",
+      target: ".tour-transaction-actions",
+      content:
+        "Open Actions to let AI categorise uncategorised items, or export your filtered view to CSV.",
       placement: "bottom",
     },
   ],
@@ -195,7 +191,7 @@ export const TOUR_STEPS: Record<string, Step[]> = {
     {
       target: ".tour-analytics-breakdown",
       content:
-        "Finally, the entity breakdown provides a tabular list grouping your spending by Category (or Vendor). Click any row to learn more.",
+        "Finally, the entity breakdown provides a tabular list grouping your spending by Category (or Payee). Click any row to learn more.",
       placement: "top",
     },
   ],
@@ -249,13 +245,13 @@ export const TOUR_STEPS: Record<string, Step[]> = {
   "/vendors": [
     {
       target: "body",
-      content: "Vendors or Payees keep track of who you interact with.",
+      content: "Payees keep track of who you interact with.",
       placement: "center",
       skipBeacon: true,
     },
     {
       target: ".tour-vendors-list",
-      content: "Clean up, merge, or rename vendors to keep your data tidy.",
+      content: "Clean up, merge, or rename payees to keep your data tidy.",
       placement: "bottom",
     },
   ],

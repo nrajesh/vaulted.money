@@ -202,7 +202,7 @@ const HomePage = () => {
     {
       icon: Wallet,
       label: t("home.tools.accountsVendors", {
-        defaultValue: "Accounts, vendors, categories",
+        defaultValue: "Accounts, payees, categories",
       }),
     },
     {

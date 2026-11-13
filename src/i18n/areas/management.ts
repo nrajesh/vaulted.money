@@ -14,9 +14,9 @@ export const management: AreaTranslations = {
           subtitle: "Manage your bank accounts and credit cards",
         },
         vendor: {
-          singular: "Vendor",
-          plural: "vendors",
-          title: "Vendors",
+          singular: "Payee",
+          plural: "payees",
+          title: "Payees",
           subtitle: "Manage payees and merchants",
         },
         category: {
@@ -96,8 +96,8 @@ export const management: AreaTranslations = {
         other: "Other",
       },
       toasts: {
-        vendorRenamed: "Vendor name updated successfully!",
-        vendorRenameFailed: "Failed to update vendor name: {{message}}",
+        vendorRenamed: "Payee name updated successfully!",
+        vendorRenameFailed: "Failed to update payee name: {{message}}",
         categoryRenamed: "Category name updated successfully!",
         categoryRenameFailed: "Failed to update category name: {{message}}",
       },
@@ -113,10 +113,10 @@ export const management: AreaTranslations = {
           subtitle: "Administra tus cuentas bancarias y tarjetas de crédito",
         },
         vendor: {
-          singular: "proveedor",
-          plural: "proveedores",
-          title: "Proveedores",
-          subtitle: "Administra beneficiarios y comercios",
+          singular: "beneficiario",
+          plural: "beneficiarios",
+          title: "Beneficiarios",
+          subtitle: "Administra beneficiarios y beneficiarios",
         },
         category: {
           singular: "categoría",
@@ -195,9 +195,9 @@ export const management: AreaTranslations = {
         other: "Otra",
       },
       toasts: {
-        vendorRenamed: "¡Nombre del proveedor actualizado!",
+        vendorRenamed: "¡Nombre del beneficiario actualizado!",
         vendorRenameFailed:
-          "No se pudo actualizar el nombre del proveedor: {{message}}",
+          "No se pudo actualizar el nombre del beneficiario: {{message}}",
         categoryRenamed: "¡Nombre de la categoría actualizado!",
         categoryRenameFailed:
           "No se pudo actualizar el nombre de la categoría: {{message}}",
@@ -214,10 +214,10 @@ export const management: AreaTranslations = {
           subtitle: "管理您的银行账户和信用卡",
         },
         vendor: {
-          singular: "商家",
-          plural: "商家",
-          title: "商家",
-          subtitle: "管理收款方和商户",
+          singular: "收款方",
+          plural: "收款方",
+          title: "收款方",
+          subtitle: "管理收款方和收款方",
         },
         category: {
           singular: "分类",
@@ -296,8 +296,8 @@ export const management: AreaTranslations = {
         other: "其他",
       },
       toasts: {
-        vendorRenamed: "商家名称已更新！",
-        vendorRenameFailed: "更新商家名称失败：{{message}}",
+        vendorRenamed: "收款方名称已更新！",
+        vendorRenameFailed: "更新收款方名称失败：{{message}}",
         categoryRenamed: "分类名称已更新！",
         categoryRenameFailed: "更新分类名称失败：{{message}}",
       },
@@ -313,9 +313,9 @@ export const management: AreaTranslations = {
           subtitle: "Beheer je bankrekeningen en creditcards",
         },
         vendor: {
-          singular: "leverancier",
-          plural: "leveranciers",
-          title: "Leveranciers",
+          singular: "begunstigde",
+          plural: "begunstigden",
+          title: "Begunstigden",
           subtitle: "Beheer begunstigden en winkels",
         },
         category: {
@@ -395,9 +395,9 @@ export const management: AreaTranslations = {
         other: "Overig",
       },
       toasts: {
-        vendorRenamed: "Naam van leverancier bijgewerkt!",
+        vendorRenamed: "Naam van begunstigde bijgewerkt!",
         vendorRenameFailed:
-          "Naam van leverancier bijwerken mislukt: {{message}}",
+          "Naam van begunstigde bijwerken mislukt: {{message}}",
         categoryRenamed: "Naam van categorie bijgewerkt!",
         categoryRenameFailed:
           "Naam van categorie bijwerken mislukt: {{message}}",
@@ -415,9 +415,9 @@ export const management: AreaTranslations = {
             "உங்கள் வங்கிக் கணக்குகளையும் கடன் அட்டைகளையும் நிர்வகிக்கவும்",
         },
         vendor: {
-          singular: "விற்பனையாளர்",
-          plural: "விற்பனையாளர்கள்",
-          title: "விற்பனையாளர்கள்",
+          singular: "பெறுநர்",
+          plural: "பெறுநர்கள்",
+          title: "பெறுநர்கள்",
           subtitle: "பணம் பெறுவோரையும் வணிகர்களையும் நிர்வகிக்கவும்",
         },
         category: {
@@ -500,9 +500,9 @@ export const management: AreaTranslations = {
         other: "பிற",
       },
       toasts: {
-        vendorRenamed: "விற்பனையாளர் பெயர் புதுப்பிக்கப்பட்டது!",
+        vendorRenamed: "பெறுநர் பெயர் புதுப்பிக்கப்பட்டது!",
         vendorRenameFailed:
-          "விற்பனையாளர் பெயரைப் புதுப்பிக்க முடியவில்லை: {{message}}",
+          "பெறுநர் பெயரைப் புதுப்பிக்க முடியவில்லை: {{message}}",
         categoryRenamed: "வகை பெயர் புதுப்பிக்கப்பட்டது!",
         categoryRenameFailed:
           "வகை பெயரைப் புதுப்பிக்க முடியவில்லை: {{message}}",

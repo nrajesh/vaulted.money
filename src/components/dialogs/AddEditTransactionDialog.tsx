@@ -1191,8 +1191,7 @@ const AddEditTransactionDialog: React.FC<AddEditTransactionDialogProps> = ({
                                 {t(
                                   "dialogs.addEditTransaction.fields.vendorReceiving",
                                   {
-                                    defaultValue:
-                                      "Vendor / Account (Receiving)",
+                                    defaultValue: "Payee / Account (Receiving)",
                                   },
                                 )}
                               </FormLabel>
@@ -1205,7 +1204,7 @@ const AddEditTransactionDialog: React.FC<AddEditTransactionDialogProps> = ({
                                   "dialogs.addEditTransaction.placeholders.selectVendorOrAccount",
                                   {
                                     defaultValue:
-                                      "Select a vendor or account...",
+                                      "Select a payee or account...",
                                   },
                                 )}
                                 searchPlaceholder={t(

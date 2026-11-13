@@ -241,10 +241,10 @@ const LedgerEntryPage = () => {
           defaultValue: "Importing CSV",
         }),
         description: t("ledgerEntry.progress.settingUpVendors", {
-          defaultValue: "Setting up vendors...",
+          defaultValue: "Setting up payees...",
         }),
         stage: t("ledgerEntry.progress.settingUpVendors", {
-          defaultValue: "Setting up vendors...",
+          defaultValue: "Setting up payees...",
         }),
         progress: 40,
         totalStages: 100,

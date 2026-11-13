@@ -41,7 +41,7 @@ const VendorsPage = () => {
     onSuccess: async () => {
       showSuccess(
         t("management.toasts.vendorRenamed", {
-          defaultValue: "Vendor name updated successfully!",
+          defaultValue: "Payee name updated successfully!",
         }),
       );
       await invalidateAllData();
@@ -51,7 +51,7 @@ const VendorsPage = () => {
       showError(
         t("management.toasts.vendorRenameFailed", {
           message: (error as Error).message,
-          defaultValue: "Failed to update vendor name: {{message}}",
+          defaultValue: "Failed to update payee name: {{message}}",
         }),
       ),
   });
@@ -119,16 +119,16 @@ const VendorsPage = () => {
     <div className="tour-vendors-list">
       <EntityManagementPage<Payee>
         title={t("management.entities.vendor.title", {
-          defaultValue: "Vendors",
+          defaultValue: "Payees",
         })}
         subtitle={t("management.entities.vendor.subtitle", {
           defaultValue: "Manage payees and merchants",
         })}
         entityName={t("management.entities.vendor.singular", {
-          defaultValue: "Vendor",
+          defaultValue: "Payee",
         })}
         entityNamePlural={t("management.entities.vendor.plural", {
-          defaultValue: "vendors",
+          defaultValue: "payees",
         })}
         data={vendors}
         isLoading={isLoadingVendors}

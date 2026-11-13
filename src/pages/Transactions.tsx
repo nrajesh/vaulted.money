@@ -458,7 +458,7 @@ const Transactions = () => {
           description: t(
             "transactions.toasts.nothingToCategorize.description",
             {
-              defaultValue: "No uncategorized vendors found.",
+              defaultValue: "No uncategorized payees found.",
             },
           ),
         });

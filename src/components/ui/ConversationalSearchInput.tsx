@@ -256,7 +256,7 @@ export function ConversationalSearchInput({
           default:
             return t("filters.conversational.suggest.vendor", {
               name,
-              defaultValue: "Vendor: {{name}}",
+              defaultValue: "Payee: {{name}}",
             });
         }
       }
@@ -337,7 +337,7 @@ export function ConversationalSearchInput({
       <div className="px-2 pb-1 text-xs text-muted-foreground">
         {t("filters.conversational.suggest.combineHint", {
           defaultValue:
-            "Results must match every filter you pick. Several of the same kind (two vendors) match either.",
+            "Results must match every filter you pick. Several of the same kind (two payees) match either.",
         })}
       </div>
       {remaining.length > 1 && (
@@ -400,7 +400,7 @@ export function ConversationalSearchInput({
           >
             <Store className="mr-2 h-4 w-4" />
             {t("filters.conversational.vendor", {
-              defaultValue: "Vendor / Payee",
+              defaultValue: "Payee",
             })}
           </CommandItem>
         </CommandGroup>
@@ -463,7 +463,7 @@ export function ConversationalSearchInput({
 
         <CommandGroup
           heading={t("filters.conversational.vendors", {
-            defaultValue: "Vendors",
+            defaultValue: "Payees",
           })}
         >
           {/* Render all vendors for local filtering */}
@@ -563,7 +563,7 @@ export function ConversationalSearchInput({
       return (
         <CommandGroup
           heading={t("filters.conversational.allVendors", {
-            defaultValue: "All Vendors",
+            defaultValue: "All Payees",
           })}
         >
           <CommandItem
