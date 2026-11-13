@@ -312,7 +312,29 @@
    "do": "click",
    "target": {
     "role": "button",
+    "name": "^Actions$"
+   },
+   "wait": 500
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "menuitem",
     "name": "Categorize Missing"
+   },
+   "wait": 900
+  },
+  {
+   "do": "caption",
+   "text": "Asked first<br><b>once per provider</b>",
+   "ms": 2600,
+   "size": 44
+  },
+  {
+   "do": "click",
+   "target": {
+    "role": "button",
+    "name": "^Send payee names$"
    }
   },
   {
@@ -321,7 +343,7 @@
   },
   {
    "do": "caption",
-   "text": "Vendor names go to<br><b>your provider</b>",
+   "text": "Payee names go to<br><b>your provider</b>",
    "ms": 2500,
    "size": 44
   },
@@ -396,7 +418,7 @@
    "do": "click",
    "target": {
     "role": "link",
-    "name": "AI & agents"
+    "name": "AI assistant"
    }
   },
   {

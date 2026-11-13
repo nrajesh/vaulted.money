@@ -24,7 +24,7 @@ There is **no watch app**, so the video does not show one.
 | Script | Video | Title | What it shows |
 |---|---|---|---|
 | `videos/search.json` | `final/vaulted-money-search.mp4` | Search | Natural-language search, on desktop and phone. |
-| `videos/ai.json` | `final/vaulted-money-ai.mp4` | AI, Your Call | The AI switch off, then on; **Categorize Missing** on rows filtered to Uncategorized; the same in light theme, ending on the agent section of the **AI & agents** page. Filmed in the desktop app. |
+| `videos/ai.json` | `final/vaulted-money-ai.mp4` | AI, Your Call | The AI switch off, then on; **Actions → Categorize Missing** on rows filtered to Uncategorized, with the real one-time "Send payee names to …?" permission prompt answered on camera; the same in light theme, ending on the agent section of the **AI assistant** page. Filmed in the desktop app. |
 | `videos/agent.json` | `final/vaulted-money-agent.mp4` | AI agent - Meet Ledger | Switching agent access on in the desktop app, a real LM Studio recording of a local model creating a ledger and importing files through the MCP tools, the imported ledger in the app, and two real LM Studio answers. |
 | `videos/api.json` | `final/vaulted-money-api.mp4` | Your Ledger, Scriptable | The Local API address and token in the desktop app, then four requests in a terminal with the real replies; a transaction added over the API appears in the open list. |
 | `videos/sync-a.json`, then `videos/sync.json` | `final/vaulted-money-sync.mp4` | One Ledger, Two Devices | A laptop switches Cross-Device Continuity on, picks a folder and adds a purchase ("Apples and honey"); an empty phone, in the light theme, picks the same folder and receives the whole ledger, purchase included. |
@@ -40,7 +40,7 @@ settings, imports nine made-up rows without a category
 (`videos/data/ai-uncategorised.csv`) through the real Import CSV dialog,
 filters the list to the last two days and turns AI off again.
 
-The captions say vendor names go to the provider, which is what the app sent
+The app asks once before anything is sent ("Send payee names to Demo provider (stand-in)?"), and the video shows that prompt being allowed. The captions say payee names go to the provider, which is what the app sent
 (`out/standin-requests.json` holds the request: vendor names and the category
 list, no amounts, dates or accounts). They do not say data stays on the device,
 because with a real provider it does not. Vendors the ledger has seen before

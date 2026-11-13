@@ -286,8 +286,12 @@ const SettingsPage = () => {
             </ThemedCardContent>
           </ThemedCard>
 
-          {/* Sync Settings Card */}
-          <ThemedCard className="md:col-span-2 lg:col-span-3">
+          {/* Sync Settings Card. The id is a stable hook for the marketing
+              video scripts (marketing/search-demo/videos/sync*.json). */}
+          <ThemedCard
+            id="settings-sync"
+            className="md:col-span-2 lg:col-span-3"
+          >
             <ThemedCardHeader>
               <div className="flex items-center justify-between">
                 <div>

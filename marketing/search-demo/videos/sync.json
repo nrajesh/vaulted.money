@@ -95,7 +95,7 @@
   {
    "do": "scrollTo",
    "target": {
-    "css": ".tour-settings-sync",
+    "css": "#settings-sync",
     "in": "phone"
    },
    "block": "center"
@@ -109,7 +109,7 @@
   {
    "do": "click",
    "target": {
-    "css": ".tour-settings-sync [role=switch]",
+    "css": "#settings-sync [role=switch]",
     "in": "phone"
    }
   },
