@@ -1,6 +1,27 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import fs from "fs";
 import path from "path";
+
+/**
+ * Website-only files in `public/` (share image, large logos for other sites,
+ * search-engine files, hosting redirects). The app build (`--mode app`, used
+ * for iOS, Android and the desktop app) leaves them out.
+ */
+const WEB_ONLY_PUBLIC_FILES = [
+  "og-image.png",
+  "logo.png",
+  "logo-light.png",
+  "logo-dark.png",
+  "logo-square-light.png",
+  "logo-square-dark.png",
+  "favicon.ico",
+  "llms.txt",
+  "robots.txt",
+  "sitemap.xml",
+  "_redirects",
+  ".DS_Store",
+];
 
 export default defineConfig(() => ({
   define: {
@@ -16,6 +37,15 @@ export default defineConfig(() => ({
   base: "./",
   plugins: [
     react(),
+    {
+      name: "app-build-drop-web-only-files",
+      apply: (_config, env) => env.command === "build" && env.mode === "app",
+      closeBundle() {
+        for (const file of WEB_ONLY_PUBLIC_FILES) {
+          fs.rmSync(path.resolve(__dirname, "dist", file), { force: true });
+        }
+      },
+    },
     {
       name: "html-csp",
       apply: "build",

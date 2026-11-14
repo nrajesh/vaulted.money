@@ -209,9 +209,8 @@ Vaulted Money is free and open-source under the MIT license. If you find it usef
 | ---------------------------------------------------------------- | ----------- |
 | Buy on Apple App Store (€9.99 one-time)                          | Coming soon |
 | Buy on Google Play Store (€9.99 one-time)                        | Coming soon |
-| Buy desktop binary on Lemon Squeezy or Polar.sh (€9.99 one-time) | Coming soon |
+| Buy the desktop app on Polar (€9.99 one-time)                    | Coming soon |
 | [GitHub Sponsors](https://github.com/sponsors/nrajesh)           | Active      |
-| PayPal / direct transfer (see in-app Donation page)              | Active      |
 
 The same app is free to build from source, regardless of which channel you choose. Store purchases exist to make installation simpler for non-technical users and to support continued development.
 

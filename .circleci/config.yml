@@ -109,8 +109,8 @@ jobs:
           name: Install Capacitor CLI
           command: pnpm exec cap --version || pnpm add -D @capacitor/cli
       - run:
-          name: Build Production Bundle
-          command: pnpm build
+          name: Build App Bundle (no website homepage or videos)
+          command: pnpm build:app
       - run:
           name: Sync Web Assets to iOS
           command: npx cap sync ios

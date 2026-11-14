@@ -254,6 +254,14 @@ User-visible text goes through `t("key", { defaultValue })` and every key is add
 
 ---
 
+## Builds and releases
+
+**Apps ship the app build, not the website.** `pnpm build` makes the website, including the homepage and its demo videos. iOS, Android and the desktop app use `pnpm build:app` (`vite build --mode app`), which compiles the homepage out and drops the website-only files listed in `vite.config.ts`. The `mobile:*`, `android:*`, `ios:*` and `electron:build` scripts already use it. Run `cap sync` only after `pnpm build:app`, and keep website-only assets imported from `HomePage` alone.
+
+**Promote `pre-prod` to `main` with a merge commit.** Use GitHub's "Create a merge commit" (`gh pr merge --merge`), never squash or rebase. A squash leaves `main` with commits `pre-prod` doesn't have, so the next promotion conflicts on every line both releases touched.
+
+---
+
 ## Quality checks
 
 ```bash
