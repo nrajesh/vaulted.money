@@ -1,5 +1,6 @@
-export type StoreChannelKey =
-  "appStore" | "playStore" | "lemonSqueezy" | "polarSh";
+/** Where Vaulted Money can be bought once: the two phone stores, and Polar
+ *  for the desktop app. */
+export type StoreChannelKey = "appStore" | "playStore" | "polar";
 
 export interface StoreChannel {
   key: StoreChannelKey;
@@ -22,14 +23,8 @@ export const storeChannels: readonly StoreChannel[] = [
     active: false,
   },
   {
-    key: "lemonSqueezy",
-    label: "Lemon Squeezy",
-    url: null,
-    active: false,
-  },
-  {
-    key: "polarSh",
-    label: "Polar.sh",
+    key: "polar",
+    label: "Polar",
     url: null,
     active: false,
   },

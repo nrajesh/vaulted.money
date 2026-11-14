@@ -16,6 +16,7 @@ import { connectAgent } from "./connectAgent";
 import { navigation } from "./navigation";
 import { plainLanguage } from "./plainLanguage";
 import { helpDrawer } from "./helpDrawer";
+import { supportPage } from "./supportPage";
 import {
   aiHub,
   aiHubBars,
@@ -51,6 +52,7 @@ export const areaTranslations: AreaTranslations[] = [
   navigation,
   plainLanguage,
   helpDrawer,
+  supportPage,
   aiHub,
   aiHubFlow,
   aiHubReady,

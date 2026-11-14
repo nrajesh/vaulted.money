@@ -1,235 +1,272 @@
-import { ArrowRight, Heart, Smartphone, Store } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import {
+  ArrowRight,
+  Check,
+  Heart,
+  Monitor,
+  ShieldCheck,
+  Smartphone,
+  Star,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   ThemedCard,
   ThemedCardContent,
-  ThemedCardDescription,
   ThemedCardHeader,
   ThemedCardTitle,
 } from "@/components/ThemedCard";
-import { Badge } from "@/components/ui/badge";
-import { storeChannels } from "@/data/storeChannels";
-// Bundled by Vite: an absolute "/assets/..." path breaks in the desktop app.
-import qrcodePaypal from "@/assets/qrcode-paypal.jpg";
-import qrcodeRevolut from "@/assets/qrcode-revolut.jpg";
+import { storeChannels, type StoreChannelKey } from "@/data/storeChannels";
 
+const REPO_URL = "https://github.com/nrajesh/vaulted.money";
+const SPONSORS_URL = "https://github.com/sponsors/nrajesh";
+
+/**
+ * Store cards use generic device icons, not the stores' logos: Apple's and
+ * Google's badges may only be shown once a listing is live (and link to it).
+ */
+const STORE_DETAILS: Record<
+  StoreChannelKey,
+  { icon: LucideIcon; descriptionKey: string; descriptionDefault: string }
+> = {
+  appStore: {
+    icon: Smartphone,
+    descriptionKey: "supportPage.stores.appStore",
+    descriptionDefault: "iPhone and iPad",
+  },
+  playStore: {
+    icon: Smartphone,
+    descriptionKey: "supportPage.stores.playStore",
+    descriptionDefault: "Android phones and tablets",
+  },
+  polar: {
+    icon: Monitor,
+    descriptionKey: "supportPage.stores.polar",
+    descriptionDefault: "Desktop app for Mac, Windows and Linux",
+  },
+};
+
+const BulletList = ({ items }: { items: string[] }) => (
+  <ul className="space-y-3">
+    {items.map((item) => (
+      <li key={item} className="flex gap-3 text-sm leading-relaxed">
+        <Check
+          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400"
+          aria-hidden="true"
+        />
+        <span>{item}</span>
+      </li>
+    ))}
+  </ul>
+);
+
+/**
+ * "Support the project": why Vaulted Money exists, and the optional ways to
+ * support it (pay once in a store when live, GitHub Sponsors, or free help).
+ * Hidden on iOS and Android, where store rules limit links to outside
+ * payments.
+ */
 export default function DonationPage() {
+  const { t } = useTranslation();
+
+  const whyPoints = [
+    t("supportPage.why.affordable", {
+      defaultValue:
+        "Knowing what you earn, spend and have left shouldn't need a subscription. It's addition, subtraction and honest record-keeping.",
+    }),
+    t("supportPage.why.onDevice", {
+      defaultValue:
+        "Your money stays on your device. There's no Vaulted Money account and no server to send it to.",
+    }),
+    t("supportPage.why.noTracking", {
+      defaultValue: "No ads, no tracking and no selling your data.",
+    }),
+    t("supportPage.why.offline", {
+      defaultValue:
+        "Works fully offline. AI is optional, off by default, and uses your own key.",
+    }),
+    t("supportPage.why.openSource", {
+      defaultValue:
+        "Open source under the MIT licence: anyone can read the code, adapt it or translate it.",
+    }),
+  ];
+
+  const helpPoints = [
+    t("supportPage.help.allFree", {
+      defaultValue:
+        "Every feature stays free. Paying unlocks nothing extra, and nothing is held back.",
+    }),
+    t("supportPage.help.payOnce", {
+      defaultValue:
+        "When Vaulted Money goes live in the stores, you can pay once to support solo development. Same app, no subscription.",
+    }),
+    t("supportPage.help.private", {
+      defaultValue:
+        "Paying never links to your money data. There's no account to link it to.",
+    }),
+    t("supportPage.help.sponsors", {
+      defaultValue:
+        "Want to help now? GitHub Sponsors takes one-time or monthly support.",
+    }),
+    t("supportPage.help.freeWays", {
+      defaultValue:
+        "Can't pay? A GitHub star, a bug report or telling a friend helps too.",
+    }),
+  ];
+
   return (
-    <div className="flex-1 space-y-6 p-6 rounded-xl min-h-[calc(100vh-100px)] transition-all duration-500 bg-slate-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-slate-900 dark:to-black">
-      <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
-        <div>
-          <h1 className="app-gradient-title app-page-title">Donate</h1>
-          <p className="app-page-subtitle">
-            Vaulted Money is free and open-source. If you find it useful,
-            consider supporting development through a store purchase or direct
-            contribution.
-          </p>
-        </div>
+    <div className="page-container">
+      <div className="app-page-header">
+        <h1 className="app-gradient-title app-page-title">
+          {t("supportPage.title", { defaultValue: "Support the project" })}
+        </h1>
+        <p className="app-page-subtitle">
+          {t("supportPage.subtitle", {
+            defaultValue:
+              "Vaulted Money is free, open source and private. Supporting it is optional.",
+          })}
+        </p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:gap-12 items-start">
-        {/* Github Sponsors */}
-        <ThemedCard className="border-pink-200 bg-pink-50/50 dark:border-pink-900/50 dark:bg-pink-950/20 h-full">
+      <div className="grid items-start gap-6 md:grid-cols-2">
+        <ThemedCard>
           <ThemedCardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge
-                variant="secondary"
-                className="bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300 hover:bg-pink-100 hover:text-pink-700"
-              >
-                Monthly Support
-              </Badge>
-            </div>
-            <ThemedCardTitle className="flex items-center gap-3 text-2xl text-pink-900 dark:text-pink-100">
-              <Heart className="h-6 w-6 text-pink-500 fill-pink-500" />
-              Github Sponsors
+            <ThemedCardTitle className="flex items-center gap-2 text-xl">
+              <ShieldCheck
+                className="h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-400"
+                aria-hidden="true"
+              />
+              {t("supportPage.why.title", {
+                defaultValue: "Why Vaulted Money exists",
+              })}
             </ThemedCardTitle>
-            <ThemedCardDescription>
-              Become a sponsor on Github to support my open source work
-              continuously.
-            </ThemedCardDescription>
           </ThemedCardHeader>
-          <ThemedCardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              Github Sponsors is the best way to support ongoing development.
-              You can choose a one-time or monthly tier.
-            </p>
-            <ul className="space-y-2 text-sm text-foreground/80">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-pink-500" />
-                Special badge on your Github profile
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-pink-500" />
-                Priority support for issues
-              </li>
-            </ul>
-            <div className="pt-4">
+          <ThemedCardContent className="pt-5">
+            <BulletList items={whyPoints} />
+          </ThemedCardContent>
+        </ThemedCard>
+
+        <ThemedCard>
+          <ThemedCardHeader>
+            <ThemedCardTitle className="flex items-center gap-2 text-xl">
+              <Heart
+                className="h-5 w-5 shrink-0 text-pink-600 dark:text-pink-400"
+                aria-hidden="true"
+              />
+              {t("supportPage.help.title", {
+                defaultValue: "Supporting it is optional",
+              })}
+            </ThemedCardTitle>
+          </ThemedCardHeader>
+          <ThemedCardContent className="space-y-6 pt-5">
+            <BulletList items={helpPoints} />
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
-                size="lg"
-                className="w-full gap-2 group bg-pink-600 hover:bg-pink-700 text-white border-none"
                 asChild
+                className="h-auto min-h-11 gap-2 whitespace-normal bg-pink-700 text-white hover:bg-pink-800 dark:bg-pink-600 dark:hover:bg-pink-700"
               >
                 <a
-                  href="https://github.com/sponsors/nrajesh"
+                  href={SPONSORS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Sponsor on Github
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <Heart className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {t("supportPage.help.sponsorButton", {
+                    defaultValue: "Sponsor on GitHub",
+                  })}
+                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="h-auto min-h-11 gap-2 whitespace-normal"
+              >
+                <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+                  <Star className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {t("supportPage.help.starButton", {
+                    defaultValue: "Star on GitHub",
+                  })}
                 </a>
               </Button>
             </div>
           </ThemedCardContent>
         </ThemedCard>
-
-        {/* Direct Donation (QR Codes) */}
-        <ThemedCard className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 h-full">
-          <ThemedCardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge
-                variant="secondary"
-                className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 hover:bg-emerald-100 hover:text-emerald-700"
-              >
-                Direct Contribution
-              </Badge>
-            </div>
-            <ThemedCardTitle className="flex items-center gap-3 text-2xl text-emerald-900 dark:text-emerald-100">
-              <Smartphone className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
-              Scan to Pay
-            </ThemedCardTitle>
-            <ThemedCardDescription>
-              Directly support via Bank Transfer or PayPal using the QR code
-              below.
-            </ThemedCardDescription>
-          </ThemedCardHeader>
-          <ThemedCardContent className="flex flex-col items-center space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full">
-              <div className="flex flex-col items-center gap-3">
-                <span className="font-semibold text-lg text-emerald-800 dark:text-emerald-200">
-                  Revolut
-                </span>
-                <a
-                  href="https://checkout.revolut.com/pay/f98ac0fd-41f3-4a09-9a61-7ab6c70717f3"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Open Revolut checkout"
-                  className="block"
-                >
-                  <div className="relative group flex h-48 w-48 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 shadow-sm">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <img
-                      src={qrcodeRevolut}
-                      alt="Revolut QR Code"
-                      className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                </a>
-              </div>
-              <div className="flex flex-col items-center gap-3">
-                <span className="font-semibold text-lg text-emerald-800 dark:text-emerald-200">
-                  PayPal
-                </span>
-                <a
-                  href="https://www.paypal.com/donate/?hosted_button_id=4AFPCKPWTGFUU"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Open PayPal donation link"
-                  className="block"
-                >
-                  <div className="relative group flex h-48 w-48 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 shadow-sm">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <img
-                      src={qrcodePaypal}
-                      alt="PayPal QR Code"
-                      className="h-40 w-40 object-contain [image-rendering:pixelated] transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                </a>
-              </div>
-            </div>
-            <p className="text-sm text-center text-muted-foreground max-w-xs mt-4">
-              Scan with your banking app or PayPal to send a donation directly.
-            </p>
-          </ThemedCardContent>
-        </ThemedCard>
       </div>
 
-      {/* Store Channels */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4 text-foreground">
-          Buy on a Store
-        </h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          Buying through a store is the easiest way to support development. The
-          same app is free on{" "}
-          <a
-            href="https://github.com/nrajesh/vaulted.money"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
+      <section className="space-y-4" aria-labelledby="support-stores-title">
+        <div>
+          <h2
+            id="support-stores-title"
+            className="text-lg font-semibold text-foreground"
           >
-            GitHub
-          </a>{" "}
-          for those who want to build it themselves.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {storeChannels
-            .filter((ch) => ch.key !== "polarSh")
-            .map((channel) => {
-              const isActive = channel.active && channel.url;
-              return (
-                <ThemedCard
-                  key={channel.key}
-                  className={
-                    isActive
-                      ? "border-blue-200 dark:border-blue-900/50"
-                      : "opacity-70"
-                  }
-                >
-                  <ThemedCardHeader>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge
-                        variant="secondary"
-                        className={
-                          isActive
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                            : "bg-slate-100 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400"
-                        }
-                      >
-                        {isActive ? "Available" : "Coming Soon"}
-                      </Badge>
+            {t("supportPage.stores.title", {
+              defaultValue: "Pay once in a store",
+            })}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t("supportPage.stores.note", {
+              defaultValue: "Links appear here once each listing is live.",
+            })}
+          </p>
+        </div>
+        <ul className="grid gap-4 sm:grid-cols-3">
+          {storeChannels.map((channel) => {
+            const details = STORE_DETAILS[channel.key];
+            const Icon = details.icon;
+            const isLive = channel.active && channel.url;
+            return (
+              <li key={channel.key}>
+                <ThemedCard className="h-full">
+                  <ThemedCardContent className="flex h-full flex-col gap-3 pt-6">
+                    <div className="flex items-start justify-between gap-2">
+                      <Icon
+                        className="h-6 w-6 shrink-0 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      {!isLive && (
+                        <Badge variant="secondary">
+                          {t("supportPage.stores.comingSoon", {
+                            defaultValue: "Coming soon",
+                          })}
+                        </Badge>
+                      )}
                     </div>
-                    <ThemedCardTitle className="flex items-center gap-3 text-xl">
-                      <Store className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      {channel.label}
-                    </ThemedCardTitle>
-                    <ThemedCardDescription>
-                      €9.99 one-time — supports continued development
-                    </ThemedCardDescription>
-                  </ThemedCardHeader>
-                  <ThemedCardContent>
-                    {isActive ? (
-                      <Button size="lg" className="w-full gap-2 group" asChild>
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {channel.label}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {t(details.descriptionKey, {
+                          defaultValue: details.descriptionDefault,
+                        })}
+                      </p>
+                    </div>
+                    {isLive && (
+                      <Button
+                        asChild
+                        className="mt-auto h-auto min-h-11 whitespace-normal"
+                      >
                         <a
                           href={channel.url!}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          Get on {channel.label}
-                          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                          {t("supportPage.stores.getIt", {
+                            store: channel.label,
+                            defaultValue: "Get it on {{store}}",
+                          })}
                         </a>
                       </Button>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">
-                        This channel will be available soon.
-                      </p>
                     )}
                   </ThemedCardContent>
                 </ThemedCard>
-              );
-            })}
-        </div>
-      </div>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </div>
   );
 }
