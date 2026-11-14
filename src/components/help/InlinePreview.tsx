@@ -87,7 +87,8 @@ export const InlinePreview = ({
       aria-label={triggerText ? undefined : triggerLabel}
       className={cn(
         triggerText
-          ? "h-11 px-0 text-primary md:h-8"
+          ? // Long labels wrap instead of running off the card at larger text sizes.
+            "h-auto min-h-11 max-w-full justify-start whitespace-normal px-0 py-2 text-left text-primary md:min-h-8 md:py-1"
           : "h-11 w-11 shrink-0 rounded-full text-muted-foreground hover:text-foreground md:h-8 md:w-8",
         className,
       )}
@@ -122,7 +123,7 @@ export const InlinePreview = ({
           type="button"
           variant="outline"
           size="sm"
-          className="ml-auto h-11 md:h-8"
+          className="ml-auto h-auto min-h-11 whitespace-normal py-2 text-left md:min-h-8 md:py-1"
           onClick={() => {
             setOpen(false);
             onDismiss();

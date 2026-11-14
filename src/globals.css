@@ -170,6 +170,12 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
+
+  /* A placeholder or value too long for a narrow box ends in "…" rather
+     than being cut mid-word (common at larger text sizes on phones). */
+  input {
+    text-overflow: ellipsis;
+  }
 }
 
 /*

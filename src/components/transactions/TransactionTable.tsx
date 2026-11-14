@@ -422,7 +422,9 @@ const TransactionMobileCard = React.memo(
                 />
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex min-w-0 items-center gap-2">
-                    <div className="truncate text-base font-bold leading-tight">
+                    {/* Wraps rather than truncates, so long payee names stay
+                        readable at larger text sizes. */}
+                    <div className="min-w-0 break-words text-base font-bold leading-tight">
                       {transaction.vendor ||
                         t("transactionsTable.noPayee", {
                           defaultValue: "No Payee",
@@ -447,7 +449,7 @@ const TransactionMobileCard = React.memo(
                       </button>
                     )}
                   </div>
-                  <div className="mb-2 min-w-0 truncate text-sm text-slate-500 dark:text-slate-400">
+                  <div className="mb-2 min-w-0 break-words text-sm text-slate-500 dark:text-slate-400">
                     {new Date(transaction.date).toLocaleDateString()}{" "}
                     {" \u00b7 "}
                     <span
@@ -480,15 +482,15 @@ const TransactionMobileCard = React.memo(
                   </div>
 
                   {transaction.remarks && (
-                    <div className="mt-2 truncate text-sm text-slate-600 dark:text-slate-400">
+                    <div className="mt-2 line-clamp-2 break-words text-sm text-slate-600 dark:text-slate-400">
                       {transaction.remarks}
                     </div>
                   )}
                 </div>
               </div>
-              <div className="flex max-w-[42%] shrink-0 flex-col items-end gap-2">
+              <div className="flex shrink-0 flex-col items-end gap-2">
                 <div
-                  className={`max-w-full truncate text-right text-base font-bold sm:text-lg ${transaction.amount < 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-400"}`}
+                  className={`whitespace-nowrap text-right text-base font-bold sm:text-lg ${transaction.amount < 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-400"}`}
                 >
                   {formattedAmount}
                 </div>
