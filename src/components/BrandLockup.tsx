@@ -1,7 +1,7 @@
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
-import logoSquareDark from "@/assets/logo-square-dark.png";
-import logoSquareLight from "@/assets/logo-square-light.png";
+import logoSquareDark from "@/assets/logo-square-dark.svg";
+import logoSquareLight from "@/assets/logo-square-light.svg";
 
 type BrandLockupSize = "header" | "sidebar" | "hero" | "mobile";
 
@@ -39,7 +39,9 @@ const sizeStyles: Record<
   hero: {
     wrapper: "flex-col gap-0.5 text-center",
     iconWrapper: "h-28 w-28 sm:h-40 sm:w-40 lg:h-48 lg:w-48",
-    title: "text-[2.85rem] sm:text-5xl lg:text-6xl",
+    // Capped by screen width so the one-line name fits narrow phones at
+    // larger text sizes.
+    title: "text-[min(2.85rem,11vw)] sm:text-5xl lg:text-6xl",
   },
   mobile: {
     wrapper: "gap-2.5",

@@ -119,6 +119,9 @@ The sidebar and the phone bottom bar render from `src/components/navigation/navC
 **Name every sheet**
 `SheetContent` has no placeholder title. Give it a visible `SheetTitle`, or `srTitle` when it has none (the phone menus), so screen readers never announce a generic name.
 
+**Check Larger text on a 360px phone**
+The text-size setting scales every `rem`, so a layout that fits at default can overflow at Larger. `Button` never wraps (`whitespace-nowrap`): give long labels `h-auto whitespace-normal`. Let names wrap (`break-words`) rather than truncate, keep fixed-width columns from starving a name column (let them wrap below it), and keep phone top-bar icon buttons in `px` so the title beside them keeps its room.
+
 **Plain CSS beats Tailwind utilities**
 In Tailwind 4, CSS outside a layer wins over every utility class. Put shared component rules (such as `.touch-target`) in `@layer components` so classes like `absolute` still apply; leave only deliberate overrides (the display settings in `globals.css`) unlayered.
 

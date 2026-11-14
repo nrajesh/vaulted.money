@@ -3,8 +3,8 @@ import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
-import logoMarkDark from "@/assets/logo-mark-dark.png";
-import logoMarkLight from "@/assets/logo-mark-light.png";
+import logoMarkDark from "@/assets/logo-mark-dark.svg";
+import logoMarkLight from "@/assets/logo-mark-light.svg";
 import {
   Building2,
   Globe,
@@ -546,19 +546,22 @@ const Layout = () => {
           isHomepageMobilePreview && "h-screen overflow-hidden",
         )}
       >
-        <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
-          <div className="flex min-w-0 items-center gap-3">
-            <SidebarTrigger className="aspect-square h-10 w-10 shrink-0 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
-              {/* A tightly cropped mark, shown at its natural size: scaling a
-                  padded image with a CSS transform made it look soft. */}
+        <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-[16px] pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
+          {/* On phones the round icon buttons keep a fixed 40px size (48px
+              tap area) instead of growing with the text-size setting, so the
+              name beside them has room at Large and Larger text. */}
+          <div className="flex min-w-0 items-center gap-[12px] md:gap-3">
+            <SidebarTrigger className="aspect-square h-[40px] w-[40px] shrink-0 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
+              {/* A tightly cropped vector mark, so it stays sharp at any
+                  screen density (the PNG looked soft on phones). */}
               <img
                 src={resolvedTheme === "dark" ? logoMarkDark : logoMarkLight}
                 alt=""
-                className="aspect-square h-7 w-7 shrink-0 object-contain"
+                className="aspect-square h-[28px] w-[28px] shrink-0 object-contain"
               />
             </SidebarTrigger>
             <div className="min-w-0 md:hidden">
-              <p className="app-gradient-title block truncate text-xl font-black leading-none tracking-normal">
+              <p className="app-gradient-title block truncate text-[min(1.25rem,4.6vw)] font-black leading-none tracking-normal">
                 Vaulted Money
               </p>
               <p className="truncate text-xs text-muted-foreground">
@@ -652,7 +655,7 @@ const Layout = () => {
             )}
           </div>
           {/* Round icon buttons must not be squeezed into ovals at large text sizes. */}
-          <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <div className="flex shrink-0 items-center gap-[8px] md:hidden [&_button]:h-[40px] [&_button]:w-[40px] [&_button_svg]:h-[20px] [&_button_svg]:w-[20px]">
             <LanguageSwitcher showLanguageSettings />
             {/* Help is one tap away; Give feedback lives inside the drawer. */}
             <Button

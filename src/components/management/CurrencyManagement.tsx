@@ -150,8 +150,10 @@ export const CurrencyManagement = () => {
     <div className="space-y-6">
       <ThemedCard>
         <ThemedCardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          {/* Stacks on narrow screens so the description isn't squeezed
+              into a one-word column beside the button. */}
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <ThemedCardTitle>Active Currencies</ThemedCardTitle>
               <ThemedCardDescription>
                 Manage exchange rates relative to your base currency (
@@ -199,11 +201,13 @@ export const CurrencyManagement = () => {
                       variant="outline"
                       role="combobox"
                       aria-expanded={isComboboxOpen}
-                      className="justify-between w-full sm:w-[300px]"
+                      className="w-full min-w-0 justify-between sm:w-[300px]"
                     >
-                      {customCode
-                        ? `${customCode}${customName ? ` - ${customName}` : ""}`
-                        : "Search currency code or name..."}
+                      <span className="min-w-0 truncate">
+                        {customCode
+                          ? `${customCode}${customName ? ` - ${customName}` : ""}`
+                          : "Search currency code or name..."}
+                      </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -404,12 +408,14 @@ export const CurrencyManagement = () => {
           </div>
 
           <div className="rounded-md border">
-            <div className="grid grid-cols-12 gap-4 p-4 border-b bg-muted/50 text-sm font-medium text-muted-foreground">
-              <div className="col-span-5 md:col-span-6">Currency</div>
-              <div className="col-span-5 md:col-span-4 text-right">
+            <div className="flex flex-wrap items-end gap-x-3 gap-y-1 p-4 border-b bg-muted/50 text-sm font-medium text-muted-foreground">
+              <div className="min-w-[8rem] flex-1">Currency</div>
+              <div className="ml-auto w-28 shrink-0 text-right">
                 Rate (1 {selectedCurrency} =)
               </div>
-              <div className="col-span-2 md:col-span-2 text-center">Action</div>
+              <div className="w-10 shrink-0">
+                <span className="sr-only">Action</span>
+              </div>
             </div>
             <div className="divide-y max-h-[600px] overflow-y-auto">
               {availableCurrencies
@@ -422,24 +428,26 @@ export const CurrencyManagement = () => {
                   return (
                     <div
                       key={currency.code}
-                      className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-muted/30 transition-colors"
+                      className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4 hover:bg-muted/30 transition-colors"
                     >
-                      <div className="col-span-5 md:col-span-6 flex flex-col">
+                      {/* The name keeps at least 8rem; when the row is too
+                          narrow, the rate and delete wrap onto their own line. */}
+                      <div className="flex min-w-[8rem] flex-1 flex-col">
                         <span className="font-semibold text-sm flex items-center gap-2">
                           <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-xs font-mono">
                             {currencySymbols[currency.code]}
                           </span>
                           {currency.code}
                         </span>
-                        <span className="text-xs text-muted-foreground truncate">
+                        <span className="break-words text-xs text-muted-foreground">
                           {currency.name}
                         </span>
                       </div>
 
-                      <div className="col-span-5 md:col-span-4 flex items-center justify-end gap-2">
+                      <div className="ml-auto flex w-28 shrink-0 items-center justify-end">
                         <Input
                           type="number"
-                          className="w-24 text-right h-8 text-sm"
+                          className="h-8 w-full text-right text-sm"
                           value={rateRelativeToSelected.toFixed(4)}
                           step="0.0001"
                           onChange={(e) => {
@@ -451,7 +459,7 @@ export const CurrencyManagement = () => {
                         />
                       </div>
 
-                      <div className="col-span-2 md:col-span-2 flex justify-center">
+                      <div className="flex w-10 shrink-0 justify-center">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button

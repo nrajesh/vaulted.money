@@ -951,7 +951,7 @@ const LedgerEntryPage = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <h2 className="truncate text-lg font-semibold text-emerald-900 dark:text-emerald-200">
+                            <h2 className="break-words text-lg font-semibold text-emerald-900 dark:text-emerald-200">
                               {ledger.name}
                             </h2>
                             <div className="mt-2 flex flex-wrap items-center gap-2">

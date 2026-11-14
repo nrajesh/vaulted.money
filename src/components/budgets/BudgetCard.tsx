@@ -25,7 +25,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { startOfMonth, endOfMonth, endOfDay, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTransactions } from "@/contexts/TransactionsContext";
@@ -457,7 +457,18 @@ function GoalCard({
               defaultValue: "Expected pace: {{percent}}% by today",
             })}
           >
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
+            {/* Centred on the marker, but anchored inward near either end so
+                the label never spills out of the card. */}
+            <div
+              className={cn(
+                "absolute -top-5 text-[10px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap",
+                expectedProgress < 15
+                  ? "left-0"
+                  : expectedProgress > 85
+                    ? "right-0"
+                    : "left-1/2 -translate-x-1/2",
+              )}
+            >
               {t("budgets.card.pace", {
                 percent: expectedProgress.toFixed(0),
                 defaultValue: "Pace {{percent}}%",
