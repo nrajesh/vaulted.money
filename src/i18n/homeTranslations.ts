@@ -69,7 +69,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       multiCurrency: "Multi-currency balances",
       accountScopes: "Account scopes for different people",
       csvImports: "CSV transaction imports",
-      accountsVendors: "Accounts, vendors, categories",
+      accountsVendors: "Accounts, payees, categories",
       encryptedBackup: "Encrypted backup options",
     },
     roadmap: {
@@ -235,7 +235,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       multiCurrency: "Balances multi-moneda",
       accountScopes: "Ámbitos de cuenta para diferentes personas",
       csvImports: "Importación de transacciones CSV",
-      accountsVendors: "Cuentas, proveedores, categorías",
+      accountsVendors: "Cuentas, beneficiarios, categorías",
       encryptedBackup: "Opciones de respaldo cifrado",
     },
     roadmap: {
@@ -401,7 +401,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       multiCurrency: "多币种余额",
       accountScopes: "不同人员的账户范围",
       csvImports: "CSV 交易导入",
-      accountsVendors: "账户、商家、分类",
+      accountsVendors: "账户、收款方、分类",
       encryptedBackup: "加密备份选项",
     },
     roadmap: {
@@ -565,7 +565,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       multiCurrency: "Meerdere valuta's",
       accountScopes: "Accountbereiken voor verschillende personen",
       csvImports: "CSV-transactie-import",
-      accountsVendors: "Rekeningen, leveranciers, categorieën",
+      accountsVendors: "Rekeningen, begunstigden, categorieën",
       encryptedBackup: "Versleutelde back-upopties",
     },
     roadmap: {
@@ -734,7 +734,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       multiCurrency: "பல-நாணய இருப்புகள்",
       accountScopes: "வெவ்வேறு நபர்களுக்கான கணக்கு எல்லைகள்",
       csvImports: "CSV பரிவர்த்தனை இறக்குமதி",
-      accountsVendors: "கணக்குகள், விற்பனையாளர்கள், வகைகள்",
+      accountsVendors: "கணக்குகள், பெறுநர்கள், வகைகள்",
       encryptedBackup: "மறையாக்கப்பட்ட காப்பு விருப்பங்கள்",
     },
     roadmap: {

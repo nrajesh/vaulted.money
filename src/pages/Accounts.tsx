@@ -1,4 +1,5 @@
 import * as React from "react";
+import { FeatureHint } from "@/components/help/FeatureHint";
 import { useTranslation } from "react-i18next";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { usePayeeManagement } from "@/hooks/usePayeeManagement";
@@ -105,14 +106,15 @@ const AccountsPage = () => {
   ];
 
   return (
-    <div className="tour-accounts-list">
+    <div>
       <EntityManagementPage<Payee>
         title={t("management.entities.account.title", {
           defaultValue: "Accounts",
         })}
-        subtitle={t("management.entities.account.subtitle", {
-          defaultValue: "Manage your bank accounts and credit cards",
+        subtitle={t("pages.accounts.subtitle", {
+          defaultValue: "Your bank accounts, cards and cash.",
         })}
+        titleHint={<FeatureHint id="reconcile" />}
         entityName={t("management.entities.account.singular", {
           defaultValue: "Account",
         })}

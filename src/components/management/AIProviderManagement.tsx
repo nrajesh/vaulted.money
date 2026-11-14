@@ -99,7 +99,7 @@ const AIProviderManagement = ({
             </h2>
           )}
           {!hideHeading && (
-            <ul className="tour-ai-byok list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
               <li>
                 {t("aiHub.providers.point1", {
                   defaultValue: "Powers Auto-categorize.",
@@ -107,13 +107,13 @@ const AIProviderManagement = ({
               </li>
               <li>
                 {t("aiHub.providers.point2", {
-                  defaultValue: "Only vendor names are sent, never amounts.",
+                  defaultValue: "Only payee names are sent, never amounts.",
                 })}
               </li>
             </ul>
           )}
         </div>
-        <div className="tour-entity-actions">
+        <div>
           <Button onClick={handleAddClick}>
             <PlusCircle className="mr-2 h-4 w-4" aria-hidden />
             {t("management.actions.add", {
@@ -126,7 +126,7 @@ const AIProviderManagement = ({
         </div>
       </div>
 
-      <div className="tour-entity-table">
+      <div>
         {providers.length === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
             {canUseLocalModels()

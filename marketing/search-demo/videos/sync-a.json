@@ -42,7 +42,7 @@
   {
    "do": "scrollTo",
    "target": {
-    "css": ".tour-settings-sync"
+    "css": "#settings-sync"
    },
    "block": "center"
   },
@@ -50,7 +50,7 @@
    "do": "anchor",
    "name": "sync",
    "target": {
-    "css": ".tour-settings-sync"
+    "css": "#settings-sync"
    }
   },
   {
@@ -74,7 +74,7 @@
   {
    "do": "click",
    "target": {
-    "css": ".tour-settings-sync [role=switch]"
+    "css": "#settings-sync [role=switch]"
    }
   },
   {

@@ -122,11 +122,11 @@ const Index = () => {
         <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
           <div>
             <h1 className="app-gradient-title app-page-title">
-              {t("layout.nav.dashboard", { defaultValue: "Dashboard" })}
+              {t("nav.items.overview", { defaultValue: "Overview" })}
             </h1>
             <p className="app-page-subtitle">
-              {t("dashboard.header.subtitle", {
-                defaultValue: "Overview of your financial health",
+              {t("pages.overview.subtitle", {
+                defaultValue: "Where your money stands, and what's next.",
               })}
             </p>
           </div>
@@ -142,7 +142,7 @@ const Index = () => {
         </div>
 
         {/* Metric Cards Row 2 - Consolidated */}
-        <div className="tour-dashboard-summary">
+        <div>
           <ConsolidatedMetricsCard
             netWorth={formatCurrency(totalBalance)}
             income={formatCurrency(totalIncome)}
@@ -153,7 +153,7 @@ const Index = () => {
         {/* Main Content Grid */}
         <div className="grid gap-4 md:grid-cols-12 h-[350px] sm:h-[500px]">
           {/* Chart Section - Takes up 8 columns (approx 2/3) */}
-          <div className="tour-dashboard-charts md:col-span-8 h-full">
+          <div className="md:col-span-8 h-full">
             <StackedCategoryChart
               transactions={filteredTransactions}
               className="h-full shadow-sm"
@@ -161,7 +161,7 @@ const Index = () => {
           </div>
 
           {/* Activity Feed - Takes up 4 columns (approx 1/3) */}
-          <div className="tour-recent-transactions md:col-span-4 h-full">
+          <div className="md:col-span-4 h-full">
             <RecentActivityFeed
               transactions={filteredTransactions}
               className="h-full shadow-sm"

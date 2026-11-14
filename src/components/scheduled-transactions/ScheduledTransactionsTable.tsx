@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/feedback/EmptyState";
 import * as React from "react";
 import {
   Table,
@@ -256,9 +257,7 @@ export function ScheduledTransactionsTable({
       <div className="block md:hidden space-y-4">
         {transactions.length === 0 ? (
           <div className="text-center py-8 text-slate-500 bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-md border">
-            {t("scheduled.table.empty", {
-              defaultValue: "No scheduled transactions found.",
-            })}
+            <EmptyState kind="scheduled" />
           </div>
         ) : (
           currentTransactions.map((transaction, index) => {
@@ -363,8 +362,17 @@ export function ScheduledTransactionsTable({
                     </span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          className="touch-target h-10 w-10 p-0"
+                          aria-label={t("scheduled.table.openMenu", {
+                            defaultValue: "Open menu",
+                          })}
+                        >
+                          <MoreHorizontal
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -441,7 +449,7 @@ export function ScheduledTransactionsTable({
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
                 {t("scheduled.table.headers.vendorAccount", {
-                  defaultValue: "Vendor / Account",
+                  defaultValue: "Payee / Account",
                 })}
               </TableHead>
               <TableHead className="text-slate-800 dark:text-slate-200 font-semibold">
@@ -469,9 +477,7 @@ export function ScheduledTransactionsTable({
                   colSpan={8}
                   className="text-center py-10 text-slate-500"
                 >
-                  {t("scheduled.table.empty", {
-                    defaultValue: "No scheduled transactions found.",
-                  })}
+                  <EmptyState kind="scheduled" />
                 </TableCell>
               </TableRow>
             ) : (
@@ -601,7 +607,10 @@ export function ScheduledTransactionsTable({
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
+                              <Button
+                                variant="ghost"
+                                className="touch-target h-8 w-8 p-0"
+                              >
                                 <span className="sr-only">
                                   {t("scheduled.table.openMenu", {
                                     defaultValue: "Open menu",

@@ -67,20 +67,19 @@ const Analytics = () => {
       <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
         <div>
           <h1 className="app-gradient-title app-page-title">
-            {t("layout.nav.analytics", { defaultValue: "Analytics" })}
+            {t("nav.items.charts", { defaultValue: "Charts" })}
           </h1>
           <p className="app-page-subtitle">
-            {t("analytics.header.subtitle", {
-              defaultValue:
-                "Review total spending and chart trends for the selected period.",
+            {t("pages.charts.subtitle", {
+              defaultValue: "Spending and trends for any period.",
             })}
           </p>
         </div>
       </div>
-      <div className="tour-analytics-filters">
+      <div>
         <SearchFilterBar />
       </div>
-      <div className="tour-analytics-chart">
+      <div>
         <AnalyticsChartView
           transactions={filteredTransactions}
           filterDateRange={dateRange}

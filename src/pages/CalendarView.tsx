@@ -151,15 +151,14 @@ export default function CalendarView() {
             {t("layout.nav.calendar", { defaultValue: "Calendar" })}
           </h1>
           <p className="app-page-subtitle max-w-2xl">
-            {t("calendar.header.subtitle", {
-              defaultValue:
-                "Explore monthly patterns and the transactions behind each day.",
+            {t("pages.calendar.subtitle", {
+              defaultValue: "See which days money comes and goes.",
             })}
           </p>
         </div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
-        <div className="tour-calendar-grid h-full min-h-0 overflow-hidden">
+        <div className="h-full min-h-0 overflow-hidden">
           <CalendarGrid
             currentDate={currentDate}
             onDateChange={setCurrentDate}
@@ -168,7 +167,7 @@ export default function CalendarView() {
             dayData={dayData}
           />
         </div>
-        <div className="tour-calendar-daily flex h-full min-h-0 flex-col overflow-hidden">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
           <DailyTransactions
             date={selectedDate}
             transactions={combinedDailyTransactions}

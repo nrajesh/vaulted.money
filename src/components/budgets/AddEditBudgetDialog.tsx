@@ -183,7 +183,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                         defaultValue: "Please select an account.",
                       })
                     : t("budgets.dialog.errors.selectVendor", {
-                        defaultValue: "Please select a vendor.",
+                        defaultValue: "Please select a payee.",
                       }),
                 path: ["budget_scope_name"],
               });
@@ -238,8 +238,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                           "A budget for this account already exists.",
                       })
                     : t("budgets.dialog.errors.duplicateVendor", {
-                        defaultValue:
-                          "A budget for this vendor already exists.",
+                        defaultValue: "A budget for this payee already exists.",
                       }),
               path:
                 data.budget_scope === "category"
@@ -609,7 +608,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                 })
               : t("budgets.dialog.descriptionBudget", {
                   defaultValue:
-                    "Set a spending limit for a category, account, or vendor.",
+                    "Set a spending limit for a category, account, or payee.",
                 })}
           </DialogDescription>
         </DialogHeader>
@@ -694,7 +693,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                       <ScopePill
                         value="vendor"
                         label={t("budgets.dialog.scope.vendor", {
-                          defaultValue: "Vendor",
+                          defaultValue: "Payee",
                         })}
                         icon={Store}
                         active={field.value === "vendor"}
@@ -800,7 +799,7 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
                               })
                             : budgetScope === "vendor"
                               ? t("budgets.dialog.selectVendor", {
-                                  defaultValue: "Select a vendor...",
+                                  defaultValue: "Select a payee...",
                                 })
                               : t("budgets.dialog.selectCategory", {
                                   defaultValue: "Select a category...",

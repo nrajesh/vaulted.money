@@ -172,6 +172,86 @@
   }
 }
 
+/*
+ * Touch targets: on touch screens, small icon buttons get an invisible 4px
+ * margin of tappable area (40px + 8px = 48px, Apple HIG 44pt / Android 48dp)
+ * without changing their look. Neighbours 8px apart (gap-2) don't overlap.
+ */
+@layer components {
+  /* In the components layer so utilities such as \`absolute\` still win. */
+  @media (pointer: coarse) {
+    .touch-target {
+      position: relative;
+    }
+
+    .touch-target::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+    }
+  }
+}
+
+/*
+ * Display settings from the help drawer (src/hooks/useDisplayPreferences.ts).
+ * Tailwind sizes are in rem, so scaling the root font scales the whole UI.
+ */
+html[data-text-size="large"] {
+  font-size: 112.5%;
+}
+
+html[data-text-size="larger"] {
+  font-size: 125%;
+}
+
+/* High contrast: stronger secondary text, borders and control outlines. */
+html[data-contrast="high"] {
+  --muted-foreground: 215 30% 22%;
+  --border: 215 20% 50%;
+  --input: 215 25% 35%;
+}
+
+html[data-contrast="high"].dark {
+  --muted-foreground: 210 30% 88%;
+  --border: 215 15% 62%;
+  --input: 215 20% 75%;
+}
+
+html[data-contrast="high"] .app-page-subtitle {
+  color: hsl(var(--foreground));
+}
+
+/*
+ * Links inside sentences are underlined in high contrast so they don't rely on
+ * colour alone (WCAG 1.4.1). Opt-in with .app-text-link: buttons rendered as
+ * links and navigation items keep their own styling.
+ */
+html[data-contrast="high"] .app-text-link {
+  text-decoration-line: underline;
+  text-underline-offset: 4px;
+}
+
+/* Reduced motion: on when chosen, or when the device asks and no choice is stored. */
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-reduce-motion="false"]) *,
+  html:not([data-reduce-motion="false"]) *::before,
+  html:not([data-reduce-motion="false"]) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .homepage-mobile-preview,
 .homepage-mobile-preview body {
   overflow: hidden !important;
@@ -213,6 +293,11 @@
 
   .app-page-header {
     @apply mb-8 animate-in fade-in duration-700 slide-in-from-bottom-4;
+  }
+
+  /* Title on the left, PageActionBar on the right; stacked on phones. */
+  .app-page-header-row {
+    @apply flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between;
   }
 
   .app-action-panel {

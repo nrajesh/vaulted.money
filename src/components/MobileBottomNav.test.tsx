@@ -56,6 +56,29 @@ describe("MobileBottomNav", () => {
     );
   });
 
+  it("labels the first tab Overview", () => {
+    renderNav();
+    expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute(
+      "href",
+      "/dashboard",
+    );
+  });
+
+  it("shows More as selected for pages that live behind it", () => {
+    renderNav("/calendar");
+    expect(screen.getByRole("button", { name: "More" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("does not select More on a bottom-bar page", () => {
+    renderNav("/budgets");
+    expect(screen.getByRole("button", { name: "More" })).not.toHaveAttribute(
+      "aria-current",
+    );
+  });
+
   it("opens the full menu from More", async () => {
     renderNav();
     expect(screen.getByText("sheet closed")).toBeInTheDocument();

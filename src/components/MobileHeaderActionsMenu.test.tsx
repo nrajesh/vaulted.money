@@ -13,11 +13,9 @@ const renderMenu = () =>
     <MemoryRouter>
       <MobileHeaderActionsMenu
         displayName="Home Budget"
-        hasTourForCurrentRoute={false}
         logout={vi.fn()}
         resolvedTheme="light"
         setTheme={vi.fn()}
-        startTour={vi.fn()}
         t={
           ((_key: string, options?: { defaultValue?: string }) =>
             options?.defaultValue ?? _key) as never

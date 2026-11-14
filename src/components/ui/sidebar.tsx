@@ -176,6 +176,8 @@ const Sidebar = React.forwardRef<
     side?: "left" | "right";
     variant?: "sidebar" | "floating" | "inset";
     collapsible?: "offcanvas" | "icon" | "none";
+    /** Screen-reader name of the phone menu sheet. */
+    mobileTitle?: string;
   }
 >(
   (
@@ -185,6 +187,7 @@ const Sidebar = React.forwardRef<
       collapsible = "offcanvas",
       className,
       children,
+      mobileTitle,
       ...props
     },
     ref,
@@ -226,6 +229,7 @@ const Sidebar = React.forwardRef<
               } as React.CSSProperties
             }
             side={side}
+            srTitle={mobileTitle}
           >
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>

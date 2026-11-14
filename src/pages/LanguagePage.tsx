@@ -202,9 +202,9 @@ const LanguagePage = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-6">
-        <ThemedCard className="tour-settings-language md:col-span-2 lg:col-span-3">
+        <ThemedCard className="md:col-span-2 lg:col-span-3">
           <ThemedCardContent className="space-y-6 pt-6">
-            <div className="tour-language-primary space-y-2">
+            <div className="space-y-2">
               <Label>
                 {t("settings.cards.language.enabled", {
                   defaultValue: "Enabled Languages",
@@ -271,7 +271,7 @@ const LanguagePage = () => {
               ) : null}
             </div>
 
-            <div className="tour-language-custom rounded-md border p-4 space-y-3">
+            <div className="rounded-md border p-4 space-y-3">
               <Label className="text-sm font-semibold">
                 {t("settings.cards.language.customTitle", {
                   defaultValue: "Add Custom Language",

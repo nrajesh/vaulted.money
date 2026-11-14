@@ -364,8 +364,8 @@ export const useTransactionPageActions = (
       // 2. Process Payees
       setOperationProgress({
         title: "Importing CSV",
-        description: "Processing Vendors...",
-        stage: "Stage 2/4: Vendors",
+        description: "Processing Payees...",
+        stage: "Stage 2/4: Payees",
         progress: 25,
         totalStages: 4,
       });

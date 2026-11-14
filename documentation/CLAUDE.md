@@ -113,6 +113,15 @@ A text-only contrast pass missed that dark-mode form controls had no visible edg
 **TooltipProvider is already mounted in Layout**
 `Layout.tsx` wraps the authenticated app in a `TooltipProvider`. Do not add a local one — use `Tooltip`, `TooltipTrigger`, and `TooltipContent` directly inside any authenticated route.
 
+**Menus come from one list**
+The sidebar and the phone bottom bar render from `src/components/navigation/navConfig.ts`, and `isNavItemActive` decides the selected item everywhere. Add or rename pages there, never in a single menu.
+
+**Name every sheet**
+`SheetContent` has no placeholder title. Give it a visible `SheetTitle`, or `srTitle` when it has none (the phone menus), so screen readers never announce a generic name.
+
+**Plain CSS beats Tailwind utilities**
+In Tailwind 4, CSS outside a layer wins over every utility class. Put shared component rules (such as `.touch-target`) in `@layer components` so classes like `absolute` still apply; leave only deliberate overrides (the display settings in `globals.css`) unlayered.
+
 **Combobox (cmdk) interaction**
 `Combobox` fields render as `<input>` elements, not `button[role='combobox']`. Target them by placeholder text (e.g. `"Search accounts..."`). Select results via `role="option"` or `[cmdk-item]`.
 
@@ -225,6 +234,8 @@ Never expose secrets (AI API keys, backup password hashes) through the API, and 
 ---
 
 ## Translations
+
+Keys already in `src/i18n/resources.ts` win over the area modules, so changing the wording of an existing key there needs a new key in an area module (as `nav.*` and `pages.*` did) or an edit to `resources.ts` in all five languages.
 
 User-visible text goes through `t("key", { defaultValue })` and every key is added for all five languages in `src/i18n/areas/` (see `documentation/I18N.md`). `src/i18n/coverageGuard.test.ts` fails if a key is undefined or if a file gains hard-coded English. Never build sentences by concatenation, and format dates with `formatDisplayDate`.
 

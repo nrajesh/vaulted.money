@@ -15,6 +15,7 @@ import {
   Unlink,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { FeatureHint } from "@/components/help/FeatureHint";
 import AIProviderManagement from "@/components/management/AIProviderManagement";
 import ApiAccessCard from "@/components/settings/ApiAccessCard";
 import ConnectToAgentPanel from "@/components/settings/ConnectToAgentPanel";
@@ -327,7 +328,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
           <ul
             className={cn(
               "flex flex-wrap gap-x-6 gap-y-2 px-3 pt-4 sm:px-6",
-              id === IN_APP_SECTION && "tour-ai-byok",
+              id === IN_APP_SECTION && "",
             )}
           >
             {facts.map(([factIcon, text]) => (
@@ -349,13 +350,15 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
     <>
       <div className="space-y-4 bg-background px-3 pt-3 sm:px-6 sm:pt-6">
         <div>
-          <h1 className="app-gradient-title app-page-title">
-            {t("layout.nav.aiAndAgents", { defaultValue: "AI & agents" })}
-          </h1>
+          <div className="flex items-center gap-1">
+            <h1 className="app-gradient-title app-page-title">
+              {t("nav.items.aiAssistant", { defaultValue: "AI assistant" })}
+            </h1>
+            <FeatureHint id="connectApps" />
+          </div>
           <p className="app-page-subtitle">
-            {t("aiHub.subtitle", {
-              defaultValue:
-                "Everything AI lives on this page. Nothing is sent anywhere until you switch it on and set it up.",
+            {t("pages.ai.subtitle", {
+              defaultValue: "Optional, and off until you turn it on.",
             })}
           </p>
         </div>
@@ -415,7 +418,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
               [
                 <Store className={FACT_ICON} aria-hidden />,
                 t("aiHub.facts.vendorNamesOnly", {
-                  defaultValue: "Sends vendor names only, never amounts",
+                  defaultValue: "Sends payee names only, never amounts",
                 }),
               ],
               [
@@ -427,7 +430,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
             ],
             // The list brings its own full-height page frame; here it is one
             // part of a longer page.
-            <div className="tour-ai-list [&_.page-container]:min-h-0">
+            <div className="[&_.page-container]:min-h-0">
               <AIProviderManagement
                 onProvidersChange={setProviders}
                 hideHeading

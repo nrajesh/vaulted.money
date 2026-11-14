@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { PageActionBar } from "@/components/layout/PageActionBar";
 import { Input } from "@/components/ui/input";
 import { Budget } from "../types/budgets";
 import { Account } from "@/types/dataProvider";
@@ -242,40 +243,42 @@ export default function BudgetsPage() {
 
   return (
     <div className="page-container">
-      <div className="app-page-header flex flex-col items-start gap-4">
+      <div className="app-page-header app-page-header-row">
         <div>
           <h1 className="app-gradient-title app-page-title">
             {t("budgets.page.title", { defaultValue: "Budgets" })}
           </h1>
           <p className="app-page-subtitle">
-            {t("budgets.page.subtitle", {
-              defaultValue: "Track your spending limits and goals",
+            {t("pages.budgets.subtitle", {
+              defaultValue: "Spending limits, and how much is left.",
             })}
           </p>
         </div>
-        <div className="app-action-panel">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            <Button
-              variant="outline"
-              className="tour-smart-budget"
-              onClick={() => setIsSmartBudgetOpen(true)}
-            >
-              <Wand2 className="mr-2 h-4 w-4" />
-              {t("budgets.page.smartCreate", { defaultValue: "Smart Create" })}
-            </Button>
-            <Button
-              onClick={() => handleOpenDialog()}
-              className="tour-create-budget bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />{" "}
-              {t("budgets.page.create", { defaultValue: "Create Budget" })}
-            </Button>
-          </div>
-        </div>
+        <PageActionBar
+          primary={{
+            id: "create-budget",
+            icon: PlusCircle,
+            label: t("budgets.page.create", { defaultValue: "Create Budget" }),
+            onSelect: () => handleOpenDialog(),
+          }}
+          secondary={[
+            {
+              id: "smart-create",
+              icon: Wand2,
+              label: t("budgets.page.smartCreate", {
+                defaultValue: "Smart Create",
+              }),
+              description: t("pageActions.descriptions.smartCreate", {
+                defaultValue: "Suggest budgets from your past spending",
+              }),
+              onSelect: () => setIsSmartBudgetOpen(true),
+            },
+          ]}
+        />
       </div>
 
       <div className="space-y-6">
-        <div className="tour-budget-search-bar app-filter-panel">
+        <div className="app-filter-panel">
           <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder={t("budgets.page.search", {
@@ -313,7 +316,7 @@ export default function BudgetsPage() {
           </div>
         </div>
 
-        <div className="tour-budget-list">
+        <div>
           <BudgetSummary budgets={spendingBudgets} isLoading={isLoading} />
         </div>
 

@@ -117,7 +117,7 @@ export const connectAgent: AreaTranslations = {
         pageIntro:
           "Let an AI agent read and update your data. What it reads is sent to its AI provider, unless the model runs on this device.",
         privacyCloud:
-          "Whatever the agent reads, such as transactions, vendors and balances, is sent to the AI provider (Anthropic, for Claude).",
+          "Whatever the agent reads, such as transactions, payees and balances, is sent to the AI provider (Anthropic, for Claude).",
         privacyLocal:
           "A local model keeps everything on this device. This does not work in the claude.ai website.",
         privacyTitle: "Privacy",
@@ -260,7 +260,7 @@ export const connectAgent: AreaTranslations = {
         pageIntro:
           "Deja que un agente de IA lea y actualice tus datos. Lo que lee se envía a su proveedor de IA, salvo que el modelo se ejecute en este equipo.",
         privacyCloud:
-          "Todo lo que lee el agente, como transacciones, proveedores y saldos, se envía al proveedor de IA (Anthropic, en el caso de Claude).",
+          "Todo lo que lee el agente, como transacciones, beneficiarios y saldos, se envía al proveedor de IA (Anthropic, en el caso de Claude).",
         privacyLocal:
           "Un modelo local lo mantiene todo en este dispositivo. Esto no funciona en el sitio web claude.ai.",
         privacyTitle: "Privacidad",
@@ -391,7 +391,7 @@ export const connectAgent: AreaTranslations = {
         pageIntro:
           "让 AI 智能体读取并更新你的数据。它读取的内容会发送给其 AI 提供商，除非模型在本机运行。",
         privacyCloud:
-          "智能体读取的任何内容（例如交易、商家和余额）都会发送给 AI 提供商（对 Claude 而言是 Anthropic）。",
+          "智能体读取的任何内容（例如交易、收款方和余额）都会发送给 AI 提供商（对 Claude 而言是 Anthropic）。",
         privacyLocal:
           "本地模型会把一切都保留在这台设备上。此功能不适用于 claude.ai 网站。",
         privacyTitle: "隐私",
@@ -529,7 +529,7 @@ export const connectAgent: AreaTranslations = {
         pageIntro:
           "Laat een AI-agent je gegevens lezen en bijwerken. Wat het leest, gaat naar de AI-aanbieder, tenzij het model op dit apparaat draait.",
         privacyCloud:
-          "Alles wat de agent leest, zoals transacties, leveranciers en saldi, wordt naar de AI-aanbieder gestuurd (Anthropic, voor Claude).",
+          "Alles wat de agent leest, zoals transacties, begunstigden en saldi, wordt naar de AI-aanbieder gestuurd (Anthropic, voor Claude).",
         privacyLocal:
           "Een lokaal model houdt alles op dit apparaat. Dit werkt niet op de website claude.ai.",
         privacyTitle: "Privacy",
@@ -679,7 +679,7 @@ export const connectAgent: AreaTranslations = {
         pageIntro:
           "AI முகவர் உங்கள் தரவைப் படித்து புதுப்பிக்கட்டும். மாதிரி இந்தச் சாதனத்தில் இயங்காவிட்டால், அது படிப்பது அதன் AI வழங்குநருக்கு அனுப்பப்படும்.",
         privacyCloud:
-          "பரிவர்த்தனைகள், விற்பனையாளர்கள், இருப்புகள் போன்று முகவர் படிக்கும் அனைத்தும் AI வழங்குநருக்கு (Claude-க்கு Anthropic) அனுப்பப்படும்.",
+          "பரிவர்த்தனைகள், பெறுநர்கள், இருப்புகள் போன்று முகவர் படிக்கும் அனைத்தும் AI வழங்குநருக்கு (Claude-க்கு Anthropic) அனுப்பப்படும்.",
         privacyLocal:
           "உள்ளூர் மாதிரி அனைத்தையும் இந்தச் சாதனத்திலேயே வைத்திருக்கும். இது claude.ai இணையதளத்தில் வேலை செய்யாது.",
         privacyTitle: "தனியுரிமை",

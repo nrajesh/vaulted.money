@@ -35,6 +35,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useDataProvider } from "@/context/DataProviderContext";
+import { useTranslation } from "react-i18next";
 
 export type Payee = {
   id: string;
@@ -78,6 +79,7 @@ const AddEditPayeeDialog: React.FC<AddEditPayeeDialogProps> = ({
   onSuccess,
   isAccountOnly = false,
 }) => {
+  const { t } = useTranslation();
   const { availableCurrencies } = useCurrency();
   const { activeLedger } = useLedger();
   const { invalidateAllData } = useTransactions();
@@ -186,7 +188,7 @@ const AddEditPayeeDialog: React.FC<AddEditPayeeDialogProps> = ({
           <DialogDescription>
             {payee
               ? `Update the details of the ${isAccountOnly ? "account" : "payee"}.`
-              : `Add a new ${isAccountOnly ? "account" : "vendor or account"} to your list.`}
+              : `Add a new ${isAccountOnly ? "account" : "payee or account"} to your list.`}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -199,7 +201,16 @@ const AddEditPayeeDialog: React.FC<AddEditPayeeDialogProps> = ({
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., SuperMart, Salary, etc."
+                      placeholder={
+                        isAccountOnly || payee?.is_account
+                          ? t("dialogs.payee.namePlaceholderAccount", {
+                              defaultValue:
+                                "e.g., Joint Checking, Savings, Visa Card",
+                            })
+                          : t("dialogs.payee.namePlaceholderPayee", {
+                              defaultValue: "e.g., SuperMart, Salary",
+                            })
+                      }
                       {...field}
                     />
                   </FormControl>

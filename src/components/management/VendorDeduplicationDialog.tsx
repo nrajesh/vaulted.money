@@ -114,7 +114,7 @@ const VendorDeduplicationDialog: React.FC<VendorReconciliationDialogProps> = ({
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select vendor..." />
+                <SelectValue placeholder="Select payee..." />
               </SelectTrigger>
               <SelectContent>
                 {vendors.map((v) => (

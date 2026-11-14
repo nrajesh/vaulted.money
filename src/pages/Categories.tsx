@@ -198,14 +198,13 @@ const CategoriesPage = () => {
   ];
 
   return (
-    <div className="tour-categories-list">
+    <div>
       <EntityManagementPage
         title={t("management.entities.category.title", {
           defaultValue: "Categories",
         })}
-        subtitle={t("management.entities.category.subtitle", {
-          defaultValue:
-            "Organize transactions with categories and sub-categories",
+        subtitle={t("pages.categories.subtitle", {
+          defaultValue: "Groups like Groceries that make spending clear.",
         })}
         entityName={t("management.entities.category.singular", {
           defaultValue: "Category",

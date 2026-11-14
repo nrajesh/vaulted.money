@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { getElectronAPI } from "@/utils/electron";
+import { clearAiConsent } from "@/utils/aiConsent";
 
 /**
  * The master "AI features" switch. When it is off, nothing in the app talks to
@@ -25,6 +26,9 @@ const readChoice = (): boolean | null => {
 };
 
 export const setAiFeatures = (enabled: boolean) => {
+  // Switching AI off forgets which providers were allowed to receive payee
+  // names, so switching it back on asks again.
+  if (!enabled) clearAiConsent();
   try {
     localStorage.setItem(STORAGE_KEY, enabled ? "on" : "off");
   } catch {

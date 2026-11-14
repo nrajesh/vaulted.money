@@ -108,7 +108,7 @@ const SettingsPage = () => {
         </h2>
         {activeLedger ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <ThemedCard className="tour-settings-currency">
+            <ThemedCard>
               <ThemedCardHeader>
                 <ThemedCardTitle>
                   {t("settings.cards.currency.title", {
@@ -144,7 +144,7 @@ const SettingsPage = () => {
               </ThemedCardContent>
             </ThemedCard>
 
-            <ThemedCard className="tour-settings-ledger">
+            <ThemedCard>
               <ThemedCardHeader>
                 <ThemedCardTitle>
                   {t("settings.cards.ledger.title", {
@@ -252,11 +252,11 @@ const SettingsPage = () => {
           </ThemedCard>
 
           {/* AI lives on its own page; this card says what is set up and links there. */}
-          <ThemedCard className="tour-settings-ai md:col-span-2 lg:col-span-3 border-indigo-200/50 dark:border-indigo-900/50 bg-indigo-50/10 dark:bg-indigo-950/5">
+          <ThemedCard className="md:col-span-2 lg:col-span-3 border-indigo-200/50 dark:border-indigo-900/50 bg-indigo-50/10 dark:bg-indigo-950/5">
             <ThemedCardHeader>
               <ThemedCardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                {t("layout.nav.aiAndAgents", { defaultValue: "AI & agents" })}
+                {t("nav.items.aiAssistant", { defaultValue: "AI assistant" })}
               </ThemedCardTitle>
               <ThemedCardDescription>
                 {t("appSettings.ai.description", {
@@ -268,8 +268,8 @@ const SettingsPage = () => {
             <ThemedCardContent className="flex flex-wrap items-center gap-3">
               <Button asChild>
                 <Link to="/ai-providers">
-                  {t("appSettings.ai.open", {
-                    defaultValue: "Open AI & agents",
+                  {t("nav.openAiAssistant", {
+                    defaultValue: "Open AI assistant",
                   })}
                 </Link>
               </Button>
@@ -286,8 +286,12 @@ const SettingsPage = () => {
             </ThemedCardContent>
           </ThemedCard>
 
-          {/* Sync Settings Card */}
-          <ThemedCard className="tour-settings-sync md:col-span-2 lg:col-span-3">
+          {/* Sync Settings Card. The id is a stable hook for the marketing
+              video scripts (marketing/search-demo/videos/sync*.json). */}
+          <ThemedCard
+            id="settings-sync"
+            className="md:col-span-2 lg:col-span-3"
+          >
             <ThemedCardHeader>
               <div className="flex items-center justify-between">
                 <div>

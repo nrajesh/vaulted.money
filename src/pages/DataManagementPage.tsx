@@ -240,18 +240,17 @@ const DataManagementPage = () => {
       <div className="app-page-header flex flex-col items-start justify-between md:flex-row md:items-center">
         <div>
           <h1 className="app-gradient-title app-page-title">
-            {t("dataManagement.title", { defaultValue: "Data" })}
+            {t("nav.items.yourData", { defaultValue: "Your data" })}
           </h1>
           <p className="app-page-subtitle">
-            {t("dataManagement.subtitle", {
-              defaultValue:
-                "Export, import, and schedule backups for your data.",
+            {t("pages.yourData.subtitle", {
+              defaultValue: "Save, restore, reset, or try demo data.",
             })}
           </p>
         </div>
       </div>
 
-      <ThemedCard className="tour-data-export border-blue-200 bg-blue-50/50 dark:border-blue-900/50 dark:bg-blue-950/20">
+      <ThemedCard className="border-blue-200 bg-blue-50/50 dark:border-blue-900/50 dark:bg-blue-950/20">
         <ThemedCardHeader>
           <ThemedCardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
             {t("dataManagement.manual.title", {
@@ -325,7 +324,7 @@ const DataManagementPage = () => {
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Reset Data Card */}
-        <ThemedCard className="tour-data-reset border-red-200/50 dark:border-red-900/50 bg-red-50/20 dark:bg-red-950/10">
+        <ThemedCard className="border-red-200/50 dark:border-red-900/50 bg-red-50/20 dark:bg-red-950/10">
           <ThemedCardHeader>
             <ThemedCardTitle className="text-red-600 dark:text-red-400">
               {t("dataManagement.reset.title", {
@@ -335,7 +334,7 @@ const DataManagementPage = () => {
             <ThemedCardDescription>
               {t("dataManagement.reset.description", {
                 defaultValue:
-                  "Permanently delete all transaction, vendor, and account records.",
+                  "Permanently delete all transaction, payee, and account records.",
               })}
             </ThemedCardDescription>
           </ThemedCardHeader>
@@ -353,7 +352,7 @@ const DataManagementPage = () => {
         </ThemedCard>
 
         {/* Generate Demo Data Card */}
-        <ThemedCard className="tour-data-demo border-indigo-200/50 dark:border-indigo-900/50 bg-indigo-50/20 dark:bg-indigo-950/10">
+        <ThemedCard className="border-indigo-200/50 dark:border-indigo-900/50 bg-indigo-50/20 dark:bg-indigo-950/10">
           <ThemedCardHeader>
             <ThemedCardTitle className="text-indigo-600 dark:text-indigo-400">
               {t("dataManagement.demo.title", {
@@ -388,7 +387,7 @@ const DataManagementPage = () => {
         })}
         description={t("dataManagement.reset.confirmDescription", {
           defaultValue:
-            "This action cannot be undone. All your transaction, vendor, and account data for ALL ledgers will be permanently deleted.",
+            "This action cannot be undone. All your transaction, payee, and account data for ALL ledgers will be permanently deleted.",
         })}
         confirmText={t("dataManagement.reset.confirmButton", {
           defaultValue: "Reset Data",

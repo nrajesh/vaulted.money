@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/feedback/EmptyState";
 import { useTranslation } from "react-i18next";
 import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -904,9 +905,7 @@ const TransactionTable = ({
       <div className="block md:hidden space-y-3">
         {sortedData.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground border rounded-md">
-            {t("transactionsTable.noTransactions", {
-              defaultValue: "No transactions found.",
-            })}
+            <EmptyState kind="transactions" />
           </div>
         ) : (
           paginatedData.map((transaction) => (
@@ -1028,9 +1027,7 @@ const TransactionTable = ({
                   colSpan={8}
                   className="text-center py-10 text-muted-foreground"
                 >
-                  {t("transactionsTable.noTransactions", {
-                    defaultValue: "No transactions found.",
-                  })}
+                  <EmptyState kind="transactions" />
                 </TableCell>
               </TableRow>
             ) : (

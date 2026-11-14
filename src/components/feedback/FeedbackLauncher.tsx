@@ -57,10 +57,13 @@ const getAppContext = () =>
 
 interface FeedbackLauncherProps {
   triggerClassName?: string;
+  /** Show "Give feedback" as visible text (help drawer) instead of an icon. */
+  showLabel?: boolean;
 }
 
 export const FeedbackLauncher = ({
   triggerClassName,
+  showLabel = false,
 }: FeedbackLauncherProps) => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -114,14 +117,21 @@ export const FeedbackLauncher = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("feedback.give", { defaultValue: "Give feedback" })}
+          variant={showLabel ? "outline" : "ghost"}
+          size={showLabel ? "default" : "icon"}
+          aria-label={
+            showLabel
+              ? undefined
+              : t("feedback.give", { defaultValue: "Give feedback" })
+          }
           title={t("feedback.tooltip", { defaultValue: "Feedback" })}
           className={triggerClassName}
         >
-          <MessageSquarePlus className="size-5" />
-          <span className="sr-only">
+          <MessageSquarePlus
+            className={showLabel ? "mr-2 size-4" : "size-5"}
+            aria-hidden="true"
+          />
+          <span className={showLabel ? undefined : "sr-only"}>
             {t("feedback.give", { defaultValue: "Give feedback" })}
           </span>
         </Button>

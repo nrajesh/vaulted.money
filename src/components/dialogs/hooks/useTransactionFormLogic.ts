@@ -12,7 +12,7 @@ export const transactionFormSchema = z
   .object({
     date: z.string().min(1, "Date is required"),
     account: z.string().min(1, "Account is required"),
-    vendor: z.string().min(1, "Vendor is required"),
+    vendor: z.string().min(1, "Payee is required"),
     category: z.string().optional(),
     sub_category: z.string().optional(),
     amount: z.coerce

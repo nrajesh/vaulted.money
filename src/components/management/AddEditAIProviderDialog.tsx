@@ -48,7 +48,11 @@ import {
   providerNeedsApiKey,
 } from "@/utils/aiModels";
 import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
-import { canUseLocalModels, isLoopbackUrl } from "@/utils/localModels";
+import {
+  canUseLocalModels,
+  isLoopbackUrl,
+  isPrivateNetworkUrl,
+} from "@/utils/localModels";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
@@ -183,11 +187,14 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
 
   // A local model has no key, so only hosted providers are stopped here.
   const hasUsableKey = (values: z.infer<FormSchema>) => {
-    if (!localOk && isLoopbackUrl(values.baseUrl)) {
+    if (
+      !localOk &&
+      (isLoopbackUrl(values.baseUrl) || isPrivateNetworkUrl(values.baseUrl))
+    ) {
       showError(
-        t("aiHub.dialog.noLocalHere", {
+        t("aiHub.dialog.noLocalNetworkHere", {
           defaultValue:
-            "A model on your own computer can only be reached from the desktop app.",
+            "A model on your own computer or home network works in the Mac app only.",
         }),
       );
       return false;
@@ -354,11 +361,14 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
   };
 
   const onSubmit = async (values: z.infer<FormSchema>) => {
-    if (!localOk && isLoopbackUrl(values.baseUrl)) {
+    if (
+      !localOk &&
+      (isLoopbackUrl(values.baseUrl) || isPrivateNetworkUrl(values.baseUrl))
+    ) {
       showError(
-        t("aiHub.dialog.noLocalHere", {
+        t("aiHub.dialog.noLocalNetworkHere", {
           defaultValue:
-            "A model on your own computer can only be reached from the desktop app.",
+            "A model on your own computer or home network works in the Mac app only.",
         }),
       );
       return;
@@ -497,6 +507,14 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                           )}
                         </SelectContent>
                       </Select>
+                      {!localOk && (
+                        <p className="text-xs text-muted-foreground">
+                          {t("aiHub.dialog.localMacOnly", {
+                            defaultValue:
+                              "Models running on your own computer or home network, such as LM Studio or Ollama, work in the Mac app only.",
+                          })}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

@@ -3,38 +3,22 @@ import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
-import logoDark from "@/assets/logo-dark.png";
-import logoLight from "@/assets/logo-light.png";
+import logoMarkDark from "@/assets/logo-mark-dark.png";
+import logoMarkLight from "@/assets/logo-mark-light.png";
 import {
-  LayoutGrid,
-  BarChart3,
-  Calendar,
-  Newspaper,
   Building2,
   Globe,
   Home,
   Baby,
   Wallet,
   Landmark,
-  Lightbulb,
-  DatabaseZap,
-  Shield,
   ChevronDown,
   Moon,
   Sun,
   Plus,
   Pin,
   PinOff,
-  Heart,
-  Receipt,
-  CreditCard,
-  FolderTree,
-  Store,
-  Coins,
-  Clock,
   BookOpen,
-  PiggyBank,
-  Brain,
   HelpCircle,
   LogOut,
   MoreHorizontal,
@@ -60,16 +44,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
@@ -82,15 +58,15 @@ import {
 
 import AddEditTransactionDialog from "@/components/dialogs/AddEditTransactionDialog";
 import { useLedger } from "@/contexts/LedgerContext";
-import { useTour } from "@/contexts/TourContext";
+import { useHelpDrawer } from "@/contexts/HelpDrawerContext";
 import { useDefaultAccountSelection } from "@/hooks/useDefaultAccountSelection";
 import { GlobalProgressDialog } from "@/components/dialogs/GlobalProgressDialog";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
-import { LanguageIcon } from "@/components/language/LanguageIcon";
 import { FeedbackLauncher } from "@/components/feedback/FeedbackLauncher";
 import SiteFooter from "@/components/SiteFooter";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { AppSidebarNav } from "@/components/navigation/AppSidebarNav";
 import BrandLockup from "@/components/BrandLockup";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -332,11 +308,9 @@ const SidebarLedgerFooter = ({
 
 type MobileHeaderActionsMenuProps = {
   displayName: string;
-  hasTourForCurrentRoute: boolean;
   logout: () => void;
   resolvedTheme?: string;
   setTheme: (theme: string) => void;
-  startTour: () => void;
   t: ReturnType<typeof useTranslation>["t"];
   isHomepageMobilePreview?: boolean;
 };
@@ -347,34 +321,6 @@ type MobileHeaderActionsMenuProps = {
  */
 const hasAgentBridge = () =>
   typeof getElectronAPI()?.getApiConfig === "function";
-
-/**
- * Sidebar entry for the agent page, shown only with the desktop bridge.
- * Exported for tests. Must be rendered inside SidebarProvider.
- */
-export const ConnectAgentSidebarItem = ({
-  isActive,
-  t,
-}: {
-  isActive: boolean;
-  t: ReturnType<typeof useTranslation>["t"];
-}) => {
-  if (!hasAgentBridge()) return null;
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive}>
-        <Link to="/connect-agent">
-          <Bot />
-          <span>
-            {t("layout.nav.connectAgentShort", {
-              defaultValue: "Connect agent",
-            })}
-          </span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-};
 
 /** Desktop header icon button to Settings. Exported for tests. */
 export const SettingsHeaderButton = ({
@@ -401,11 +347,9 @@ export const SettingsHeaderButton = ({
 // Exported only so tests can render the menu without the whole Layout.
 export const MobileHeaderActionsMenu = ({
   displayName,
-  hasTourForCurrentRoute,
   logout,
   resolvedTheme,
   setTheme,
-  startTour,
   t,
   isHomepageMobilePreview,
 }: MobileHeaderActionsMenuProps) => {
@@ -466,12 +410,6 @@ export const MobileHeaderActionsMenu = ({
             </Link>
           </DropdownMenuItem>
         )}
-        {hasTourForCurrentRoute && (
-          <DropdownMenuItem onClick={startTour} className={actionItemClassName}>
-            <HelpCircle className="h-5 w-5" />
-            {t("helpTour.start", { defaultValue: "Start help tour" })}
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           className={actionItemClassName}
@@ -506,7 +444,7 @@ const Layout = () => {
     new URLSearchParams(location.search).get("preview") === "homepage-mobile" ||
     (typeof window !== "undefined" && window.self !== window.top);
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
-  const { startTour, hasTourForCurrentRoute } = useTour();
+  const { openHelp } = useHelpDrawer();
 
   React.useEffect(() => {
     if (!isLoading && !activeLedger) {
@@ -561,7 +499,10 @@ const Layout = () => {
       )}
     >
       <MobileSidebarCloser />
-      <Sidebar collapsible="icon" className="tour-sidebar-nav">
+      <Sidebar
+        collapsible="icon"
+        mobileTitle={t("nav.menuTitle", { defaultValue: "Menu" })}
+      >
         <SidebarHeader className="pt-[env(safe-area-inset-top)]">
           <div className="flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:justify-center">
             <BrandLockup
@@ -575,317 +516,16 @@ const Layout = () => {
               nameClassName="group-data-[collapsible=icon]:hidden"
             />
             <PinTrigger />
-            <SidebarTrigger className="flex md:hidden" />
+            <SidebarTrigger className="flex h-11 w-11 md:hidden" />
           </div>
         </SidebarHeader>
         <SidebarContent className="p-0">
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              {t("layout.groups.dashboards", { defaultValue: "Dashboards" })}
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/dashboard"}
-                >
-                  <Link to="/dashboard">
-                    <LayoutGrid />
-                    <span>
-                      {t("layout.nav.dashboard", { defaultValue: "Dashboard" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/calendar"}
-                >
-                  <Link to="/calendar">
-                    <Calendar />
-                    <span>
-                      {t("layout.nav.calendar", { defaultValue: "Calendar" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/analytics"}
-                >
-                  <Link to="/analytics">
-                    <BarChart3 />
-                    <span>
-                      {t("layout.nav.analytics", { defaultValue: "Analytics" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/insights"}
-                >
-                  <Link to="/insights">
-                    <Lightbulb />
-                    <span>
-                      {t("layout.nav.insights", { defaultValue: "Insights" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/transactions"}
-                >
-                  <Link to="/transactions">
-                    <Receipt />
-                    <span>
-                      {t("layout.nav.transactions", {
-                        defaultValue: "Transactions",
-                      })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              {t("layout.groups.management", { defaultValue: "Management" })}
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/accounts"}
-                >
-                  <Link to="/accounts">
-                    <CreditCard />
-                    <span>
-                      {t("layout.nav.accounts", { defaultValue: "Accounts" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/categories"}
-                >
-                  <Link to="/categories">
-                    <FolderTree />
-                    <span>
-                      {t("layout.nav.categories", {
-                        defaultValue: "Categories",
-                      })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/vendors"}
-                >
-                  <Link to="/vendors">
-                    <Store />
-                    <span>
-                      {t("layout.nav.vendors", { defaultValue: "Vendors" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/currencies"}
-                >
-                  <Link to="/currencies">
-                    <Coins />
-                    <span>
-                      {t("layout.nav.currencies", {
-                        defaultValue: "Currencies",
-                      })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={
-                    location.pathname === "/ai-providers" ||
-                    location.pathname === "/connect-agent"
-                  }
-                >
-                  <Link to="/ai-providers">
-                    <Brain />
-                    <span>
-                      {t("layout.nav.aiAndAgents", {
-                        defaultValue: "AI & agents",
-                      })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              {t("layout.groups.configure", { defaultValue: "Configure" })}
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/scheduled"}
-                >
-                  <Link to="/scheduled">
-                    <Clock />
-                    <span>
-                      {t("layout.nav.scheduled", { defaultValue: "Scheduled" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <Collapsible asChild>
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                      isActive={location.pathname.startsWith("/reports")}
-                    >
-                      <Newspaper />
-                      {t("layout.nav.reports", { defaultValue: "Reports" })}
-                      <ChevronDown className="ml-auto size-4 transition-transform group-data-[state=open]:rotate-180" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={location.pathname === "/reports/essential"}
-                        >
-                          <Link to="/reports/essential">
-                            <span>
-                              {t("layout.nav.reportsEssential", {
-                                defaultValue: "Essential",
-                              })}
-                            </span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={location.pathname === "/reports/advanced"}
-                        >
-                          <Link to="/reports/advanced">
-                            <span>
-                              {t("layout.nav.reportsAdvanced", {
-                                defaultValue: "Advanced",
-                              })}
-                            </span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/budgets"}
-                >
-                  <Link to="/budgets">
-                    <PiggyBank />
-                    <span>
-                      {t("layout.nav.budgets", { defaultValue: "Budgets" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              {t("layout.groups.setup", { defaultValue: "Setup" })}
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/settings"}
-                >
-                  <Link to="/settings">
-                    <BookOpen />
-                    <span>
-                      {t("layout.nav.settings", { defaultValue: "Settings" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/language"}
-                >
-                  <Link to="/language">
-                    <LanguageIcon className="size-4" />
-                    <span>
-                      {t("layout.nav.languages", { defaultValue: "Languages" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/data-management"}
-                >
-                  <Link to="/data-management">
-                    <DatabaseZap />
-                    <span>
-                      {t("layout.nav.data", { defaultValue: "Data" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/backup"}
-                >
-                  <Link to="/backup">
-                    <Shield />
-                    <span>
-                      {t("layout.nav.backup", { defaultValue: "Backup" })}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              {!Capacitor.isNativePlatform() && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === "/donate"}
-                  >
-                    <Link to="/donate">
-                      <Heart />
-                      <span>
-                        {t("layout.nav.donate", { defaultValue: "Donate" })}
-                      </span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-            </SidebarMenu>
-          </SidebarGroup>
+          <AppSidebarNav
+            env={{
+              isNative: Capacitor.isNativePlatform(),
+              hasDesktopBridge: hasAgentBridge(),
+            }}
+          />
         </SidebarContent>
         <SidebarFooter>
           <SidebarLedgerFooter
@@ -908,11 +548,13 @@ const Layout = () => {
       >
         <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
           <div className="flex min-w-0 items-center gap-3">
-            <SidebarTrigger className="h-10 w-10 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
+            <SidebarTrigger className="aspect-square h-10 w-10 shrink-0 rounded-full border border-gray-200 bg-white/80 shadow-sm backdrop-blur hover:bg-white dark:border-input dark:bg-gray-800/80 dark:hover:bg-gray-700 md:hidden">
+              {/* A tightly cropped mark, shown at its natural size: scaling a
+                  padded image with a CSS transform made it look soft. */}
               <img
-                src={resolvedTheme === "dark" ? logoDark : logoLight}
+                src={resolvedTheme === "dark" ? logoMarkDark : logoMarkLight}
                 alt=""
-                className="h-9 w-9 scale-[1.35] object-contain"
+                className="aspect-square h-7 w-7 shrink-0 object-contain"
               />
             </SidebarTrigger>
             <div className="min-w-0 md:hidden">
@@ -958,18 +600,19 @@ const Layout = () => {
             )}
             <LanguageSwitcher showLanguageSettings />
             <SettingsHeaderButton t={t} />
-            {hasTourForCurrentRoute && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
-                onClick={startTour}
-                aria-label={t("helpTour.start")}
-              >
-                <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
-                <span className="sr-only">{t("helpTour.start")}</span>
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
+              onClick={() => openHelp()}
+              aria-label={t("helpDrawer.open", { defaultValue: "Help" })}
+              aria-haspopup="dialog"
+            >
+              <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+              <span className="sr-only">
+                {t("helpDrawer.open", { defaultValue: "Help" })}
+              </span>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -1008,16 +651,25 @@ const Layout = () => {
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2 md:hidden">
+          {/* Round icon buttons must not be squeezed into ovals at large text sizes. */}
+          <div className="flex shrink-0 items-center gap-2 md:hidden">
             <LanguageSwitcher showLanguageSettings />
-            <FeedbackLauncher triggerClassName="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input" />
+            {/* Help is one tap away; Give feedback lives inside the drawer. */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 shrink-0 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
+              onClick={() => openHelp()}
+              aria-label={t("helpDrawer.open", { defaultValue: "Help" })}
+              aria-haspopup="dialog"
+            >
+              <HelpCircle className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+            </Button>
             <MobileHeaderActionsMenu
               displayName={displayName}
-              hasTourForCurrentRoute={hasTourForCurrentRoute}
               logout={logout}
               resolvedTheme={resolvedTheme}
               setTheme={setTheme}
-              startTour={startTour}
               t={t}
               isHomepageMobilePreview={isHomepageMobilePreview}
             />

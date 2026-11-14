@@ -75,7 +75,7 @@ export function AnalyticsChartView({
   return (
     <div className="space-y-2">
       {/* Summary Header */}
-      <div className="tour-analytics-summary">
+      <div>
         <SpendingSummaryHeader
           totalSpent={analytics.totalSpent}
           previousTotalSpent={analytics.previousTotalSpent}
@@ -103,7 +103,7 @@ export function AnalyticsChartView({
             </button>
 
             {/* Chart type toggles */}
-            <div className="tour-analytics-toggles flex items-center gap-1 bg-muted/60 rounded-full p-1">
+            <div className="flex items-center gap-1 bg-muted/60 rounded-full p-1">
               <button
                 onClick={() => setChartMode("line")}
                 className={`p-2 rounded-full transition-all duration-200 ${
@@ -237,7 +237,7 @@ export function AnalyticsChartView({
           </div>
 
           {/* Period Selector */}
-          <div className="tour-analytics-period pt-4">
+          <div className="pt-4">
             <PeriodSelector
               period={analytics.period}
               onPeriodChange={analytics.setPeriod}
@@ -248,7 +248,7 @@ export function AnalyticsChartView({
       </ThemedCard>
 
       {/* Entity Breakdown Table */}
-      <div className="tour-analytics-breakdown">
+      <div>
         <ThemedCard>
           <ThemedCardContent className="p-4 sm:p-6">
             <EntityBreakdownTable

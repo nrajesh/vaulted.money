@@ -13,6 +13,9 @@ import { csvImportScreen } from "./csvImportScreen";
 import { budgetDialogs } from "./budgetDialogs";
 import { aiProviderScreens } from "./aiProviderScreens";
 import { connectAgent } from "./connectAgent";
+import { navigation } from "./navigation";
+import { plainLanguage } from "./plainLanguage";
+import { helpDrawer } from "./helpDrawer";
 import {
   aiHub,
   aiHubBars,
@@ -45,6 +48,9 @@ export const areaTranslations: AreaTranslations[] = [
   budgetDialogs,
   aiProviderScreens,
   connectAgent,
+  navigation,
+  plainLanguage,
+  helpDrawer,
   aiHub,
   aiHubFlow,
   aiHubReady,

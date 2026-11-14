@@ -29,7 +29,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "AI inside the app",
         subtitle:
-          "Powers Auto-categorize. Add a provider with your own key, or a model running on your computer, and pick the one to use. Only vendor names are sent, never amounts.",
+          "Powers Auto-categorize. Add a provider with your own key, or a model running on your computer, and pick the one to use. Only payee names are sent, never amounts.",
         inUse: "In use",
         useThis: "Use this one",
         keyColumn: "API key",
@@ -99,7 +99,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "IA dentro de la app",
         subtitle:
-          "Se usa para la categorización automática. Añade un proveedor con tu propia clave, o un modelo que se ejecute en tu ordenador, y elige cuál usar. Solo se envían nombres de comercios, nunca importes.",
+          "Se usa para la categorización automática. Añade un proveedor con tu propia clave, o un modelo que se ejecute en tu ordenador, y elige cuál usar. Solo se envían nombres de beneficiarios, nunca importes.",
         inUse: "En uso",
         useThis: "Usar este",
         keyColumn: "Clave de API",
@@ -168,7 +168,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "应用内的 AI",
         subtitle:
-          "用于自动分类。添加使用您自己密钥的提供商，或在您电脑上运行的模型，并选择要使用的那个。只发送商户名称，绝不发送金额。",
+          "用于自动分类。添加使用您自己密钥的提供商，或在您电脑上运行的模型，并选择要使用的那个。只发送收款方名称，绝不发送金额。",
         inUse: "使用中",
         useThis: "使用这个",
         keyColumn: "API 密钥",
@@ -236,7 +236,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "AI in de app",
         subtitle:
-          "Wordt gebruikt voor automatisch categoriseren. Voeg een provider toe met je eigen sleutel, of een model dat op je computer draait, en kies welke je gebruikt. Alleen namen van leveranciers worden verstuurd, nooit bedragen.",
+          "Wordt gebruikt voor automatisch categoriseren. Voeg een provider toe met je eigen sleutel, of een model dat op je computer draait, en kies welke je gebruikt. Alleen namen van begunstigden worden verstuurd, nooit bedragen.",
         inUse: "In gebruik",
         useThis: "Deze gebruiken",
         keyColumn: "API-sleutel",
@@ -308,7 +308,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "செயலிக்குள் AI",
         subtitle:
-          "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது. உங்கள் சொந்த விசையுடன் ஒரு வழங்குநரையோ, உங்கள் கணினியில் இயங்கும் மாதிரியையோ சேர்த்து, பயன்படுத்த வேண்டியதைத் தேர்வு செய்யவும். விற்பனையாளர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
+          "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது. உங்கள் சொந்த விசையுடன் ஒரு வழங்குநரையோ, உங்கள் கணினியில் இயங்கும் மாதிரியையோ சேர்த்து, பயன்படுத்த வேண்டியதைத் தேர்வு செய்யவும். பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
         inUse: "பயன்பாட்டில்",
         useThis: "இதைப் பயன்படுத்து",
         keyColumn: "API விசை",
@@ -715,7 +715,7 @@ export const aiHubReady: AreaTranslations = {
       privacy: {
         cloudTitle: "Claude and Codex",
         cloudBody:
-          "What the agent reads (transactions, vendors, balances) is sent to its maker: Anthropic or OpenAI.",
+          "What the agent reads (transactions, payees, balances) is sent to its maker: Anthropic or OpenAI.",
         localTitle: "A private model",
         localBody: "Everything stays on this computer.",
         offTitle: "Switched off",
@@ -747,7 +747,7 @@ export const aiHubReady: AreaTranslations = {
       privacy: {
         cloudTitle: "Claude y Codex",
         cloudBody:
-          "Lo que lee el agente (transacciones, comercios, saldos) se envía a su creador: Anthropic u OpenAI.",
+          "Lo que lee el agente (transacciones, beneficiarios, saldos) se envía a su creador: Anthropic u OpenAI.",
         localTitle: "Un modelo privado",
         localBody: "Todo se queda en este ordenador.",
         offTitle: "Desactivado",
@@ -775,7 +775,7 @@ export const aiHubReady: AreaTranslations = {
       privacy: {
         cloudTitle: "Claude 和 Codex",
         cloudBody:
-          "智能体读取的内容（交易、商户、余额）会发送给其开发方：Anthropic 或 OpenAI。",
+          "智能体读取的内容（交易、收款方、余额）会发送给其开发方：Anthropic 或 OpenAI。",
         localTitle: "私有模型",
         localBody: "所有内容都留在此电脑上。",
         offTitle: "已关闭",
@@ -806,7 +806,7 @@ export const aiHubReady: AreaTranslations = {
       privacy: {
         cloudTitle: "Claude en Codex",
         cloudBody:
-          "Wat de agent leest (transacties, leveranciers, saldi) wordt naar de maker gestuurd: Anthropic of OpenAI.",
+          "Wat de agent leest (transacties, begunstigden, saldi) wordt naar de maker gestuurd: Anthropic of OpenAI.",
         localTitle: "Een privémodel",
         localBody: "Alles blijft op deze computer.",
         offTitle: "Uitgeschakeld",
@@ -838,7 +838,7 @@ export const aiHubReady: AreaTranslations = {
       privacy: {
         cloudTitle: "Claude மற்றும் Codex",
         cloudBody:
-          "முகவர் படிப்பவை (பரிவர்த்தனைகள், விற்பனையாளர்கள், இருப்புகள்) அதை உருவாக்கிய நிறுவனத்திற்கு அனுப்பப்படும்: Anthropic அல்லது OpenAI.",
+          "முகவர் படிப்பவை (பரிவர்த்தனைகள், பெறுநர்கள், இருப்புகள்) அதை உருவாக்கிய நிறுவனத்திற்கு அனுப்பப்படும்: Anthropic அல்லது OpenAI.",
         localTitle: "தனிப்பட்ட மாதிரி",
         localBody: "அனைத்தும் இந்தக் கணினியிலேயே இருக்கும்.",
         offTitle: "அணைக்கப்பட்டுள்ளது",
@@ -927,7 +927,7 @@ export const aiHubPoints: AreaTranslations = {
     aiHub: {
       providers: {
         point1: "Powers Auto-categorize.",
-        point2: "Only vendor names are sent, never amounts.",
+        point2: "Only payee names are sent, never amounts.",
       },
       bars: {
         agentsNote2:
@@ -957,7 +957,7 @@ export const aiHubPoints: AreaTranslations = {
     aiHub: {
       providers: {
         point1: "Se usa para la categorización automática.",
-        point2: "Solo se envían nombres de comercios, nunca importes.",
+        point2: "Solo se envían nombres de beneficiarios, nunca importes.",
       },
       bars: {
         agentsNote2:
@@ -988,7 +988,7 @@ export const aiHubPoints: AreaTranslations = {
     aiHub: {
       providers: {
         point1: "用于自动分类。",
-        point2: "只发送商户名称，绝不发送金额。",
+        point2: "只发送收款方名称，绝不发送金额。",
       },
       bars: {
         agentsNote2:
@@ -1018,7 +1018,7 @@ export const aiHubPoints: AreaTranslations = {
       providers: {
         point1: "Wordt gebruikt voor automatisch categoriseren.",
         point2:
-          "Alleen namen van leveranciers worden verstuurd, nooit bedragen.",
+          "Alleen namen van begunstigden worden verstuurd, nooit bedragen.",
       },
       bars: {
         agentsNote2:
@@ -1050,7 +1050,7 @@ export const aiHubPoints: AreaTranslations = {
       providers: {
         point1: "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது.",
         point2:
-          "விற்பனையாளர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
+          "பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
       },
       bars: {
         agentsNote2:
@@ -1087,7 +1087,7 @@ export const aiHubFacts: AreaTranslations = {
     aiHub: {
       facts: {
         autoCategorize: "Powers Auto-categorize",
-        vendorNamesOnly: "Sends vendor names only, never amounts",
+        vendorNamesOnly: "Sends payee names only, never amounts",
         independent: "Works without agent access",
         readsUpdates: "Reads and updates your data",
         sentToProvider: "What it reads is sent to its AI provider",
@@ -1109,7 +1109,7 @@ export const aiHubFacts: AreaTranslations = {
     aiHub: {
       facts: {
         autoCategorize: "Se usa para la categorización automática",
-        vendorNamesOnly: "Solo envía nombres de comercios, nunca importes",
+        vendorNamesOnly: "Solo envía nombres de beneficiarios, nunca importes",
         independent: "Funciona sin acceso de agentes",
         readsUpdates: "Lee y actualiza tus datos",
         sentToProvider: "Lo que lee se envía a su proveedor de IA",
@@ -1132,7 +1132,7 @@ export const aiHubFacts: AreaTranslations = {
     aiHub: {
       facts: {
         autoCategorize: "用于自动分类",
-        vendorNamesOnly: "只发送商户名称，绝不发送金额",
+        vendorNamesOnly: "只发送收款方名称，绝不发送金额",
         independent: "无需智能体访问即可使用",
         readsUpdates: "读取并更新您的数据",
         sentToProvider: "读取的内容会发送给其 AI 提供商",
@@ -1152,7 +1152,7 @@ export const aiHubFacts: AreaTranslations = {
     aiHub: {
       facts: {
         autoCategorize: "Voor automatisch categoriseren",
-        vendorNamesOnly: "Stuurt alleen namen van leveranciers, nooit bedragen",
+        vendorNamesOnly: "Stuurt alleen namen van begunstigden, nooit bedragen",
         independent: "Werkt zonder toegang voor agents",
         readsUpdates: "Leest en wijzigt je gegevens",
         sentToProvider: "Wat hij leest, gaat naar zijn AI-provider",
@@ -1175,7 +1175,7 @@ export const aiHubFacts: AreaTranslations = {
       facts: {
         autoCategorize: "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது",
         vendorNamesOnly:
-          "விற்பனையாளர் பெயர்களை மட்டுமே அனுப்பும், தொகைகளை ஒருபோதும் இல்லை",
+          "பெறுநர் பெயர்களை மட்டுமே அனுப்பும், தொகைகளை ஒருபோதும் இல்லை",
         independent: "முகவர் அணுகல் இல்லாமலே வேலை செய்யும்",
         readsUpdates: "உங்கள் தரவைப் படித்துப் புதுப்பிக்கும்",
         sentToProvider: "அது படிப்பவை அதன் AI வழங்குநருக்கு அனுப்பப்படும்",

@@ -14,7 +14,7 @@ interface SiteFooterProps {
 }
 
 const footerLinkClassName =
-  "font-medium text-sky-700 transition-colors hover:text-sky-800 dark:text-sky-300 dark:hover:text-sky-200";
+  "app-text-link font-medium text-sky-700 transition-colors hover:text-sky-800 dark:text-sky-300 dark:hover:text-sky-200";
 
 const SiteFooter = ({ extraLinks = [] }: SiteFooterProps) => {
   const { t } = useTranslation();
