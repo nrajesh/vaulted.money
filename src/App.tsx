@@ -24,7 +24,11 @@ const queryClient = new QueryClient();
 
 // Lazy load page components
 const Index = lazy(() => import("@/pages/Index"));
-const HomePage = lazy(() => import("@/pages/HomePage"));
+// The marketing homepage (and its demo videos) only exists on the website.
+// The iOS, Android and desktop apps are built with `--mode app`, where this
+// is compiled out so the videos never reach the app bundles.
+const IS_APP_BUILD = import.meta.env.MODE === "app";
+const HomePage = IS_APP_BUILD ? null : lazy(() => import("@/pages/HomePage"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/PrivacyPolicyPage"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
 const CalendarView = lazy(() => import("@/pages/CalendarView"));
@@ -90,7 +94,7 @@ function App() {
                             <Route
                               path="/"
                               element={
-                                usesAppShellRouting ? (
+                                usesAppShellRouting || !HomePage ? (
                                   <Navigate to="/ledgers" replace />
                                 ) : (
                                   <HomePage />

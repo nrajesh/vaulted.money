@@ -43,6 +43,9 @@ Version checked: 1.7.2 (iOS `MARKETING_VERSION` 1.7.2, Android `versionCode` 107
    - The phone and web AI setup says that models on your own computer or home network work in the Mac app only.
    - It refuses `localhost` and home-network addresses (192.168.x, 10.x, 172.16–31.x, `*.local`) with that message.
 
+- **App size:** the store and desktop builds use `pnpm build:app`, which leaves out the website homepage, its demo videos and website-only files (34 MB down to about 5 MB of web content).
+- **Prompts:** none on iOS or Android. Android declares only `INTERNET`, which installs without asking. On a Mac, macOS asks for Local Network access only if someone points the AI assistant at another computer on their network; `localhost` never asks.
+
 ### Before submitting
 
 1. **Merge to `main`.** The help drawer's "Read more" links open `documentation/USER_GUIDE.md` on `main`, which only has the updated guide after the merge.

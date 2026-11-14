@@ -9,6 +9,9 @@ import {
 } from "@/components/ThemedCard";
 import { Badge } from "@/components/ui/badge";
 import { storeChannels } from "@/data/storeChannels";
+// Bundled by Vite: an absolute "/assets/..." path breaks in the desktop app.
+import qrcodePaypal from "@/assets/qrcode-paypal.jpg";
+import qrcodeRevolut from "@/assets/qrcode-revolut.jpg";
 
 export default function DonationPage() {
   return (
@@ -115,7 +118,7 @@ export default function DonationPage() {
                   <div className="relative group flex h-48 w-48 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 shadow-sm">
                     <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <img
-                      src="/assets/qrcode_revolut.jpg"
+                      src={qrcodeRevolut}
                       alt="Revolut QR Code"
                       className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
                     />
@@ -136,7 +139,7 @@ export default function DonationPage() {
                   <div className="relative group flex h-48 w-48 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 shadow-sm">
                     <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <img
-                      src="/assets/qrcode_paypal.jpg"
+                      src={qrcodePaypal}
                       alt="PayPal QR Code"
                       className="h-40 w-40 object-contain [image-rendering:pixelated] transition-transform duration-500 group-hover:scale-105"
                     />
