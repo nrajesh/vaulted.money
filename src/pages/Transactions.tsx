@@ -5,6 +5,18 @@ import { requestAiConsent } from "@/utils/aiConsent";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import TransactionTable from "@/components/transactions/TransactionTable";
+import { TransactionDetailPane } from "@/components/transactions/TransactionDetailPane";
+import {
+  SPLIT_MIN_WIDTH,
+  pickTransactionLayout,
+  readLayoutPreference,
+  storeLayoutPreference,
+  type TransactionLayoutPreference,
+} from "@/components/transactions/transactionLayout";
+import { useElementWidth } from "@/hooks/useElementWidth";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { duplicateTransactionPayload } from "@/utils/duplicateTransaction";
+import { cn } from "@/lib/utils";
 import AddEditTransactionDialog from "@/components/dialogs/AddEditTransactionDialog";
 import CSVMappingDialog from "@/components/transactions/CSVMappingDialog";
 import { useTransactions } from "@/contexts/TransactionsContext";
@@ -692,6 +704,53 @@ const Transactions = () => {
     [linkTransactions, toast, t],
   );
 
+  // Two-panel layout: on screens with room for two phone-width columns
+  // (an unfolded iPhone Duo, a tablet, a narrow window) the card list sits
+  // beside a details panel for the selected transaction.
+  const { selectedCurrency } = useCurrency();
+  const [tableShellRef, tableShellWidth] = useElementWidth<HTMLDivElement>();
+  const [layoutPreference, setLayoutPreference] =
+    useState<TransactionLayoutPreference>(readLayoutPreference);
+  const layout = pickTransactionLayout(tableShellWidth, layoutPreference);
+  const [detailId, setDetailId] = useState<string | null>(null);
+
+  // The selected transaction, or the newest real one so the panel is never
+  // empty when there is something to show. Cleared if filtered away.
+  const detailTransaction = React.useMemo(() => {
+    if (layout !== "split") return null;
+    const chosen = detailId
+      ? filteredTransactions.find((item) => item.id === detailId)
+      : undefined;
+    if (chosen) return chosen;
+    return (
+      filteredTransactions
+        .filter((item) => !("is_projected" in item && item.is_projected))
+        .reduce<(typeof filteredTransactions)[number] | null>(
+          (newest, item) =>
+            !newest || item.date > newest.date ? item : newest,
+          null,
+        ) ?? null
+    );
+  }, [layout, detailId, filteredTransactions]);
+
+  const currencyFor = React.useCallback(
+    (transaction: { account: string; currency?: string | null }) =>
+      accountCurrencyMap?.get(transaction.account) ||
+      transaction.currency ||
+      selectedCurrency,
+    [accountCurrencyMap, selectedCurrency],
+  );
+
+  const chooseLayout = React.useCallback((value: "split" | "table") => {
+    setLayoutPreference(value);
+    storeLayoutPreference(value);
+  }, []);
+
+  const handleCardClick = React.useCallback(
+    (transaction: Transaction) => setDetailId(transaction.id),
+    [],
+  );
+
   const handleRowDoubleClick = React.useCallback(
     (transaction: Transaction) => {
       setEditingTransaction(transaction);
@@ -725,20 +784,91 @@ const Transactions = () => {
         </div>
       </div>
 
-      <div className="app-table-shell">
-        <TransactionTable
-          transactions={filteredTransactions}
-          allData={combinedTransactions}
-          loading={isLoadingTransactions}
-          onRefresh={invalidateAllData}
-          onDeleteTransactions={handleDeleteTransactionsWrapper}
-          onAddTransaction={addTransaction}
-          onScheduleTransactions={handleScheduleTransactions}
-          onUnlinkTransaction={handleUnlinkTransaction}
-          onLinkTransactions={handleLinkTransactions}
-          onRowDoubleClick={handleRowDoubleClick}
-          accountCurrencyMap={accountCurrencyMap}
-        />
+      <div
+        ref={tableShellRef}
+        className={cn(
+          "app-table-shell",
+          // The shell clips its corners; in the split it must not, or the
+          // details panel cannot stay in view while the list scrolls.
+          layout === "split" && "overflow-visible",
+        )}
+      >
+        {tableShellWidth >= SPLIT_MIN_WIDTH && (
+          <div
+            role="group"
+            aria-label={t("transactionsTable.layout.label", {
+              defaultValue: "Layout",
+            })}
+            className="mb-4 flex justify-end gap-1"
+          >
+            {(["split", "table"] as const).map((option) => (
+              <Button
+                key={option}
+                size="sm"
+                variant={layout === option ? "secondary" : "ghost"}
+                aria-pressed={layout === option}
+                onClick={() => chooseLayout(option)}
+              >
+                {option === "split"
+                  ? t("transactionsTable.layout.split", {
+                      defaultValue: "List and details",
+                    })
+                  : t("transactionsTable.layout.table", {
+                      defaultValue: "Table",
+                    })}
+              </Button>
+            ))}
+          </div>
+        )}
+        <div
+          className={cn(
+            layout === "split" && "grid grid-cols-2 items-start gap-4",
+          )}
+        >
+          <TransactionTable
+            transactions={filteredTransactions}
+            allData={combinedTransactions}
+            loading={isLoadingTransactions}
+            onRefresh={invalidateAllData}
+            onDeleteTransactions={handleDeleteTransactionsWrapper}
+            onAddTransaction={addTransaction}
+            onScheduleTransactions={handleScheduleTransactions}
+            onUnlinkTransaction={handleUnlinkTransaction}
+            onLinkTransactions={handleLinkTransactions}
+            onRowDoubleClick={handleRowDoubleClick}
+            accountCurrencyMap={accountCurrencyMap}
+            view={layout === "table" ? "responsive" : "cards"}
+            activeTransactionId={
+              layout === "split" ? (detailTransaction?.id ?? null) : null
+            }
+            onCardClick={layout === "split" ? handleCardClick : undefined}
+          />
+          {layout === "split" && (
+            <TransactionDetailPane
+              className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto"
+              transaction={detailTransaction}
+              allTransactions={combinedTransactions}
+              currencyFor={currencyFor}
+              onEdit={(transaction) => {
+                setEditingTransaction(transaction);
+                setIsDialogOpen(true);
+              }}
+              onDuplicate={(transaction) =>
+                addTransaction(duplicateTransactionPayload(transaction))
+              }
+              onDelete={(transaction) => {
+                setDetailId(null);
+                handleDeleteTransactionsWrapper([
+                  {
+                    id: transaction.id,
+                    transfer_id: transaction.transfer_id || undefined,
+                  },
+                ]);
+              }}
+              onSelect={setDetailId}
+            />
+          )}
+        </div>
       </div>
 
       <AddEditTransactionDialog

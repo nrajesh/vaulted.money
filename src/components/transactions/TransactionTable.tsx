@@ -1,5 +1,6 @@
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { useTranslation } from "react-i18next";
+import { duplicateTransactionPayload } from "@/utils/duplicateTransaction";
 import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -65,6 +66,16 @@ interface TransactionTableProps {
   onUnlinkTransaction?: (transferId: string) => void;
   onLinkTransactions?: (id1: string, id2: string) => void;
   accountCurrencyMap?: Map<string, string>;
+  /**
+   * "responsive" (default): cards on phones, the full table from md up.
+   * "cards": always the card list, used as the left panel of the two-panel
+   * layout (see transactionLayout.ts).
+   */
+  view?: "responsive" | "cards";
+  /** Highlights this card as the one shown in the details panel. */
+  activeTransactionId?: string | null;
+  /** Tapping a card calls this instead of `onRowDoubleClick` when given. */
+  onCardClick?: (transaction: Transaction) => void;
 }
 
 // Memoized Row Component
@@ -300,19 +311,9 @@ const TransactionRow = React.memo(
           </ContextMenuItem>
           <ContextMenuItem
             inset
-            onClick={() => {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { id, created_at, ...rest } = transaction;
-              onAddTransaction({
-                ...rest,
-                remarks: transaction.remarks + " (Copy)",
-                recurrence_id: undefined,
-                is_scheduled_origin: undefined,
-                is_projected: undefined,
-                recurrence_frequency: undefined,
-                recurrence_end_date: undefined,
-              });
-            }}
+            onClick={() =>
+              onAddTransaction(duplicateTransactionPayload(transaction))
+            }
           >
             <Copy className="h-4 w-4 mr-2" />{" "}
             {t("transactionsTable.duplicate", { defaultValue: "Duplicate" })}
@@ -338,6 +339,8 @@ const TransactionMobileCard = React.memo(
   ({
     transaction,
     isSelected,
+    isActive,
+    onCardClick,
     onToggleSelect,
     onRowDoubleClick,
     onUnlinkTransaction,
@@ -353,6 +356,8 @@ const TransactionMobileCard = React.memo(
   }: {
     transaction: Transaction;
     isSelected: boolean;
+    isActive?: boolean;
+    onCardClick?: (transaction: Transaction) => void;
     onToggleSelect: (id: string) => void;
     onRowDoubleClick?: (
       transaction: Transaction,
@@ -395,10 +400,15 @@ const TransactionMobileCard = React.memo(
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
-            className={`app-mobile-row ${isSelected ? "app-row-selected" : ""} ${
+            className={`app-mobile-row ${isSelected || isActive ? "app-row-selected" : ""} ${
               isFuture ? "italic bg-slate-50/50 dark:bg-slate-900/50" : ""
-            }`}
+            } ${onCardClick ? "cursor-pointer" : ""}`}
+            aria-current={isActive ? "true" : undefined}
             onClick={(e) => {
+              if (onCardClick) {
+                onCardClick(transaction);
+                return;
+              }
               if (onRowDoubleClick && !transaction.is_projected) {
                 onRowDoubleClick(transaction, e);
               }
@@ -569,18 +579,9 @@ const TransactionMobileCard = React.memo(
           </ContextMenuItem>
           <ContextMenuItem
             inset
-            onClick={() => {
-              const { id: _id, created_at: _created_at, ...rest } = transaction;
-              onAddTransaction({
-                ...rest,
-                remarks: transaction.remarks + " (Copy)",
-                recurrence_id: undefined,
-                is_scheduled_origin: undefined,
-                is_projected: undefined,
-                recurrence_frequency: undefined,
-                recurrence_end_date: undefined,
-              });
-            }}
+            onClick={() =>
+              onAddTransaction(duplicateTransactionPayload(transaction))
+            }
           >
             <Copy className="h-4 w-4 mr-2" />{" "}
             {t("transactionsTable.duplicate", { defaultValue: "Duplicate" })}
@@ -611,7 +612,11 @@ const TransactionTable = ({
   onUnlinkTransaction,
   onLinkTransactions,
   accountCurrencyMap,
+  view = "responsive",
+  activeTransactionId,
+  onCardClick,
 }: TransactionTableProps) => {
+  const cardsOnly = view === "cards";
   const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -773,7 +778,7 @@ const TransactionTable = ({
           numSelected > 0
             ? "app-table-toolbar-active"
             : "app-table-toolbar-idle"
-        } ${numSelected === 0 ? "hidden md:block" : ""}`}
+        } ${numSelected === 0 ? (cardsOnly ? "hidden" : "hidden md:block") : ""}`}
       >
         <div className="flex min-h-12 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2">
@@ -904,7 +909,7 @@ const TransactionTable = ({
       </div>
 
       {/* Mobile View */}
-      <div className="block md:hidden space-y-3">
+      <div className={cardsOnly ? "space-y-3" : "block md:hidden space-y-3"}>
         {sortedData.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground border rounded-md">
             <EmptyState kind="transactions" />
@@ -915,6 +920,8 @@ const TransactionTable = ({
               key={transaction.id}
               transaction={transaction}
               isSelected={selectedIds.has(transaction.id)}
+              isActive={activeTransactionId === transaction.id}
+              onCardClick={onCardClick}
               onToggleSelect={toggleSelect}
               onRowDoubleClick={onRowDoubleClick}
               onUnlinkTransaction={onUnlinkTransaction}
@@ -938,7 +945,9 @@ const TransactionTable = ({
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block rounded-md border">
+      <div
+        className={cardsOnly ? "hidden" : "hidden md:block rounded-md border"}
+      >
         <Table>
           <TableHeader>
             <TableRow>
