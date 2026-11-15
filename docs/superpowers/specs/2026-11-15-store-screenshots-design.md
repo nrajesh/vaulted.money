@@ -140,3 +140,63 @@ PNG, no transparency. Google Play images avoid the Mac wording on the AI shot
 Windows and Linux desktop builds, unsigned: tray icon on close for
 non-Mac, Windows installer and Linux AppImage/deb in the release workflow,
 "desktop app" wording. To be planned on its own.
+
+---
+
+# Part 2: videos
+
+Approved with the screenshots on 15 Nov 2026: add an App Store preview. The
+owner also asked for a keynote-style showreel to replace
+`marketing/vaulted-money-showreel-hq.mp4`, which predates today's UX changes,
+mentions Windows/Linux and feels too fast. Reference for feel:
+`jhg/marketing/jhg-launch-video.mp4` (its README describes the method).
+
+## A. App Store preview (one, iPhone)
+
+- **Rules that shape it:** Apple allows only screen recordings of the app
+  itself: no device frames, no hands, no other platforms; 15–30 s;
+  886×1920 for iPhone 6.9". Captions and music are allowed.
+- **Made by:** recording the real app in the iOS simulator
+  (`simctl io recordVideo`), driven through the same story as the
+  screenshots, then captions (same strings files) and the soundtrack laid
+  on with ffmpeg.
+- **Story, ~25 s:** privacy (Charts, donut) → plain-English search typed
+  and understood → Accounts → AI switch flipped on → budget warnings →
+  end card with the name.
+- An iPad preview is optional and can follow the same script later.
+
+## B. Showreel (website, Polar, YouTube, Google Play promo)
+
+- **Method:** like the jhg video: an HTML stage animated with a GSAP
+  timeline, rendered frame by frame in headless Chromium with motion blur,
+  and a soundtrack synthesised from code (no stock music, nothing to
+  license). Lives in `marketing/showreel/`.
+- **Finish:** true 4K (3840×2160, 60 fps), plus a 1080p cut.
+- **Pace:** slower than the old reel. About 70–80 s, each feature held
+  long enough to read the headline twice (roughly 6–8 s a scene), with
+  keynote-style moves between scenes: devices gliding in and turning,
+  zooming into the one element that matters, the light/dark theme
+  sweeping across, the iPhone becoming the iPad becoming the Mac.
+- **Screens:** real captures from the screenshot tool (iPhone, iPad,
+  Android phone, Mac window), so the reel always matches the current app.
+- **Story:** follows the screenshots: logo → "Your money never leaves your
+  device" (unless you switch AI on) → plain-English search → your labels,
+  your rules → AI when you want it (with the two callouts) → budgets that
+  warn you → big screens (two panels) → "Every device": iPhone, iPad,
+  Android, Mac → end card.
+- **Music:** calm, confident and modern rather than energetic: soft
+  synth pads and piano, a gentle pulse that lifts at the device reveal,
+  quiet UI sound effects synced to the picture, normalised to −14 LUFS.
+- **Two endings:** the store cut ends on the brand; the website cut can
+  add "Free & open source" (kept out of store listings, which may not
+  mention cheaper channels).
+- **Devices named:** iPhone, iPad, Android, Mac. Windows and Linux only
+  once those builds ship.
+
+## Where the files go
+
+- Generated output stays in each tool's `out/` (gitignored).
+- Following the existing exception for finished marketing videos, the
+  final showreel and App Store preview are committed to
+  `marketing/showreel/final/`, current cut only. The untracked
+  `marketing/vaulted-money-showreel-hq.mp4` is replaced by them.
