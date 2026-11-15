@@ -13,7 +13,7 @@ const LENGTHS = [
   ["labels", "Your rules", 8],
   ["ai", "Optional AI", 9],
   ["budgets", "Budgets", 8],
-  ["bigScreens", "Big screens", 9],
+  ["bigScreens", "Big screens", 11],
   ["devices", "Every device", 10],
   ["end", "Vaulted Money", 9],
 ];
@@ -25,7 +25,7 @@ export const CHAPTERS = LENGTHS.map(([id, label, seconds]) => {
   return chapter;
 });
 
-export const DURATION = at; // 76 s
+export const DURATION = at; // 78 s
 
 export const chapter = (id) => CHAPTERS.find((c) => c.id === id);
 
@@ -36,7 +36,7 @@ export const SCORE_CUES = [
   { t: chapter("search").start + 1.6, kind: "tick" },
   { t: chapter("labels").start + 3.5, kind: "whoosh" },
   { t: chapter("ai").start + 2.0, kind: "tick" },
-  { t: chapter("bigScreens").start + 3.0, kind: "whoosh" },
+  { t: chapter("bigScreens").start + 5.0, kind: "whoosh" },
   { t: chapter("devices").start, kind: "lift" },
   { t: chapter("end").start, kind: "lift" },
 ];

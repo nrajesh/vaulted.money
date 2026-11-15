@@ -52,11 +52,17 @@ const NOTES = {};
 
 /**
  * A device frame with a captured screen. kind: phone | tablet | duo | laptop.
- * The Duo gets no drawn status bar: its recording shows the real one, down
- * the right-hand edge.
+ * `recorded`: the screen shows a simulator recording (the Duo always, the
+ * big iPad), which carries the real status bar, so none is drawn.
  */
-function device(name, theme, kind = "phone", width = 380) {
-  const screen = `<div class="screen">${kind === "laptop" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : kind === "duo" ? "" : statusBar(theme, kind, width)}<img src="${src(name)}" alt="">${kind === "duo" ? '<div class="hinge"></div>' : ""}<div class="spot"></div></div>`;
+function device(
+  name,
+  theme,
+  kind = "phone",
+  width = 380,
+  { recorded = kind === "duo" } = {},
+) {
+  const screen = `<div class="screen">${kind === "laptop" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : recorded ? "" : statusBar(theme, kind, width)}<img src="${src(name)}" alt="">${kind === "duo" ? '<div class="hinge"></div>' : ""}<div class="spot"></div></div>`;
   const node =
     kind === "laptop"
       ? el(
@@ -229,9 +235,10 @@ const bigCap = caption({
   body: "List and details side by side, on iPad and iPhone Duo.",
   theme: "light",
 });
-const ipad = device("ipad-dark-6", "dark", "tablet", 560);
+const ipad = device("ipad-dark-6", "dark", "tablet", 560, { recorded: true });
+ipad.dataset.recording = "ipad";
 const duo = device("duoInner-dark-6", "dark", "duo", 860);
-duo.dataset.duo = "1";
+duo.dataset.recording = "duo";
 const ipadLabel = el('<div class="label on-light-label">iPad</div>');
 const duoLabel = el('<div class="label on-light-label">iPhone Duo</div>');
 stage.append(ipad, duo, bigCap, ipadLabel, duoLabel);
@@ -275,7 +282,7 @@ const row = [
     y: 460,
   },
 ];
-row[2].node.dataset.duo = "1";
+row[2].node.dataset.recording = "duo";
 const labels = row.map((r) => el(`<div class="label">${r.label}</div>`));
 stage.append(...row.map((r) => r.node), ...labels, devicesCap);
 
@@ -391,14 +398,16 @@ function render(seconds) {
     spotlight(budgetsPhone, t, start + 2.5, stop - 0.7);
   }
 
-  // Big screens: iPad, then the iPhone Duo (its recording plays on the
-  // screen once it is still: see duo/overlay.mjs, which mirrors these times).
+  // Big screens: iPad, then the iPhone Duo, each playing its simulator
+  // recording once still.
   {
     const { start, end: stop } = C.bigScreens;
     poseCaption(bigCap, t, start + 0.3, stop);
-    const handover = start + 3.0;
+    // The iPad's recording switches from the table to list and details, so
+    // it needs no spotlight; the Duo's opens rows (see duo/overlay.mjs,
+    // which mirrors these times as HANDOVER).
+    const handover = start + 5.0;
     poseDevice(ipad, t, start, handover + 0.7, { x: 1100, y: 140 });
-    spotlight(ipad, t, start + 1.6, handover);
     poseDevice(duo, t, handover, stop, { x: 960, y: 300, delay: 0.1 });
     const labelFor = (label, node, from, to) =>
       set(label, {
@@ -446,12 +455,18 @@ function render(seconds) {
 
 // ── Boot ────────────────────────────────────────────────────────────────────
 async function boot() {
-  // The Duo shows the recording's first frame (render.mjs extracts it), so
-  // the hand-over to the footage does not jump.
-  const first = await fetch("out/keynote/duo-first.png", { method: "HEAD" });
-  if (first.ok)
-    for (const node of document.querySelectorAll("[data-duo] img"))
-      node.src = "out/keynote/duo-first.png";
+  // A recorded screen shows its recording's first frame (render.mjs extracts
+  // it), so the hand-over to the footage does not jump.
+  for (const name of ["ipad", "duo"]) {
+    const first = await fetch(`out/keynote/${name}-first.png`, {
+      method: "HEAD",
+    });
+    if (first.ok)
+      for (const node of document.querySelectorAll(
+        `[data-recording="${name}"] img`,
+      ))
+        node.src = `out/keynote/${name}-first.png`;
+  }
   await Promise.all(
     images.map(async (img) => {
       const name = img.getAttribute("src").replace(/^.*\/|\.png$/g, "");

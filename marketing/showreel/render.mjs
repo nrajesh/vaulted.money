@@ -35,7 +35,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderScore, writeWav } from "./calmScore.mjs";
-import { DUO_SKIP } from "./duo/overlay.mjs";
+import { RECORDINGS } from "./duo/overlay.mjs";
 import { renderSoundtrack } from "./soundtrack.mjs";
 import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
@@ -444,22 +444,23 @@ function copyKeynoteScreens() {
     );
   const to = join(OUT_DIR, "keynote");
   mkdirSync(to, { recursive: true });
-  // With a Duo recording, its first frame stands in for the Duo screen.
-  const duo = join(ROOT, "../app-preview/out/duo.mp4");
-  const marks = join(ROOT, "../app-preview/out/duo.marks.json");
-  if (existsSync(duo) && existsSync(marks)) {
+  // With a simulator recording, its first frame stands in for that screen.
+  for (const [name, { skip }] of Object.entries(RECORDINGS)) {
+    const video = join(ROOT, `../app-preview/out/${name}.mp4`);
+    const marks = join(ROOT, `../app-preview/out/${name}.marks.json`);
+    if (!existsSync(video) || !existsSync(marks)) continue;
     const { start } = JSON.parse(readFileSync(marks, "utf8"));
     spawnSync(ffmpegPath, [
       "-v",
       "error",
       "-y",
       "-ss",
-      String(start + DUO_SKIP),
+      String(start + skip),
       "-i",
-      duo,
+      video,
       "-frames:v",
       "1",
-      join(to, "duo-first.png"),
+      join(to, `${name}-first.png`),
     ]);
   }
   for (const name of readdirSync(from))

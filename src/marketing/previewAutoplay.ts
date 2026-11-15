@@ -50,26 +50,48 @@ export const PREVIEW_STORY: PreviewStep[] = [
 ];
 
 /**
- * The iPhone Duo segment for the keynote showreel: the two-panel
- * Transactions view, three rows opened one after another. Recorded with the
- * Duo's inner screen turned sideways (marketing/app-preview/README.md).
+ * The iPad segment for the keynote showreel: Transactions opens as the table
+ * (the default at the iPad's width), then "List and details" brings in the
+ * details panel. Recorded on an iPad Pro 13-inch held upright.
+ */
+export const IPAD_STORY: PreviewStep[] = [
+  { do: "goto", path: "/transactions" },
+  { do: "wait", ms: 1500 },
+  { do: "click", role: "button", name: "Table" },
+  { do: "wait", ms: 1500 },
+  { do: "click", role: "button", name: "List and details" },
+  { do: "wait", ms: 3000 },
+];
+
+/**
+ * The iPhone Duo segment for the keynote showreel: something different from
+ * the iPad, so the list and details are already side by side (the default at
+ * the Duo's width, chosen before the footage the keynote uses) and three rows
+ * are opened one after another. Recorded with the Duo's inner screen turned
+ * sideways (marketing/app-preview/README.md).
  */
 export const DUO_STORY: PreviewStep[] = [
   { do: "goto", path: "/transactions" },
   { do: "wait", ms: 1500 },
-  // Start on the table: the split is already the default at the Duo's width,
-  // so pressing "List and details" only shows something from the table.
-  { do: "click", role: "button", name: "Table" },
-  { do: "wait", ms: 1500 },
   { do: "click", role: "button", name: "List and details" },
-  { do: "wait", ms: 1800 },
-  { do: "tapRow", index: 0 },
-  { do: "wait", ms: 2400 },
+  { do: "wait", ms: 1000 },
   { do: "tapRow", index: 1 },
-  { do: "wait", ms: 2400 },
+  { do: "wait", ms: 1100 },
+  // The unfolded Duo held sideways is short: bring the next rows into view.
+  { do: "scroll", y: 260 },
+  { do: "wait", ms: 500 },
   { do: "tapRow", index: 2 },
-  { do: "wait", ms: 2600 },
+  { do: "wait", ms: 1300 },
+  { do: "tapRow", index: 3 },
+  { do: "wait", ms: 1500 },
 ];
+
+/** The story a preview build plays, from VITE_PREVIEW_STORY. */
+export function storyFor(name: string | undefined): PreviewStep[] {
+  if (name === "duo") return DUO_STORY;
+  if (name === "ipad") return IPAD_STORY;
+  return PREVIEW_STORY;
+}
 
 export async function runPreviewStory(
   steps: PreviewStep[],
@@ -180,7 +202,5 @@ export async function startPreviewAutoplay(): Promise<void> {
   }
   await sleep(2000);
   mark("start");
-  const story =
-    import.meta.env.VITE_PREVIEW_STORY === "duo" ? DUO_STORY : PREVIEW_STORY;
-  await runPreviewStory(story, domApi);
+  await runPreviewStory(storyFor(import.meta.env.VITE_PREVIEW_STORY), domApi);
 }

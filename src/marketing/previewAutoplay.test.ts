@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   DUO_STORY,
+  IPAD_STORY,
   PREVIEW_STORY,
+  storyFor,
   runPreviewStory,
   type PreviewApi,
 } from "./previewAutoplay";
@@ -69,21 +71,34 @@ describe("runPreviewStory", () => {
     expect(waited).toBeLessThanOrEqual(28_000);
   });
 
-  it("walks the Duo story through three rows of the two-panel list", async () => {
+  it("opens the iPad story on the table, then switches to list and details", async () => {
     const api = fakeApi();
-    await runPreviewStory(DUO_STORY, api);
+    await runPreviewStory(IPAD_STORY, api);
     expect(api.calls[0]).toBe("goto /transactions");
-    // Starts on the table so pressing "List and details" visibly opens the
-    // panel (on the Duo the split is already the default).
     const table = api.calls.indexOf("click button Table");
     expect(table).toBeGreaterThan(-1);
     expect(api.calls.indexOf("click button List and details")).toBeGreaterThan(
       table,
     );
-    expect(api.calls.filter((c) => c.startsWith("tap row"))).toEqual([
-      "tap row 0",
-      "tap row 1",
-      "tap row 2",
-    ]);
+  });
+
+  it("walks the Duo story through rows of the two-panel list", async () => {
+    const api = fakeApi();
+    await runPreviewStory(DUO_STORY, api);
+    expect(api.calls[0]).toBe("goto /transactions");
+    // The split is chosen before any row is opened (and before the footage
+    // the keynote uses), so no press shows up after the panel is there.
+    const split = api.calls.indexOf("click button List and details");
+    const taps = api.calls.filter((c) => c.startsWith("tap row"));
+    expect(split).toBeGreaterThan(-1);
+    expect(split).toBeLessThan(api.calls.indexOf("tap row 1"));
+    expect(taps).toEqual(["tap row 1", "tap row 2", "tap row 3"]);
+    expect(api.calls).not.toContain("click button Table");
+  });
+
+  it("picks the story from the build setting", () => {
+    expect(storyFor("duo")).toBe(DUO_STORY);
+    expect(storyFor("ipad")).toBe(IPAD_STORY);
+    expect(storyFor("")).toBe(PREVIEW_STORY);
   });
 });

@@ -31,15 +31,21 @@ Needs Xcode (simulator) and ffmpeg.
 If you change the story's screens, update `SEGMENTS` in `captions.mjs` to
 match.
 
-## iPhone Duo footage (keynote showreel)
+## iPad and iPhone Duo footage (keynote showreel)
 
-The two-panel view needs the Duo's inner screen turned sideways, and no
-command can rotate or unfold the simulator, so this takes one manual step:
+The keynote's "Big screens" scene plays two simulator recordings: the iPad
+switching from the table to list and details, then the iPhone Duo opening
+rows with the details alongside.
 
-1. In Xcode, open **Window → Devices and Simulators** (Device Hub), boot
-   **iPhone Duo**, unfold it and turn it sideways.
-2. Run `node marketing/app-preview/record.mjs --device "iPhone Duo" --story duo --name duo --display 3`
-   (display 3 is the inner screen; the Duo has two)
-   (it keeps the orientation; the story opens three rows in the list and details view).
-3. Run `node marketing/showreel/duo/overlay.mjs` (add `--scale 2` and `--in` for the 4K
-   file) to place it on the keynote cut's Duo screen.
+1. iPad (upright, no setup):
+   `node marketing/app-preview/record.mjs --device "iPad Pro 13-inch (M5)" --story ipad --name ipad`
+2. iPhone Duo: no command can rotate or unfold the simulator, so in Xcode
+   open **Window → Devices and Simulators** (Device Hub), boot **iPhone Duo**,
+   unfold it and turn it sideways. Then run
+   `node marketing/app-preview/record.mjs --device "iPhone Duo" --story duo --name duo --display 3`
+   (display 3 is the inner screen; the Duo has two).
+3. Check where each story's footage should begin and adjust `RECORDINGS` in
+   `marketing/showreel/duo/overlay.mjs` if needed (the start mark lands about
+   a second after the story starts).
+4. Run `node marketing/showreel/duo/overlay.mjs` (add `--scale 2` and `--in`
+   for the 4K file) to place both on the keynote cut.

@@ -370,8 +370,11 @@ html[data-reduce-motion="true"] *::after {
     @apply border-border/70 bg-card/90 dark:bg-slate-950/70;
   }
 
+  /* No colour transition: Safari (iOS) did not repaint the selected card's
+     border until the next tap, so the two-panel list's highlight lagged one
+     row behind the details panel. */
   .app-mobile-row {
-    @apply rounded-xl border bg-card p-4 text-card-foreground shadow-sm transition-colors;
+    @apply rounded-xl border bg-card p-4 text-card-foreground shadow-sm;
   }
 
   .app-row-selected {
