@@ -331,7 +331,7 @@ const SettingsPage = () => {
                     <AlertDescription>
                       {t("settings.sync.recommendation", {
                         defaultValue:
-                          "To ensure seamless continuity, select a folder synced by a cloud provider like iCloud, Google Drive, or Dropbox. Any local folder works, but won't sync automatically to other devices.",
+                          "Pick a folder that iCloud, Google Drive or Dropbox syncs to have your backups on your other devices too.",
                       })}
                     </AlertDescription>
                   </Alert>

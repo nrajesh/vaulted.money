@@ -42,7 +42,7 @@ export const settingsScreen: AreaTranslations = {
         toggle: "Automatically sync across devices",
         recommendationTitle: "Recommendation",
         recommendation:
-          "To ensure seamless continuity, select a folder synced by a cloud provider like iCloud, Google Drive, or Dropbox. Any local folder works, but won't sync automatically to other devices.",
+          "Pick a folder that iCloud, Google Drive or Dropbox syncs to have your backups on your other devices too.",
         location: "Sync Location",
         selectFolder: "Select Folder",
         folderUpdated: "Sync folder location updated.",
@@ -95,7 +95,7 @@ export const settingsScreen: AreaTranslations = {
         toggle: "Sincronizar automáticamente entre dispositivos",
         recommendationTitle: "Recomendación",
         recommendation:
-          "Para una continuidad fluida, elige una carpeta sincronizada por un proveedor en la nube como iCloud, Google Drive o Dropbox. Cualquier carpeta local sirve, pero no se sincronizará automáticamente con otros dispositivos.",
+          "Elige una carpeta que sincronice iCloud, Google Drive o Dropbox para tener tus copias también en tus otros dispositivos.",
         location: "Ubicación de sincronización",
         selectFolder: "Seleccionar carpeta",
         folderUpdated: "Ubicación de la carpeta de sincronización actualizada.",
@@ -145,7 +145,7 @@ export const settingsScreen: AreaTranslations = {
         toggle: "在设备间自动同步",
         recommendationTitle: "建议",
         recommendation:
-          "为确保无缝衔接，请选择由 iCloud、Google Drive 或 Dropbox 等云服务同步的文件夹。任何本地文件夹也可使用，但不会自动同步到其他设备。",
+          "选择由 iCloud、Google Drive 或 Dropbox 同步的文件夹，备份就会同时出现在您的其他设备上。",
         location: "同步位置",
         selectFolder: "选择文件夹",
         folderUpdated: "同步文件夹位置已更新。",
@@ -198,7 +198,7 @@ export const settingsScreen: AreaTranslations = {
         toggle: "Automatisch synchroniseren tussen apparaten",
         recommendationTitle: "Aanbeveling",
         recommendation:
-          "Kies voor een naadloze continuïteit een map die door een cloudaanbieder zoals iCloud, Google Drive of Dropbox wordt gesynchroniseerd. Elke lokale map werkt, maar wordt niet automatisch met andere apparaten gesynchroniseerd.",
+          "Kies een map die iCloud, Google Drive of Dropbox synchroniseert, dan staan je back-ups ook op je andere apparaten.",
         location: "Synchronisatielocatie",
         selectFolder: "Map kiezen",
         folderUpdated: "Locatie van de synchronisatiemap bijgewerkt.",
@@ -251,7 +251,7 @@ export const settingsScreen: AreaTranslations = {
         toggle: "சாதனங்கள் முழுவதும் தானாக ஒத்திசை",
         recommendationTitle: "பரிந்துரை",
         recommendation:
-          "தடையற்ற தொடர்ச்சிக்கு, iCloud, Google Drive அல்லது Dropbox போன்ற கிளவுட் சேவையால் ஒத்திசைக்கப்படும் கோப்புறையைத் தேர்ந்தெடுக்கவும். எந்த உள்ளூர் கோப்புறையும் வேலை செய்யும், ஆனால் மற்ற சாதனங்களுடன் தானாக ஒத்திசையாது.",
+          "iCloud, Google Drive அல்லது Dropbox ஒத்திசைக்கும் கோப்புறையைத் தேர்ந்தெடுத்தால், உங்கள் காப்புப்பிரதிகள் மற்ற சாதனங்களிலும் கிடைக்கும்.",
         location: "ஒத்திசைவு இடம்",
         selectFolder: "கோப்புறையைத் தேர்ந்தெடு",
         folderUpdated: "ஒத்திசைவு கோப்புறை இடம் புதுப்பிக்கப்பட்டது.",

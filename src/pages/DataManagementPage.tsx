@@ -275,7 +275,7 @@ const DataManagementPage = () => {
             <AlertDescription className="text-blue-700 dark:text-blue-300">
               {t("dataManagement.manual.importantBody", {
                 defaultValue:
-                  "Since this is a local-first app, if you clear your browser data, you will lose your records. Please export regular backups.",
+                  "Clearing your browser data deletes your records. Export backups regularly.",
               })}
             </AlertDescription>
           </Alert>
@@ -403,7 +403,7 @@ const DataManagementPage = () => {
         })}
         description={t("dataManagement.demo.confirmDescription", {
           defaultValue:
-            "This will clear all existing transactions and generate new diverse demo data. This action cannot be undone.",
+            "Replaces all your transactions with demo data. This can't be undone.",
         })}
         confirmText={t("dataManagement.demo.confirmButton", {
           defaultValue: "Generate",

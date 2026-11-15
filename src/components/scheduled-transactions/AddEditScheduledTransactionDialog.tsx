@@ -221,7 +221,7 @@ export const AddEditScheduledTransactionDialog: React.FC<
           <DialogDescription>
             {t("scheduled.dialog.description", {
               defaultValue:
-                "Define a recurring transaction. Occurrences up to today will be automatically added to your transactions.",
+                "Occurrences up to today are added to your transactions automatically.",
             })}
           </DialogDescription>
         </DialogHeader>

@@ -325,7 +325,7 @@ const ApiAccessCardView = ({
         <ThemedCardDescription>
           {t("settings.api.description", {
             defaultValue:
-              "Let scripts and tools on this computer manage your data over HTTP. The API only listens on 127.0.0.1, so only apps on this computer can reach it. If you connect an AI agent, what it reads is sent to that agent's provider.",
+              "Lets scripts and AI agents on this computer use your data. Only apps on this computer can reach it. What an agent reads goes to its AI provider.",
           })}
         </ThemedCardDescription>
       </ThemedCardHeader>

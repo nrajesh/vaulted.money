@@ -12,7 +12,7 @@ export const backupScreen: AreaTranslations = {
       },
       unsupported: {
         title: "Browser Not Supported",
-        body: "Scheduled backups require the File System Access API (Chrome/Edge/Opera), the Desktop App, or a Native Mobile App.",
+        body: "Scheduled backups need the Mac or mobile app, or Chrome, Edge or Opera.",
       },
       create: {
         title: "Create Scheduled Backup",
@@ -89,7 +89,7 @@ export const backupScreen: AreaTranslations = {
       },
       unsupported: {
         title: "Navegador no compatible",
-        body: "Las copias programadas requieren la API de acceso al sistema de archivos (Chrome/Edge/Opera), la aplicación de escritorio o una aplicación móvil nativa.",
+        body: "Las copias programadas necesitan la app de Mac o móvil, o Chrome, Edge u Opera.",
       },
       create: {
         title: "Crear copia de seguridad programada",
@@ -166,7 +166,7 @@ export const backupScreen: AreaTranslations = {
       },
       unsupported: {
         title: "浏览器不受支持",
-        body: "定期备份需要文件系统访问 API（Chrome/Edge/Opera）、桌面应用或原生移动应用。",
+        body: "定时备份需要 Mac 或手机应用，或 Chrome、Edge、Opera 浏览器。",
       },
       create: {
         title: "创建定期备份",
@@ -237,7 +237,7 @@ export const backupScreen: AreaTranslations = {
       },
       unsupported: {
         title: "Browser niet ondersteund",
-        body: "Geplande back-ups vereisen de File System Access API (Chrome/Edge/Opera), de desktop-app of een native mobiele app.",
+        body: "Geplande back-ups werken in de Mac- of mobiele app, of in Chrome, Edge of Opera.",
       },
       create: {
         title: "Geplande back-up maken",
@@ -315,7 +315,7 @@ export const backupScreen: AreaTranslations = {
       },
       unsupported: {
         title: "உலாவி ஆதரிக்கப்படவில்லை",
-        body: "திட்டமிட்ட காப்புப் பிரதிகளுக்கு File System Access API (Chrome/Edge/Opera), டெஸ்க்டாப் பயன்பாடு அல்லது நேட்டிவ் மொபைல் பயன்பாடு தேவை.",
+        body: "திட்டமிட்ட காப்புப்பிரதிகளுக்கு Mac அல்லது மொபைல் ஆப், அல்லது Chrome, Edge, Opera தேவை.",
       },
       create: {
         title: "திட்டமிட்ட காப்புப் பிரதியை உருவாக்கு",

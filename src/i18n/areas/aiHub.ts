@@ -29,7 +29,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "AI inside the app",
         subtitle:
-          "Powers Auto-categorize. Add a provider with your own key, or a model running on your computer, and pick the one to use. Only payee names are sent, never amounts.",
+          "Powers Auto-categorize. Only payee names are sent, never amounts.",
         inUse: "In use",
         useThis: "Use this one",
         keyColumn: "API key",
@@ -99,7 +99,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "IA dentro de la app",
         subtitle:
-          "Se usa para la categorización automática. Añade un proveedor con tu propia clave, o un modelo que se ejecute en tu ordenador, y elige cuál usar. Solo se envían nombres de beneficiarios, nunca importes.",
+          "Se usa para la categorización automática. Solo se envían nombres de beneficiarios, nunca importes.",
         inUse: "En uso",
         useThis: "Usar este",
         keyColumn: "Clave de API",
@@ -167,8 +167,7 @@ export const aiHub: AreaTranslations = {
       },
       providers: {
         title: "应用内的 AI",
-        subtitle:
-          "用于自动分类。添加使用您自己密钥的提供商，或在您电脑上运行的模型，并选择要使用的那个。只发送收款方名称，绝不发送金额。",
+        subtitle: "用于自动分类。只发送收款方名称，从不发送金额。",
         inUse: "使用中",
         useThis: "使用这个",
         keyColumn: "API 密钥",
@@ -236,7 +235,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "AI in de app",
         subtitle:
-          "Wordt gebruikt voor automatisch categoriseren. Voeg een provider toe met je eigen sleutel, of een model dat op je computer draait, en kies welke je gebruikt. Alleen namen van begunstigden worden verstuurd, nooit bedragen.",
+          "Wordt gebruikt voor automatisch categoriseren. Alleen namen van begunstigden worden verstuurd, nooit bedragen.",
         inUse: "In gebruik",
         useThis: "Deze gebruiken",
         keyColumn: "API-sleutel",
@@ -308,7 +307,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "செயலிக்குள் AI",
         subtitle:
-          "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது. உங்கள் சொந்த விசையுடன் ஒரு வழங்குநரையோ, உங்கள் கணினியில் இயங்கும் மாதிரியையோ சேர்த்து, பயன்படுத்த வேண்டியதைத் தேர்வு செய்யவும். பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
+          "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது. பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
         inUse: "பயன்பாட்டில்",
         useThis: "இதைப் பயன்படுத்து",
         keyColumn: "API விசை",
@@ -370,7 +369,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "No provider yet. Add one to let the app suggest categories. A model on your own computer (LM Studio, Ollama) works too and needs no key.",
+          "No provider yet. Add one to get category suggestions. A model on your own computer (LM Studio, Ollama) needs no key.",
         keyMissingLong: "Missing",
         needsKeyNote: "This provider cannot be used until you add its API key.",
         embeddingNote:
@@ -433,7 +432,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "Aún no hay ningún proveedor. Añade uno para que la app sugiera categorías. También sirve un modelo en tu propio ordenador (LM Studio, Ollama), que no necesita clave.",
+          "Aún no hay proveedor. Añade uno para recibir sugerencias de categoría. Un modelo en tu propio ordenador (LM Studio, Ollama) no necesita clave.",
         keyMissingLong: "Falta",
         needsKeyNote:
           "Este proveedor no se puede usar hasta que añadas su clave de API.",
@@ -498,7 +497,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "还没有提供商。添加一个，让应用为您建议分类。在您自己电脑上运行的模型（LM Studio、Ollama）也可以，且无需密钥。",
+          "还没有提供商。添加一个即可获得类别建议。在您自己电脑上运行的模型（LM Studio、Ollama）不需要密钥。",
         keyMissingLong: "缺失",
         needsKeyNote: "添加 API 密钥后才能使用此提供商。",
         embeddingNote:
@@ -556,7 +555,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "Nog geen provider. Voeg er een toe zodat de app categorieën kan voorstellen. Een model op je eigen computer (LM Studio, Ollama) werkt ook en heeft geen sleutel nodig.",
+          "Nog geen provider. Voeg er een toe voor categoriesuggesties. Een model op je eigen computer (LM Studio, Ollama) heeft geen sleutel nodig.",
         keyMissingLong: "Ontbreekt",
         needsKeyNote:
           "Deze provider kan pas worden gebruikt als je de API-sleutel toevoegt.",
@@ -623,7 +622,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "இன்னும் வழங்குநர் இல்லை. செயலி வகைகளைப் பரிந்துரைக்க ஒன்றைச் சேர்க்கவும். உங்கள் சொந்தக் கணினியில் உள்ள மாதிரியும் (LM Studio, Ollama) வேலை செய்யும், அதற்கு விசை தேவையில்லை.",
+          "இன்னும் வழங்குநர் இல்லை. வகைப் பரிந்துரைகளைப் பெற ஒன்றைச் சேர்க்கவும். உங்கள் கணினியில் இயங்கும் மாதிரிக்கு (LM Studio, Ollama) சாவி தேவையில்லை.",
         keyMissingLong: "இல்லை",
         needsKeyNote:
           "API விசையைச் சேர்க்கும் வரை இந்த வழங்குநரைப் பயன்படுத்த முடியாது.",
@@ -1263,8 +1262,7 @@ export const aiHubMobile: AreaTranslations = {
           "nothing answered at {{url}}. Check the server is running and allows requests from other apps (CORS).",
       },
       providers: {
-        emptyMobile:
-          "No provider yet. Add one to let the app suggest categories. Models running on your own computer need the desktop app.",
+        emptyMobile: "No provider yet. Add one to get category suggestions.",
       },
     },
   },
@@ -1279,7 +1277,7 @@ export const aiHubMobile: AreaTranslations = {
       },
       providers: {
         emptyMobile:
-          "Aún no hay ningún proveedor. Añade uno para que la app sugiera categorías. Los modelos que se ejecutan en tu propio ordenador necesitan la app de escritorio.",
+          "Aún no hay proveedor. Añade uno para recibir sugerencias de categoría.",
       },
     },
   },
@@ -1292,8 +1290,7 @@ export const aiHubMobile: AreaTranslations = {
           "{{url}} 没有响应。请确认服务器正在运行并允许来自其他应用的请求（CORS）。",
       },
       providers: {
-        emptyMobile:
-          "还没有提供商。添加一个，让应用为您建议分类。在您自己电脑上运行的模型需要使用桌面应用。",
+        emptyMobile: "还没有提供商。添加一个即可获得类别建议。",
       },
     },
   },
@@ -1308,7 +1305,7 @@ export const aiHubMobile: AreaTranslations = {
       },
       providers: {
         emptyMobile:
-          "Nog geen provider. Voeg er een toe zodat de app categorieën kan voorstellen. Modellen op je eigen computer hebben de desktop-app nodig.",
+          "Nog geen provider. Voeg er een toe voor categoriesuggesties.",
       },
     },
   },
@@ -1323,7 +1320,7 @@ export const aiHubMobile: AreaTranslations = {
       },
       providers: {
         emptyMobile:
-          "இன்னும் வழங்குநர் இல்லை. செயலி வகைகளைப் பரிந்துரைக்க ஒன்றைச் சேர்க்கவும். உங்கள் சொந்தக் கணினியில் இயங்கும் மாதிரிகளுக்கு டெஸ்க்டாப் செயலி தேவை.",
+          "இன்னும் வழங்குநர் இல்லை. வகைப் பரிந்துரைகளைப் பெற ஒன்றைச் சேர்க்கவும்.",
       },
     },
   },

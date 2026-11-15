@@ -1243,7 +1243,7 @@ const LedgerEntryPage = () => {
         })}
         description={t("ledgerEntry.demoDialog.description", {
           defaultValue:
-            "This will clear ALL existing data (ledgers, transactions, budgets) and generate new diverse demo data. This action cannot be undone.",
+            "Replaces all your data (ledgers, transactions, budgets) with demo data. This can't be undone.",
         })}
         confirmText={t("ledgerEntry.demoDialog.confirm", {
           defaultValue: "Generate Data",

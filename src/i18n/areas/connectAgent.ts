@@ -95,7 +95,7 @@ export const connectAgent: AreaTranslations = {
           "Chat with an AI about your money manager in three quick steps.",
         disconnect: "Disconnect everything",
         disconnectWarning:
-          "This switches the Local API off and replaces the token, which cuts off every connected agent and script. Switch the Local API on again to let them reconnect on their own, with no copy-paste.",
+          "Switches the Local API off and replaces the token, disconnecting every agent and script. They reconnect by themselves when you switch it back on.",
         done: "(done)",
         download: "Download vaulted-money.mcpb from the latest release",
         enable: "Allow agents to connect",
@@ -238,7 +238,7 @@ export const connectAgent: AreaTranslations = {
           "Chatea con una IA sobre tu gestor de finanzas en tres pasos rápidos.",
         disconnect: "Desconectar todo",
         disconnectWarning:
-          "Esto desactiva la API local y sustituye el token, lo que desconecta a todos los agentes y scripts conectados. Vuelve a activar la API local para que se reconecten solos, sin copiar ni pegar nada.",
+          "Apaga la API local y cambia el token, lo que desconecta todos los agentes y scripts. Se reconectan solos cuando vuelvas a encenderla.",
         done: "(hecho)",
         download: "Descarga vaulted-money.mcpb de la última versión",
         enable: "Permitir que se conecten agentes",
@@ -370,7 +370,7 @@ export const connectAgent: AreaTranslations = {
         description: "只需三个简单步骤，即可与 AI 聊聊您的理财应用。",
         disconnect: "全部断开连接",
         disconnectWarning:
-          "这会关闭本地 API 并更换令牌，从而断开所有已连接的智能体和脚本。重新打开本地 API 后，它们会自动重新连接，无需复制粘贴。",
+          "关闭本地 API 并更换令牌，所有智能体和脚本都会断开。重新打开后它们会自动重连。",
         done: "（已完成）",
         download: "从最新版本下载 vaulted-money.mcpb",
         enable: "允许智能体连接",
@@ -507,7 +507,7 @@ export const connectAgent: AreaTranslations = {
           "Chat in drie snelle stappen met een AI over je geldbeheer.",
         disconnect: "Alles loskoppelen",
         disconnectWarning:
-          "Dit zet de lokale API uit en vervangt het token, waardoor elke gekoppelde agent en elk script wordt afgesloten. Zet de lokale API weer aan om ze vanzelf opnieuw te laten verbinden, zonder kopiëren en plakken.",
+          "Zet de lokale API uit en vervangt het token, waardoor alle agents en scripts de verbinding verliezen. Ze maken zelf weer verbinding als je hem weer aanzet.",
         done: "(klaar)",
         download: "Download vaulted-money.mcpb uit de nieuwste release",
         enable: "Agents toestaan te verbinden",
@@ -655,7 +655,7 @@ export const connectAgent: AreaTranslations = {
           "மூன்று எளிய படிகளில் உங்கள் பண மேலாளர் பற்றி AI உடன் உரையாடுங்கள்.",
         disconnect: "அனைத்தையும் துண்டி",
         disconnectWarning:
-          "இது உள்ளூர் API-ஐ அணைத்து டோக்கனை மாற்றுகிறது, இதனால் இணைக்கப்பட்ட ஒவ்வொரு முகவரும் ஸ்கிரிப்டும் துண்டிக்கப்படும். அவை நகலெடுத்து ஒட்டாமலேயே தாமாக மீண்டும் இணைய, உள்ளூர் API-ஐ மீண்டும் இயக்குங்கள்.",
+          "உள்ளூர் API-ஐ அணைத்து டோக்கனை மாற்றுகிறது; எல்லா முகவர்களும் ஸ்கிரிப்டுகளும் துண்டிக்கப்படும். மீண்டும் இயக்கும்போது அவை தானாக இணையும்.",
         done: "(முடிந்தது)",
         download:
           "சமீபத்திய வெளியீட்டிலிருந்து vaulted-money.mcpb-ஐப் பதிவிறக்குங்கள்",

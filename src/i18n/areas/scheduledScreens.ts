@@ -57,7 +57,7 @@ export const scheduledScreens: AreaTranslations = {
         addTitle: "Add Scheduled Transaction",
         editTitle: "Edit Scheduled Transaction",
         description:
-          "Define a recurring transaction. Occurrences up to today will be automatically added to your transactions.",
+          "Occurrences up to today are added to your transactions automatically.",
         startDate: "Start Date",
         startDateHint:
           "Only future dates (from tomorrow onwards) can be selected.",
@@ -102,7 +102,7 @@ export const scheduledScreens: AreaTranslations = {
       smart: {
         title: "Smart Schedule Creation",
         description:
-          "We detected these potential recurring transactions. Review suggested amounts and select which ones to schedule.",
+          "Repeating payments found in your history. Check the amounts and pick which to schedule.",
         analyzing: "Analyzing patterns...",
         selectAll: "Select all suggestions",
         selectOne: "Select suggestion {{number}}",
@@ -189,7 +189,7 @@ export const scheduledScreens: AreaTranslations = {
         addTitle: "Añadir transacción programada",
         editTitle: "Editar transacción programada",
         description:
-          "Define una transacción recurrente. Las ocurrencias hasta hoy se añadirán automáticamente a tus transacciones.",
+          "Las repeticiones hasta hoy se añaden automáticamente a tus transacciones.",
         startDate: "Fecha de inicio",
         startDateHint:
           "Solo se pueden elegir fechas futuras (a partir de mañana).",
@@ -234,7 +234,7 @@ export const scheduledScreens: AreaTranslations = {
       smart: {
         title: "Creación inteligente de programaciones",
         description:
-          "Hemos detectado estas posibles transacciones recurrentes. Revisa los importes sugeridos y elige cuáles programar.",
+          "Pagos que se repiten en tu historial. Revisa los importes y elige cuáles programar.",
         analyzing: "Analizando patrones...",
         selectAll: "Seleccionar todas las sugerencias",
         selectOne: "Seleccionar sugerencia {{number}}",
@@ -319,8 +319,7 @@ export const scheduledScreens: AreaTranslations = {
       dialog: {
         addTitle: "添加计划交易",
         editTitle: "编辑计划交易",
-        description:
-          "设置一笔定期交易。截至今天的发生记录将自动添加到您的交易中。",
+        description: "截至今天的各次记录会自动添加到您的交易中。",
         startDate: "开始日期",
         startDateHint: "只能选择未来日期（从明天起）。",
         endDate: "结束日期（可选）",
@@ -364,7 +363,7 @@ export const scheduledScreens: AreaTranslations = {
       smart: {
         title: "智能创建计划",
         description:
-          "我们检测到这些可能的定期交易。请查看建议金额并选择要计划的项目。",
+          "从您的记录中找到的重复付款。核对金额，然后选择要安排的项目。",
         analyzing: "正在分析规律...",
         selectAll: "选择所有建议",
         selectOne: "选择建议 {{number}}",
@@ -450,7 +449,7 @@ export const scheduledScreens: AreaTranslations = {
         addTitle: "Geplande transactie toevoegen",
         editTitle: "Geplande transactie bewerken",
         description:
-          "Stel een terugkerende transactie in. Voorkomens tot en met vandaag worden automatisch aan je transacties toegevoegd.",
+          "Herhalingen tot en met vandaag worden automatisch aan je transacties toegevoegd.",
         startDate: "Startdatum",
         startDateHint:
           "Alleen toekomstige datums (vanaf morgen) kunnen worden gekozen.",
@@ -495,7 +494,7 @@ export const scheduledScreens: AreaTranslations = {
       smart: {
         title: "Slim planningen maken",
         description:
-          "We hebben deze mogelijke terugkerende transacties gevonden. Controleer de voorgestelde bedragen en kies welke je wilt inplannen.",
+          "Terugkerende betalingen uit je geschiedenis. Controleer de bedragen en kies welke je wilt inplannen.",
         analyzing: "Patronen worden geanalyseerd...",
         selectAll: "Alle suggesties selecteren",
         selectOne: "Suggestie {{number}} selecteren",
@@ -582,7 +581,7 @@ export const scheduledScreens: AreaTranslations = {
         addTitle: "திட்டமிட்ட பரிவர்த்தனையைச் சேர்",
         editTitle: "திட்டமிட்ட பரிவர்த்தனையைத் திருத்து",
         description:
-          "மீண்டும் நிகழும் பரிவர்த்தனையை வரையறுக்கவும். இன்று வரையிலான நிகழ்வுகள் தானாகவே உங்கள் பரிவர்த்தனைகளில் சேர்க்கப்படும்.",
+          "இன்று வரையிலான நிகழ்வுகள் உங்கள் பரிவர்த்தனைகளில் தானாகச் சேர்க்கப்படும்.",
         startDate: "தொடக்க தேதி",
         startDateHint:
           "எதிர்கால தேதிகளை (நாளை முதல்) மட்டுமே தேர்ந்தெடுக்க முடியும்.",
@@ -627,7 +626,7 @@ export const scheduledScreens: AreaTranslations = {
       smart: {
         title: "ஸ்மார்ட் அட்டவணை உருவாக்கம்",
         description:
-          "இந்த சாத்தியமான தொடர் பரிவர்த்தனைகளைக் கண்டறிந்தோம். பரிந்துரைக்கப்பட்ட தொகைகளைச் சரிபார்த்து எவற்றைத் திட்டமிட வேண்டும் எனத் தேர்ந்தெடுக்கவும்.",
+          "உங்கள் வரலாற்றில் கண்டறியப்பட்ட மீண்டும் வரும் கொடுப்பனவுகள். தொகைகளைச் சரிபார்த்து எவற்றைத் திட்டமிட வேண்டும் எனத் தேர்ந்தெடுக்கவும்.",
         analyzing: "முறைகளை ஆராய்கிறது...",
         selectAll: "அனைத்துப் பரிந்துரைகளையும் தேர்ந்தெடு",
         selectOne: "பரிந்துரை {{number}} ஐத் தேர்ந்தெடு",
