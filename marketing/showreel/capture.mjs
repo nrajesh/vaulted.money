@@ -513,25 +513,36 @@ async function main() {
 
     // Which budgets the demo creates, and their order, varies from run to
     // run (it depends on async timing); the film frames whichever on-track
-    // and over-budget cards land on the first page.
+    // and over-budget cards share a page, so step through the pages until
+    // one shows both.
     await goto("/budgets", 2400);
-    await shot("desktop-budgets-dark", {
-      queries: {
-        summary: ["div", "Avg. Monthly Budget", 90],
-        overBudget: ["div", "over budget", 160],
-        onTrack: ["div", "On track", 160],
-        remaining: ["div", "remaining", 160, "-€"],
-        activeBudgets: ["h2, h3, div", "Active Budgets", 20],
-      },
-    });
-    // Prefer a card the app itself labels "On track", else one with money
-    // remaining.
-    const budgetRects = manifest.screens["desktop-budgets-dark"].rects;
-    budgetRects.onTrack ??= budgetRects.remaining;
-    if (!budgetRects.onTrack || !budgetRects.overBudget) {
-      throw new Error(
-        "This run's demo budgets show no on-track and over-budget pair on page 1. Run the capture again.",
-      );
+    let budgetRects;
+    for (let page = 1; ; page++) {
+      await shot("desktop-budgets-dark", {
+        queries: {
+          summary: ["div", "Avg. Monthly Budget", 90],
+          overBudget: ["div", "over budget", 160],
+          onTrack: ["div", "On track", 160],
+          remaining: ["div", "remaining", 160, "-€"],
+          activeBudgets: ["h2, h3, div", "Active Budgets", 20],
+        },
+      });
+      // Prefer a card the app itself labels "On track", else one with money
+      // remaining.
+      budgetRects = manifest.screens["desktop-budgets-dark"].rects;
+      budgetRects.onTrack ??= budgetRects.remaining;
+      if (budgetRects.onTrack && budgetRects.overBudget) break;
+      const next = await evaluate(`(() => {
+        const button = document.querySelector('button[aria-label="Next page"]');
+        if (!button || button.disabled) return false;
+        button.click();
+        return true;
+      })()`);
+      if (!next)
+        throw new Error(
+          `No budgets page shows both an on-track and an over-budget card (checked ${page}). Run the capture again.`,
+        );
+      await settle(1200);
     }
     await goto("/insights", 2400);
     await shot("desktop-insights-dark", {
