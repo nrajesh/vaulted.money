@@ -194,7 +194,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
       showError(
         t("aiHub.dialog.noLocalNetworkHere", {
           defaultValue:
-            "A model on your own computer or home network works in the Mac app only.",
+            "A model on your own computer or home network works in the desktop app only.",
         }),
       );
       return false;
@@ -368,7 +368,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
       showError(
         t("aiHub.dialog.noLocalNetworkHere", {
           defaultValue:
-            "A model on your own computer or home network works in the Mac app only.",
+            "A model on your own computer or home network works in the desktop app only.",
         }),
       );
       return;
@@ -511,7 +511,7 @@ const AddEditAIProviderDialog: React.FC<AddEditAIProviderDialogProps> = ({
                         <p className="text-xs text-muted-foreground">
                           {t("aiHub.dialog.localMacOnly", {
                             defaultValue:
-                              "Models running on your own computer or home network, such as LM Studio or Ollama, work in the Mac app only.",
+                              "Models running on your own computer or home network, such as LM Studio or Ollama, work in the desktop app only.",
                           })}
                         </p>
                       )}

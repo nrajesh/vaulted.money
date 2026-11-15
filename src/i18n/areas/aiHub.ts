@@ -1080,7 +1080,7 @@ export const aiHubPoints: AreaTranslations = {
   },
 };
 
-/** Icon facts on the bars, the Mac-only notice and missing-agent blockers. Machine-written: ask a native speaker to review. */
+/** Icon facts on the bars, the desktop-only notice and missing-agent blockers. Machine-written: ask a native speaker to review. */
 export const aiHubFacts: AreaTranslations = {
   en: {
     aiHub: {
@@ -1095,9 +1095,9 @@ export const aiHubFacts: AreaTranslations = {
       },
       summary: {
         agentsNeedsMac:
-          "Needs the Mac app. Your AI agent connects to Vaulted Money on your Mac.",
+          "Needs the desktop app. Your AI agent connects to Vaulted Money on your computer.",
         agentsNeedsComputer:
-          "Needs Vaulted Money on a computer (currently Mac). Your AI agent connects to it there.",
+          "Needs Vaulted Money on a computer (Mac, Windows or Linux). Your AI agent connects to it there.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1121,9 +1121,9 @@ export const aiHubFacts: AreaTranslations = {
       },
       summary: {
         agentsNeedsMac:
-          "Requiere la app para Mac. Tu agente de IA se conecta a Vaulted Money en tu Mac.",
+          "Requiere la app de escritorio. Tu agente de IA se conecta a Vaulted Money en tu ordenador.",
         agentsNeedsComputer:
-          "Requiere Vaulted Money en un ordenador (por ahora Mac). Tu agente de IA se conecta allí.",
+          "Requiere Vaulted Money en un ordenador (Mac, Windows o Linux). Tu agente de IA se conecta allí.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1146,9 +1146,9 @@ export const aiHubFacts: AreaTranslations = {
       },
       summary: {
         agentsNeedsMac:
-          "需要 Mac 应用。您的 AI 智能体会连接到您 Mac 上的 Vaulted Money。",
+          "需要桌面应用。您的 AI 智能体会连接到您电脑上的 Vaulted Money。",
         agentsNeedsComputer:
-          "需要在电脑上使用 Vaulted Money（目前为 Mac）。您的 AI 智能体会连接到那里。",
+          "需要在电脑上使用 Vaulted Money（Mac、Windows 或 Linux）。您的 AI 智能体会连接到那里。",
       },
       chat: {
         blockNoClaudeCode: "此电脑上还没有 Claude Code。请安装后再回来。",
@@ -1169,9 +1169,9 @@ export const aiHubFacts: AreaTranslations = {
       },
       summary: {
         agentsNeedsMac:
-          "Vereist de Mac-app. Je AI-agent maakt verbinding met Vaulted Money op je Mac.",
+          "Vereist de desktop-app. Je AI-agent maakt verbinding met Vaulted Money op je computer.",
         agentsNeedsComputer:
-          "Vereist Vaulted Money op een computer (voorlopig Mac). Je AI-agent maakt daar verbinding.",
+          "Vereist Vaulted Money op een computer (Mac, Windows of Linux). Je AI-agent maakt daar verbinding.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1196,9 +1196,9 @@ export const aiHubFacts: AreaTranslations = {
       },
       summary: {
         agentsNeedsMac:
-          "Mac செயலி தேவை. உங்கள் AI முகவர் உங்கள் Mac-இல் உள்ள Vaulted Money-உடன் இணையும்.",
+          "கணினி செயலி தேவை. உங்கள் AI முகவர் உங்கள் கணினியில் உள்ள Vaulted Money-உடன் இணையும்.",
         agentsNeedsComputer:
-          "கணினியில் Vaulted Money தேவை (தற்போது Mac). உங்கள் AI முகவர் அங்கே இணையும்.",
+          "கணினியில் Vaulted Money தேவை (Mac, Windows அல்லது Linux). உங்கள் AI முகவர் அங்கே இணையும்.",
       },
       chat: {
         blockNoClaudeCode:

@@ -43,7 +43,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "Other AI apps",
         connected: "Can connect",
         notConnected: "Not switched on",
-        macOnly: "Mac app only",
+        macOnly: "Desktop app only",
         samples: "Questions to try",
         copy: "Copy",
         copyQuestion: "Copy question: {{question}}",
@@ -97,7 +97,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "Connecting other apps",
           summary:
-            "The Mac app can let AI apps and your own scripts reach your data through a connection that only works on your own computer. It is off until you switch it on.",
+            "The desktop app can let AI apps and your own scripts reach your data through a connection that only works on your own computer. It is off until you switch it on.",
         },
         privacy: {
           title: "Your privacy",
@@ -172,7 +172,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Use Claude or ChatGPT",
-          body: "In the Mac app, connect an AI app and ask questions about your money in that app.",
+          body: "In the desktop app, connect an AI app and ask questions about your money in that app.",
         },
         demo: {
           title: "Try it with demo data",
@@ -235,7 +235,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "Otras apps de IA",
         connected: "Pueden conectarse",
         notConnected: "Sin activar",
-        macOnly: "Solo en la app para Mac",
+        macOnly: "Solo en la app de escritorio",
         samples: "Preguntas para probar",
         copy: "Copiar",
         copyQuestion: "Copiar pregunta: {{question}}",
@@ -289,7 +289,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "Conectar otras apps",
           summary:
-            "La app para Mac puede dejar que apps de IA y tus scripts accedan a tus datos mediante una conexión que solo funciona en tu ordenador. Está apagada hasta que la actives.",
+            "La app de escritorio puede dejar que apps de IA y tus scripts accedan a tus datos mediante una conexión que solo funciona en tu ordenador. Está apagada hasta que la actives.",
         },
         privacy: {
           title: "Tu privacidad",
@@ -364,7 +364,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Usa Claude o ChatGPT",
-          body: "En la app para Mac, conecta una app de IA y pregúntale por tu dinero allí.",
+          body: "En la app de escritorio, conecta una app de IA y pregúntale por tu dinero allí.",
         },
         demo: {
           title: "Pruébalo con datos de ejemplo",
@@ -425,7 +425,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "其他 AI 应用",
         connected: "可以连接",
         notConnected: "未开启",
-        macOnly: "仅限 Mac 应用",
+        macOnly: "仅限桌面应用",
         samples: "可以试试的问题",
         copy: "复制",
         copyQuestion: "复制问题：{{question}}",
@@ -479,7 +479,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "连接其他应用",
           summary:
-            "Mac 应用可以通过仅在你自己电脑上可用的连接，让 AI 应用和你的脚本访问你的数据。开启前一直关闭。",
+            "桌面应用可以通过仅在你自己电脑上可用的连接，让 AI 应用和你的脚本访问你的数据。开启前一直关闭。",
         },
         privacy: {
           title: "你的隐私",
@@ -554,7 +554,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "使用 Claude 或 ChatGPT",
-          body: "在 Mac 应用中连接 AI 应用，然后在该应用中询问你的财务问题。",
+          body: "在桌面应用中连接 AI 应用，然后在该应用中询问你的财务问题。",
         },
         demo: {
           title: "用示例数据试用",
@@ -616,7 +616,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "Andere AI-apps",
         connected: "Kunnen verbinden",
         notConnected: "Niet aangezet",
-        macOnly: "Alleen in de Mac-app",
+        macOnly: "Alleen in de desktop-app",
         samples: "Vragen om te proberen",
         copy: "Kopiëren",
         copyQuestion: "Vraag kopiëren: {{question}}",
@@ -670,7 +670,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "Andere apps koppelen",
           summary:
-            "De Mac-app kan AI-apps en je eigen scripts bij je gegevens laten via een verbinding die alleen op je eigen computer werkt. Hij staat uit tot je hem aanzet.",
+            "De desktop-app kan AI-apps en je eigen scripts bij je gegevens laten via een verbinding die alleen op je eigen computer werkt. Hij staat uit tot je hem aanzet.",
         },
         privacy: {
           title: "Je privacy",
@@ -745,7 +745,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Gebruik Claude of ChatGPT",
-          body: "Koppel in de Mac-app een AI-app en stel daar vragen over je geld.",
+          body: "Koppel in de desktop-app een AI-app en stel daar vragen over je geld.",
         },
         demo: {
           title: "Probeer het met demogegevens",
@@ -808,7 +808,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "பிற AI பயன்பாடுகள்",
         connected: "இணைக்கலாம்",
         notConnected: "இயக்கப்படவில்லை",
-        macOnly: "Mac பயன்பாட்டில் மட்டும்",
+        macOnly: "கணினி பயன்பாட்டில் மட்டும்",
         samples: "முயல வேண்டிய கேள்விகள்",
         copy: "நகலெடு",
         copyQuestion: "கேள்வியை நகலெடு: {{question}}",
@@ -862,7 +862,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "பிற பயன்பாடுகளை இணைத்தல்",
           summary:
-            "Mac பயன்பாடு, உங்கள் கணினியில் மட்டுமே இயங்கும் இணைப்பின் மூலம் AI பயன்பாடுகளும் உங்கள் ஸ்கிரிப்டுகளும் தரவை அணுக அனுமதிக்கும். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்.",
+            "கணினி பயன்பாடு, உங்கள் கணினியில் மட்டுமே இயங்கும் இணைப்பின் மூலம் AI பயன்பாடுகளும் உங்கள் ஸ்கிரிப்டுகளும் தரவை அணுக அனுமதிக்கும். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்.",
         },
         privacy: {
           title: "உங்கள் தனியுரிமை",
@@ -937,7 +937,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Claude அல்லது ChatGPT பயன்படுத்துங்கள்",
-          body: "Mac பயன்பாட்டில் ஒரு AI பயன்பாட்டை இணைத்து, அதில் உங்கள் பணம் பற்றிக் கேளுங்கள்.",
+          body: "கணினி பயன்பாட்டில் ஒரு AI பயன்பாட்டை இணைத்து, அதில் உங்கள் பணம் பற்றிக் கேளுங்கள்.",
         },
         demo: {
           title: "மாதிரித் தரவுடன் முயலுங்கள்",

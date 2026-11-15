@@ -375,7 +375,7 @@ const ScheduledBackups = () => {
             <p className="mt-1 text-sm">
               {t("backup.unsupported.body", {
                 defaultValue:
-                  "Scheduled backups need the Mac or mobile app, or Chrome, Edge or Opera.",
+                  "Scheduled backups need the desktop or mobile app, or Chrome, Edge or Opera.",
               })}
             </p>
           </div>

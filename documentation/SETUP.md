@@ -143,6 +143,8 @@ Two shortcuts chain several of these together:
 | Web local preview | `pnpm build` then `pnpm preview` | Local preview server |
 | Electron packages | `pnpm run electron:build` | `release/` |
 | Electron dev | `pnpm run electron:dev` | Local desktop window |
+| Windows installers | `pnpm run electron:build:win` | `release/*.exe` (build on Windows) |
+| Linux packages | `pnpm run electron:build:linux` | `release/*.AppImage`, `release/*.deb` (build on Linux) |
 | Sync mobile shells | `pnpm run mobile:sync` | Copies web build to native shells |
 | Refresh both mobile apps | `pnpm run mobile:refresh` | Builds web and syncs iOS/Android |
 | Android debug APK | `pnpm run android:build:apk` | `android/app/build/outputs/apk/debug/` |
@@ -153,6 +155,17 @@ Two shortcuts chain several of these together:
 Electron packaging depends on a fresh web build because the renderer ships from `dist/`.
 
 Capacitor mobile builds also depend on a fresh web build because `cap sync` copies `dist/` into the native iOS and Android projects.
+
+## Windows and Linux Builds
+
+The release workflow builds these on GitHub's Windows and Linux machines, for x64 and Arm:
+
+- **Windows**: one NSIS installer per chip (`-win-x64.exe`, `-win-arm64.exe`). It is not code-signed, so SmartScreen warns on first launch ("More info" > "Run anyway").
+- **Linux**: an AppImage and a `.deb` per chip. Mark the AppImage executable (`chmod +x`) before opening it.
+
+Build them on the matching system. On a Mac the last packaging step needs Rosetta, because electron-builder's NSIS and AppImage tools are Intel-only.
+
+Closing the window only hides it, so scheduled backups and the Local API keep running. On a Mac the Dock icon brings it back; on Windows and Linux the tray icon does (`electron/tray.ts`), and its menu quits the app. Opening the app again also brings back the running window, as only one copy runs at a time. Some Linux desktops (GNOME without the AppIndicator extension) hide tray icons; there, open the app again from the launcher.
 
 ## Mobile Refresh
 
@@ -205,6 +218,8 @@ Use the clean reinstall flow after icon updates. iOS and Android can cache launc
 Publishing a GitHub release keeps GitHub's default source ZIP/TAR assets and also uploads:
 
 - macOS Electron DMG
+- Windows installers (x64 and Arm; unsigned)
+- Linux AppImage and .deb packages (x64 and arm64)
 - Android release APK
 - unsigned iOS simulator app ZIP
 

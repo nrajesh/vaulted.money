@@ -63,14 +63,14 @@ describe("AiHubPage", () => {
     vi.restoreAllMocks();
   });
 
-  it("locks the agent part outside the Mac app instead of offering a bar to open", () => {
+  it("locks the agent part outside the desktop app instead of offering a bar to open", () => {
     renderPage();
     expect(
       screen.getByRole("heading", { level: 1, name: "AI assistant" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Needs the Mac app. Your AI agent connects to Vaulted Money on your Mac.",
+        "Needs the desktop app. Your AI agent connects to Vaulted Money on your computer.",
       ),
     ).toBeInTheDocument();
     // Nothing to expand, and none of the agent setup is shown.
@@ -92,7 +92,7 @@ describe("AiHubPage", () => {
     renderPage();
     expect(
       screen.getByText(
-        "Needs Vaulted Money on a computer (currently Mac). Your AI agent connects to it there.",
+        "Needs Vaulted Money on a computer (Mac, Windows or Linux). Your AI agent connects to it there.",
       ),
     ).toBeInTheDocument();
   });

@@ -4,10 +4,13 @@ import {
   ipcMain,
   dialog,
   Menu,
+  nativeImage,
   nativeTheme,
   shell,
+  Tray,
 } from "electron";
 import { buildAppMenuTemplate } from "./appMenu";
+import { buildTrayMenuTemplate, trayIconPath, usesTray } from "./tray";
 import * as path from "path";
 import * as fs from "fs";
 import * as Security from "./security";
@@ -21,7 +24,52 @@ import {
 import { copyServerFile, detectCodex, setupCodex } from "./codex";
 
 let mainWindow: BrowserWindow | null = null;
+// Kept in a module variable so the tray icon is not garbage-collected.
+let tray: Tray | null = null;
 let isQuitting = false;
+
+// One copy of the app at a time: two windows writing the same IndexedDB
+// would trip over each other. Opening the app again (from the Start menu,
+// say, while it sits in the tray) brings back the window that is running.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on("second-instance", () => showMainWindow());
+}
+
+function showMainWindow() {
+  if (!mainWindow) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+/** Windows and Linux: the tray icon reopens the hidden window (see tray.ts). */
+function createTray() {
+  const image = nativeImage.createFromPath(
+    trayIconPath({
+      isPackaged: app.isPackaged,
+      resourcesPath: process.resourcesPath,
+      appPath: app.getAppPath(),
+    }),
+  );
+  tray = new Tray(image);
+  tray.setToolTip(app.name);
+  tray.setContextMenu(
+    Menu.buildFromTemplate(
+      buildTrayMenuTemplate({
+        appName: app.name,
+        open: showMainWindow,
+        quit: () => app.quit(),
+      }),
+    ),
+  );
+  // Windows opens the window on a click; Linux desktops show the menu.
+  tray.on("click", showMainWindow);
+}
 let authorizedBackupFolders = new Set<string>();
 
 // --- Local REST API -------------------------------------------------------
@@ -194,6 +242,7 @@ app.whenReady().then(() => {
     ),
   );
   createWindow();
+  if (usesTray(process.platform)) createTray();
 
   // Initialize authorized folders from config
   const backupConfigPath = path.join(
@@ -415,11 +464,7 @@ app.whenReady().then(() => {
   );
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    } else if (mainWindow) {
-      mainWindow.show();
-    }
+    showMainWindow();
   });
 });
 

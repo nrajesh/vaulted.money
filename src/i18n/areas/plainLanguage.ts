@@ -95,7 +95,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Ask other AI apps about your money",
-        body: "In the Mac app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
+        body: "In the desktop app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
       },
     },
     help: {
@@ -136,9 +136,9 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "Models running on your own computer or home network, such as LM Studio or Ollama, work in the Mac app only.",
+          "Models running on your own computer or home network, such as LM Studio or Ollama, work in the desktop app only.",
         noLocalNetworkHere:
-          "A model on your own computer or home network works in the Mac app only.",
+          "A model on your own computer or home network works in the desktop app only.",
       },
     },
   },
@@ -231,7 +231,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Pregunta a otras apps de IA por tu dinero",
-        body: "En la app para Mac puedes dejar que Claude, ChatGPT y apps similares lean y actualicen tus datos. Está apagado hasta que lo actives, y lo que leen se envía a quien creó esa app.",
+        body: "En la app de escritorio puedes dejar que Claude, ChatGPT y apps similares lean y actualicen tus datos. Está apagado hasta que lo actives, y lo que leen se envía a quien creó esa app.",
       },
     },
     help: {
@@ -272,9 +272,9 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "Los modelos que se ejecutan en tu ordenador o en tu red doméstica, como LM Studio u Ollama, solo funcionan en la app para Mac.",
+          "Los modelos que se ejecutan en tu ordenador o en tu red doméstica, como LM Studio u Ollama, solo funcionan en la app de escritorio.",
         noLocalNetworkHere:
-          "Un modelo en tu ordenador o red doméstica solo funciona en la app para Mac.",
+          "Un modelo en tu ordenador o red doméstica solo funciona en la app de escritorio.",
       },
     },
   },
@@ -365,7 +365,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "向其他 AI 应用询问你的财务",
-        body: "在 Mac 应用中，你可以让 Claude、ChatGPT 等应用读取和更新你的数据。开启前一直关闭，它们读取的内容会发送给该应用的开发方。",
+        body: "在桌面应用中，你可以让 Claude、ChatGPT 等应用读取和更新你的数据。开启前一直关闭，它们读取的内容会发送给该应用的开发方。",
       },
     },
     help: {
@@ -406,8 +406,8 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "在你自己的电脑或家庭网络上运行的模型（如 LM Studio 或 Ollama）仅在 Mac 应用中可用。",
-        noLocalNetworkHere: "你电脑或家庭网络上的模型仅在 Mac 应用中可用。",
+          "在你自己的电脑或家庭网络上运行的模型（如 LM Studio 或 Ollama）仅在桌面应用中可用。",
+        noLocalNetworkHere: "你电脑或家庭网络上的模型仅在桌面应用中可用。",
       },
     },
   },
@@ -500,7 +500,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Vraag andere AI-apps naar je geld",
-        body: "In de Mac-app kun je Claude, ChatGPT en vergelijkbare apps je gegevens laten lezen en bijwerken. Het staat uit tot je het aanzet, en wat ze lezen gaat naar de maker van die app.",
+        body: "In de desktop-app kun je Claude, ChatGPT en vergelijkbare apps je gegevens laten lezen en bijwerken. Het staat uit tot je het aanzet, en wat ze lezen gaat naar de maker van die app.",
       },
     },
     help: {
@@ -542,9 +542,9 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "Modellen op je eigen computer of thuisnetwerk, zoals LM Studio of Ollama, werken alleen in de Mac-app.",
+          "Modellen op je eigen computer of thuisnetwerk, zoals LM Studio of Ollama, werken alleen in de desktop-app.",
         noLocalNetworkHere:
-          "Een model op je eigen computer of thuisnetwerk werkt alleen in de Mac-app.",
+          "Een model op je eigen computer of thuisnetwerk werkt alleen in de desktop-app.",
       },
     },
   },
@@ -636,7 +636,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "பிற AI பயன்பாடுகளிடம் உங்கள் பணம் பற்றிக் கேளுங்கள்",
-        body: "Mac பயன்பாட்டில் Claude, ChatGPT போன்றவை உங்கள் தரவைப் படிக்கவும் புதுப்பிக்கவும் அனுமதிக்கலாம். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்; அவை படிப்பது அந்தப் பயன்பாட்டை உருவாக்கியவருக்குச் செல்லும்.",
+        body: "கணினி பயன்பாட்டில் Claude, ChatGPT போன்றவை உங்கள் தரவைப் படிக்கவும் புதுப்பிக்கவும் அனுமதிக்கலாம். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்; அவை படிப்பது அந்தப் பயன்பாட்டை உருவாக்கியவருக்குச் செல்லும்.",
       },
     },
     help: {
@@ -678,9 +678,9 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "உங்கள் கணினியிலோ வீட்டு நெட்வொர்க்கிலோ இயங்கும் LM Studio, Ollama போன்ற மாதிரிகள் Mac பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
+          "உங்கள் கணினியிலோ வீட்டு நெட்வொர்க்கிலோ இயங்கும் LM Studio, Ollama போன்ற மாதிரிகள் கணினி பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
         noLocalNetworkHere:
-          "உங்கள் கணினி அல்லது வீட்டு நெட்வொர்க்கில் உள்ள மாதிரி Mac பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
+          "உங்கள் கணினி அல்லது வீட்டு நெட்வொர்க்கில் உள்ள மாதிரி கணினி பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
       },
     },
   },

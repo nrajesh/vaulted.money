@@ -51,6 +51,72 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$RELEASE_TAG" release-assets/*.dmg --clobber
 
+  electron-windows:
+    name: Electron Windows installer
+    # Unsigned: Windows SmartScreen warns on first launch ("More info" > "Run anyway").
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build installers (x64 and Arm)
+        run: pnpm run electron:build:win
+
+      - name: Upload installers to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(release/*.exe)
+          test ${#files[@]} -gt 0
+          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+
+  electron-linux:
+    name: Electron Linux packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build AppImage and .deb (x64 and arm64)
+        run: pnpm run electron:build:linux
+
+      - name: Upload packages to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(release/*.AppImage release/*.deb)
+          test ${#files[@]} -gt 0
+          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+
   android-apk:
     name: Android APK
     runs-on: ubuntu-latest

@@ -350,7 +350,7 @@ const AskTab = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
             value={
               !localApi.supported
                 ? t("helpDrawer.ask.macOnly", {
-                    defaultValue: "Mac app only",
+                    defaultValue: "Desktop app only",
                   })
                 : agentsOn
                   ? t("helpDrawer.ask.connected", {

@@ -34,7 +34,9 @@
     "showreel:draft": "node marketing/showreel/render.mjs --draft",
     "showreel:capture": "node marketing/showreel/capture.mjs",
     "showreel:finals": "node marketing/showreel/finals.mjs",
-    "marketing:preview": "node marketing/app-preview/record.mjs && node marketing/app-preview/compose.mjs"
+    "marketing:preview": "node marketing/app-preview/record.mjs && node marketing/app-preview/compose.mjs",
+    "electron:build:win": "pnpm run build:app && pnpm run electron:compile && electron-builder --win --publish never",
+    "electron:build:linux": "pnpm run build:app && pnpm run electron:compile && electron-builder --linux --publish never"
   },
   "dependencies": {
     "@capacitor/core": "^8.6.0",
@@ -141,6 +143,10 @@
       {
         "from": "mcp/server.mjs",
         "to": "mcp/server.mjs"
+      },
+      {
+        "from": "assets/tray",
+        "to": "tray"
       }
     ],
     "mac": {
@@ -160,10 +166,51 @@
       "entitlementsInherit": "electron/entitlements.mac.plist"
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/brand/mac-icon.png"
     },
     "linux": {
-      "target": "AppImage"
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/brand/mac-icon.png",
+      "category": "Office;Finance",
+      "maintainer": "Vaulted Money",
+      "executableName": "vaulted-money",
+      "syncDesktopName": true,
+      "synopsis": "Private, offline money manager"
+    },
+    "nsis": {
+      "oneClick": false,
+      "buildUniversalInstaller": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
-  }
+  },
+  "description": "Private, offline money manager for your devices",
+  "desktopName": "vaulted-money.desktop",
+  "homepage": "https://vaulted.money"
 }

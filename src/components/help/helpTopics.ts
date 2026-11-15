@@ -62,7 +62,7 @@ export const GUIDE_SECTIONS = {
     anchor: "local-api-desktop-app",
     title: "Connecting other apps",
     summary:
-      "The Mac app can let AI apps and your own scripts reach your data through a connection that only works on your own computer. It is off until you switch it on.",
+      "The desktop app can let AI apps and your own scripts reach your data through a connection that only works on your own computer. It is off until you switch it on.",
   },
   privacy: {
     anchor: "privacy-model",
@@ -164,7 +164,7 @@ export const HELP_CARDS = {
   connectApps: {
     guide: "localApi",
     title: "Use Claude or ChatGPT",
-    body: "In the Mac app, connect an AI app and ask questions about your money in that app.",
+    body: "In the desktop app, connect an AI app and ask questions about your money in that app.",
   },
   demo: {
     guide: "core",

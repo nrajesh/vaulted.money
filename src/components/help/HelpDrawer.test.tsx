@@ -109,7 +109,7 @@ describe("HelpDrawer", () => {
     const dialog = await screen.findByRole("dialog", { name: "Help" });
     expect(within(dialog).getByText("Off")).toBeVisible();
     expect(within(dialog).getByText("Not set up")).toBeVisible();
-    expect(within(dialog).getByText("Mac app only")).toBeVisible();
+    expect(within(dialog).getByText("Desktop app only")).toBeVisible();
     expect(
       within(dialog).getByRole("button", {
         name: "Copy question: Am I over budget anywhere this month?",
