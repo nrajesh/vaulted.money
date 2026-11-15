@@ -64,7 +64,13 @@ function buildApp({ preview, markUrl = "", story = "" }) {
  * Builds the preview app, records `seconds` of it on `device`, and returns
  * { video, marks } where marks are seconds from the start of the video.
  */
-export async function recordSimulator({ device, seconds, name, story = "" }) {
+export async function recordSimulator({
+  device,
+  seconds,
+  name,
+  story = "",
+  display = "",
+}) {
   requireTools(["xcrun", "ffmpeg"]);
   mkdirSync(OUT, { recursive: true });
   const video = path.join(OUT, `${name}.mp4`);
@@ -143,6 +149,8 @@ export async function recordSimulator({ device, seconds, name, story = "" }) {
       "io",
       udid,
       "recordVideo",
+      // Two-screen devices (iPhone Duo) need the screen named: 3 is the inner one.
+      ...(display ? [`--display=${display}`] : []),
       "--codec",
       "h264",
       "--force",
@@ -208,5 +216,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     seconds: Number(arg("seconds", 75)),
     name: arg("name", "raw"),
     story: arg("story", ""),
+    display: arg("display", ""),
   });
 }
