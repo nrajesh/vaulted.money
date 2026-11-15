@@ -1,0 +1,9 @@
+{
+  "name": "vaulted-money-marketing",
+  "private": true,
+  "type": "module",
+  "description": "Store screenshots, App Store preview and showreels for Vaulted Money (see each folder's README)",
+  "devDependencies": {
+    "playwright": "1.57.0"
+  }
+}

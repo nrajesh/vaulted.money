@@ -1,0 +1,35 @@
+{
+  "1": {
+    "headline": "Your money *never leaves* your device.",
+    "sub": "Unless you switch AI on.",
+    "body": "No sign-up. No cloud."
+  },
+  "2": {
+    "headline": "Ask it like *you'd say it.*",
+    "body": "“Groceries over 20 last month”, understood right on your phone."
+  },
+  "3": {
+    "headline": "Your money. Your labels. *Your rules.*",
+    "body": "Own and manage every account, payee, budget & category."
+  },
+  "4": {
+    "headline": "AI when you want it. *Silent* when you don't.",
+    "body": "Off by default, one switch away. Use AI the way you want.",
+    "callouts": [
+      "Agents may need a second device",
+      "Local AI keeps data off the cloud"
+    ]
+  },
+  "5": {
+    "headline": "See where it *really* goes.",
+    "body": "Get warned before you overspend."
+  },
+  "6": {
+    "headline": "Room to breathe on *big screens.*",
+    "body": "List and details side by side."
+  },
+  "feature": {
+    "headline": "Your money *never leaves* your device.",
+    "body": "Private, offline budgeting. Optional AI."
+  }
+}
