@@ -4,9 +4,9 @@
 
 **Goal:** One command makes every App Store / Google Play / Polar image from the real app; a recorded App Store preview and a 4K keynote-style showreel follow the same story.
 
-**Architecture:** Three tools under `marketing/`, sharing one capture step and one caption source. `store-screenshots` drives the web build in Playwright (fixed clock and random seed, so numbers never change), captures screens per device and theme, then renders HTML frames to exact pixel sizes. `app-preview` records the real iOS app in the simulator while a preview-only autoplay script walks the story, then adds captions and music with ffmpeg. `showreel` is an HTML stage animated by a GSAP timeline, rendered frame by frame (the jhg method) with a synthesised soundtrack.
+**Architecture:** Three tools under `marketing/`, sharing one capture step and one caption source. `store-screenshots` drives the web build in Playwright (fixed clock and random seed, so numbers never change), captures screens per device and theme, then renders HTML frames to exact pixel sizes. `app-preview` records the real iOS app in the simulator while a preview-only autoplay script walks the story, then adds captions and music with ffmpeg. `showreel` revives the project's own code-built showreel engine (commit `8cf27ba`: deterministic scenes, CDP frame renderer with motion blur, synthesised soundtrack tied to one timeline) and gives it two cuts: a fast social cut (the old reel, refreshed) and a slower keynote cut, both in 4K.
 
-**Tech Stack:** Node 22 ES modules, Playwright (Chromium), GSAP 3, ffmpeg (libx264, aac), Xcode simulator (`simctl`), Vitest for the pure logic.
+**Tech Stack:** Node 22 ES modules, Playwright (Chromium), headless Chrome over CDP, ffmpeg (Homebrew `ffmpeg` already on PATH has libx264 + aac; `ffmpeg-full` is keg-only and not needed), Xcode 27.2 simulators incl. iPhone Duo (`simctl`), Vitest for the pure logic.
 
 **Spec:** `docs/superpowers/specs/2026-11-15-store-screenshots-design.md` (Part 1 screenshots, Part 2 videos). Reference for the video method: the jhg launch video README (`jhg/marketing/launch-video-source.zip`).
 
@@ -25,7 +25,10 @@
 - Anti-goals: no misspelled query, no "Infinite", no negative net worth, no "€-", no "0 selected" bar, no empty areas in frame; no "Android"/"Google Play" in Apple images; no "Mac" in Google Play images; no "free"/price wording in any store image.
 - Demo data: "Home Budget" ledger from `/ledgers?demo=1` → "Generate Data". Fixed clock `2026-11-20T10:00:00` and seeded `Math.random`, so every run gives the same numbers.
 - App Store preview: screen recording of the app only (no device frame), 886×1920, 15–30 s, captions and music allowed.
-- Showreel: 3840×2160 and 1920×1080, 60 fps, 70–80 s, ~6–8 s per scene; soundtrack synthesised in code, normalised to −14 LUFS; store cut ends on the brand, website cut adds "Free & open source"; devices named: iPhone, iPad, Android, Mac.
+- Showreel, two cuts, each 3840×2160 and 1920×1080 at 60 fps, soundtrack synthesised in code, −14 LUFS:
+  - **Keynote cut:** 70–80 s, ~6–8 s per scene, calm score; store version ends on the brand, website version adds "Free & open source".
+  - **Social cut:** the old 50 s reel's pace and storyboard, refreshed with current screens; for social media and the website.
+  - Both: headline type matches the screenshots (system sans, bold, accent words in the brand gradients; no serif italics); devices named iPhone, iPad, Android, Mac (Windows/Linux only once those builds ship); the keynote cut includes an iPhone Duo segment recorded from the Duo simulator.
 - Nothing generated is committed except the finished videos in `marketing/showreel/final/` (current cut only). Captures and images go to each tool's `out/` (gitignored).
 - Image generation runs on macOS (the app uses the system font; Linux runners render a different font).
 
@@ -57,15 +60,14 @@ marketing/
     render.mjs                         renders slide HTML to PNG at exact size
     make.mjs                           CLI: capture → render → out/<set>/<lang>/
     README.md
-  audio/
-    synth.mjs, score.mjs               shared synthesiser and the calm score
   app-preview/
     record.mjs                         simulator build, install, recordVideo
     compose.mjs                        crop/scale, captions, music → final mp4
     README.md
-  showreel/
-    index.html, src/main.js, src/styles.css, src/scenes/*.js
-    render.mjs, mux.mjs, README.md
+  showreel/                            restored from 8cf27ba, then updated
+    timeline.mjs → timelines/{social,keynote}.mjs
+    soundtrack.mjs (+ calm score), render.mjs, capture.mjs, scenes/*.mjs
+    duo/record.mjs                     Duo simulator recording
     final/                             committed finished videos
 src/marketing/previewAutoplay.ts       preview-build-only story driver
 ```
@@ -174,43 +176,45 @@ src/marketing/previewAutoplay.ts       preview-build-only story driver
 - [ ] **Step 2: Verify** with `gh workflow run release.yml -f tag=<an existing test tag>` on a branch, or locally with `act` if installed. Expected: the zip appears on the release.
 - [ ] **Step 3: Commit** `git commit -m "Release: attach regenerated store screenshots"`
 
-## Part 2: Shared soundtrack and the App Store preview
+## Part 2: Restore the showreel engine
 
-### Task 6: Synthesised score
+### Task 6: Bring back the old showreel engine
 
 **Files:**
-- Create: `marketing/audio/synth.mjs`, `marketing/audio/score.mjs`
-- Test: `marketing/audio/score.test.ts`
+- Restore from `8cf27ba`: everything under `marketing/showreel/` (`git checkout 8cf27ba -- marketing/showreel`)
+- Modify: `package.json` (scripts `showreel`, `showreel:draft`, `showreel:capture` as they were in `8cf27ba`, plus `--cut` passthrough), `.gitignore` (`marketing/showreel/out/` if missing)
+- Test: `marketing/showreel/timeline.test.ts`
 
 **Interfaces:**
-- Produces: `renderScore({ seconds: number, cues: { t: number, kind: "lift"|"tick"|"whoosh"|"chime" }[], sampleRate?: 48000 }): Float32Array[]` (stereo) and `writeWav(path: string, channels: Float32Array[], sampleRate: number): void`.
-- Mood (spec): calm, confident, modern; soft synth pads and piano, a gentle pulse that lifts at `lift` cues; quiet UI effects at the other cues.
+- Produces (existing, keep the names): `window.__render(seconds)`; `timeline.mjs` exports tempo, chapters and named cues; `soundtrack.mjs` writes `out/soundtrack.wav` from the timeline; `render.mjs` flags `--draft`, `--stills`, `--from/--to`, `--blur`, `--workers`.
+- Produces (new): `render.mjs --cut social|keynote` and `--scale 2` (4K: the 1920×1080 stage drawn at twice the detail); `soundtrack.mjs --cut`.
 
-- [ ] **Step 1: Write failing tests:** `renderScore({ seconds: 2, cues: [] })` returns 2 channels of 96 000 samples; every sample is within [−1, 1]; a `tick` cue at 1.0 s raises the RMS of 0.98–1.05 s above the RMS of 0.5–0.57 s.
-- [ ] **Step 2: Run** `pnpm vitest run marketing/audio/score.test.ts`. Expected: FAIL.
-- [ ] **Step 3: Implement** (oscillators with ADSR, simple reverb via a feedback delay network, piano as decaying partials). Port the structure of the jhg `audio.mjs`; do not copy its Indian instrumentation.
-- [ ] **Step 4: Run** the test. Expected: PASS.
-- [ ] **Step 5: Listen:** `node -e "...renderScore({seconds:30,cues:[{t:4,kind:'lift'}]})..."` → `marketing/audio/out/sample.wav`. Play it; check that it's calm and doesn't clip.
-- [ ] **Step 6: Commit** `git commit -m "Marketing: synthesised score"`
+- [ ] **Step 1: Restore** the folder and scripts; `pnpm install`.
+- [ ] **Step 2: Write a failing test** `timeline.test.ts`: the social timeline's chapters are in time order without gaps, and the last chapter ends at the film's length.
+- [ ] **Step 3: Run** `pnpm vitest run marketing/showreel/timeline.test.ts`. Expected: PASS against the restored timeline (it pins existing behaviour before changes); if it fails, fix the test to the real structure and note it.
+- [ ] **Step 4: Run** `pnpm showreel:draft`. Expected: a 960×540 draft of the old 50 s reel renders (old screens are fine at this step).
+- [ ] **Step 5: Add `--scale 2`** to `render.mjs` (device scale factor 2 on the CDP viewport, output 3840×2160) and render a 2 s slice: `node marketing/showreel/render.mjs --scale 2 --from 2 --to 4`. Expected (`ffprobe`): 3840×2160.
+- [ ] **Step 6: Commit** `git commit -m "Showreel: restore the code-built engine, add 4K"`
+
+## Part 3: App Store preview
 
 ### Task 7: Preview-only autoplay and simulator recording
 
 **Files:**
 - Create: `src/marketing/previewAutoplay.ts`, `marketing/app-preview/record.mjs`
-- Modify: `src/main.tsx` (import `previewAutoplay` only when `import.meta.env.VITE_PREVIEW_AUTOPLAY === "1"`)
-- Modify: `package.json` (script `"marketing:preview": "node marketing/app-preview/record.mjs && node marketing/app-preview/compose.mjs"`)
+- Modify: `src/main.tsx` (import `previewAutoplay` only when `import.meta.env.VITE_PREVIEW_AUTOPLAY === "1"`), `package.json` (script `"marketing:preview": "node marketing/app-preview/record.mjs && node marketing/app-preview/compose.mjs"`)
 - Test: `src/marketing/previewAutoplay.test.ts`, `src/tests/previewAutoplayNotShipped.test.ts`
 
 **Interfaces:**
 - Consumes: `story.json` actions (Task 1).
-- Produces: `runPreviewStory(steps: PreviewStep[], api: { navigate(path): void; click(role, name): Promise<void>; type(text): Promise<void>; wait(ms): Promise<void> }): Promise<void>`, where `PreviewStep` = the story actions plus `{ do: "goto", path }`. On finishing it sets `document.title = "preview:done"`.
-- Produces: `record.mjs`, which builds with `VITE_PREVIEW_AUTOPLAY=1 pnpm build:app`, runs `cap sync ios`, builds for the simulator (as `ios:build:simulator`), boots "iPhone 18 Pro Max", sets the status bar (`xcrun simctl status_bar booted override --time 9:41 --dataNetwork 5g --batteryLevel 100`), installs, starts `xcrun simctl io booted recordVideo --codec h264 out/raw.mp4`, launches the app, and stops recording 30 s later or on `preview:done`.
+- Produces: `runPreviewStory(steps: PreviewStep[], api: { navigate(path: string): void; click(role: string, name: string): Promise<void>; type(text: string): Promise<void>; wait(ms: number): Promise<void> }): Promise<void>` where `PreviewStep` = the story actions plus `{ do: "goto", path }`; when finished it sets `document.title = "preview:done"`.
+- Produces: `recordSimulator({ device: string, seconds: number, out: string }): Promise<void>` in `record.mjs`. It builds with `VITE_PREVIEW_AUTOPLAY=1 pnpm build:app`, then `cap sync ios`, builds for the simulator (as `ios:build:simulator`), boots the device, runs `xcrun simctl status_bar <udid> override --time 9:41 --dataNetwork 5g --batteryState charged --batteryLevel 100`, installs, records (`xcrun simctl io <udid> recordVideo --codec h264`), launches, and stops on `preview:done` or the time limit. Default device "iPhone 18 Pro Max"; Task 11 reuses it with "iPhone Duo".
 
-- [ ] **Step 1: Write failing tests:** with a fake `api`, `runPreviewStory` calls `navigate("/analytics")` first and `type("groceries over 20 last month ")` exactly once; `previewAutoplayNotShipped.test.ts` reads `dist/` after `pnpm build:app` (skipped if `dist/` is missing) and asserts no file contains `"preview:done"`.
+- [ ] **Step 1: Write failing tests:** with a fake `api`, `runPreviewStory` calls `navigate("/analytics")` first and `type("groceries over 20 last month ")` exactly once; `previewAutoplayNotShipped.test.ts` reads `dist/` (skipped when missing) and asserts no file contains `"preview:done"`.
 - [ ] **Step 2: Run** `pnpm vitest run src/marketing src/tests/previewAutoplayNotShipped.test.ts`. Expected: FAIL.
 - [ ] **Step 3: Implement** `previewAutoplay.ts` (story ~25 s: 0–4 s Charts donut, 4–10 s search typed and understood, 10–14 s Accounts, 14–19 s AI switched on, 19–23 s Spending insights, 23–25 s hold) and the guarded import.
 - [ ] **Step 4: Run** the tests (after `pnpm build:app` for the guard). Expected: PASS.
-- [ ] **Step 5: Implement and run `record.mjs`.** Expected: `marketing/app-preview/out/raw.mp4`, 25–30 s, the real app with the 9:41/5G status bar.
+- [ ] **Step 5: Implement and run `record.mjs`.** Expected: `marketing/app-preview/out/raw.mp4`, 25–30 s, the real app with the 9:41 / 5G status bar.
 - [ ] **Step 6: Commit** `git commit -m "App Store preview: preview-only autoplay and simulator recording"`
 
 ### Task 8: Preview captions, music and export
@@ -220,59 +224,71 @@ src/marketing/previewAutoplay.ts       preview-build-only story driver
 - Test: `marketing/app-preview/compose.test.ts`
 
 **Interfaces:**
-- Consumes: `out/raw.mp4` (Task 7), `renderScore`/`writeWav` (Task 6), strings (Task 1).
+- Consumes: `out/raw.mp4` (Task 7); the showreel synthesiser (`soundtrack.mjs`, Task 6) for a 25 s calm cue; strings (Task 1).
 - Produces: `captionTimeline(strings, story): { start: number, end: number, headline: string, sub?: string }[]` and `marketing/app-preview/out/vaulted-money-app-preview.mp4` (886×1920, H.264 + AAC, 15–30 s, −14 LUFS).
 
-- [ ] **Step 1: Write failing tests:** `captionTimeline` returns 5 entries in time order that don't overlap, with the last ending ≤ 30; entry 2's headline is the plain text of shot 2's headline (no asterisks).
+- [ ] **Step 1: Write failing tests:** `captionTimeline` returns 5 entries in time order without overlaps, the last ending ≤ 30; entry 2's headline is shot 2's headline without asterisks.
 - [ ] **Step 2: Run** them. Expected: FAIL.
-- [ ] **Step 3: Implement.** Captions are rendered as transparent PNGs with the slide template's typography and overlaid with ffmpeg `overlay=enable='between(t,a,b)'`; the video is scaled to 886×1920; the music comes from `renderScore` with a `lift` at the search reveal; `loudnorm=I=-14`.
-- [ ] **Step 4: Run** the tests, then `pnpm marketing:preview`. Expected: PASS; `ffprobe` shows 886×1920 and a duration of 15–30 s.
+- [ ] **Step 3: Implement:** captions rendered as transparent PNGs with the slide template's typography and overlaid with ffmpeg `overlay=enable='between(t,a,b)'`; video scaled to 886×1920; music from the synthesiser with a lift at the search reveal; `loudnorm=I=-14`.
+- [ ] **Step 4: Run** the tests, then `pnpm marketing:preview`. Expected: PASS; `ffprobe` shows 886×1920 and 15–30 s.
 - [ ] **Step 5: Commit** `git commit -m "App Store preview: captions, music and export"`
 
-## Part 3: Showreel
+## Part 4: Showreels
 
-### Task 9: Stage and frame-by-frame renderer
+### Task 9: Refresh capture and typography (both cuts)
 
 **Files:**
-- Create: `marketing/showreel/index.html`, `marketing/showreel/src/main.js`, `marketing/showreel/src/styles.css`, `marketing/showreel/render.mjs`, `marketing/showreel/mux.mjs`
-- Test: `marketing/showreel/frames.test.ts`
+- Modify: `marketing/showreel/capture.mjs`, `marketing/showreel/showreel.mjs`, `marketing/showreel/styles.css`, `marketing/showreel/scenes/*.mjs` (copy only)
+
+- [ ] **Step 1: Capture from the current app:** point `capture.mjs` at the "Home Budget" ledger with the fixed clock and seed from Task 2 (reuse `marketing/shared/capture.mjs` helpers); capture both themes; capture phone, iPad, Android-width and Mac-window screens, including the two-panel Transactions view and the AI page with the new wording.
+- [ ] **Step 2: Typography:** drop the Google Fonts download; headlines use the screenshots' stack (`-apple-system, "SF Pro Display", Inter, sans-serif`, weight 800, tight tracking); accent words use the dark/light brand gradients instead of Instrument Serif italic; JetBrains Mono stays only for the terminal/HUD labels (system monospace).
+- [ ] **Step 3: Copy:** remove Windows and Linux; platform lists read iPhone · iPad · Android · Mac · Web; run `findAntiGoals` (Task 2, store `"mac"`) over every scene's visible text in a stills pass and fix what it finds (the "Free & open source" chapter is allowed in the social cut).
+- [ ] **Step 4: Check:** `node marketing/showreel/render.mjs --stills 2,6,12,18,24,32,40,47 --cut social`. Expected: 8 stills, all current screens, no serif italics, no anti-goals.
+- [ ] **Step 5: Commit** `git commit -m "Showreel: current screens and screenshot typography"`
+
+### Task 10: Keynote cut and calm score
+
+**Files:**
+- Create: `marketing/showreel/timelines/keynote.mjs`, `marketing/showreel/scenes/{faceoff,search,labels,aiSwitch,bigScreens}.mjs`
+- Move: `marketing/showreel/timeline.mjs` → `marketing/showreel/timelines/social.mjs` (update imports)
+- Modify: `marketing/showreel/soundtrack.mjs` (score selected by cut), `marketing/showreel/showreel.mjs` (`?cut=` / `--cut`)
+- Test: extend `marketing/showreel/timeline.test.ts`
 
 **Interfaces:**
-- Consumes: captures from `captureShots` for devices `iphone`, `ipad`, `android`, `mac` in both themes (Task 2), copied to `marketing/showreel/out/captures/`.
-- Produces: `window.__seek(t: number): void` on the stage (pauses the GSAP master timeline at `t`); `window.__cues(): { t, kind }[]`; `frameTimes(fps: number, sub: number, from: number, to: number): number[][]` (sub-sample times per output frame, for motion blur).
-- Produces CLI: `node marketing/showreel/render.mjs [--fps 60] [--sub 5] [--scale 2] [--from s] [--to s] [--stills a,b] [--cut store|web]` → `out/video-silent.mp4`; `node marketing/showreel/mux.mjs` → `out/vaulted-money-showreel-<4k|1080p>-<cut>.mp4`.
+- Consumes: the engine (Task 6), captures (Task 9), strings (Task 1), the Duo recording `marketing/showreel/out/duo/duo-split.mp4` (Task 11; until then the scene uses the iPad capture).
+- Produces: `timelines/keynote.mjs` with the same exports as `social.mjs`.
 
-- [ ] **Step 1: Write failing tests:** `frameTimes(60, 5, 0, 1)` has 60 frames of 5 times each, all within [0, 1), and strictly increasing; `frameTimes(60, 1, 2, 3)[0][0]` is 2.
-- [ ] **Step 2: Run** them. Expected: FAIL.
-- [ ] **Step 3: Implement** the stage (1920×1080 layout drawn at `--scale 2` for 4K), `render.mjs` (headless Chromium, `__seek` per sub-sample, average sub-samples, pipe raw frames to ffmpeg libx264 CRF 14, workers), and `mux.mjs` (adds the WAV, `loudnorm=I=-14`). Follow the jhg `render.mjs`/`mux.mjs` structure.
-- [ ] **Step 4: Run** the tests, then `node marketing/showreel/render.mjs --fps 30 --sub 1 --to 3`. Expected: PASS; a 3 s silent draft.
-- [ ] **Step 5: Commit** `git commit -m "Showreel: stage and frame-by-frame renderer"`
+Keynote storyboard (≈76 s, tempo ~84 BPM): vault logo 0–5 → privacy face-off 5–14 ("Unless you switch AI on" as its own beat) → search 14–23 (typed at a readable pace; "Understood as" zooms) → labels 23–31 (light/dark sweep across Accounts) → AI switch 31–40 (switch flips; the two callouts slide in) → budgets 40–48 (zoom into the over-budget card) → big screens 48–57 (iPhone becomes iPad becomes iPhone Duo unfolding to two panels) → every device 57–67 (iPhone, iPad, Android, Mac glide into a row) → end 67–76 (lockup; `web` version adds "Free & open source").
 
-### Task 10: Scenes
+- [ ] **Step 1: Extend the test:** the keynote timeline is 70–80 s, chapters in order without gaps, every chapter ≥ 5 s; the social timeline is unchanged in length.
+- [ ] **Step 2: Run** it. Expected: FAIL.
+- [ ] **Step 3: Implement** the keynote timeline, the new scenes and the calm score (soft pads and piano, gentle pulse, lifts at privacy, the device reveal and the end; UI ticks on cues).
+- [ ] **Step 4: Run** the test. Expected: PASS. Then `node marketing/showreel/render.mjs --cut keynote --stills 8,18,27,35,44,52,62,72`; review the stills.
+- [ ] **Step 5: Commit** `git commit -m "Showreel: keynote cut and calm score"`
+
+### Task 11: iPhone Duo segment from the simulator
 
 **Files:**
-- Create: `marketing/showreel/src/scenes/{intro,privacy,search,labels,ai,budgets,bigScreens,devices,end}.js`
-- Modify: `marketing/showreel/src/main.js`
+- Create: `marketing/showreel/duo/record.mjs`
 
 **Interfaces:**
-- Consumes: the stage helpers (Task 9) and strings (Task 1).
-- Produces: each scene exports `build(tl: gsap.core.Timeline, at: number): { end: number, cues: {t, kind}[] }`; `main.js` chains them and exposes the combined cues.
+- Consumes: `recordSimulator` (Task 7) and `previewAutoplay` with a Duo story (`/transactions` → tap three rows so the details panel changes → hold).
+- Produces: `marketing/showreel/out/duo/duo-split.mp4` (inner display, 10–12 s).
 
-Scene plan (≈76 s): intro logo build 0–5; privacy 5–14 (face-off pair, the "Unless you switch AI on" line arrives as its own beat); search 14–23 (query types at a readable pace, the "Understood as" panel zooms); labels 23–31 (light/dark theme sweep across Accounts); ai 31–40 (switch flips, both callouts slide in); budgets 40–48 (zoom into the over-budget card); bigScreens 48–57 (iPhone morphs into iPad, two panels); devices 57–67 ("Every device": iPhone, iPad, Android, Mac glide into a row); end 67–76 (logo, name; the `web` cut adds "Free & open source").
+- [ ] **Step 1: Create the device** if missing: `xcrun simctl create "Vaulted Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo com.apple.CoreSimulator.SimRuntime.iOS-27-2`.
+- [ ] **Step 2: Record** with `recordSimulator({ device: "Vaulted Duo", seconds: 12, out: ".../duo-split.mp4" })`. Expected: the two-panel layout on the inner display, rows selected one after another, nothing under the side status bar.
+- [ ] **Step 3: Swap it into** the keynote's big-screens scene (drawn Duo frame around the video) and re-render that stretch: `--cut keynote --from 48 --to 57 --draft`.
+- [ ] **Step 4: Commit** `git commit -m "Showreel: iPhone Duo segment recorded from the simulator"`
 
-- [ ] **Step 1: Implement** the scenes. Use only captured screens and spec copy; each headline is held ≥ 2 reading passes (≥ 0.5 s per word, minimum 3 s).
-- [ ] **Step 2: Check stills:** `node marketing/showreel/render.mjs --stills 7,18,27,35,44,52,62,72`. Expected: 8 PNGs in `out/stills`; review each against the spec's anti-goals (also run `findAntiGoals` over the text the stage shows at each still time).
-- [ ] **Step 3: Commit** `git commit -m "Showreel: scenes"`
-
-### Task 11: Soundtrack, final renders, commit finals
+### Task 12: Final renders and commit the finals
 
 **Files:**
-- Create: `marketing/showreel/final/vaulted-money-showreel-4k.mp4`, `marketing/showreel/final/vaulted-money-showreel-1080p.mp4`, `marketing/showreel/final/vaulted-money-app-preview.mp4`, `marketing/showreel/README.md`
-- Delete: the untracked `marketing/vaulted-money-showreel-hq.mp4` (after the owner confirms the new reel)
+- Create: `marketing/showreel/final/vaulted-money-showreel-keynote-4k.mp4`, `...-keynote-1080p.mp4`, `...-social-4k.mp4`, `...-social-1080p.mp4`, `marketing/showreel/final/vaulted-money-app-preview.mp4`
+- Modify: `marketing/showreel/README.md` (both storyboards, how to render each cut)
+- Delete: the untracked `marketing/vaulted-money-showreel-hq.mp4` once the owner has the new cuts
 
-- [ ] **Step 1: Score to picture:** `node marketing/showreel/render.mjs --cues-only` → `out/cues.json`; render the score from it (Task 6) → `out/soundtrack.wav`, ≈76 s with lifts at privacy, the device reveal and the end.
-- [ ] **Step 2: Final renders:** `--scale 2 --fps 60 --sub 5 --cut store` and the same with `--cut web`, then `mux.mjs` for 4K and 1080p. Expected (`ffprobe`): 3840×2160 and 1920×1080, 60 fps, 70–80 s.
-- [ ] **Step 3: Owner review:** share the store-cut 1080p file; apply notes; re-render only the changed stretch (`--from/--to`).
-- [ ] **Step 4: Copy finals** (store cut 4K and 1080p, the app preview) into `marketing/showreel/final/`; write the README (script table, how to re-render, as in the jhg README).
-- [ ] **Step 5: Run the repo checks:** `pnpm lint && pnpm format:check && npx tsc --noEmit -p tsconfig.app.json && pnpm test:coverage && pnpm build`. Expected: all pass.
-- [ ] **Step 6: Commit** `git commit -m "Showreel and App Store preview: final cuts"`
+- [ ] **Step 1: Owner review:** render both cuts at 1080p (`pnpm showreel -- --cut keynote`, `--cut social`) and share them; apply notes by re-rendering only the changed stretch (`--from/--to`).
+- [ ] **Step 2: Final 4K renders** (`--scale 2`) of both cuts, keynote in its store and web versions. Expected (`ffprobe`): 3840×2160 and 1920×1080, 60 fps; keynote 70–80 s, social ≈50 s.
+- [ ] **Step 3: Copy finals** into `marketing/showreel/final/` (store keynote, social, app preview) and update the README.
+- [ ] **Step 4: Run the repo checks:** `pnpm lint && pnpm format:check && npx tsc --noEmit -p tsconfig.app.json && pnpm test:coverage && pnpm build`. Expected: all pass.
+- [ ] **Step 5: Commit** `git commit -m "Showreels and App Store preview: final cuts"`
