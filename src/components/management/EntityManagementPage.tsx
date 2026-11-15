@@ -353,9 +353,9 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
             className={`app-table-toolbar ${
               numSelected > 0
                 ? "app-table-toolbar-active"
-                : // Nothing to act on yet: on phones it is only an empty bar,
-                  // as on the Transactions screen.
-                  "app-table-toolbar-idle hidden md:block"
+                : // Nothing to act on yet: an empty "0 selected" bar with a
+                  // disabled button only takes space, at any screen size.
+                  "app-table-toolbar-idle hidden"
             }`}
           >
             <div className="flex min-h-12 flex-wrap items-center justify-between gap-3">

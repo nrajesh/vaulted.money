@@ -96,4 +96,21 @@ describe("TransactionTable", () => {
     expect(unlinkButtons.length).toBeGreaterThan(0);
     expect(unlinkButtons[0].tagName).toBe("BUTTON");
   });
+  it("hides the empty selection bar at every size until something is selected", () => {
+    render(
+      <BrowserRouter>
+        <TransactionTable
+          transactions={mockTransactions}
+          loading={false}
+          onRefresh={vi.fn()}
+          onDeleteTransactions={vi.fn()}
+          onAddTransaction={vi.fn()}
+        />
+      </BrowserRouter>,
+    );
+    const bar = screen.getByText(/0 selected/).closest(".app-table-toolbar");
+    expect(bar).toHaveClass("hidden");
+    // No breakpoint brings the empty bar back (it showed on desktop).
+    expect(bar?.className).not.toMatch(/\b(sm|md|lg|xl):block\b/);
+  });
 });

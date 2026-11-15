@@ -28,7 +28,11 @@
     "android:build:apk": "pnpm run build:app && cap sync android && cd android && ./gradlew assembleDebug",
     "android:build:apk:release": "pnpm run build:app && cap sync android && cd android && ./gradlew assembleRelease",
     "ios:build:simulator": "pnpm run build:app && cap sync ios && xcodebuild -workspace ios/App/App.xcodeproj/project.xcworkspace -scheme App -configuration Release -sdk iphonesimulator -derivedDataPath ios/build/DerivedData CODE_SIGNING_ALLOWED=NO build",
-    "release:local": "cross-env ELECTRON_BUILDER_CACHE=.cache/electron-builder pnpm run electron:build && pnpm run android:build:apk && pnpm run ios:build:simulator"
+    "release:local": "cross-env ELECTRON_BUILDER_CACHE=.cache/electron-builder pnpm run electron:build && pnpm run android:build:apk && pnpm run ios:build:simulator",
+    "marketing:screenshots": "node marketing/store-screenshots/make.mjs",
+    "showreel": "node marketing/showreel/render.mjs",
+    "showreel:draft": "node marketing/showreel/render.mjs --draft",
+    "showreel:capture": "node marketing/showreel/capture.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.6.0",

@@ -66,7 +66,8 @@
         "ms": 1500
       }
     ],
-    "visibleFraction": 0.7
+    "visibleFraction": 0.7,
+    "cropBelow": "Chat with your money using an external AI agent"
   },
   {
     "id": 5,

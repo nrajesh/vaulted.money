@@ -47,10 +47,10 @@ body {
   color: hsl(222.2 84% 4.9%);
 }
 .dark em {
-  background: linear-gradient(90deg, hsl(183 51% 74%), hsl(187 55% 61%));
+  background-image: linear-gradient(90deg, hsl(183 51% 74%), hsl(187 55% 61%));
 }
 .light em {
-  background: linear-gradient(90deg, hsl(27 72% 58%), hsl(20 73% 52%));
+  background-image: linear-gradient(90deg, hsl(27 72% 58%), hsl(20 73% 52%));
 }
 em {
   font-style: normal;

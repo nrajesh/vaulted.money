@@ -169,7 +169,16 @@
           const naturalTop = capBottom + 22 * u;
           // Show only the top `visibleFraction` of a cropped screen (shot 4).
           const cropTop = H - el.offsetHeight * d.visibleFraction;
-          el.style.top = `${d.visibleFraction < 1 ? Math.max(naturalTop, cropTop) : naturalTop}px`;
+          // A sideways device is shorter than the space under the caption:
+          // centre it there instead of leaving a gap below.
+          const spare = H - naturalTop - el.offsetHeight;
+          const top =
+            d.visibleFraction < 1
+              ? Math.max(naturalTop, cropTop)
+              : d.transform === "sideways" && spare > 0
+                ? naturalTop + spare / 2
+                : naturalTop;
+          el.style.top = `${top}px`;
         }
       }
       await document.fonts.ready;

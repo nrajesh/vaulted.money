@@ -22,7 +22,12 @@ export { fitHeadline } from "./fit.mjs";
 
 const other = (theme) => (theme === "dark" ? "light" : "dark");
 
-export function buildSlide(setId, shotId, strings) {
+/**
+ * `crops` maps a capture file to the share of its screen to show, as
+ * measured by the capture (shot 4 ends just below the agent card's title);
+ * without one the story's `visibleFraction` (or the whole screen) is used.
+ */
+export function buildSlide(setId, shotId, strings, crops = {}) {
   const set = SETS[setId];
   const shot = story.find((s) => s.id === shotId);
   const text = strings[String(shotId)];
@@ -30,20 +35,20 @@ export function buildSlide(setId, shotId, strings) {
     throw new Error(`No slide for set "${setId}" shot ${shotId}`);
 
   const image = (theme) => `${set.device}-${theme}-${shotId}.png`;
-  const visibleFraction = shot.visibleFraction ?? 1;
+  const crop = (theme) => crops[image(theme)] ?? shot.visibleFraction ?? 1;
   const devices = shot.pair
     ? [
         {
           image: image("dark"),
           theme: "dark",
           transform: "faceLeft",
-          visibleFraction,
+          visibleFraction: crop("dark"),
         },
         {
           image: image("light"),
           theme: "light",
           transform: "faceRight",
-          visibleFraction,
+          visibleFraction: crop("light"),
         },
       ]
     : [
@@ -53,7 +58,7 @@ export function buildSlide(setId, shotId, strings) {
           transform: shot.landscape?.includes(set.device)
             ? "sideways"
             : "straight",
-          visibleFraction,
+          visibleFraction: crop(shot.appTheme),
         },
       ];
 

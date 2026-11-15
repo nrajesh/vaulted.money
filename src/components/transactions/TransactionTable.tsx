@@ -778,7 +778,7 @@ const TransactionTable = ({
           numSelected > 0
             ? "app-table-toolbar-active"
             : "app-table-toolbar-idle"
-        } ${numSelected === 0 ? (cardsOnly ? "hidden" : "hidden md:block") : ""}`}
+        } ${numSelected === 0 ? "hidden" : ""}`}
       >
         <div className="flex min-h-12 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2">

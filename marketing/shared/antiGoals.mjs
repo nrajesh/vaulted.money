@@ -28,6 +28,12 @@ const RULES = [
     message: "Empty or error state: demo data did not load",
   },
   {
+    // The owner asked for the AI agent card's note to stay out of frame.
+    pattern: /Needs the Mac app|on a computer \(currently Mac\)/,
+    stores: ["apple", "play"],
+    message: "AI agent card's computer note in frame",
+  },
+  {
     pattern: /\b(Mac|macOS|iPhone|iPad|Apple)\b/,
     stores: ["play"],
     message: "Apple name in a Google Play image",

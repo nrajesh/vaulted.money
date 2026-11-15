@@ -20,7 +20,12 @@ type Slide = {
   devices: Device[];
   statusBar: { time: string; network: string };
 };
-const slide = buildSlide as (set: string, id: number, strings: object) => Slide;
+const slide = buildSlide as (
+  set: string,
+  id: number,
+  strings: object,
+  crops?: Record<string, number>,
+) => Slide;
 
 describe("buildSlide", () => {
   it("makes shot 1 a face-off of a dark and a light phone", () => {
@@ -53,6 +58,9 @@ describe("buildSlide", () => {
       "Local AI keeps data off the cloud",
     ]);
     expect(four.devices[0].visibleFraction).toBe(0.7);
+    // The capture measures where the agent card's title ends on each device.
+    const measured = slide("iphone69", 4, en, { "iphone-dark-4.png": 0.62 });
+    expect(measured.devices[0].visibleFraction).toBe(0.62);
     expect(slide("iphone69", 3, en).devices[0].visibleFraction).toBe(1);
   });
 

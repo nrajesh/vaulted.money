@@ -21,8 +21,17 @@ describe("findAntiGoals", () => {
   });
 
   it("rejects Apple names in Google Play images only", () => {
-    expect(check("Needs the Mac app.", "play")).not.toHaveLength(0);
-    expect(check("Needs the Mac app.", "apple")).toHaveLength(0);
+    expect(check("Download the Mac version", "play")).not.toHaveLength(0);
+    expect(check("Download the Mac version", "apple")).toHaveLength(0);
+  });
+
+  it("keeps the agent card's computer note out of every store image", () => {
+    expect(
+      check("Needs the Mac app. Your AI agent connects", "apple"),
+    ).not.toHaveLength(0);
+    expect(
+      check("Needs Vaulted Money on a computer (currently Mac).", "play"),
+    ).not.toHaveLength(0);
   });
 
   it("rejects other platforms in Apple images", () => {

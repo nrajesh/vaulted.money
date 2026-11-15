@@ -7,7 +7,7 @@
  * Each screen's visible text is checked with findAntiGoals before it is
  * saved; a problem stops the run with the shot id and what was found.
  */
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { findAntiGoals } from "./antiGoals.mjs";
@@ -103,8 +103,17 @@ async function openDemoLedger(page, baseUrl) {
   } catch {
     throw new Error("Demo data did not finish loading");
   }
-  await page.getByText("Home Budget").first().click();
-  await page.waitForURL(/dashboard/, { timeout: 30_000 });
+  // The name shows while demo data is still being written, and a redraw can
+  // swallow the first tap, so try a few times.
+  for (let attempt = 1; ; attempt++) {
+    await page.getByText("Home Budget").first().click();
+    try {
+      await page.waitForURL(/dashboard/, { timeout: 15_000 });
+      return;
+    } catch (error) {
+      if (attempt === 3) throw error;
+    }
+  }
 }
 
 /**
@@ -135,7 +144,15 @@ export async function captureShots({
     await context.addInitScript(seedRandom, SEED);
     const page = await context.newPage();
     await page.clock.setFixedTime(FIXED_NOW);
-    await openDemoLedger(page, baseUrl);
+    try {
+      await openDemoLedger(page, baseUrl);
+    } catch (error) {
+      // Keep what the screen showed, so a failed run can be diagnosed.
+      await page.screenshot({
+        path: path.join(outDir, `failed-${device}.png`),
+      });
+      throw error;
+    }
 
     for (const theme of themes) {
       await page.evaluate(
@@ -156,10 +173,25 @@ export async function captureShots({
         await page.waitForLoadState("networkidle");
         await page.waitForTimeout(1500);
         for (const action of shot.actions) await runAction(page, action);
-        const text = await page.evaluate(
-          visibleText,
-          shot.visibleFraction ?? 1,
-        );
+        // `cropBelow`: show the screen down to just below this text, measured
+        // on each device (the agent card sits at a different height on each).
+        let fraction = shot.visibleFraction ?? 1;
+        if (shot.cropBelow) {
+          const box = await page
+            .getByText(shot.cropBelow)
+            .first()
+            .boundingBox();
+          const height = page.viewportSize().height;
+          if (box) {
+            fraction = Math.min(1, (box.y + box.height + 6) / height);
+            // On wide screens the card's note sits beside its title, so stop
+            // above the card instead.
+            const below = await page.evaluate(visibleText, fraction);
+            if (findAntiGoals(below, "apple").length)
+              fraction = Math.max(0.2, (box.y - 24) / height);
+          }
+        }
+        const text = await page.evaluate(visibleText, fraction);
         const problems = findAntiGoals(text, store);
         if (problems.length)
           throw new Error(
@@ -167,6 +199,10 @@ export async function captureShots({
           );
         const file = path.join(outDir, `${device}-${theme}-${id}.png`);
         await page.screenshot({ path: file });
+        writeFileSync(
+          file.replace(/\.png$/, ".json"),
+          JSON.stringify({ visibleFraction: fraction }),
+        );
         written.push(file);
       }
     }
