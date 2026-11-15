@@ -6,9 +6,19 @@
     "pair": true,
     "route": "/analytics",
     "actions": [
-      { "do": "scroll", "y": 280 },
-      { "do": "click", "role": "button", "name": "Pie chart" },
-      { "do": "wait", "ms": 1500 }
+      {
+        "do": "scroll",
+        "y": 280
+      },
+      {
+        "do": "click",
+        "role": "button",
+        "name": "Pie chart"
+      },
+      {
+        "do": "wait",
+        "ms": 1500
+      }
     ]
   },
   {
@@ -17,9 +27,19 @@
     "appTheme": "dark",
     "route": "/transactions",
     "actions": [
-      { "do": "click", "role": "combobox", "name": "" },
-      { "do": "type", "text": "groceries over 20 last month " },
-      { "do": "wait", "ms": 1200 }
+      {
+        "do": "click",
+        "role": "combobox",
+        "name": ""
+      },
+      {
+        "do": "type",
+        "text": "groceries over 20 last month "
+      },
+      {
+        "do": "wait",
+        "ms": 1200
+      }
     ]
   },
   {
@@ -34,11 +54,19 @@
     "page": "light",
     "appTheme": "dark",
     "route": "/ai-providers",
-    "phoneOffset": 0.12,
     "actions": [
-      { "do": "click", "role": "button", "name": "Turn on AI" },
-      { "do": "wait", "ms": 1500 }
-    ]
+      {
+        "do": "click",
+        "role": "button",
+        "name": "Turn on AI",
+        "ifPresent": true
+      },
+      {
+        "do": "wait",
+        "ms": 1500
+      }
+    ],
+    "visibleFraction": 0.7
   },
   {
     "id": 5,
@@ -53,8 +81,17 @@
     "appTheme": "dark",
     "route": "/transactions",
     "actions": [
-      { "do": "click", "role": "button", "name": "List and details" },
-      { "do": "wait", "ms": 1200 }
-    ]
+      {
+        "do": "click",
+        "role": "button",
+        "name": "List and details",
+        "ifPresent": true
+      },
+      {
+        "do": "wait",
+        "ms": 1200
+      }
+    ],
+    "landscape": ["duoInner", "androidTablet"]
   }
 ]
