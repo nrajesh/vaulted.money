@@ -122,6 +122,9 @@ The sidebar and the phone bottom bar render from `src/components/navigation/navC
 **Check Larger text on a 360px phone**
 The text-size setting scales every `rem`, so a layout that fits at default can overflow at Larger. `Button` never wraps (`whitespace-nowrap`): give long labels `h-auto whitespace-normal`. Let names wrap (`break-words`) rather than truncate, keep fixed-width columns from starving a name column (let them wrap below it), and keep phone top-bar icon buttons in `px` so the title beside them keeps its room.
 
+**Respect the side safe areas (iPhone landscape, iPhone Duo)**
+iPhone Duo keeps its status bar on the right edge (84pt) and iPhones turned sideways have the camera on one side. `#root` is padded by `--safe-area-left`/`--safe-area-right` (in `globals.css`), but anything `fixed` is measured from the screen edge: add the variables yourself, e.g. `right-[calc(1rem+var(--safe-area-right))]`, as the phone header, tab bar, add button, sidebar and side sheets do. Never pad `body`; open dialogs overwrite its padding. Branch layouts on available width, never on device or orientation.
+
 **Plain CSS beats Tailwind utilities**
 In Tailwind 4, CSS outside a layer wins over every utility class. Put shared component rules (such as `.touch-target`) in `@layer components` so classes like `absolute` still apply; leave only deliberate overrides (the display settings in `globals.css`) unlayered.
 

@@ -365,7 +365,7 @@ const HomePage = () => {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-background pt-16 text-foreground sm:pt-24">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 px-3 shadow-sm backdrop-blur dark:border-border/80 dark:bg-slate-950/90 sm:px-4">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 pl-[calc(0.75rem+var(--safe-area-left))] pr-[calc(0.75rem+var(--safe-area-right))] shadow-sm backdrop-blur dark:border-border/80 dark:bg-slate-950/90 sm:pl-[calc(1rem+var(--safe-area-left))] sm:pr-[calc(1rem+var(--safe-area-right))]">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3">
           <Link
             to="/"

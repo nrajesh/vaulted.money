@@ -80,7 +80,7 @@ const PrivacyPolicyPage = () => {
 
   return (
     <main className="min-h-screen bg-background pt-20 text-foreground sm:pt-24">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 px-4 shadow-sm backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/90">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 pl-[calc(1rem+var(--safe-area-left))] pr-[calc(1rem+var(--safe-area-right))] shadow-sm backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/90">
         <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-3 sm:h-24">
           <Link
             to="/"
