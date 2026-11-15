@@ -35,7 +35,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderScore, writeWav } from "./calmScore.mjs";
-import { RECORDINGS } from "./duo/overlay.mjs";
+import { RECORDINGS, screenWindows } from "./duo/overlay.mjs";
 import { renderSoundtrack } from "./soundtrack.mjs";
 import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
@@ -444,24 +444,32 @@ function copyKeynoteScreens() {
     );
   const to = join(OUT_DIR, "keynote");
   mkdirSync(to, { recursive: true });
-  // With a simulator recording, its first frame stands in for that screen.
+  // With a simulator recording, its first frame stands in for that screen
+  // before the footage plays, and its last frame while the device leaves.
+  const windows = screenWindows(1);
   for (const [name, { skip }] of Object.entries(RECORDINGS)) {
     const video = join(ROOT, `../app-preview/out/${name}.mp4`);
     const marks = join(ROOT, `../app-preview/out/${name}.marks.json`);
     if (!existsSync(video) || !existsSync(marks)) continue;
     const { start } = JSON.parse(readFileSync(marks, "utf8"));
-    spawnSync(ffmpegPath, [
-      "-v",
-      "error",
-      "-y",
-      "-ss",
-      String(start + skip),
-      "-i",
-      video,
-      "-frames:v",
-      "1",
-      join(to, `${name}-first.png`),
-    ]);
+    const length = windows[name].to - windows[name].from;
+    for (const [suffix, at] of [
+      ["first", start + skip],
+      ["last", start + skip + length],
+    ])
+      spawnSync(ffmpegPath, [
+        "-v",
+        "error",
+        "-y",
+        "-i",
+        video,
+        // tpad: the recording stops when the screen does, so hold its end.
+        "-vf",
+        `tpad=stop_mode=clone:stop_duration=10,trim=start=${at},setpts=PTS-STARTPTS`,
+        "-frames:v",
+        "1",
+        join(to, `${name}-${suffix}.png`),
+      ]);
   }
   for (const name of readdirSync(from))
     if (/\.(png|json)$/.test(name))

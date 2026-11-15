@@ -408,6 +408,9 @@ function render(seconds) {
     // which mirrors these times as HANDOVER).
     const handover = start + 5.0;
     poseDevice(ipad, t, start, handover + 0.7, { x: 1100, y: 140 });
+    // Once its footage has played, each leaves showing the footage's end.
+    showRecordingEnd(ipad, t >= handover);
+    showRecordingEnd(duo, t >= stop - 0.7);
     poseDevice(duo, t, handover, stop, { x: 960, y: 300, delay: 0.1 });
     const labelFor = (label, node, from, to) =>
       set(label, {
@@ -453,19 +456,36 @@ function render(seconds) {
   }
 }
 
+/** Swaps a recorded screen between its recording's first and last frame. */
+const RECORDING_FRAMES = {};
+function showRecordingEnd(node, ended) {
+  const frames = RECORDING_FRAMES[node.dataset.recording];
+  if (!frames) return;
+  const img = node.querySelector("img");
+  const want = ended ? frames.last : frames.first;
+  if (img.getAttribute("src") !== want) img.setAttribute("src", want);
+}
+
 // ── Boot ────────────────────────────────────────────────────────────────────
 async function boot() {
   // A recorded screen shows its recording's first frame (render.mjs extracts
   // it), so the hand-over to the footage does not jump.
   for (const name of ["ipad", "duo"]) {
-    const first = await fetch(`out/keynote/${name}-first.png`, {
-      method: "HEAD",
-    });
-    if (first.ok)
-      for (const node of document.querySelectorAll(
-        `[data-recording="${name}"] img`,
-      ))
-        node.src = `out/keynote/${name}-first.png`;
+    const first = `out/keynote/${name}-first.png`;
+    if (!(await fetch(first, { method: "HEAD" })).ok) continue;
+    const last = `out/keynote/${name}-last.png`;
+    RECORDING_FRAMES[name] = {
+      first,
+      last: (await fetch(last, { method: "HEAD" })).ok ? last : first,
+    };
+    // Decoded now, so swapping to it mid-render shows at once.
+    const preload = new Image();
+    preload.src = RECORDING_FRAMES[name].last;
+    await preload.decode();
+    for (const node of document.querySelectorAll(
+      `[data-recording="${name}"] img`,
+    ))
+      node.src = first;
   }
   await Promise.all(
     images.map(async (img) => {
