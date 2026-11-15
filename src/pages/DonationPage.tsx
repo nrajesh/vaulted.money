@@ -43,7 +43,7 @@ const STORE_DETAILS: Record<
   polar: {
     icon: Monitor,
     descriptionKey: "supportPage.stores.polar",
-    descriptionDefault: "Desktop app for Mac, Windows and Linux",
+    descriptionDefault: "Mac app (Apple silicon and Intel)",
   },
 };
 

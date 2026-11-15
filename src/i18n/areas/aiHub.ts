@@ -49,7 +49,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "Off. No agent can connect.",
       },
       agents: {
-        title: "Chat with your data from an AI agent",
+        title: "Chat with your money using an external AI agent",
         matchNote:
           "Picked to match {{name}}, which you already use inside the app. Choose another any time.",
       },
@@ -119,7 +119,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "Desactivado. Ningún agente puede conectarse.",
       },
       agents: {
-        title: "Chatea con tus datos desde un agente de IA",
+        title: "Chatea con tu dinero mediante un agente de IA externo",
         matchNote:
           "Elegido para coincidir con {{name}}, que ya usas dentro de la app. Puedes elegir otro cuando quieras.",
       },
@@ -188,7 +188,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "已关闭。任何智能体都无法连接。",
       },
       agents: {
-        title: "通过 AI 智能体与您的数据对话",
+        title: "通过外部 AI 智能体与您的财务数据对话",
         matchNote:
           "已根据您在应用内使用的 {{name}} 预选。您可以随时选择其他方式。",
       },
@@ -258,7 +258,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "Uit. Geen enkele agent kan verbinden.",
       },
       agents: {
-        title: "Chat met je gegevens via een AI-agent",
+        title: "Chat met je geld via een externe AI-agent",
         matchNote:
           "Gekozen omdat je {{name}} al in de app gebruikt. Je kunt altijd iets anders kiezen.",
       },
@@ -331,7 +331,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "அணைக்கப்பட்டுள்ளது. எந்த முகவரும் இணைய முடியாது.",
       },
       agents: {
-        title: "AI முகவர் மூலம் உங்கள் தரவுடன் உரையாடுங்கள்",
+        title: "வெளிப்புற AI முகவர் மூலம் உங்கள் பணத்துடன் உரையாடுங்கள்",
         matchNote:
           "நீங்கள் செயலிக்குள் ஏற்கனவே பயன்படுத்தும் {{name}} உடன் பொருந்துமாறு தேர்ந்தெடுக்கப்பட்டது. எப்போது வேண்டுமானாலும் வேறொன்றைத் தேர்வு செய்யலாம்.",
       },
@@ -1095,7 +1095,10 @@ export const aiHubFacts: AreaTranslations = {
         switchesApi: "Its switch also runs the Local API for scripts",
       },
       summary: {
-        agentsMacOnly: "Available ONLY in the Mac app.",
+        agentsNeedsMac:
+          "Needs the Mac app. Your AI agent connects to Vaulted Money on your Mac.",
+        agentsNeedsComputer:
+          "Needs Vaulted Money on a computer (currently Mac). Your AI agent connects to it there.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1118,7 +1121,10 @@ export const aiHubFacts: AreaTranslations = {
           "Su interruptor también controla la API local para scripts",
       },
       summary: {
-        agentsMacOnly: "Disponible SOLO en la app para Mac.",
+        agentsNeedsMac:
+          "Requiere la app para Mac. Tu agente de IA se conecta a Vaulted Money en tu Mac.",
+        agentsNeedsComputer:
+          "Requiere Vaulted Money en un ordenador (por ahora Mac). Tu agente de IA se conecta allí.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1140,7 +1146,10 @@ export const aiHubFacts: AreaTranslations = {
         switchesApi: "其开关同时控制供脚本使用的本地 API",
       },
       summary: {
-        agentsMacOnly: "仅在 Mac 应用中可用。",
+        agentsNeedsMac:
+          "需要 Mac 应用。您的 AI 智能体会连接到您 Mac 上的 Vaulted Money。",
+        agentsNeedsComputer:
+          "需要在电脑上使用 Vaulted Money（目前为 Mac）。您的 AI 智能体会连接到那里。",
       },
       chat: {
         blockNoClaudeCode: "此电脑上还没有 Claude Code。请安装后再回来。",
@@ -1160,7 +1169,10 @@ export const aiHubFacts: AreaTranslations = {
         switchesApi: "De schakelaar bedient ook de lokale API voor scripts",
       },
       summary: {
-        agentsMacOnly: "ALLEEN beschikbaar in de Mac-app.",
+        agentsNeedsMac:
+          "Vereist de Mac-app. Je AI-agent maakt verbinding met Vaulted Money op je Mac.",
+        agentsNeedsComputer:
+          "Vereist Vaulted Money op een computer (voorlopig Mac). Je AI-agent maakt daar verbinding.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1184,7 +1196,10 @@ export const aiHubFacts: AreaTranslations = {
           "இதன் சுவிட்ச் ஸ்கிரிப்டுகளுக்கான உள்ளூர் API ஐயும் இயக்குகிறது",
       },
       summary: {
-        agentsMacOnly: "Mac செயலியில் மட்டுமே கிடைக்கும்.",
+        agentsNeedsMac:
+          "Mac செயலி தேவை. உங்கள் AI முகவர் உங்கள் Mac-இல் உள்ள Vaulted Money-உடன் இணையும்.",
+        agentsNeedsComputer:
+          "கணினியில் Vaulted Money தேவை (தற்போது Mac). உங்கள் AI முகவர் அங்கே இணையும்.",
       },
       chat: {
         blockNoClaudeCode:

@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import * as React from "react";
 import {
   ArrowLeftRight,
@@ -147,9 +148,18 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
   const agentsOn = !!api.status?.enabled && !!api.status?.running;
   let agentStatus: string;
   if (!api.supported) {
-    agentStatus = t("aiHub.summary.agentsMacOnly", {
-      defaultValue: "Available ONLY in the Mac app.",
-    });
+    // Agents connect to the Local API, which only the Mac app runs. Android
+    // users have never seen a Mac app, so tell them what "on a computer" means.
+    agentStatus =
+      Capacitor.getPlatform() === "android"
+        ? t("aiHub.summary.agentsNeedsComputer", {
+            defaultValue:
+              "Needs Vaulted Money on a computer (currently Mac). Your AI agent connects to it there.",
+          })
+        : t("aiHub.summary.agentsNeedsMac", {
+            defaultValue:
+              "Needs the Mac app. Your AI agent connects to Vaulted Money on your Mac.",
+          });
   } else if (agentsOn) {
     agentStatus = t("aiHub.summary.agentsOn", {
       defaultValue: "On. Agents on this computer can connect.",
@@ -441,7 +451,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
             AGENTS_SECTION,
             <Bot className="h-4 w-4" aria-hidden />,
             t("aiHub.agents.title", {
-              defaultValue: "Chat with your data from an AI agent",
+              defaultValue: "Chat with your money using an external AI agent",
             }),
             agentStatus,
             agentsOn,

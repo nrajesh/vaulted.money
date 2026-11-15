@@ -248,7 +248,9 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
       }
       const displayCurrency = currencyCode || selectedCurrency;
       const symbol = allCurrencySymbols[displayCurrency] || displayCurrency;
-      return `${symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      // Sign first, then the symbol: "-€1,380.00", not "€-1,380.00".
+      const sign = amount < 0 ? "-" : "";
+      return `${sign}${symbol}${Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     },
     [selectedCurrency, allCurrencySymbols],
   );
