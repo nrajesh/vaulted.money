@@ -325,6 +325,40 @@ export function ConversationalSearchInput({
     setOpen(false);
   };
 
+  // How the picked filters combine, in as few words as possible: every kind
+  // must match; two of the same kind (two payees) match either, so say that
+  // only when it applies.
+  const sameKindTwice = (
+    ["vendor", "category", "subCategory", "account"] as const
+  ).find(
+    (entity) =>
+      remaining.filter(
+        (item) => item.part.kind === "entity" && item.part.entity === entity,
+      ).length > 1,
+  );
+  const eitherText = {
+    vendor: t("filters.conversational.suggest.eitherPayees", {
+      defaultValue: "Two payees match either.",
+    }),
+    category: t("filters.conversational.suggest.eitherCategories", {
+      defaultValue: "Two categories match either.",
+    }),
+    subCategory: t("filters.conversational.suggest.eitherSubCategories", {
+      defaultValue: "Two sub-categories match either.",
+    }),
+    account: t("filters.conversational.suggest.eitherAccounts", {
+      defaultValue: "Two accounts match either.",
+    }),
+  };
+  const combineHint = [
+    t("filters.conversational.suggest.allMustMatch", {
+      defaultValue: "All filters must match.",
+    }),
+    sameKindTwice ? eitherText[sameKindTwice] : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   // Every understood piece is its own row, so the user can take just one of
   // them; with several left, "apply all" comes first and is the default.
   const suggestionGroup = remaining.length > 0 && (
@@ -334,11 +368,8 @@ export function ConversationalSearchInput({
         defaultValue: "Understood as",
       })}
     >
-      <div className="px-2 pb-1 text-xs text-muted-foreground">
-        {t("filters.conversational.suggest.combineHint", {
-          defaultValue:
-            "Results must match every filter you pick. Several of the same kind (two payees) match either.",
-        })}
+      <div className="px-2 pb-2 text-xs text-muted-foreground">
+        {combineHint}
       </div>
       {remaining.length > 1 && (
         <CommandItem

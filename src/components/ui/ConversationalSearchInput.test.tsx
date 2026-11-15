@@ -135,14 +135,36 @@ describe("ConversationalSearchInput suggestion", () => {
     expect(screen.queryByText("Understood as")).not.toBeInTheDocument();
   });
 
-  it("says how the filters combine, and offers Clear and Done", async () => {
+  it("says how the filters combine in a few words, and offers Clear and Done", async () => {
     await openAndType("groceries over 20");
     expect(
-      await screen.findByText(/must match every filter/),
+      await screen.findByText("All filters must match."),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/match either/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.queryByText("Understood as")).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText(/type to filter/i)).toHaveValue("");
+  });
+
+  it("adds that two of the same kind match either, only when there are two", async () => {
+    render(
+      <ConversationalSearchInput
+        onUpdate={vi.fn()}
+        {...props}
+        vendors={[
+          { name: "Starbucks", slug: "starbucks" },
+          { name: "Corner Roast", slug: "corner-roast" },
+        ]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("combobox"));
+    const input = await screen.findByPlaceholderText(/type to filter/i);
+    await userEvent.type(input, "starbucks corner roast");
+    expect(
+      await screen.findByText(
+        "All filters must match. Two payees match either.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("has the suggestion selected first, so Enter accepts it", async () => {

@@ -24,8 +24,11 @@ export const searchSuggestions: AreaTranslations = {
         clear: "Clear",
         done: "Done",
         suggest: {
-          combineHint:
-            "Results must match every filter you pick. Several of the same kind (two payees) match either.",
+          allMustMatch: "All filters must match.",
+          eitherPayees: "Two payees match either.",
+          eitherCategories: "Two categories match either.",
+          eitherSubCategories: "Two sub-categories match either.",
+          eitherAccounts: "Two accounts match either.",
           heading: "Understood as",
           amountExact: "Amount: {{amount}}",
           applyAll: "Apply all {{count}}",
@@ -69,8 +72,11 @@ export const searchSuggestions: AreaTranslations = {
         clear: "Borrar",
         done: "Listo",
         suggest: {
-          combineHint:
-            "Los resultados deben cumplir todos los filtros que elijas. Varios del mismo tipo (dos beneficiarios) cumplen cualquiera.",
+          allMustMatch: "Deben cumplirse todos los filtros.",
+          eitherPayees: "Dos beneficiarios: vale cualquiera.",
+          eitherCategories: "Dos categorías: vale cualquiera.",
+          eitherSubCategories: "Dos subcategorías: vale cualquiera.",
+          eitherAccounts: "Dos cuentas: vale cualquiera.",
           heading: "Entendido como",
           amountExact: "Importe: {{amount}}",
           applyAll: "Aplicar los {{count}}",
@@ -114,8 +120,11 @@ export const searchSuggestions: AreaTranslations = {
         clear: "清除",
         done: "完成",
         suggest: {
-          combineHint:
-            "结果必须符合你选择的每个筛选条件。同一类型的多个条件（例如两个收款方）满足其一即可。",
+          allMustMatch: "须满足所有筛选条件。",
+          eitherPayees: "两个收款方满足其一即可。",
+          eitherCategories: "两个类别满足其一即可。",
+          eitherSubCategories: "两个子类别满足其一即可。",
+          eitherAccounts: "两个账户满足其一即可。",
           heading: "理解为",
           amountExact: "金额：{{amount}}",
           applyAll: "全部应用（{{count}}）",
@@ -159,8 +168,11 @@ export const searchSuggestions: AreaTranslations = {
         clear: "Wissen",
         done: "Klaar",
         suggest: {
-          combineHint:
-            "Resultaten moeten aan elk gekozen filter voldoen. Meerdere van dezelfde soort (twee begunstigden) voldoen aan een van beide.",
+          allMustMatch: "Alle filters moeten kloppen.",
+          eitherPayees: "Twee begunstigden: een van beide volstaat.",
+          eitherCategories: "Twee categorieën: een van beide volstaat.",
+          eitherSubCategories: "Twee subcategorieën: een van beide volstaat.",
+          eitherAccounts: "Twee rekeningen: een van beide volstaat.",
           heading: "Opgevat als",
           amountExact: "Bedrag: {{amount}}",
           applyAll: "Alle {{count}} toepassen",
@@ -204,8 +216,11 @@ export const searchSuggestions: AreaTranslations = {
         clear: "அழி",
         done: "முடிந்தது",
         suggest: {
-          combineHint:
-            "நீங்கள் தேர்ந்தெடுக்கும் ஒவ்வொரு வடிகட்டியுடனும் முடிவுகள் பொருந்த வேண்டும். ஒரே வகையில் பல (இரு பெறுநர்கள்) இருந்தால் ஏதேனும் ஒன்று போதும்.",
+          allMustMatch: "எல்லா வடிப்பான்களும் பொருந்த வேண்டும்.",
+          eitherPayees: "இரண்டு பெறுநர்கள்: ஏதேனும் ஒன்று போதும்.",
+          eitherCategories: "இரண்டு வகைகள்: ஏதேனும் ஒன்று போதும்.",
+          eitherSubCategories: "இரண்டு துணை வகைகள்: ஏதேனும் ஒன்று போதும்.",
+          eitherAccounts: "இரண்டு கணக்குகள்: ஏதேனும் ஒன்று போதும்.",
           heading: "புரிந்துகொண்டது",
           amountExact: "தொகை: {{amount}}",
           applyAll: "அனைத்தும் பயன்படுத்து ({{count}})",
