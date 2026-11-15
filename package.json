@@ -32,7 +32,8 @@
     "marketing:screenshots": "node marketing/store-screenshots/make.mjs",
     "showreel": "node marketing/showreel/render.mjs",
     "showreel:draft": "node marketing/showreel/render.mjs --draft",
-    "showreel:capture": "node marketing/showreel/capture.mjs"
+    "showreel:capture": "node marketing/showreel/capture.mjs",
+    "marketing:preview": "node marketing/app-preview/record.mjs && node marketing/app-preview/compose.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.6.0",

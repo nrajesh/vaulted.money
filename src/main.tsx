@@ -25,6 +25,15 @@ if (Capacitor.isNativePlatform() || isElectron()) {
   document.documentElement.dataset.shell = "app";
 }
 
+// App Store preview recording only (marketing/app-preview): a build made
+// with VITE_PREVIEW_AUTOPLAY=1 plays the preview story by itself. Vite drops
+// this branch, and the module, from every other build.
+if (import.meta.env.VITE_PREVIEW_AUTOPLAY === "1") {
+  void import("@/marketing/previewAutoplay").then((m) =>
+    m.startPreviewAutoplay(),
+  );
+}
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
