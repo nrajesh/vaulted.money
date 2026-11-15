@@ -30,3 +30,15 @@ Needs Xcode (simulator) and ffmpeg.
 
 If you change the story's screens, update `SEGMENTS` in `captions.mjs` to
 match.
+
+## iPhone Duo footage (keynote showreel)
+
+The two-panel view needs the Duo's inner screen turned sideways, and no
+command can rotate or unfold the simulator, so this takes one manual step:
+
+1. In Xcode, open **Window → Devices and Simulators** (Device Hub), boot
+   **iPhone Duo**, unfold it and turn it sideways.
+2. Run `node marketing/app-preview/record.mjs --device "iPhone Duo" --story duo --name duo`
+   (it keeps the orientation; the story opens three rows in the list and details view).
+3. Run `node marketing/showreel/duo/overlay.mjs` (add `--scale 2` and `--in` for the 4K
+   file) to place it on the keynote cut's Duo screen.

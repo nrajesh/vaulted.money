@@ -13,7 +13,8 @@ export type PreviewStep =
   | { do: "click"; role: string; name: string }
   | { do: "type"; text: string }
   | { do: "scroll"; y: number }
-  | { do: "wait"; ms: number };
+  | { do: "wait"; ms: number }
+  | { do: "tapRow"; index: number };
 
 export interface PreviewApi {
   navigate(path: string): void;
@@ -21,6 +22,8 @@ export interface PreviewApi {
   type(text: string): Promise<void>;
   scroll(y: number): Promise<void>;
   wait(ms: number): Promise<void>;
+  /** Taps the `index`th transaction card (the two-panel list). */
+  tapRow(index: number): Promise<void>;
 }
 
 /** About 25 seconds: long enough to read each screen, under Apple's 30 s. */
@@ -46,6 +49,24 @@ export const PREVIEW_STORY: PreviewStep[] = [
   { do: "wait", ms: 1500 },
 ];
 
+/**
+ * The iPhone Duo segment for the keynote showreel: the two-panel
+ * Transactions view, three rows opened one after another. Recorded with the
+ * Duo's inner screen turned sideways (marketing/app-preview/README.md).
+ */
+export const DUO_STORY: PreviewStep[] = [
+  { do: "goto", path: "/transactions" },
+  { do: "wait", ms: 1500 },
+  { do: "click", role: "button", name: "List and details" },
+  { do: "wait", ms: 1800 },
+  { do: "tapRow", index: 0 },
+  { do: "wait", ms: 2400 },
+  { do: "tapRow", index: 1 },
+  { do: "wait", ms: 2400 },
+  { do: "tapRow", index: 2 },
+  { do: "wait", ms: 2600 },
+];
+
 export async function runPreviewStory(
   steps: PreviewStep[],
   api: PreviewApi,
@@ -55,6 +76,7 @@ export async function runPreviewStory(
     else if (step.do === "click") await api.click(step.role, step.name);
     else if (step.do === "type") await api.type(step.text);
     else if (step.do === "scroll") await api.scroll(step.y);
+    else if (step.do === "tapRow") await api.tapRow(step.index);
     else await api.wait(step.ms);
   }
   document.title = "preview:done";
@@ -128,6 +150,11 @@ export const domApi: PreviewApi = {
     });
     await sleep(400);
   },
+  async tapRow(index) {
+    const rows = document.querySelectorAll<HTMLElement>(".app-mobile-row");
+    rows[index]?.click();
+    await sleep(100);
+  },
   wait: sleep,
 };
 
@@ -149,5 +176,7 @@ export async function startPreviewAutoplay(): Promise<void> {
   }
   await sleep(2000);
   mark("start");
-  await runPreviewStory(PREVIEW_STORY, domApi);
+  const story =
+    import.meta.env.VITE_PREVIEW_STORY === "duo" ? DUO_STORY : PREVIEW_STORY;
+  await runPreviewStory(story, domApi);
 }

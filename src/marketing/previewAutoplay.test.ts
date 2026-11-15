@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  DUO_STORY,
   PREVIEW_STORY,
   runPreviewStory,
   type PreviewApi,
@@ -20,6 +21,9 @@ const fakeApi = (): PreviewApi & { calls: string[] } => {
     }),
     wait: vi.fn(async () => {}),
     scroll: vi.fn(async () => {}),
+    tapRow: vi.fn(async (index: number) => {
+      calls.push(`tap row ${index}`);
+    }),
   };
 };
 
@@ -63,5 +67,17 @@ describe("runPreviewStory", () => {
     );
     expect(waited).toBeGreaterThanOrEqual(15_000);
     expect(waited).toBeLessThanOrEqual(28_000);
+  });
+
+  it("walks the Duo story through three rows of the two-panel list", async () => {
+    const api = fakeApi();
+    await runPreviewStory(DUO_STORY, api);
+    expect(api.calls[0]).toBe("goto /transactions");
+    expect(api.calls).toContain("click button List and details");
+    expect(api.calls.filter((c) => c.startsWith("tap row"))).toEqual([
+      "tap row 0",
+      "tap row 1",
+      "tap row 2",
+    ]);
   });
 });

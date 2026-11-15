@@ -47,12 +47,13 @@ function findDevice(name) {
   throw new Error(`No simulator named "${name}" (xcrun simctl list devices)`);
 }
 
-function buildApp({ preview, markUrl = "" }) {
+function buildApp({ preview, markUrl = "", story = "" }) {
   run("pnpm", ["build:app"], {
     env: {
       ...process.env,
       VITE_PREVIEW_AUTOPLAY: preview ? "1" : "",
       VITE_PREVIEW_MARK_URL: preview ? markUrl : "",
+      VITE_PREVIEW_STORY: preview ? story : "",
     },
     stdio: "ignore",
   });
@@ -63,7 +64,7 @@ function buildApp({ preview, markUrl = "" }) {
  * Builds the preview app, records `seconds` of it on `device`, and returns
  * { video, marks } where marks are seconds from the start of the video.
  */
-export async function recordSimulator({ device, seconds, name }) {
+export async function recordSimulator({ device, seconds, name, story = "" }) {
   requireTools(["xcrun", "ffmpeg"]);
   mkdirSync(OUT, { recursive: true });
   const video = path.join(OUT, `${name}.mp4`);
@@ -82,7 +83,7 @@ export async function recordSimulator({ device, seconds, name }) {
   const markUrl = `http://127.0.0.1:${markServer.address().port}`;
   try {
     console.log("Building the preview app…");
-    buildApp({ preview: true, markUrl });
+    buildApp({ preview: true, markUrl, story });
     run(
       "xcodebuild",
       [
@@ -206,5 +207,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     device: arg("device", "iPhone 18 Pro Max"),
     seconds: Number(arg("seconds", 75)),
     name: arg("name", "raw"),
+    story: arg("story", ""),
   });
 }
