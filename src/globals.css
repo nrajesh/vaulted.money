@@ -171,6 +171,25 @@
     color: hsl(var(--foreground));
   }
 
+  /* Native feel on phones: no grey flash when tapping, and no web link
+     preview when long-pressing a link or image. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a,
+  img {
+    -webkit-touch-callout: none;
+  }
+
+  /* In the installed apps (set in main.tsx) the page itself should not
+     bounce past its top or bottom like a web page. The website keeps the
+     browser's pull-to-refresh. */
+  html[data-shell="app"],
+  html[data-shell="app"] body {
+    overscroll-behavior-y: none;
+  }
+
   /* A placeholder or value too long for a narrow box ends in "…" rather
      than being cut mid-word (common at larger text sizes on phones). */
   input {

@@ -447,7 +447,7 @@ export const CurrencyManagement = () => {
                       <div className="ml-auto flex w-28 shrink-0 items-center justify-end">
                         <Input
                           type="number"
-                          className="h-8 w-full text-right text-sm"
+                          className="h-8 w-full text-right text-base md:text-sm"
                           value={rateRelativeToSelected.toFixed(4)}
                           step="0.0001"
                           onChange={(e) => {

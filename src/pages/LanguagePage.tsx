@@ -309,7 +309,7 @@ const LanguagePage = () => {
                   onChange={(event) =>
                     setCustomLanguageJson(event.target.value)
                   }
-                  className="min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono"
+                  className="min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-base md:text-xs"
                   placeholder={t("settings.cards.language.jsonPlaceholder", {
                     defaultValue: '{"layout":{"nav":{"dashboard":"..."}}}',
                   })}

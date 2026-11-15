@@ -1,4 +1,13 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  Menu,
+  nativeTheme,
+  shell,
+} from "electron";
+import { buildAppMenuTemplate } from "./appMenu";
 import * as path from "path";
 import * as fs from "fs";
 import * as Security from "./security";
@@ -128,6 +137,14 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    // The layout works down to phone widths; below this it stops making sense.
+    minWidth: 420,
+    minHeight: 560,
+    // Keep the window hidden until the first paint, and give it the app's
+    // background colour, so it never flashes white before the theme loads.
+    // The app's default theme is dark, matching the <meta name="theme-color">.
+    show: false,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#0d1520" : "#ffffff",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
@@ -147,6 +164,8 @@ function createWindow() {
     });
   }
 
+  mainWindow.once("ready-to-show", () => mainWindow?.show());
+
   mainWindow.on("close", (event) => {
     if (!isQuitting) {
       event.preventDefault();
@@ -162,6 +181,18 @@ app.on("before-quit", () => {
 });
 
 app.whenReady().then(() => {
+  // Replace Electron's default menu (which has web items such as "Reload"
+  // and "Toggle Developer Tools") with a standard Mac menu.
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate(
+      buildAppMenuTemplate({
+        appName: app.name,
+        isMac: process.platform === "darwin",
+        isDev: Boolean(process.env.VITE_DEV_SERVER_URL),
+        openWebsite: () => void shell.openExternal("https://vaulted.money"),
+      }),
+    ),
+  );
   createWindow();
 
   // Initialize authorized folders from config
