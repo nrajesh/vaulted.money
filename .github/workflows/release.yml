@@ -130,3 +130,41 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$RELEASE_TAG" release-assets/vaulted-money-ios-simulator-app.zip --clobber
+
+  store-screenshots:
+    name: Store screenshots
+    # macOS: the app uses the system font, which Linux runners lack.
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix marketing
+          npx --prefix marketing playwright install chromium
+
+      - name: Install ffmpeg
+        run: brew install ffmpeg
+
+      - name: Make every store image
+        run: pnpm marketing:screenshots --set all
+
+      - name: Upload store screenshots to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd marketing/store-screenshots/out
+          zip -qr ../vaulted-money-store-screenshots.zip . -x 'captures/*'
+          gh release upload "$RELEASE_TAG" ../vaulted-money-store-screenshots.zip --clobber
