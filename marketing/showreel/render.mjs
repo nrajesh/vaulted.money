@@ -23,11 +23,17 @@
  */
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DURATION, WIDTH, HEIGHT } from "./timeline.mjs";
+import { renderScore, writeWav } from "./calmScore.mjs";
 import { renderSoundtrack } from "./soundtrack.mjs";
 import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
@@ -43,6 +49,16 @@ const option = (name, fallback) => {
     ? args[index + 1]
     : fallback;
 };
+
+// --cut social (the original fast cut) or keynote (the calm, 76 s cut);
+// --web adds the website ending to the keynote cut.
+const cut = option("cut", "social");
+const web = flag("web");
+const timeline =
+  cut === "keynote"
+    ? await import("./timelines/keynote.mjs")
+    : await import("./timeline.mjs");
+const { DURATION, WIDTH, HEIGHT } = timeline;
 
 const draft = flag("draft");
 const fps = Number(option("fps", draft ? 30 : 60));
@@ -60,7 +76,7 @@ const outputFile = option(
   "out",
   join(
     OUT_DIR,
-    draft ? "vaulted-money-showreel-draft.mp4" : "vaulted-money-showreel.mp4",
+    `vaulted-money-showreel${cut === "keynote" ? `-keynote${web ? "-web" : ""}` : ""}${draft ? "-draft" : ""}.mp4`,
   ),
 );
 
@@ -216,7 +232,13 @@ async function renderStills(pages, times) {
 async function renderVideo(pages) {
   const audioPath = join(OUT_DIR, "soundtrack.wav");
   console.log("• Synthesising soundtrack");
-  writeFileSync(audioPath, renderSoundtrack());
+  if (cut === "keynote")
+    writeWav(
+      audioPath,
+      renderScore({ seconds: DURATION, cues: timeline.SCORE_CUES }),
+      48000,
+    );
+  else writeFileSync(audioPath, renderSoundtrack());
 
   const firstFrame = Math.floor(fromSeconds * fps);
   const lastFrame = Math.ceil(toSeconds * fps) - 1;
@@ -411,14 +433,27 @@ function encodeWebCopy(masterFile) {
   });
 }
 
+/** The keynote cut uses the store screenshot captures (run them first). */
+function copyKeynoteScreens() {
+  const from = join(ROOT, "../store-screenshots/out/captures");
+  if (!existsSync(from))
+    throw new Error("No store captures yet: run pnpm marketing:screenshots first");
+  const to = join(OUT_DIR, "keynote");
+  mkdirSync(to, { recursive: true });
+  for (const name of readdirSync(from))
+    if (name.endsWith(".png")) copyFileSync(join(from, name), join(to, name));
+}
+
 async function main() {
   if (!chromePath) throw new Error("No Chromium found. Set CHROME_PATH.");
   mkdirSync(OUT_DIR, { recursive: true });
   await ensureFonts();
-  await ensureScreens();
+  if (cut === "keynote") copyKeynoteScreens();
+  else await ensureScreens();
 
   const server = await startStaticServer();
-  const pageUrl = `http://127.0.0.1:${server.address().port}/index.html?render`;
+  const page = cut === "keynote" ? "keynote.html" : "index.html";
+  const pageUrl = `http://127.0.0.1:${server.address().port}/${page}?render${web ? "&web" : ""}`;
   const workerCount = stills.length
     ? Math.min(workers, stills.length)
     : workers;
