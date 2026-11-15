@@ -33,6 +33,7 @@
     "showreel": "node marketing/showreel/render.mjs",
     "showreel:draft": "node marketing/showreel/render.mjs --draft",
     "showreel:capture": "node marketing/showreel/capture.mjs",
+    "showreel:finals": "node marketing/showreel/finals.mjs",
     "marketing:preview": "node marketing/app-preview/record.mjs && node marketing/app-preview/compose.mjs"
   },
   "dependencies": {

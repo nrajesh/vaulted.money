@@ -37,6 +37,24 @@ node marketing/showreel/render.mjs --blur 4 --workers 4  # lighter blur, more br
 node marketing/showreel/soundtrack.mjs                   # just the audio → out/soundtrack.wav
 ```
 
+### The keynote cut and the finished files
+
+```bash
+node marketing/showreel/render.mjs --cut keynote         # the calm 78 s cut, store ending
+node marketing/showreel/render.mjs --cut keynote --web   # website ending → ...-keynote-site.mp4
+node marketing/showreel/duo/overlay.mjs                  # plays the iPad and Duo recordings on it
+pnpm showreel:finals                                     # everything below, in 4K
+```
+
+The keynote is built from the store screenshot captures (`pnpm
+marketing:screenshots` first) and the iPad and iPhone Duo simulator
+recordings (see `marketing/app-preview/README.md`). `pnpm showreel:finals`
+re-captures the social cut, renders both cuts in 4K, adds the recordings and
+copies light copies (each under GitHub's 100 MB limit) to `final/`:
+`vaulted-money-keynote.mp4`, `vaulted-money-keynote-website.mp4` and
+`vaulted-money-showreel-social.mp4`. Those are committed; keep only the
+current cut there.
+
 Requirements: Node 22+ (for the built-in `WebSocket`), Chromium or Chrome, and an
 ffmpeg build with `libx264` and `aac`. Point at them with `CHROME_PATH` and
 `FFMPEG_PATH` if they are not found automatically. The first run downloads the

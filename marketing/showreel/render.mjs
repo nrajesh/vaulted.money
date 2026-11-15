@@ -53,7 +53,8 @@ const option = (name, fallback) => {
 };
 
 // --cut social (the original fast cut) or keynote (the calm, 76 s cut);
-// --web adds the website ending to the keynote cut.
+// --web adds the website ending to the keynote cut (written as
+// ...-keynote-site.mp4, so it never clashes with a "-web" light copy).
 const cut = option("cut", "social");
 const web = flag("web");
 const timeline =
@@ -78,7 +79,7 @@ const outputFile = option(
   "out",
   join(
     OUT_DIR,
-    `vaulted-money-showreel${cut === "keynote" ? `-keynote${web ? "-web" : ""}` : ""}${draft ? "-draft" : ""}.mp4`,
+    `vaulted-money-showreel${cut === "keynote" ? `-keynote${web ? "-site" : ""}` : ""}${draft ? "-draft" : ""}.mp4`,
   ),
 );
 
@@ -394,7 +395,7 @@ async function renderVideo(pages) {
  * The master is encoded near-losslessly (grain is expensive), so also write
  * a lighter copy for websites, chat and social uploads.
  */
-function encodeWebCopy(masterFile) {
+export function encodeWebCopy(masterFile) {
   const webFile = masterFile.replace(/\.mp4$/, "-web.mp4");
   const ffmpegArgs = [
     "-y",
