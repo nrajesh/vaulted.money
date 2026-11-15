@@ -57,6 +57,10 @@ export const PREVIEW_STORY: PreviewStep[] = [
 export const DUO_STORY: PreviewStep[] = [
   { do: "goto", path: "/transactions" },
   { do: "wait", ms: 1500 },
+  // Start on the table: the split is already the default at the Duo's width,
+  // so pressing "List and details" only shows something from the table.
+  { do: "click", role: "button", name: "Table" },
+  { do: "wait", ms: 1500 },
   { do: "click", role: "button", name: "List and details" },
   { do: "wait", ms: 1800 },
   { do: "tapRow", index: 0 },

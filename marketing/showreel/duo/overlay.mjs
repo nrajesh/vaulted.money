@@ -14,13 +14,12 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { chapter } from "../timelines/keynote.mjs";
 
-/** Where (px) and when (s) the Duo screen is on stage; mirrors keynote.mjs. */
 /**
- * Seconds into the Duo recording where the footage starts: "List and
- * details" is already on screen and the selected row and the details panel
- * agree (later taps in the recorded run did not stay in step).
+ * Seconds into the Duo recording where the footage starts: the story has
+ * just switched to "Table" (at 1.5 s), so the footage opens on the table and
+ * pressing "List and details" opens the panel about a second in.
  */
-export const DUO_SKIP = 0.3;
+export const DUO_SKIP = 2.0;
 
 export function duoWindow(scale = 1) {
   const big = chapter("bigScreens");

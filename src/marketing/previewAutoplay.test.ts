@@ -73,7 +73,13 @@ describe("runPreviewStory", () => {
     const api = fakeApi();
     await runPreviewStory(DUO_STORY, api);
     expect(api.calls[0]).toBe("goto /transactions");
-    expect(api.calls).toContain("click button List and details");
+    // Starts on the table so pressing "List and details" visibly opens the
+    // panel (on the Duo the split is already the default).
+    const table = api.calls.indexOf("click button Table");
+    expect(table).toBeGreaterThan(-1);
+    expect(api.calls.indexOf("click button List and details")).toBeGreaterThan(
+      table,
+    );
     expect(api.calls.filter((c) => c.startsWith("tap row"))).toEqual([
       "tap row 0",
       "tap row 1",

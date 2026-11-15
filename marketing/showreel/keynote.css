@@ -168,14 +168,18 @@ em {
   position: absolute;
   inset: 0;
 }
+/* Status bar: sized in em from the font size keynote.mjs sets per device */
 .sb {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 26px;
-  padding: 0 28px;
-  font-size: 14px;
+  height: 3.2em;
+  padding: 0 2.9em;
   font-weight: 600;
+}
+.sb.tablet {
+  height: 1.85em;
+  padding: 0 1.4em;
 }
 .sb.dark {
   background: #0f172a;
@@ -187,15 +191,15 @@ em {
 }
 .sb b {
   font-weight: 700;
-  margin-right: 8px;
+  margin-right: 0.45em;
 }
 .bat {
   display: inline-block;
-  width: 22px;
-  height: 11px;
-  border: 1.6px solid currentColor;
-  border-radius: 3px;
-  padding: 1.2px;
+  width: 1.5em;
+  height: 0.72em;
+  border: 0.1em solid currentColor;
+  border-radius: 0.2em;
+  padding: 0.08em;
   vertical-align: middle;
 }
 .bat i {
@@ -203,7 +207,7 @@ em {
   width: 80%;
   height: 100%;
   background: currentColor;
-  border-radius: 1.5px;
+  border-radius: 0.1em;
 }
 .titlebar {
   height: 34px;

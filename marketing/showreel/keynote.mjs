@@ -30,15 +30,33 @@ const set = (node, props) => {
 };
 const src = (name) => `out/keynote/${name}.png`;
 
-const statusBar = (theme) =>
-  `<div class="sb ${theme}"><span>9:41</span><span><b>5G</b><span class="bat"><i></i></span></span></div>`;
+/**
+ * The status bar, drawn at the size the real one has on that device: the
+ * screenshot is shrunk to fit the frame, so the bar shrinks by the same
+ * amount (iPhone: 17 pt text in a 54 pt bar on a 440 pt screen; iPad: 13 pt
+ * text in a 24 pt bar on a 1032 pt screen).
+ */
+const STATUS_BARS = {
+  phone: { screen: 440, text: 17 },
+  tablet: { screen: 1032, text: 13 },
+};
+const statusBar = (theme, kind, frameWidth) => {
+  const bar = STATUS_BARS[kind];
+  const padding = kind === "tablet" ? 16 : 12;
+  const scale = (frameWidth - 2 * padding) / bar.screen;
+  return `<div class="sb ${theme} ${kind}" style="font-size:${(bar.text * scale).toFixed(2)}px"><span>9:41</span><span><b>5G</b><span class="bat"><i></i></span></span></div>`;
+};
 
 /** Capture notes (crop, spotlight box) by image name, loaded at boot. */
 const NOTES = {};
 
-/** A device frame with a captured screen. kind: phone | tablet | duo | laptop */
+/**
+ * A device frame with a captured screen. kind: phone | tablet | duo | laptop.
+ * The Duo gets no drawn status bar: its recording shows the real one, down
+ * the right-hand edge.
+ */
 function device(name, theme, kind = "phone", width = 380) {
-  const screen = `<div class="screen">${kind === "laptop" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : statusBar(theme)}<img src="${src(name)}" alt="">${kind === "duo" ? '<div class="hinge"></div>' : ""}<div class="spot"></div></div>`;
+  const screen = `<div class="screen">${kind === "laptop" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : kind === "duo" ? "" : statusBar(theme, kind, width)}<img src="${src(name)}" alt="">${kind === "duo" ? '<div class="hinge"></div>' : ""}<div class="spot"></div></div>`;
   const node =
     kind === "laptop"
       ? el(
