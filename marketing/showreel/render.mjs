@@ -21,19 +21,21 @@
  *   CHROME_PATH  Chromium/Chrome binary (defaults to the Playwright install)
  *   FFMPEG_PATH  ffmpeg with libx264 + aac (defaults to `ffmpeg` on PATH)
  */
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createServer } from "node:http";
 import {
   copyFileSync,
   existsSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   writeFileSync,
 } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderScore, writeWav } from "./calmScore.mjs";
+import { DUO_SKIP } from "./duo/overlay.mjs";
 import { renderSoundtrack } from "./soundtrack.mjs";
 import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
@@ -442,6 +444,24 @@ function copyKeynoteScreens() {
     );
   const to = join(OUT_DIR, "keynote");
   mkdirSync(to, { recursive: true });
+  // With a Duo recording, its first frame stands in for the Duo screen.
+  const duo = join(ROOT, "../app-preview/out/duo.mp4");
+  const marks = join(ROOT, "../app-preview/out/duo.marks.json");
+  if (existsSync(duo) && existsSync(marks)) {
+    const { start } = JSON.parse(readFileSync(marks, "utf8"));
+    spawnSync(ffmpegPath, [
+      "-v",
+      "error",
+      "-y",
+      "-ss",
+      String(start + DUO_SKIP),
+      "-i",
+      duo,
+      "-frames:v",
+      "1",
+      join(to, "duo-first.png"),
+    ]);
+  }
   for (const name of readdirSync(from))
     if (/\.(png|json)$/.test(name))
       copyFileSync(join(from, name), join(to, name));

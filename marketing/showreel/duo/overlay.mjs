@@ -15,15 +15,24 @@ import path from "node:path";
 import { chapter } from "../timelines/keynote.mjs";
 
 /** Where (px) and when (s) the Duo screen is on stage; mirrors keynote.mjs. */
+/**
+ * Seconds into the Duo recording where the footage starts: "List and
+ * details" is already on screen and the selected row and the details panel
+ * agree (later taps in the recorded run did not stay in step).
+ */
+export const DUO_SKIP = 0.3;
+
 export function duoWindow(scale = 1) {
   const big = chapter("bigScreens");
-  const handover = big.start + 4.4;
+  // keynote.mjs: the Duo comes in at +3.0 s and is still 1.2 s later.
+  const handover = big.start + 3.0;
   return {
     x: (960 + 12) * scale,
     y: (300 + 12) * scale,
     width: 836 * scale,
     height: 614 * scale,
-    from: handover + 1.6,
+    radius: 40 * scale,
+    from: handover + 1.2,
     to: big.end - 0.7,
   };
 }
@@ -61,12 +70,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     "-i",
     input,
     "-ss",
-    String(marks.start),
+    String(marks.start + DUO_SKIP),
     "-i",
     duo,
     "-filter_complex",
-    `[1:v]tpad=stop_mode=clone:stop_duration=10,setpts=PTS-STARTPTS+${w.from}/TB,scale=${w.width}:${w.height}[d];` +
-      `[0:v][d]overlay=${w.x}:${w.y}:enable='between(t,${w.from},${w.to})'[v]`,
+    // The footage, its corners rounded to match the drawn screen.
+    `[1:v]tpad=stop_mode=clone:stop_duration=10,setpts=PTS-STARTPTS+${w.from}/TB,scale=${w.width}:${w.height},format=rgba[d0];` +
+      `color=c=white:s=${w.width}x${w.height},format=gray,geq=lum='255*lte(hypot(max(0\\,max(${w.radius}-X\\,X-(W-1-${w.radius})))\\,max(0\\,max(${w.radius}-Y\\,Y-(H-1-${w.radius})))),${w.radius})'[m];` +
+      `[d0][m]alphamerge[d];` +
+      `[0:v][d]overlay=${w.x}:${w.y}:eof_action=pass:enable='between(t,${w.from},${w.to})'[v]`,
     "-map",
     "[v]",
     "-map",

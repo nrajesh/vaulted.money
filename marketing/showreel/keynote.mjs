@@ -211,9 +211,12 @@ const bigCap = caption({
   body: "List and details side by side, on iPad and iPhone Duo.",
   theme: "light",
 });
-const ipad = device("ipad-dark-6", "dark", "tablet", 640);
+const ipad = device("ipad-dark-6", "dark", "tablet", 560);
 const duo = device("duoInner-dark-6", "dark", "duo", 860);
-stage.append(ipad, duo, bigCap);
+duo.dataset.duo = "1";
+const ipadLabel = el('<div class="label on-light-label">iPad</div>');
+const duoLabel = el('<div class="label on-light-label">iPhone Duo</div>');
+stage.append(ipad, duo, bigCap, ipadLabel, duoLabel);
 
 // Every device
 const devicesCap = caption({
@@ -221,32 +224,40 @@ const devicesCap = caption({
   theme: "dark",
   centre: true,
 });
+// Smallest screen to largest; the Apple devices sit together.
 const row = [
   {
-    node: device("iphone-light-1", "light", "phone", 220),
-    label: "iPhone",
-    x: 100,
-    y: 420,
-  },
-  {
-    node: device("ipad-light-2", "light", "tablet", 380),
-    label: "iPad",
-    x: 375,
-    y: 400,
-  },
-  {
-    node: device("android-dark-3", "dark", "phone", 220),
+    node: device("android-dark-3", "dark", "phone", 190),
     label: "Android",
-    x: 810,
+    x: 30,
+    y: 450,
+  },
+  {
+    node: device("iphone-light-1", "light", "phone", 190),
+    label: "iPhone",
+    x: 250,
+    y: 450,
+  },
+  {
+    node: device("duoInner-dark-6", "dark", "duo", 340),
+    label: "iPhone Duo",
+    x: 470,
+    y: 560,
+  },
+  {
+    node: device("ipad-light-2", "light", "tablet", 330),
+    label: "iPad",
+    x: 850,
     y: 420,
   },
   {
-    node: device("mac-dark-6", "dark", "laptop", 760),
+    node: device("mac-dark-6", "dark", "laptop", 620),
     label: "Mac",
-    x: 1075,
-    y: 390,
+    x: 1220,
+    y: 460,
   },
 ];
+row[2].node.dataset.duo = "1";
 const labels = row.map((r) => el(`<div class="label">${r.label}</div>`));
 stage.append(...row.map((r) => r.node), ...labels, devicesCap);
 
@@ -362,22 +373,26 @@ function render(seconds) {
     spotlight(budgetsPhone, t, start + 2.5, stop - 0.7);
   }
 
-  // Big screens: iPad, then the Duo unfolds to two panels
+  // Big screens: iPad, then the iPhone Duo (its recording plays on the
+  // screen once it is still: see duo/overlay.mjs, which mirrors these times).
   {
     const { start, end: stop } = C.bigScreens;
     poseCaption(bigCap, t, start + 0.3, stop);
-    const handover = start + 4.4;
-    poseDevice(ipad, t, start, handover + 0.7, { x: 1060, y: 170 });
-    spotlight(ipad, t, start + 2.0, handover);
+    const handover = start + 3.0;
+    poseDevice(ipad, t, start, handover + 0.7, { x: 1100, y: 140 });
+    spotlight(ipad, t, start + 1.6, handover);
     poseDevice(duo, t, handover, stop, { x: 960, y: 300, delay: 0.1 });
-    const unfold = tween(t, handover + 0.2, handover + 1.6, ease.inOutCubic);
-    set(duo, {
-      transform: `perspective(1800px) rotateY(${(1 - unfold) * 70}deg)`,
-      transformOrigin: "50% 50%",
-    });
+    const labelFor = (label, node, from, to) =>
+      set(label, {
+        left: `${node.offsetLeft + node.offsetWidth / 2}px`,
+        top: `${node.offsetTop + node.offsetHeight + 22}px`,
+        opacity: tween(t, from, from + 0.5) * (1 - tween(t, to - 0.6, to)),
+      });
+    labelFor(ipadLabel, ipad, start + 1.2, handover + 0.4);
+    labelFor(duoLabel, duo, handover + 1.2, stop);
   }
 
-  // Every device: four glide into a row, named
+  // Every device: five glide into a row, named
   {
     const { start, end: stop } = C.devices;
     poseCaption(devicesCap, t, start + 0.2, stop);
@@ -413,6 +428,12 @@ function render(seconds) {
 
 // ── Boot ────────────────────────────────────────────────────────────────────
 async function boot() {
+  // The Duo shows the recording's first frame (render.mjs extracts it), so
+  // the hand-over to the footage does not jump.
+  const first = await fetch("out/keynote/duo-first.png", { method: "HEAD" });
+  if (first.ok)
+    for (const node of document.querySelectorAll("[data-duo] img"))
+      node.src = "out/keynote/duo-first.png";
   await Promise.all(
     images.map(async (img) => {
       const name = img.getAttribute("src").replace(/^.*\/|\.png$/g, "");

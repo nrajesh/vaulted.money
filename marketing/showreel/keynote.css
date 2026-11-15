@@ -406,3 +406,6 @@ em {
 .laptop .titlebar {
   height: 26px;
 }
+.label.on-light-label {
+  color: hsl(222.2 84% 4.9%);
+}
