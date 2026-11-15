@@ -51,3 +51,17 @@ export function storeLayoutPreference(value: "split" | "table"): void {
     // Storage unavailable (private mode): the choice lasts for this visit.
   }
 }
+
+/**
+ * The transaction the details panel opens on when nothing is selected: the
+ * first card of the list (newest date first, upcoming scheduled ones
+ * included), so the panel always matches a row the person can see.
+ */
+export function firstListedTransaction<T extends { date: string }>(
+  transactions: T[],
+): T | null {
+  return transactions.reduce<T | null>(
+    (first, item) => (!first || item.date > first.date ? item : first),
+    null,
+  );
+}

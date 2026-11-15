@@ -46,3 +46,20 @@ describe("layout preference", () => {
     expect(readLayoutPreference()).toBeNull();
   });
 });
+
+describe("firstListedTransaction", () => {
+  it("picks the first card the list shows: the latest date, upcoming ones included", async () => {
+    const { firstListedTransaction } = await import("./transactionLayout");
+    const pick = firstListedTransaction([
+      { id: "past", date: "2026-11-20T00:00:00.000Z" },
+      { id: "upcoming", date: "2026-11-29T00:00:00.000Z", is_projected: true },
+      { id: "older", date: "2026-11-02T00:00:00.000Z" },
+    ]);
+    expect(pick?.id).toBe("upcoming");
+  });
+
+  it("is empty for an empty list", async () => {
+    const { firstListedTransaction } = await import("./transactionLayout");
+    expect(firstListedTransaction([])).toBeNull();
+  });
+});

@@ -8,6 +8,7 @@ import TransactionTable from "@/components/transactions/TransactionTable";
 import { TransactionDetailPane } from "@/components/transactions/TransactionDetailPane";
 import {
   SPLIT_MIN_WIDTH,
+  firstListedTransaction,
   pickTransactionLayout,
   readLayoutPreference,
   storeLayoutPreference,
@@ -714,23 +715,15 @@ const Transactions = () => {
   const layout = pickTransactionLayout(tableShellWidth, layoutPreference);
   const [detailId, setDetailId] = useState<string | null>(null);
 
-  // The selected transaction, or the newest real one so the panel is never
-  // empty when there is something to show. Cleared if filtered away.
+  // The selected transaction, or the list's first card so the panel is never
+  // empty and always matches a visible row. Cleared if filtered away.
   const detailTransaction = React.useMemo(() => {
     if (layout !== "split") return null;
     const chosen = detailId
       ? filteredTransactions.find((item) => item.id === detailId)
       : undefined;
     if (chosen) return chosen;
-    return (
-      filteredTransactions
-        .filter((item) => !("is_projected" in item && item.is_projected))
-        .reduce<(typeof filteredTransactions)[number] | null>(
-          (newest, item) =>
-            !newest || item.date > newest.date ? item : newest,
-          null,
-        ) ?? null
-    );
+    return firstListedTransaction(filteredTransactions);
   }, [layout, detailId, filteredTransactions]);
 
   const currencyFor = React.useCallback(
