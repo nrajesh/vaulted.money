@@ -59,8 +59,7 @@ const partKey = (part: InterpretationPart): string =>
 /**
  * An account named in a sentence ("in checking account") means *only* those
  * accounts, not those on top of whatever the page had selected. Only the first
- * account taken in a search replaces the selection; further ones add to it
- * (two accounts of the same kind match either).
+ * account taken in a search replaces the selection; further ones add to it.
  */
 export interface SearchUpdateOptions {
   replaceAccounts?: boolean;
@@ -325,52 +324,28 @@ export function ConversationalSearchInput({
     setOpen(false);
   };
 
-  // How the picked filters combine, in as few words as possible: every kind
-  // must match; two of the same kind (two payees) match either, so say that
-  // only when it applies.
-  const sameKindTwice = (
-    ["vendor", "category", "subCategory", "account"] as const
-  ).find(
-    (entity) =>
-      remaining.filter(
-        (item) => item.part.kind === "entity" && item.part.entity === entity,
-      ).length > 1,
-  );
-  const eitherText = {
-    vendor: t("filters.conversational.suggest.eitherPayees", {
-      defaultValue: "Two payees match either.",
-    }),
-    category: t("filters.conversational.suggest.eitherCategories", {
-      defaultValue: "Two categories match either.",
-    }),
-    subCategory: t("filters.conversational.suggest.eitherSubCategories", {
-      defaultValue: "Two sub-categories match either.",
-    }),
-    account: t("filters.conversational.suggest.eitherAccounts", {
-      defaultValue: "Two accounts match either.",
-    }),
-  };
-  const combineHint = [
-    t("filters.conversational.suggest.allMustMatch", {
-      defaultValue: "All filters must match.",
-    }),
-    sameKindTwice ? eitherText[sameKindTwice] : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   // Every understood piece is its own row, so the user can take just one of
   // them; with several left, "apply all" comes first and is the default.
   const suggestionGroup = remaining.length > 0 && (
     <CommandGroup
       forceMount
-      heading={t("filters.conversational.suggest.heading", {
-        defaultValue: "Understood as",
-      })}
+      // How the picked filters combine, on the heading's own line.
+      heading={
+        <>
+          <span>
+            {t("filters.conversational.suggest.heading", {
+              defaultValue: "Understood as",
+            })}
+          </span>
+          <span className="font-normal">
+            {" · "}
+            {t("filters.conversational.suggest.allMustMatch", {
+              defaultValue: "all filters must match",
+            })}
+          </span>
+        </>
+      }
     >
-      <div className="px-2 pb-2 text-xs text-muted-foreground">
-        {combineHint}
-      </div>
       {remaining.length > 1 && (
         <CommandItem
           forceMount

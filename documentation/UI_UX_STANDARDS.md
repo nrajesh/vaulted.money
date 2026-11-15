@@ -47,7 +47,7 @@ Use one search/filter area per screen:
 
 The applied-filters row sits **directly above** the search box and is always there: it reads "No filters applied" when empty, so nothing shifts when the first filter is added (only a long list wrapping onto more rows moves the page). It goes above the box, not below, so a pick shows where the eyes already are and the suggestion list opening under the box never covers it. Every applied filter (date, accounts, categories, vendors, amount, income/expense, top-N, text) has a chip that removes it.
 
-The suggestion list never applies anything on its own. Picking a piece applies only that piece and keeps the rest on offer; **Apply all** takes what is left and **Clear** / **Done** end the interaction. Say how filters combine in the interface (every kind must match; several of one kind match either).
+The suggestion list never applies anything on its own. Picking a piece applies only that piece and keeps the rest on offer; **Apply all** takes what is left and **Clear** / **Done** end the interaction. Say how filters combine in as few words as possible, on the "Understood as" line itself ("all filters must match"); the fuller explanation belongs in the user guide, not on screen.
 
 ## Text Contrast
 
