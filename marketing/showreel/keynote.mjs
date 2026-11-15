@@ -62,7 +62,7 @@ function device(
   width = 380,
   { recorded = kind === "duo" } = {},
 ) {
-  const screen = `<div class="screen">${kind === "laptop" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : recorded ? "" : statusBar(theme, kind, width)}<img src="${src(name)}" alt="">${kind === "duo" ? '<div class="hinge"></div>' : ""}<div class="spot"></div></div>`;
+  const screen = `<div class="screen">${kind === "laptop" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : recorded ? "" : statusBar(theme, kind, width)}<img src="${src(name)}" alt=""><div class="spot"></div></div>`;
   const node =
     kind === "laptop"
       ? el(

@@ -237,20 +237,6 @@ em {
 .titlebar i:nth-child(3) {
   background: #28c840;
 }
-.hinge {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 3px;
-  transform: translateX(-50%);
-  background: linear-gradient(
-    transparent,
-    rgba(255, 255, 255, 0.25),
-    transparent
-  );
-}
-
 /* Callout chips (AI scene) */
 .chip {
   position: absolute;

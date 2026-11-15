@@ -82,7 +82,8 @@ function cuts() {
     },
     {
       shot: "desktop-ledgers-light",
-      region: { x: 360, y: 40, width: 720, height: 405 },
+      // The ledger cards, not the empty space above them.
+      region: { x: 320, y: 440, width: 800, height: 450 },
       label: "Multi-ledger",
     },
   ];

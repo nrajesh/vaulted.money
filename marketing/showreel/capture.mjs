@@ -216,6 +216,34 @@ async function main() {
     await wait(500);
   }
 
+  /** Close an open dialog with a real Escape key press. */
+  async function closeDialog() {
+    for (const type of ["keyDown", "keyUp"]) {
+      await session.send("Input.dispatchKeyEvent", {
+        type,
+        key: "Escape",
+        code: "Escape",
+        windowsVirtualKeyCode: 27,
+      });
+    }
+    await waitFor(`!document.querySelector("[role=dialog]")`);
+    await wait(300);
+  }
+
+  /** Close an open menu with a real Escape key press. */
+  async function closeMenu() {
+    for (const type of ["keyDown", "keyUp"]) {
+      await session.send("Input.dispatchKeyEvent", {
+        type,
+        key: "Escape",
+        code: "Escape",
+        windowsVirtualKeyCode: 27,
+      });
+    }
+    await waitFor(`!document.querySelector("[role=menu]")`);
+    await wait(300);
+  }
+
   /** Move the real pointer, so hover states (chart tooltips) appear. */
   async function hover(x, y) {
     await session.send("Input.dispatchMouseEvent", {
@@ -245,6 +273,8 @@ async function main() {
       const field = document.querySelector(${JSON.stringify(selector)});
       field.scrollIntoView({ block: "center" });
       field.focus();
+      // Replace, not append to, whatever the field starts with.
+      field.select();
     })()`);
     await session.send("Input.insertText", { text });
     await wait(150);
@@ -406,11 +436,18 @@ async function main() {
     });
     await goto("/transactions", 2200);
     await shot("desktop-transactions-dark", {
+      queries: { actions: ["button", "Actions"] },
+    });
+    // The film opens the real Actions menu before "Import CSV".
+    await openMenu("Actions");
+    await shot("desktop-import-menu-dark", {
       queries: {
-        importCsv: ["button", "Actions"],
-        categorize: ["button", "Actions"],
+        actions: ["button", "Actions"],
+        menu: ["[role=menu]"],
+        importItem: ["[role=menuitem]", "Import CSV"],
       },
     });
+    await closeMenu();
 
     // CSV import: the real two-step dialog.
     const accountFilter = await evaluate(
@@ -446,10 +483,19 @@ async function main() {
         firstRow: ["tbody tr"],
         categoryHeader: ["th", "Category"],
         subCategoryHeader: ["th", "Sub-category"],
-        categorize: ["button", "Actions"],
-        importCsv: ["button", "Actions"],
+        actions: ["button", "Actions"],
       },
     });
+    // ...and again before "Categorize Missing".
+    await openMenu("Actions");
+    await shot("desktop-categorize-menu-dark", {
+      queries: {
+        actions: ["button", "Actions"],
+        menu: ["[role=menu]"],
+        categorizeItem: ["[role=menuitem]", "Categorize Missing"],
+      },
+    });
+    await closeMenu();
 
     // Optional AI: off until switched on; what turning it on means.
     await goto("/ai-providers", 1800);
@@ -466,18 +512,37 @@ async function main() {
     await typeInto("[role=dialog] input[name=model]", "llama3.1");
     await typeInto("[role=dialog] input[name=baseUrl]", standIn.url);
     await typeInto("[role=dialog] input[name=apiKey]", "local");
-    await click("Save Provider", "[role=dialog] button");
-    await settle(1500);
+    await wait(400);
+    // The real form, pointed at a model on this computer.
     await shot("desktop-ai-provider-dark", {
       queries: {
-        dialog: ["button", "AI inside the app"],
-        endpoint: ["[role=switch]"],
+        dialog: ["[role=dialog]"],
+        endpoint: ["[role=dialog] input[name=baseUrl]"],
       },
     });
+    // The website refuses to save a model on this computer (only the desktop
+    // app can reach one), and this capture runs the website. The film shows
+    // the desktop app, so save the provider the way the desktop app's form
+    // would: through the app's own data provider, key kept locally.
+    await closeDialog();
+    await evaluate(`(async () => {
+      const { LocalDataProvider } = await import("/src/providers/LocalDataProvider.ts");
+      const { writeAiApiKeyToStorage } = await import("/src/constants/aiApiKeyStorage.ts");
+      const created = await new LocalDataProvider().addAIProvider({
+        name: "Local model",
+        type: "OPENAI",
+        baseUrl: ${JSON.stringify(standIn.url)},
+        model: "llama3.1",
+        isDefault: true,
+      });
+      writeAiApiKeyToStorage(created.id, "local");
+    })()`);
+    await goto("/ai-providers", 1800);
+    await settle(1200);
+    // The saved provider's card ("In use").
     await shot("desktop-ai-providers-dark", {
       queries: {
-        table: ["button", "AI inside the app"],
-        row: ["span, div, li", "Sends payee names only, never amounts"],
+        row: ["div", "In use", 120],
         title: ["h1"],
       },
     });
@@ -489,11 +554,23 @@ async function main() {
     await goto("/transactions", 2200);
     await openMenu("Actions");
     await click("Categorize Missing", "[role=menuitem]");
-    await wait(800);
-    const consent = await evaluate(
-      `[...document.querySelectorAll("[role=alertdialog] button")].some((b) => b.textContent.trim() === "Send payee names")`,
-    );
-    if (consent) await click("Send payee names", "[role=alertdialog] button");
+    // With a working provider the app asks before sending payee names; the
+    // question can take a moment to appear.
+    const consentButton = `[...document.querySelectorAll("[role=alertdialog] button")].some((b) => b.textContent.trim() === "Send payee names")`;
+    await waitFor(
+      `${consentButton} || !document.querySelector("table")?.innerText.includes("Uncategorized")`,
+      15000,
+    ).catch(async () => {
+      console.log(
+        "  state:",
+        await evaluate(
+          `JSON.stringify({ menu: !!document.querySelector("[role=menu]"), dialogs: [...document.querySelectorAll("[role=alertdialog],[role=dialog]")].map((d) => d.innerText.slice(0, 200)), toasts: [...document.querySelectorAll("[data-sonner-toast]")].map((d) => d.innerText) })`,
+        ),
+      );
+      throw new Error("Categorize Missing did nothing");
+    });
+    if (await evaluate(consentButton))
+      await click("Send payee names", "[role=alertdialog] button");
     await waitFor(
       `!document.querySelector("table")?.innerText.includes("Uncategorized")`,
     );
@@ -527,11 +604,16 @@ async function main() {
           activeBudgets: ["h2, h3, div", "Active Budgets", 20],
         },
       });
+      // Only cards wholly on screen count: a card below the fold is not in
+      // the screenshot, and framing it would show an empty box.
+      const onScreen = (box) => box && box.y >= 0 && box.y + box.height <= 900;
       // Prefer a card the app itself labels "On track", else one with money
       // remaining.
       budgetRects = manifest.screens["desktop-budgets-dark"].rects;
-      budgetRects.onTrack ??= budgetRects.remaining;
-      if (budgetRects.onTrack && budgetRects.overBudget) break;
+      if (!onScreen(budgetRects.onTrack)) delete budgetRects.onTrack;
+      if (onScreen(budgetRects.remaining))
+        budgetRects.onTrack ??= budgetRects.remaining;
+      if (budgetRects.onTrack && onScreen(budgetRects.overBudget)) break;
       const next = await evaluate(`(() => {
         const button = document.querySelector('button[aria-label="Next page"]');
         if (!button || button.disabled) return false;

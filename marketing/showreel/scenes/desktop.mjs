@@ -4,12 +4,15 @@
  * One window stays on stage while the story moves through it, like a screen
  * recording directed by a camera. Each chapter keeps one headline on the left
  * while the window shows two or three things, each held long enough to read:
- *   bars 5–7    a bank export drops onto "Import CSV"; the real import
- *               dialog and its preview; the new (uncategorised) rows;
- *   bars 8–9    the cursor clicks "Categorize Missing" and a scan line sweeps
- *               the table as categories appear, matched from history;
- *   bars 10–11  optional AI: a provider pointed at a model on localhost, then
- *               the "keys stay local" settings card;
+ *   bars 5–7    the cursor opens the Actions menu and a bank export drops
+ *               onto "Import CSV"; the real import dialog and its preview;
+ *               the new (uncategorised) rows;
+ *   bars 8–9    the cursor opens Actions again and clicks "Categorize
+ *               Missing"; a scan line sweeps the table as categories appear,
+ *               matched from history;
+ *   bars 10–11  optional AI: the real "Add AI Provider" form pointed at a
+ *               model on this computer, the saved provider, then the
+ *               "off until you turn it on" settings card;
  *   bars 12–13  budgets, with the real overspend alerts popping out, before
  *               the window tips back into the isometric reports wall.
  * All images are captures of the running app (capture.mjs); callouts are
@@ -40,11 +43,21 @@ const CENTER_X = 1920 - 70 - (VIEW_WIDTH * WINDOW_SCALE) / 2;
 const CENTER_Y = 178 + (WINDOW_HEIGHT * WINDOW_SCALE) / 2;
 const TIP_START = CUES.budgetsTip;
 const TIP_END = beat(52.3);
+// The cursor opens the Actions menu before each of the two menu items.
+const IMPORT_MENU_CLICK = beat(16.9);
+const CATEGORIZE_MENU_CLICK = beat(29.4);
 
 const PAGES = [
   { name: "desktop-transactions-dark", at: START },
+  { name: "desktop-import-menu-dark", at: IMPORT_MENU_CLICK + 0.05 },
   { name: "desktop-import-settings-dark", at: CUES.importSettings },
   { name: "desktop-transactions-imported-dark", at: CUES.imported },
+  { name: "desktop-categorize-menu-dark", at: CATEGORIZE_MENU_CLICK + 0.05 },
+  // The menu closes on the click, before the categories sweep in.
+  {
+    name: "desktop-transactions-imported-dark",
+    at: CUES.categorizeClick + 0.05,
+  },
   {
     name: "desktop-transactions-categorized-dark",
     at: CUES.categorized,
@@ -105,8 +118,12 @@ let cameraKeys;
 
 // ── Geometry, read from the capture manifest ────────────────────────────────
 function measure() {
-  const importCsv = rect("desktop-transactions-dark", "importCsv");
-  const categorize = rect("desktop-transactions-imported-dark", "categorize");
+  const importActions = rect("desktop-import-menu-dark", "actions");
+  const importMenu = rect("desktop-import-menu-dark", "menu");
+  const importCsv = rect("desktop-import-menu-dark", "importItem");
+  const categorizeActions = rect("desktop-categorize-menu-dark", "actions");
+  const categorizeMenu = rect("desktop-categorize-menu-dark", "menu");
+  const categorize = rect("desktop-categorize-menu-dark", "categorizeItem");
   const firstRow = rect("desktop-transactions-imported-dark", "firstRow");
   const categoryHeader = rect(
     "desktop-transactions-imported-dark",
@@ -136,7 +153,11 @@ function measure() {
     height: firstRow.height * 6 + 8,
   };
   return {
+    importActions,
+    importMenu,
     importCsv,
+    categorizeActions,
+    categorizeMenu,
     categorize,
     firstRow,
     preview,
@@ -176,6 +197,20 @@ const centre = (box) => ({
 });
 
 /**
+ * Keeps the camera's view inside the captured page (1440 × 900 CSS px), so
+ * framing something near an edge never shows empty space past the page.
+ */
+function clampToPage(key) {
+  const halfWidth = VIEW_WIDTH / (2 * key.z);
+  const halfHeight = VIEW_HEIGHT / (2 * key.z);
+  return {
+    ...key,
+    x: clamp(key.x, halfWidth, VIEW_WIDTH - halfWidth),
+    y: clamp(key.y, halfHeight, VIEW_HEIGHT - halfHeight),
+  };
+}
+
+/**
  * Camera keyframes inside the window: zoom and focus in page CSS px. Every
  * move settles and holds for at least a second before the next one.
  */
@@ -191,30 +226,34 @@ function buildCamera(g) {
     VIEW_HEIGHT / (pair.height + 180),
   );
   const toastFocus = centre(g.toast);
-  // The row's left part: name, type, model and endpoint.
+  // The saved provider's card, at the left of its row.
   const providerFocus = {
-    x: g.providerRow.x + 600,
+    x: g.providerRow.x + 330,
     y: centre(g.providerRow).y,
   };
+  // The Actions button and the menu it opens, read together.
+  const importMenuFocus = centre(union(g.importActions, g.importMenu));
+  const categorizeMenuFocus = centre(
+    union(g.categorizeActions, g.categorizeMenu),
+  );
   const previewFocus = centre(g.preview);
   const endpointFocus = {
     x: centre(g.providerDialog).x,
     y: centre(g.endpoint).y,
   };
-  const tableView = { z: 1.1, x: 720, y: 400 };
   return [
     { t: START, ...home },
     { t: beat(16.8), ...home },
-    { t: beat(17.6), z: 1.18, x: centre(g.importCsv).x - 120, y: 330 },
-    { t: beat(18.8), z: 1.18, x: centre(g.importCsv).x - 120, y: 330 },
+    { t: beat(17.6), z: 1.3, ...importMenuFocus },
+    { t: beat(18.8), z: 1.32, ...importMenuFocus },
     { t: beat(19.3), ...home },
     { t: beat(20.3), z: 1.55, ...previewFocus },
     { t: beat(23), z: 1.6, x: previewFocus.x + 24, y: previewFocus.y },
     { t: beat(23.6), ...home },
     { t: beat(24.6), z: 1.42, ...rowsFocus },
     { t: beat(27.6), z: 1.44, ...rowsFocus },
-    { t: beat(28.4), ...tableView },
-    { t: beat(30.6), ...tableView },
+    { t: beat(28.4), z: 1.3, ...categorizeMenuFocus },
+    { t: beat(30.6), z: 1.32, ...categorizeMenuFocus },
     { t: beat(31.4), z: 1.42, ...rowsFocus },
     { t: beat(33.6), z: 1.44, ...rowsFocus },
     { t: beat(34.2), z: 1.32, ...toastFocus },
@@ -223,8 +262,8 @@ function buildCamera(g) {
     { t: beat(37), z: 1.45, ...endpointFocus },
     { t: beat(39.2), z: 1.48, ...endpointFocus },
     { t: beat(39.7), ...home },
-    { t: beat(40.5), z: 1.2, ...providerFocus },
-    { t: beat(43.5), z: 1.24, ...providerFocus },
+    { t: beat(40.5), z: 1.3, ...providerFocus },
+    { t: beat(43.5), z: 1.33, ...providerFocus },
     { t: beat(44.2), ...home },
     { t: beat(45), z: budgetsZoom, ...budgetsFocus },
     {
@@ -234,7 +273,7 @@ function buildCamera(g) {
       y: budgetsFocus.y,
     },
     { t: TIP_START + 0.2, ...home },
-  ];
+  ].map(clampToPage);
 }
 
 function cameraAt(t) {
@@ -279,7 +318,7 @@ function windowMarkup(g) {
         ${callout("categorize", pad(g.categorize, 6))}
         ${callout("sorted", g.rows, "Matched from your history", "mint")}
         ${callout("toast", pad(g.toast, 4))}
-        ${callout("endpoint", pad(g.endpoint, 6), "Off until you switch it on", "cyan")}
+        ${callout("endpoint", pad(g.endpoint, 6), "A model on this computer", "cyan")}
         ${callout("onTrack", pad(g.onTrack, 6), "On track", "mint")}
         ${callout("overBudget", pad(g.overBudget, 6), "Over budget", "rose")}
         <div class="desk-ripple"></div>
@@ -414,6 +453,64 @@ function renderCopy(t) {
   });
 }
 
+/**
+ * Where the cursor is (page px), or null while it is off screen. Each trip
+ * glides in from the lower right, clicks Actions, and for "Categorize
+ * Missing" moves on to the item. For the import the bank export is dropped
+ * on "Import CSV" instead, so the cursor leaves once the menu is open.
+ */
+function cursorAt(t) {
+  const trips = [
+    {
+      from: beat(16.25),
+      stops: [
+        { point: centre(geometry.importActions), click: IMPORT_MENU_CLICK },
+      ],
+      leave: beat(17.5),
+    },
+    {
+      from: beat(28.6),
+      stops: [
+        {
+          point: centre(geometry.categorizeActions),
+          click: CATEGORIZE_MENU_CLICK,
+        },
+        { point: centre(geometry.categorize), click: CUES.categorizeClick },
+      ],
+      leave: beat(30.8),
+    },
+  ];
+  const trip = trips.find((entry) => t >= entry.from && t < entry.leave + 0.4);
+  if (!trip) return null;
+  const first = trip.stops[0].point;
+  let x = first.x + 380;
+  let y = first.y + 330;
+  let previousTime = trip.from;
+  let press = 0;
+  for (const stop of trip.stops) {
+    const arrive = stop.click - 0.12;
+    const travel = ease.inOutCubic(progress(t, previousTime, arrive));
+    const fromX = x;
+    const fromY = y;
+    x = lerp(fromX, stop.point.x, travel);
+    y = lerp(fromY, stop.point.y, travel) + Math.sin(travel * Math.PI) * -30;
+    press = Math.max(
+      press,
+      impulse(t, stop.click, 14) * (t >= stop.click ? 1 : 0),
+    );
+    if (t < arrive) break;
+    x = stop.point.x;
+    y = stop.point.y;
+    previousTime = stop.click + 0.1;
+  }
+  return {
+    x,
+    y,
+    press,
+    opacity: 1 - progress(t, trip.leave, trip.leave + 0.4),
+  };
+}
+
 export function render(t) {
   const visible = t >= START && t < END;
   show(root, visible);
@@ -476,41 +573,34 @@ export function render(t) {
   renderCallout("import", t, beat(17.8), beat(19.1), CUES.csvDrop);
   renderCallout("preview", t, beat(20.4), beat(23.3));
   renderCallout("rows", t, beat(24.8), beat(27.7));
-  renderCallout("categorize", t, beat(29), beat(31), CUES.categorizeClick);
+  renderCallout("categorize", t, beat(29.5), beat(30.6), CUES.categorizeClick);
   renderCallout("sorted", t, beat(31.4), beat(33.9));
   renderCallout("toast", t, beat(34.2), beat(35.8));
   renderCallout("endpoint", t, beat(37.1), beat(39.4));
   renderCallout("onTrack", t, beat(45.2), beat(50.8));
   renderCallout("overBudget", t, beat(46), beat(50.8));
 
-  // ── Cursor clicks "Categorize Missing" on beat 30 ───────────────────────
-  const target = centre(geometry.categorize);
-  const travel = ease.inOutCubic(progress(t, beat(28.9), beat(29.85)));
-  const cursorVisible = t >= beat(28.85) && t < beat(31.2);
-  show(cursor, cursorVisible);
-  if (cursorVisible) {
-    const press =
-      impulse(t, CUES.categorizeClick, 14) *
-      (t >= CUES.categorizeClick ? 1 : 0);
+  // ── Cursor: opens Actions, then picks the menu item ──────────────────
+  const pointer = cursorAt(t);
+  show(cursor, Boolean(pointer));
+  if (pointer) {
     style(cursor, {
-      opacity: 1 - progress(t, beat(30.8), beat(31.2)),
-      transform: `translate(${lerp(target.x + 380, target.x, travel)}px, ${
-        lerp(target.y + 330, target.y, travel) +
-        Math.sin(travel * Math.PI) * -40
-      }px) scale(${1 - press * 0.18})`,
+      opacity: pointer.opacity,
+      transform: `translate(${pointer.x}px, ${pointer.y}px) scale(${1 - pointer.press * 0.18})`,
     });
   }
-  const rippleAge = t - CUES.categorizeClick;
-  const csvRippleAge = t - CUES.csvDrop;
-  const rippleAt =
-    rippleAge >= 0 && rippleAge < 0.5
-      ? { age: rippleAge, point: target }
-      : csvRippleAge >= 0 && csvRippleAge < 0.5
-        ? { age: csvRippleAge, point: centre(geometry.importCsv) }
-        : null;
+  const clicks = [
+    { at: IMPORT_MENU_CLICK, point: centre(geometry.importActions) },
+    { at: CUES.csvDrop, point: centre(geometry.importCsv) },
+    { at: CATEGORIZE_MENU_CLICK, point: centre(geometry.categorizeActions) },
+    { at: CUES.categorizeClick, point: centre(geometry.categorize) },
+  ];
+  const rippleAt = clicks.find(
+    (click) => t - click.at >= 0 && t - click.at < 0.5,
+  );
   show(ripple, Boolean(rippleAt));
   if (rippleAt) {
-    const grow = ease.outCubic(rippleAt.age / 0.5);
+    const grow = ease.outCubic((t - rippleAt.at) / 0.5);
     style(ripple, {
       opacity: 1 - grow,
       transform: `translate(${rippleAt.point.x}px, ${rippleAt.point.y}px) translate(-50%, -50%) scale(${0.3 + grow * 1.6})`,
@@ -540,8 +630,9 @@ export function render(t) {
   style(keyCard, {
     opacity: clamp(keyIn * 2) * (1 - keyOut),
     transform:
-      `translate(${lerp(700, 112, keyIn)}px, ${lerp(760, 640, keyIn) + keyOut * 60}px) ` +
-      `scale(${lerp(0.4, 1, keyIn)}) rotateX(${(1 - clamp(keyIn)) * 30}deg)`,
+      `translate(${lerp(700, 40, keyIn)}px, ${lerp(800, 700, keyIn) + keyOut * 60}px) ` +
+      // Small enough to sit beside the window rather than over it.
+      `scale(${lerp(0.4, 0.8, keyIn)}) rotateX(${(1 - clamp(keyIn)) * 30}deg)`,
   });
 
   // ── Overspend alerts from Insights pop out as notifications ─────────────
