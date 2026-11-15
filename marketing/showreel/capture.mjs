@@ -20,7 +20,15 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import { freePort, launchChrome, wait } from "./lib/chrome.mjs";
+
+// The stand-in AI provider the demo videos use: no key, no network, the
+// same answers every run (marketing/search-demo/lib/standin-ai.cjs).
+const { startStandIn } = createRequire(import.meta.url)(
+  "../search-demo/lib/standin-ai.cjs",
+);
+let standIn = null;
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const REPO = join(ROOT, "..", "..");
@@ -46,7 +54,7 @@ function bankExport(payees, date) {
   );
 }
 
-/** Seeded Math.random, injected before any app script runs. */
+/** Seeded Math.random and ids, and a fixed today, injected before any app script runs. */
 const SEED_SCRIPT = `(() => {
   let state = 20260927;
   Math.random = () => {
@@ -56,6 +64,23 @@ const SEED_SCRIPT = `(() => {
     value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
     return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
   };
+  // Record ids come from crypto.randomUUID; draw them from the same seed.
+  const hex = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  crypto.randomUUID = () => hex(8) + "-" + hex(4) + "-4" + hex(3) + "-a" + hex(3) + "-" + hex(12);
+  // Demo data is dated back from "today": fix today (as the store
+  // screenshots do), so every run makes the same ledgers.
+  const RealDate = Date;
+  const shift = new RealDate("2026-11-20T10:00:00").getTime() - RealDate.now();
+  class FixedDate extends RealDate {
+    constructor(...args) {
+      if (args.length === 0) super(RealDate.now() + shift);
+      else super(...args);
+    }
+    static now() {
+      return RealDate.now() + shift;
+    }
+  }
+  window.Date = FixedDate;
 })();`;
 
 /** Keeps screenshots free of transient toasts unless a shot wants one. */
@@ -176,6 +201,19 @@ async function main() {
     })()`);
     if (!clicked) throw new Error(`Nothing to click for "${text}"`);
     await wait(700);
+  }
+
+  /** Opens a Radix menu, which listens for pointerdown rather than click. */
+  async function openMenu(text) {
+    const opened = await evaluate(`(() => {
+      const target = [...document.querySelectorAll("button")].find((b) =>
+        b.offsetParent !== null && b.textContent.trim() === ${JSON.stringify(text)});
+      if (!target) return false;
+      target.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }));
+      return true;
+    })()`);
+    if (!opened) throw new Error(`No menu button "${text}"`);
+    await wait(500);
   }
 
   /** Move the real pointer, so hover states (chart tooltips) appear. */
@@ -369,8 +407,8 @@ async function main() {
     await goto("/transactions", 2200);
     await shot("desktop-transactions-dark", {
       queries: {
-        importCsv: ["button", "Import CSV"],
-        categorize: ["button", "Categorize Missing"],
+        importCsv: ["button", "Actions"],
+        categorize: ["button", "Actions"],
       },
     });
 
@@ -408,61 +446,54 @@ async function main() {
         firstRow: ["tbody tr"],
         categoryHeader: ["th", "Category"],
         subCategoryHeader: ["th", "Sub-category"],
-        categorize: ["button", "Categorize Missing"],
-        importCsv: ["button", "Import CSV"],
+        categorize: ["button", "Actions"],
+        importCsv: ["button", "Actions"],
       },
     });
 
-    // Optional AI: a local, OpenAI-compatible model as the provider.
+    // Optional AI: off until switched on; what turning it on means.
     await goto("/ai-providers", 1800);
+    const aiOff = await evaluate(
+      `[...document.querySelectorAll("button")].some((b) => b.textContent.trim() === "Turn on AI")`,
+    );
+    if (aiOff) await click("Turn on AI");
+    await settle(1200);
+    // A provider, so "Categorize Missing" can run (history matches first).
+    standIn = await startStandIn({ port: await freePort() });
     await click("Add AI Provider");
-    await waitForText("Add AI Provider");
-    await typeInto(
-      '[role=dialog] input[placeholder^="e.g., Local"]',
-      "Local Llama",
-    );
-    await typeInto('[role=dialog] input[placeholder^="e.g., gpt"]', "llama3.1");
-    await typeInto(
-      '[role=dialog] input[placeholder^="https"]',
-      "http://localhost:11434/v1",
-    );
-    await typeInto("[role=dialog] textarea", "Runs on this machine");
-    await click(
-      "Set as default provider",
-      "[role=dialog] label, [role=dialog] button",
-    );
-    await shot("desktop-ai-provider-dark", {
-      queries: {
-        dialog: ["[role=dialog]"],
-        endpoint: ['[role=dialog] input[placeholder^="https"]'],
-      },
-    });
+    await waitForText("Save Provider");
+    await typeInto("[role=dialog] input[name=name]", "Local model");
+    await typeInto("[role=dialog] input[name=model]", "llama3.1");
+    await typeInto("[role=dialog] input[name=baseUrl]", standIn.url);
+    await typeInto("[role=dialog] input[name=apiKey]", "local");
     await click("Save Provider", "[role=dialog] button");
     await settle(1500);
-    await shot("desktop-ai-providers-dark", {
-      queries: { table: ["table"], row: ["tbody tr"], title: ["h1"] },
+    await shot("desktop-ai-provider-dark", {
+      queries: {
+        dialog: ["button", "AI inside the app"],
+        endpoint: ["[role=switch]"],
+      },
     });
-
-    await goto("/settings", 1800);
-    await typeInto("#ai-api-key", "local-model");
-    await waitFor(`Object.keys(localStorage).some((key) =>
-      key.startsWith("vaultedmoney_ai_apiKey_") && localStorage.getItem(key))`);
-    await evaluate(`document.activeElement.blur()`);
-    await settle(1200);
-    const aiCard = await evaluate(`(() => {
-      const heading = [...document.querySelectorAll("h1,h2,h3,div")].find((e) => e.textContent.trim() === "AI Integrations (BYOK)");
-      let card = heading;
-      while (card && card.getBoundingClientRect().height < 280) card = card.parentElement;
-      card.scrollIntoView({ block: "center" });
-      const box = card.getBoundingClientRect();
-      return { x: box.x + scrollX, y: box.y + scrollY, width: box.width, height: box.height };
-    })()`);
-    await wait(500);
-    await shot("desktop-settings-ai-dark", { clip: aiCard });
+    await shot("desktop-ai-providers-dark", {
+      queries: {
+        table: ["button", "AI inside the app"],
+        row: ["span, div, li", "Sends payee names only, never amounts"],
+        title: ["h1"],
+      },
+    });
+    await shot("desktop-settings-ai-dark", {
+      clip: { x: 0, y: 0, width: 1440, height: 580 },
+    });
 
     // "Categorize Missing": matched from the ledger's own history.
     await goto("/transactions", 2200);
-    await click("Categorize Missing");
+    await openMenu("Actions");
+    await click("Categorize Missing", "[role=menuitem]");
+    await wait(800);
+    const consent = await evaluate(
+      `[...document.querySelectorAll("[role=alertdialog] button")].some((b) => b.textContent.trim() === "Send payee names")`,
+    );
+    if (consent) await click("Send payee names", "[role=alertdialog] button");
     await waitFor(
       `!document.querySelector("table")?.innerText.includes("Uncategorized")`,
     );
@@ -475,7 +506,7 @@ async function main() {
         firstRow: ["tbody tr"],
         categoryHeader: ["th", "Category"],
         subCategoryHeader: ["th", "Sub-category"],
-        categorize: ["button", "Categorize Missing"],
+        categorize: ["button", "Actions"],
         toast: ["li, [data-sonner-toast]", "Categorized", 40],
       },
     });
@@ -702,6 +733,7 @@ async function main() {
   } finally {
     browser.close();
     vite.stop();
+    await standIn?.close();
     await wait(300);
     // Chromium may still be flushing its profile; never mask the real error.
     try {

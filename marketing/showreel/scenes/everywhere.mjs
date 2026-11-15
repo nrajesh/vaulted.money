@@ -32,7 +32,7 @@ const PHRASES = [
     time: CUES.everywhere,
     plain: "Every",
     serif: "device.",
-    sub: "WEB · MACOS · WINDOWS · LINUX · iOS · ANDROID",
+    sub: "iPHONE · iPAD · ANDROID · MAC · WEB",
   },
   {
     time: CUES.currency,
@@ -73,7 +73,7 @@ const SETUP = [
 ];
 const PLATFORMS = [
   ["globe", "Web", "pnpm dev"],
-  ["monitor", "Desktop", "pnpm run electron:dev"],
+  ["monitor", "Mac", "pnpm run electron:dev"],
   ["smartphone", "Android", "pnpm run android:build:apk"],
   ["tablet-smartphone", "iOS", "pnpm run ios:build:simulator"],
 ];

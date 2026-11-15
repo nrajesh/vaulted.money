@@ -279,7 +279,7 @@ function windowMarkup(g) {
         ${callout("categorize", pad(g.categorize, 6))}
         ${callout("sorted", g.rows, "Matched from your history", "mint")}
         ${callout("toast", pad(g.toast, 4))}
-        ${callout("endpoint", pad(g.endpoint, 6), "A model on your own machine", "cyan")}
+        ${callout("endpoint", pad(g.endpoint, 6), "Off until you switch it on", "cyan")}
         ${callout("onTrack", pad(g.onTrack, 6), "On track", "mint")}
         ${callout("overBudget", pad(g.overBudget, 6), "Over budget", "rose")}
         <div class="desk-ripple"></div>

@@ -16,9 +16,11 @@
   --panel: #0b121b;
   --panel-2: #111b26;
   --line: rgba(160, 225, 235, 0.12);
-  --display: "Inter Tight", system-ui, sans-serif;
-  --serif: "Instrument Serif", Georgia, serif;
-  --mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Same type as the store screenshots: the system sans (SF on a Mac),
+     bold, with accent words in the brand gradient instead of serif italics. */
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Tight", sans-serif;
+  --serif: var(--display);
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
   --brand-gradient: linear-gradient(
     90deg,
     var(--brand-from),
@@ -280,14 +282,14 @@ body {
 }
 
 .serif {
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  font-family: var(--display);
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .serif .glyph {
-  background: linear-gradient(180deg, #b8f0f2, #6fd3de 55%, #3f9fc0);
+  background: linear-gradient(90deg, hsl(183 51% 74%), hsl(187 55% 61%));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
