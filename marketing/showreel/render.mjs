@@ -437,11 +437,14 @@ function encodeWebCopy(masterFile) {
 function copyKeynoteScreens() {
   const from = join(ROOT, "../store-screenshots/out/captures");
   if (!existsSync(from))
-    throw new Error("No store captures yet: run pnpm marketing:screenshots first");
+    throw new Error(
+      "No store captures yet: run pnpm marketing:screenshots first",
+    );
   const to = join(OUT_DIR, "keynote");
   mkdirSync(to, { recursive: true });
   for (const name of readdirSync(from))
-    if (name.endsWith(".png")) copyFileSync(join(from, name), join(to, name));
+    if (/\.(png|json)$/.test(name))
+      copyFileSync(join(from, name), join(to, name));
 }
 
 async function main() {

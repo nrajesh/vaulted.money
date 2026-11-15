@@ -2,9 +2,9 @@
  * A calm score, synthesised from scratch (no samples, nothing to license),
  * for the App Store preview and the keynote cut of the showreel.
  *
- * 84 BPM, Cmaj9 – Am9 – Fmaj7 – G6, two bars each: soft pads and a sparse
- * piano. A gentle pulse joins at the first `lift` cue and grows a little at
- * each later one. Other cues add quiet UI sounds on the picture: `tick`
+ * 84 BPM, Cmaj9 – Am9 – Fmaj7 – G6, two bars each: soft pads, a sparse
+ * piano and a warm bass. At the first `lift` cue a gentle pulse, a soft
+ * groove and a short piano motif join; each later lift adds a little. Other cues add quiet UI sounds on the picture: `tick`
  * (a tap), `chime` (a reveal) and `whoosh` (a transition).
  *
  *   renderScore({ seconds, cues }) → [left, right] Float32Array at 48 kHz
@@ -102,11 +102,73 @@ function pulse(left, right, rate, seconds, lifts) {
   }
 }
 
+/** Root notes on the half bar, a warm sine with a little second harmonic. */
+function bass(left, right, rate, seconds) {
+  for (let t0 = 0; t0 < seconds; t0 += BEAT * 2) {
+    const root = chordAt(t0)[0] - 12;
+    const f = midi(root);
+    add(left, right, rate, t0, BEAT * 2, 0, (t) => {
+      const env = Math.min(1, t / 0.02) * Math.exp(-t * 0.9);
+      return (
+        0.08 * env * (Math.sin(TAU * f * t) + 0.25 * Math.sin(TAU * 2 * f * t))
+      );
+    });
+  }
+}
+
+/** A soft groove from the first lift: hats on the off-beats, a rim on 2 and 4. */
+function groove(left, right, rate, seconds, lifts, rand) {
+  if (!lifts.length) return;
+  for (let t0 = Math.ceil(lifts[0] / BEAT) * BEAT; t0 < seconds; t0 += BEAT) {
+    const beatInBar = Math.round(t0 / BEAT) % 4;
+    let hp = 0;
+    add(left, right, rate, t0 + BEAT / 2, 0.08, 0.3, (t) => {
+      const n = rand();
+      const v = n - hp;
+      hp = n;
+      return 0.035 * Math.exp(-t * 60) * v;
+    });
+    if (beatInBar === 1 || beatInBar === 3)
+      add(left, right, rate, t0, 0.12, -0.2, (t) => {
+        const env = Math.exp(-t * 35);
+        return 0.05 * env * (Math.sin(TAU * 820 * t) * 0.6 + rand() * 0.4);
+      });
+  }
+}
+
+/** A short piano motif over each chord: the hook the score returns to. */
+function melody(left, right, rate, seconds, lifts) {
+  if (!lifts.length) return;
+  const MOTIF = [4, 3, 2, 4, 3, 1]; // chord-tone indexes
+  const RHYTHM = [0, 1, 1.5, 3, 4, 5.5]; // beats into the two bars
+  for (
+    let start = Math.floor(lifts[0] / (BAR * 2)) * BAR * 2;
+    start < seconds;
+    start += BAR * 2
+  ) {
+    const chord = chordAt(start);
+    MOTIF.forEach((tone, i) => {
+      const t0 = start + RHYTHM[i] * BEAT;
+      if (t0 < lifts[0] || t0 >= seconds) return;
+      const f = midi(chord[tone] + 24);
+      add(left, right, rate, t0, 1.8, 0.1, (t) => {
+        const env = Math.min(1, t / 0.004) * Math.exp(-t * 2.6);
+        return (
+          0.045 *
+          env *
+          (Math.sin(TAU * f * t) +
+            0.3 * Math.sin(TAU * 2 * f * t) * Math.exp(-t * 4))
+        );
+      });
+    });
+  }
+}
+
 function cue(left, right, rate, { t, kind }, rand) {
   if (kind === "tick")
     add(left, right, rate, t, 0.06, 0.2, (x) => {
       const env = Math.exp(-x * 90);
-      return 0.22 * env * (0.6 * Math.sin(TAU * 3800 * x) + 0.4 * rand());
+      return 0.4 * env * (0.6 * Math.sin(TAU * 3800 * x) + 0.4 * rand());
     });
   if (kind === "chime")
     add(left, right, rate, t, 2.5, -0.15, (x) => {
@@ -160,6 +222,9 @@ export function renderScore({ seconds, cues = [], sampleRate = 48000 }) {
     .map((c) => c.t)
     .sort((a, b) => a - b);
   pulse(left, right, sampleRate, seconds, lifts);
+  bass(left, right, sampleRate, seconds);
+  groove(left, right, sampleRate, seconds, lifts, rand);
+  melody(left, right, sampleRate, seconds, lifts);
   for (const c of cues) cue(left, right, sampleRate, c, rand);
   const [l, r] = reverb(left, right, sampleRate);
 

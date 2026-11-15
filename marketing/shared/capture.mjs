@@ -34,7 +34,11 @@ const loadChromium = async () => {
     path.join(import.meta.dirname, "../node_modules/playwright/index.mjs")
   );
   return chromium.launch(
-    process.env.CHROME ? { executablePath: process.env.CHROME } : {},
+    process.env.CHROME
+      ? { executablePath: process.env.CHROME }
+      : // Playwright's full Chromium: works without the separate
+        // "headless shell" download.
+        { channel: "chromium" },
   );
 };
 
@@ -56,6 +60,33 @@ const seedRandom = (seed) => {
     ).join("");
   crypto.randomUUID = () =>
     `${hex(8)}-${hex(4)}-4${hex(3)}-${"89ab"[Math.floor(Math.random() * 4)]}${hex(3)}-${hex(12)}`;
+};
+
+// Runs in the page: the box (fractions of the viewport) of the smallest
+// element that contains `text` and is at least `minHeight` px tall: the
+// panel the showreel's spotlight points at.
+const findHighlight = ({ text, minHeight }) => {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let best = null;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent.includes(text)) continue;
+    let el = node.parentElement;
+    while (el && el.getBoundingClientRect().height < minHeight)
+      el = el.parentElement;
+    if (!el || el.offsetParent === null) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0) continue;
+    if (!best || r.width * r.height < best.width * best.height) best = r;
+  }
+  if (!best) return null;
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  return {
+    x: best.left / W,
+    y: best.top / H,
+    w: best.width / W,
+    h: best.height / H,
+  };
 };
 
 // Runs in the page: the text drawn inside the top `fraction` of the viewport.
@@ -201,7 +232,12 @@ export async function captureShots({
         await page.screenshot({ path: file });
         writeFileSync(
           file.replace(/\.png$/, ".json"),
-          JSON.stringify({ visibleFraction: fraction }),
+          JSON.stringify({
+            visibleFraction: fraction,
+            highlight: shot.highlight
+              ? await page.evaluate(findHighlight, shot.highlight)
+              : null,
+          }),
         );
         written.push(file);
       }

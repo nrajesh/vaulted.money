@@ -29,16 +29,14 @@ export const DURATION = at; // 76 s
 
 export const chapter = (id) => CHAPTERS.find((c) => c.id === id);
 
-/** Sound cues for the calm score: lifts at the big moments, quiet UI sounds. */
+/** Sound cues for the calm score: lifts at the big moments, quiet taps and
+ * transitions (no chimes: they sat on screens that did not need them). */
 export const SCORE_CUES = [
-  { t: chapter("intro").start + 1.2, kind: "chime" },
   { t: chapter("privacy").start, kind: "lift" },
   { t: chapter("search").start + 1.6, kind: "tick" },
   { t: chapter("labels").start + 3.5, kind: "whoosh" },
   { t: chapter("ai").start + 2.0, kind: "tick" },
-  { t: chapter("budgets").start + 2.5, kind: "chime" },
   { t: chapter("bigScreens").start + 3.0, kind: "whoosh" },
   { t: chapter("devices").start, kind: "lift" },
   { t: chapter("end").start, kind: "lift" },
-  { t: chapter("end").start + 1.0, kind: "chime" },
 ];

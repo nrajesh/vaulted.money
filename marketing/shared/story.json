@@ -19,7 +19,11 @@
         "do": "wait",
         "ms": 1500
       }
-    ]
+    ],
+    "highlight": {
+      "text": "Spent",
+      "minHeight": 260
+    }
   },
   {
     "id": 2,
@@ -40,14 +44,22 @@
         "do": "wait",
         "ms": 1200
       }
-    ]
+    ],
+    "highlight": {
+      "text": "Understood as",
+      "minHeight": 220
+    }
   },
   {
     "id": 3,
     "page": "dark",
     "appTheme": "light",
     "route": "/accounts",
-    "actions": []
+    "actions": [],
+    "highlight": {
+      "text": "Joint Checking",
+      "minHeight": 120
+    }
   },
   {
     "id": 4,
@@ -67,14 +79,22 @@
       }
     ],
     "visibleFraction": 0.7,
-    "cropBelow": "Chat with your money using an external AI agent"
+    "cropBelow": "Chat with your money using an external AI agent",
+    "highlight": {
+      "text": "AI features",
+      "minHeight": 40
+    }
   },
   {
     "id": 5,
     "page": "dark",
     "appTheme": "light",
     "route": "/insights",
-    "actions": []
+    "actions": [],
+    "highlight": {
+      "text": "You have exceeded",
+      "minHeight": 180
+    }
   },
   {
     "id": 6,
@@ -93,6 +113,10 @@
         "ms": 1200
       }
     ],
-    "landscape": ["duoInner", "androidTablet"]
+    "landscape": ["duoInner", "androidTablet"],
+    "highlight": {
+      "text": "Earlier with",
+      "minHeight": 300
+    }
   }
 ]

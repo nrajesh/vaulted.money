@@ -110,7 +110,11 @@ const { chromium } = await import(
   path.join(REPO, "marketing/node_modules/playwright/index.mjs")
 );
 const browser = await chromium.launch(
-  process.env.CHROME ? { executablePath: process.env.CHROME } : {},
+  process.env.CHROME
+    ? { executablePath: process.env.CHROME }
+    : // Playwright's full Chromium: works without the separate
+      // "headless shell" download.
+      { channel: "chromium" },
 );
 const assets = await startAssetServer(CAPTURES);
 const written = [];

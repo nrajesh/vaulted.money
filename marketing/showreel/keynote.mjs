@@ -33,12 +33,21 @@ const src = (name) => `out/keynote/${name}.png`;
 const statusBar = (theme) =>
   `<div class="sb ${theme}"><span>9:41</span><span><b>5G</b><span class="bat"><i></i></span></span></div>`;
 
-/** A device frame with a captured screen. kind: phone | tablet | window | duo */
+/** Capture notes (crop, spotlight box) by image name, loaded at boot. */
+const NOTES = {};
+
+/** A device frame with a captured screen. kind: phone | tablet | duo | laptop */
 function device(name, theme, kind = "phone", width = 380) {
-  const node = el(`<div class="device ${theme} ${kind === "phone" || kind === "duo" ? "" : kind}">
-    ${kind === "window" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : ""}
-    <div class="screen">${kind === "window" ? "" : statusBar(theme)}<img src="${src(name)}" alt="">${kind === "duo" ? '<div class="hinge"></div>' : ""}<div class="over"></div></div>
-  </div>`);
+  const screen = `<div class="screen">${kind === "laptop" ? '<div class="titlebar"><i></i><i></i><i></i></div>' : statusBar(theme)}<img src="${src(name)}" alt="">${kind === "duo" ? '<div class="hinge"></div>' : ""}<div class="spot"></div></div>`;
+  const node =
+    kind === "laptop"
+      ? el(
+          `<div class="laptop window ${theme}"><div class="lid">${screen}</div><div class="base"></div></div>`,
+        )
+      : el(
+          `<div class="device ${theme} ${kind === "tablet" ? "tablet" : ""}">${screen}</div>`,
+        );
+  node.dataset.name = name;
   set(node, { width: `${width}px` });
   images.push(node.querySelector("img"));
   return node;
@@ -81,11 +90,19 @@ function poseCaption(node, t, start, end, { subAt = 1.6, bodyAt = 2.2 } = {}) {
     const p = tween(t, start + bodyAt, start + bodyAt + 0.6);
     set(body, { opacity: p * out, transform: `translateY(${(1 - p) * 24}px)` });
   }
-  set(node, { visibility: t >= start - 0.1 && t <= end ? "visible" : "hidden" });
+  set(node, {
+    visibility: t >= start - 0.1 && t <= end ? "visible" : "hidden",
+  });
 }
 
 /** A device glides up into place, holds, and sinks away. */
-function poseDevice(node, t, start, end, { x, y, rotate = 0, rotateY = 0, delay = 0.3 }) {
+function poseDevice(
+  node,
+  t,
+  start,
+  end,
+  { x, y, rotate = 0, rotateY = 0, delay = 0.3 },
+) {
   const inP = tween(t, start + delay, start + delay + 1.1, ease.outQuart);
   const outP = tween(t, end - 0.7, end, ease.inCubic);
   set(node, {
@@ -97,13 +114,22 @@ function poseDevice(node, t, start, end, { x, y, rotate = 0, rotateY = 0, delay 
   });
 }
 
-/** Slow push into a point of the screen (fractions of the image) from `at`. */
-function zoom(node, t, at, length, { scale = 1.6, fx = 0.5, fy = 0.5 }) {
-  const p = tween(t, at, at + length, ease.inOutCubic);
-  const s = lerp(1, scale, p);
-  set(node.querySelector("img"), {
-    transformOrigin: `${fx * 100}% ${fy * 100}%`,
-    transform: `scale(${s})`,
+/**
+ * Spotlight: from `at` until `until`, dims the screen around the part to
+ * look at (the box the capture recorded) and rings it in the brand teal.
+ */
+function spotlight(node, t, at, until) {
+  const box = NOTES[node.dataset.name]?.highlight;
+  const spot = node.querySelector(".spot");
+  if (!box) return;
+  const img = node.querySelector("img");
+  const pad = 6;
+  set(spot, {
+    left: `${img.offsetLeft + box.x * img.offsetWidth - pad}px`,
+    top: `${img.offsetTop + box.y * img.offsetHeight - pad}px`,
+    width: `${box.w * img.offsetWidth + pad * 2}px`,
+    height: `${box.h * img.offsetHeight + pad * 2}px`,
+    opacity: tween(t, at, at + 0.7) * (1 - tween(t, until - 0.6, until)),
   });
 }
 
@@ -116,7 +142,9 @@ const C = Object.fromEntries(CHAPTERS.map((c) => [c.id, c]));
 const LIGHT = new Set(["search", "ai", "bigScreens"]);
 
 // Intro
-const intro = el(`<div class="lockup">${logoSvg("intro", "dark")}<h2>Vaulted <em>Money</em></h2></div>`);
+const intro = el(
+  `<div class="lockup">${logoSvg("intro", "dark")}<h2>Vaulted <em>Money</em></h2></div>`,
+);
 stage.append(intro);
 
 // Privacy: face-off pair
@@ -160,8 +188,12 @@ const ICON_MONITOR =
   '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>';
 const ICON_SHIELD =
   '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>';
-const chip1 = el(`<div class="chip"><span class="ic">${ICON_MONITOR}</span>Agents may need a second device</div>`);
-const chip2 = el(`<div class="chip"><span class="ic">${ICON_SHIELD}</span>Local AI keeps data off the cloud</div>`);
+const chip1 = el(
+  `<div class="chip"><span class="ic">${ICON_MONITOR}</span>Agents may need a second device</div>`,
+);
+const chip2 = el(
+  `<div class="chip"><span class="ic">${ICON_SHIELD}</span>Local AI keeps data off the cloud</div>`,
+);
 stage.append(aiPhone, aiCap, chip1, chip2);
 
 // Budgets
@@ -184,12 +216,36 @@ const duo = device("duoInner-dark-6", "dark", "duo", 860);
 stage.append(ipad, duo, bigCap);
 
 // Every device
-const devicesCap = caption({ headline: "Every *device.*", theme: "dark", centre: true });
+const devicesCap = caption({
+  headline: "Every *device.*",
+  theme: "dark",
+  centre: true,
+});
 const row = [
-  { node: device("iphone-light-1", "light", "phone", 250), label: "iPhone", x: 125, y: 380 },
-  { node: device("ipad-light-2", "light", "tablet", 430), label: "iPad", x: 435, y: 370 },
-  { node: device("android-dark-3", "dark", "phone", 250), label: "Android", x: 925, y: 380 },
-  { node: device("mac-dark-6", "dark", "window", 560), label: "Mac", x: 1235, y: 430 },
+  {
+    node: device("iphone-light-1", "light", "phone", 220),
+    label: "iPhone",
+    x: 100,
+    y: 420,
+  },
+  {
+    node: device("ipad-light-2", "light", "tablet", 380),
+    label: "iPad",
+    x: 375,
+    y: 400,
+  },
+  {
+    node: device("android-dark-3", "dark", "phone", 220),
+    label: "Android",
+    x: 810,
+    y: 420,
+  },
+  {
+    node: device("mac-dark-6", "dark", "laptop", 760),
+    label: "Mac",
+    x: 1075,
+    y: 390,
+  },
 ];
 const labels = row.map((r) => el(`<div class="label">${r.label}</div>`));
 stage.append(...row.map((r) => r.node), ...labels, devicesCap);
@@ -211,7 +267,11 @@ function render(seconds) {
   // Page colour: light for the light chapters, with a soft 0.8 s crossfade.
   const lightness = CHAPTERS.reduce((acc, c) => {
     if (!LIGHT.has(c.id)) return acc;
-    return Math.max(acc, tween(t, c.start - 0.4, c.start + 0.4) * (1 - tween(t, c.end - 0.4, c.end + 0.4)));
+    return Math.max(
+      acc,
+      tween(t, c.start - 0.4, c.start + 0.4) *
+        (1 - tween(t, c.end - 0.4, c.end + 0.4)),
+    );
   }, 0);
   set(bgLight, { opacity: lightness });
 
@@ -220,16 +280,34 @@ function render(seconds) {
     const { start, end: stop } = C.intro;
     const p = tween(t, start + 0.2, start + 1.8, ease.outQuart);
     const out = 1 - tween(t, stop - 0.7, stop, ease.inCubic);
-    set(intro, { opacity: p * out, transform: `scale(${lerp(0.88, 1, p)})`, visibility: t < stop ? "visible" : "hidden" });
-    set(intro.querySelector("h2"), { opacity: tween(t, start + 1.4, start + 2.2) });
+    set(intro, {
+      opacity: p * out,
+      transform: `scale(${lerp(0.88, 1, p)})`,
+      visibility: t < stop ? "visible" : "hidden",
+    });
+    set(intro.querySelector("h2"), {
+      opacity: tween(t, start + 1.4, start + 2.2),
+    });
   }
 
   // Privacy face-off
   {
     const { start, end: stop } = C.privacy;
     poseCaption(privacyCap, t, start + 0.3, stop, { subAt: 2.6, bodyAt: 3.8 });
-    poseDevice(privacyL, t, start, stop, { x: 1000, y: 210, rotateY: 26, rotate: -6, delay: 0.5 });
-    poseDevice(privacyR, t, start, stop, { x: 1400, y: 210, rotateY: -26, rotate: 6, delay: 0.8 });
+    poseDevice(privacyL, t, start, stop, {
+      x: 1000,
+      y: 210,
+      rotateY: 26,
+      rotate: -6,
+      delay: 0.5,
+    });
+    poseDevice(privacyR, t, start, stop, {
+      x: 1400,
+      y: 210,
+      rotateY: -26,
+      rotate: 6,
+      delay: 0.8,
+    });
   }
 
   // Search: push into the "Understood as" panel
@@ -237,7 +315,7 @@ function render(seconds) {
     const { start, end: stop } = C.search;
     poseCaption(searchCap, t, start + 0.3, stop);
     poseDevice(searchPhone, t, start, stop, { x: 1150, y: 150 });
-    zoom(searchPhone, t, start + 3, 3, { scale: 1.3, fx: 0.5, fy: 0.42 });
+    spotlight(searchPhone, t, start + 3, stop - 0.7);
   }
 
   // Labels: a light sweep across the same screen
@@ -257,12 +335,19 @@ function render(seconds) {
     // Low enough that the agent card's "Needs the Mac app" note stays below
     // the frame, as in the store images.
     poseDevice(aiPhone, t, start, stop, { x: 1180, y: 500 });
+    spotlight(aiPhone, t, start + 2.0, start + 3.4);
     [chip1, chip2].forEach((chip, i) => {
-      const p = tween(t, start + 3.2 + i * 0.7, start + 4.0 + i * 0.7, ease.outBack);
+      const p = tween(
+        t,
+        start + 3.2 + i * 0.7,
+        start + 4.0 + i * 0.7,
+        ease.outBack,
+      );
       const out = 1 - tween(t, stop - 0.6, stop, ease.inCubic);
+      const below = aiCap.offsetTop + aiCap.offsetHeight + 56;
       set(chip, {
         left: `${150 + (1 - p) * -60}px`,
-        top: `${720 + i * 100}px`,
+        top: `${below + i * 104}px`,
         opacity: Math.min(1, p) * out,
         visibility: t >= start && t <= stop ? "visible" : "hidden",
       });
@@ -274,7 +359,7 @@ function render(seconds) {
     const { start, end: stop } = C.budgets;
     poseCaption(budgetsCap, t, start + 0.3, stop);
     poseDevice(budgetsPhone, t, start, stop, { x: 1150, y: 150 });
-    zoom(budgetsPhone, t, start + 2.5, 3, { scale: 1.3, fx: 0.5, fy: 0.3 });
+    spotlight(budgetsPhone, t, start + 2.5, stop - 0.7);
   }
 
   // Big screens: iPad, then the Duo unfolds to two panels
@@ -283,9 +368,13 @@ function render(seconds) {
     poseCaption(bigCap, t, start + 0.3, stop);
     const handover = start + 4.4;
     poseDevice(ipad, t, start, handover + 0.7, { x: 1060, y: 170 });
+    spotlight(ipad, t, start + 2.0, handover);
     poseDevice(duo, t, handover, stop, { x: 960, y: 300, delay: 0.1 });
     const unfold = tween(t, handover + 0.2, handover + 1.6, ease.inOutCubic);
-    set(duo, { transform: `perspective(1800px) rotateY(${(1 - unfold) * 70}deg)`, transformOrigin: "50% 50%" });
+    set(duo, {
+      transform: `perspective(1800px) rotateY(${(1 - unfold) * 70}deg)`,
+      transformOrigin: "50% 50%",
+    });
   }
 
   // Every device: four glide into a row, named
@@ -293,7 +382,11 @@ function render(seconds) {
     const { start, end: stop } = C.devices;
     poseCaption(devicesCap, t, start + 0.2, stop);
     row.forEach((r, i) => {
-      poseDevice(r.node, t, start, stop, { x: r.x, y: r.y, delay: 0.6 + i * 0.35 });
+      poseDevice(r.node, t, start, stop, {
+        x: r.x,
+        y: r.y,
+        delay: 0.6 + i * 0.35,
+      });
       const h = r.node.offsetHeight;
       const p = tween(t, start + 1.4 + i * 0.35, start + 2.0 + i * 0.35);
       const out = 1 - tween(t, stop - 0.6, stop);
@@ -309,13 +402,24 @@ function render(seconds) {
   {
     const { start, end: stop } = C.end;
     const p = tween(t, start + 0.2, start + 1.6, ease.outQuart);
-    set(end, { opacity: p, transform: `scale(${lerp(0.94, 1, p)})`, visibility: t >= start ? "visible" : "hidden" });
+    set(end, {
+      opacity: p,
+      transform: `scale(${lerp(0.94, 1, p)})`,
+      visibility: t >= start ? "visible" : "hidden",
+    });
     set(black, { opacity: tween(t, stop - 1.2, stop, ease.inCubic) });
   }
 }
 
 // ── Boot ────────────────────────────────────────────────────────────────────
 async function boot() {
+  await Promise.all(
+    images.map(async (img) => {
+      const name = img.getAttribute("src").replace(/^.*\/|\.png$/g, "");
+      const res = await fetch(`out/keynote/${name}.json`);
+      if (res.ok) NOTES[name] = await res.json();
+    }),
+  );
   await Promise.all(images.map((img) => img.decode()));
   await document.fonts.ready;
   window.__render = render;

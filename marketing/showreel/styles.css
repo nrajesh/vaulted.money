@@ -18,7 +18,9 @@
   --line: rgba(160, 225, 235, 0.12);
   /* Same type as the store screenshots: the system sans (SF on a Mac),
      bold, with accent words in the brand gradient instead of serif italics. */
-  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Tight", sans-serif;
+  --display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Tight",
+    sans-serif;
   --serif: var(--display);
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
   --brand-gradient: linear-gradient(
