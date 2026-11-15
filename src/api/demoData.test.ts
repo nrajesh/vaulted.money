@@ -145,7 +145,12 @@ describe("demo data in the real app", () => {
       call("GET", `/ledgers/${home}/vendors/duplicates`),
     );
     const groups = result.data.map((g) => g.names.join("|"));
-    for (const expected of [/Aldi/i, /Amazon/i, /McDonald/i, /Caf.? Roma/i]) {
+    for (const expected of [
+      /Albrecht/i,
+      /Amberline/i,
+      /Mac.?s Burgers/i,
+      /Caf.? Roma/i,
+    ]) {
       expect(
         groups.some((g) => expected.test(g)),
         `${expected} in ${JSON.stringify(groups)}`,

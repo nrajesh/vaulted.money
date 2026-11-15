@@ -257,6 +257,7 @@ User-visible text goes through `t("key", { defaultValue })` and every key is add
 - **When you add or change a user-visible feature, give the demo a scenario that uses it** and assert it in `src/utils/demoDataPlan.test.ts` or `src/api/demoData.test.ts`.
 - **Never hard-code a date or year** in demo data. Derive everything from the `now` the plan is given; the tests run it with several different "today" values.
 - Keep it deterministic for a seed, and keep balances believable (no overdrawn cash accounts, cards within their limit).
+- **No real company or product names** (payees or notes): store screenshots and videos are made from the demo, and real brands are trademarks. Invent names; `src/utils/demoDataPlan.test.ts` lists the ones to avoid.
 
 ---
 
