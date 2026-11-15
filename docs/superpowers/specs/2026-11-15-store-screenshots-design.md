@@ -59,7 +59,13 @@ and can be regenerated in minutes whenever the app's screens change.
 - **Shot 1 only**: a pair of phones, light and dark, side by side and
   **both fully in view** (neither cut off).
 - Headline at the top, sub-lines below it, phone in the lower two-thirds.
-  Lines balance so no single word sits alone on a line.
+  Lines balance so no single word sits alone on a line; each language can
+  override a caption's line breaks.
+- Every device shows a drawn status bar: "9:41" on the left, "5G" and a
+  small battery on the right (no large signal bars). It also keeps app
+  content clear of the device's rounded corners.
+- Phones run off the bottom edge of the image; the iPad on shot 6 is drawn
+  larger so the two panels read at thumbnail size.
 
 ## The shots (English)
 
@@ -68,8 +74,8 @@ and can be regenerated in minutes whenever the app's screens change.
 | 1 | dark | Your money **never leaves** your device. | **Unless you switch AI on.** (sub-heading) / No sign-up. No cloud. | Charts, donut view (light + dark pair) |
 | 2 | light | Ask it like **you'd say it.** | "Groceries over 20 last month", understood right on your phone. | Transactions search, "Understood as" panel (correct spelling) |
 | 3 | dark | Your money. Your labels. **Your rules.** | Own and manage every account, payee, budget & category. | Accounts (light app) |
-| 4 | light | AI when you want it. **Silent** when you don't. | Off by default, one switch away. Use AI the way you want. | AI assistant, switched on |
-| 5 | dark | See where it **really** goes. | Budgets that warn you before the month is over. | Budgets / Spending insights (not Charts) |
+| 4 | light | AI when you want it. **Silent** when you don't. | Off by default, one switch away. Use AI the way you want. Two callouts: "Agents may need a second device" (monitor icon), "Local AI keeps data off the cloud" (shield icon). | AI assistant, switched on; screen runs off the bottom edge above the agent card, so its "Needs the Mac app" note is out of frame |
+| 5 | dark | See where it **really** goes. | Get warned before you overspend. | Budgets / Spending insights (not Charts) |
 | 6 | light | Room to breathe on **big screens.** | List and details side by side. | Two-panel Transactions (iPad and Duo sets only) |
 
 "No cloud" is accurate: the app has no cloud of its own. Sync uses a folder
