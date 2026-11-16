@@ -12,6 +12,51 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { Transaction } from "@/data/finance-data";
 import { Payee } from "@/components/dialogs/AddEditPayeeDialog";
 
+const NODE_COLOURS = {
+  Income: "#10b981",
+  Account: "#3b82f6",
+  Expense: "#f59e0b",
+} as const;
+
+/**
+ * A node with its name beside it, so the chart reads without hovering:
+ * income on the left, accounts in the middle, where the money went on the
+ * right. Node names are "Income: Salary", "Account: Savings" and so on.
+ */
+const FlowNode = (props: {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: { name: string };
+}) => {
+  const { x = 0, y = 0, width = 0, height = 0, payload } = props;
+  const [kind, ...rest] = (payload?.name ?? "").split(": ");
+  const label = rest.join(": ") || kind;
+  const onLeft = kind === "Income";
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={Math.max(height, 2)}
+        rx={2}
+        fill={NODE_COLOURS[kind as keyof typeof NODE_COLOURS] ?? "#64748b"}
+      />
+      <text
+        x={onLeft ? x - 8 : x + width + 8}
+        y={y + height / 2}
+        textAnchor={onLeft ? "end" : "start"}
+        dominantBaseline="middle"
+        className="fill-slate-700 text-[11px] font-medium dark:fill-slate-200"
+      >
+        {label}
+      </text>
+    </g>
+  );
+};
+
 interface SankeyChartProps {
   transactions: Transaction[];
   accounts: Payee[];
@@ -145,12 +190,13 @@ const SankeyChart: React.FC<SankeyChartProps> = ({
               data={sankeyData}
               nodePadding={50}
               margin={{
-                left: 100,
-                right: 100,
+                left: 120,
+                right: 130,
                 top: 5,
                 bottom: 5,
               }}
-              link={{ stroke: "#777" }}
+              link={{ stroke: "#94a3b8", strokeOpacity: 0.35 }}
+              node={<FlowNode />}
             >
               <Tooltip
                 formatter={(value: unknown) => formatCurrency(value as number)}
