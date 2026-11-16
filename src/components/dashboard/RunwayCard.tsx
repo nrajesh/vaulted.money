@@ -1,8 +1,4 @@
-import {
-  ArrowUpRight,
-  ArrowDownRight,
-  Infinity as InfinityIcon,
-} from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, TrendingUp } from "lucide-react";
 import { useFinancialRunway } from "@/hooks/dashboard/useFinancialRunway";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
@@ -62,7 +58,7 @@ export const RunwayCard = () => {
             className={`p-2 rounded-full ${isInfinite ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : runwayMonths < 3 ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"}`}
           >
             {isInfinite ? (
-              <InfinityIcon className="w-5 h-5" />
+              <TrendingUp className="w-5 h-5" />
             ) : runwayMonths < 3 ? (
               <ArrowDownRight className="w-5 h-5" />
             ) : (
@@ -74,7 +70,12 @@ export const RunwayCard = () => {
         <div className="mt-2">
           <div className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {isInfinite
-              ? t("dashboard.runway.infinite", { defaultValue: "Infinite" })
+              ? // Earning more than is spent: show how much is left over each
+                // month instead of an endless runway.
+                t("dashboard.runway.perMonth", {
+                  amount: formatCurrency(netCashFlow),
+                  defaultValue: "+{{amount}} / month",
+                })
               : formatDuration(runwayMonths)}
           </div>
           <p

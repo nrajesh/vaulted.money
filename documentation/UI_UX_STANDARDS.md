@@ -22,6 +22,7 @@ A screen is a title and its content. Sentences that explain a screen belong in t
 - **No card heading that repeats the page title** ("Manage Your Accounts" on Accounts), and no card description that restates its own title or button.
 - **Status is a figure and a colour**, such as "€20.26 over budget" in red, not a sentence about it.
 - **Controls that belong together share one row** (the transfers switch and Reset), and an empty selection bar is hidden.
+- **Lists of things are cards, not tables**, at every size (`EntityCardGrid`): a name, one figure and one quiet line. Mark a column `card: "primary"` or `card: "meta"`; the rest shows in the details that open when the card is clicked.
 - How-to text ("Open Actions, then…") goes in a `FeatureHint` (the ⓘ beside a title) or a help card, never inline.
 
 The title/tagline must not share a row with dense action groups on mobile. Keep the title aligned to the same left edge as the filter and table shell.

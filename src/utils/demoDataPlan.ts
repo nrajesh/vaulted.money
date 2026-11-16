@@ -590,8 +590,10 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
               Math.floor((d.getTime() - start.getTime()) / (365 * DAY_MS))),
       ),
     frequency: "Monthly",
-    from: addMonthsClamped(start, 0, 25),
-    dayOfMonth: 25,
+    // Paid early in the month, so the month in view has income to set
+    // against its spending whatever day the demo is opened.
+    from: addMonthsClamped(start, 0, 1),
+    dayOfMonth: 1,
     remarks: "Salary – net (+ meal vouchers)",
   });
   sim.recurring({
@@ -608,8 +610,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
               Math.floor((d.getTime() - start.getTime()) / (365 * DAY_MS))),
       ),
     frequency: "Monthly",
-    from: addMonthsClamped(start, 0, 28),
-    dayOfMonth: 28,
+    from: addMonthsClamped(start, 0, 3),
+    dayOfMonth: 3,
     remarks: "Partner salary – net",
   });
   sim.recurring({

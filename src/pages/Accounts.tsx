@@ -7,14 +7,12 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import AddEditPayeeDialog, {
   Payee,
 } from "@/components/dialogs/AddEditPayeeDialog";
-import { ColumnDefinition } from "@/components/management/EntityTable";
+import { ColumnDefinition } from "@/components/management/EntityCardGrid";
 import EntityManagementPage from "@/components/management/EntityManagementPage";
 import AccountDeduplicationDialog from "@/components/management/AccountDeduplicationDialog";
 import AccountBalanceReconciliationDialog from "@/components/management/AccountBalanceReconciliationDialog";
 
 import { filterAccounts } from "@/utils/searchFilters";
-
-import { GroupedEntityTable } from "@/components/management/GroupedEntityTable";
 
 const AccountsPage = () => {
   const { t } = useTranslation();
@@ -66,10 +64,11 @@ const AccountsPage = () => {
     {
       header: t("management.columns.type", { defaultValue: "Type" }),
       accessor: (item) => typeLabel(item.type || "Checking"),
-    }, // Default for legacy data
+    }, // Default for legacy data; the group heading already says the type
     {
       header: t("management.columns.currency", { defaultValue: "Currency" }),
       accessor: "currency",
+      card: "meta",
     },
     {
       header: t("management.columns.startingBalance", {
@@ -84,6 +83,7 @@ const AccountsPage = () => {
       }),
       accessor: (item) =>
         formatCurrency(item.running_balance || 0, item.currency || undefined),
+      card: "primary",
     },
     {
       header: t("management.columns.remarks", { defaultValue: "Remarks" }),
@@ -93,7 +93,9 @@ const AccountsPage = () => {
       header: t("management.columns.transactions", {
         defaultValue: "Transactions",
       }),
-      accessor: "totalTransactions",
+      accessor: (item) => item.totalTransactions || 0,
+      card: "meta",
+      unit: true,
       cellRenderer: (item) => (
         <span
           className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer hover:text-primary hover:underline"
@@ -139,7 +141,6 @@ const AccountsPage = () => {
         BalanceReconciliationDialogComponent={
           AccountBalanceReconciliationDialog
         }
-        TableComponent={GroupedEntityTable}
         groupBy="type"
         groupLabel={typeLabel}
         disablePagination={true}

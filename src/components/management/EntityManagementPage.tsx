@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import LoadingOverlay from "@/components/feedback/LoadingOverlay";
 import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
-import { EntityTable, ColumnDefinition } from "./EntityTable";
+import { EntityCardGrid, ColumnDefinition } from "./EntityCardGrid";
 
 interface EntityManagementPageProps<T extends { id: string; name: string }> {
   title: string;
@@ -136,7 +136,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
   groupBy,
   groupLabel,
   disablePagination = false,
-  TableComponent = EntityTable,
+  TableComponent = EntityCardGrid,
 }: EntityManagementPageProps<T> & {
   disablePagination?: boolean;
   TableComponent?: React.ComponentType<{

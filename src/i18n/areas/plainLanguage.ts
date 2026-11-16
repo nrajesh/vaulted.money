@@ -8,6 +8,10 @@ import type { AreaTranslations } from "./types";
  */
 export const plainLanguage: AreaTranslations = {
   en: {
+    dashboard: {
+      overview: { net: "Net" },
+      runway: { perMonth: "+{{amount}} / month" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "e.g., Joint Checking, Savings, Visa Card",
@@ -143,6 +147,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   es: {
+    dashboard: {
+      overview: { net: "Neto" },
+      runway: { perMonth: "+{{amount}} / mes" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount:
@@ -279,6 +287,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   zh: {
+    dashboard: {
+      overview: { net: "净额" },
+      runway: { perMonth: "+{{amount}} / 月" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "例如：联名支票账户、储蓄、Visa 卡",
@@ -412,6 +424,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   nl: {
+    dashboard: {
+      overview: { net: "Netto" },
+      runway: { perMonth: "+{{amount}} / maand" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount:
@@ -549,6 +565,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   ta: {
+    dashboard: {
+      overview: { net: "நிகரம்" },
+      runway: { perMonth: "+{{amount}} / மாதம்" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "எ.கா., கூட்டுக் கணக்கு, சேமிப்பு, Visa அட்டை",
