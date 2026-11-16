@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import ConnectToAgentPanel from "./ConnectToAgentPanel";
 import type { ApiServerStatus } from "@/utils/electron";
@@ -365,6 +366,15 @@ describe("ConnectToAgentPanel", () => {
     expect(strip.textContent).toMatch(/Ask your first question/);
   });
 
+  it("puts the switch inside step 1 and marks manual steps as instructions", () => {
+    renderPanel(makeStatus({ enabled: true, running: true }));
+    const strip = screen.getByRole("list", { name: "Steps" });
+    expect(within(strip).getByRole("switch")).toBeChecked();
+    expect(within(strip).getByText("Choose an option below.")).toBeVisible();
+    selectChoice(/Claude Code/);
+    expect(screen.getByText("Follow these steps")).toBeVisible();
+  });
+
   it("marks step 2 done once a way to chat is chosen, and says where to chat", () => {
     renderPanel(makeStatus({ enabled: true, running: true }));
     const strip = () => screen.getByRole("list", { name: "Steps" }).textContent;
@@ -528,6 +538,9 @@ describe("ConnectToAgentPanel", () => {
         screen.queryByRole("button", { name: "Set up Claude Code for me" }),
       ).toBeNull();
       expect(screen.queryByText(/could not find/i)).toBeNull();
+      // With no button above them, the steps are not offered as an "or".
+      expect(screen.getByText("Follow these steps")).toBeVisible();
+      expect(screen.queryByText("Or do it yourself")).toBeNull();
     });
 
     it("offers the setup button when Claude Code is found and reports success", async () => {
@@ -543,7 +556,18 @@ describe("ConnectToAgentPanel", () => {
           name: "Set up Claude Code for me",
         }),
       );
-      expect(await screen.findByText(/Done\. Open Claude Code/)).toBeVisible();
+      // The button installs for Claude Code in a terminal only, so both the
+      // explanation and the result say the Claude app needs the steps below.
+      expect(
+        screen.getByText(/does not appear under Plugins in the Claude app/),
+      ).toBeVisible();
+      expect(screen.getByText("Or do it yourself")).toBeVisible();
+      expect(
+        await screen.findByText(/Done\. Type claude in a terminal/),
+      ).toBeVisible();
+      expect(
+        screen.getByText(/To add it under Plugins in the Claude app/),
+      ).toBeVisible();
       expect(setup).toHaveBeenCalledWith();
     });
 

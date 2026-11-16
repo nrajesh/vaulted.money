@@ -25,6 +25,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "Choose an option below.",
+        step3Hint: "In the app you picked, not here.",
+        followSteps: "Follow these steps",
+        doItYourself: "Or do it yourself",
+        codeSetupWhere:
+          "This adds Vaulted Money to Claude Code in a terminal. It does not appear under Plugins in the Claude app. For that, follow the steps below.",
+        codeSetupReadyWhere:
+          "Done. Type claude in a terminal and ask about your money. To add it under Plugins in the Claude app, follow the steps below.",
         appBadge: "Easiest",
         appBlurb: "Chat in the Claude desktop app.",
         appKeepOpen: "Keep Vaulted Money open.",
@@ -165,6 +173,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "Elige una opción abajo.",
+        step3Hint: "En la app que elegiste, no aquí.",
+        followSteps: "Sigue estos pasos",
+        doItYourself: "O hazlo tú mismo",
+        codeSetupWhere:
+          'Esto añade Vaulted Money a Claude Code en un terminal. No aparece en "Plugins" de la app de Claude. Para eso, sigue los pasos de abajo.',
+        codeSetupReadyWhere:
+          'Listo. Escribe claude en un terminal y pregunta por tu dinero. Para añadirlo en "Plugins" de la app de Claude, sigue los pasos de abajo.',
         appBadge: "Lo más fácil",
         appBlurb: "Chatea en la aplicación de escritorio de Claude.",
         appKeepOpen: "Mantén Vaulted Money abierto.",
@@ -306,6 +322,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "在下方选择一个选项。",
+        step3Hint: "在你选择的应用中提问，而不是这里。",
+        followSteps: "按以下步骤操作",
+        doItYourself: "或者自己动手",
+        codeSetupWhere:
+          "这会把 Vaulted Money 添加到终端中的 Claude Code。它不会出现在 Claude 应用的“Plugins”中。如需在应用中使用，请按下面的步骤操作。",
+        codeSetupReadyWhere:
+          "完成。在终端中输入 claude，问问你的资金情况。如需将它添加到 Claude 应用的“Plugins”中，请按下面的步骤操作。",
         appBadge: "最简单",
         appBlurb: "在 Claude 桌面应用中聊天。",
         appKeepOpen: "保持 Vaulted Money 处于打开状态。",
@@ -437,6 +461,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "Kies hieronder een optie.",
+        step3Hint: "In de app die je koos, niet hier.",
+        followSteps: "Volg deze stappen",
+        doItYourself: "Of doe het zelf",
+        codeSetupWhere:
+          'Dit voegt Vaulted Money toe aan Claude Code in een terminal. Het verschijnt niet onder "Plugins" in de Claude-app. Volg daarvoor de stappen hieronder.',
+        codeSetupReadyWhere:
+          'Klaar. Typ claude in een terminal en vraag naar je geld. Wil je het toevoegen onder "Plugins" in de Claude-app, volg dan de stappen hieronder.',
         appBadge: "Makkelijkst",
         appBlurb: "Chat in de Claude-desktopapp.",
         appKeepOpen: "Houd Vaulted Money open.",
@@ -577,6 +609,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "கீழே ஒரு விருப்பத்தைத் தேர்ந்தெடுக்கவும்.",
+        step3Hint: "நீங்கள் தேர்ந்தெடுத்த செயலியில், இங்கே அல்ல.",
+        followSteps: "இந்தப் படிகளைப் பின்பற்றவும்",
+        doItYourself: "அல்லது நீங்களே செய்யுங்கள்",
+        codeSetupWhere:
+          'இது டெர்மினலில் உள்ள Claude Code-இல் Vaulted Money-ஐச் சேர்க்கிறது. Claude செயலியின் "Plugins"-இல் இது தோன்றாது. அதற்குக் கீழே உள்ள படிகளைப் பின்பற்றவும்.',
+        codeSetupReadyWhere:
+          'முடிந்தது. டெர்மினலில் claude என டைப் செய்து உங்கள் பணத்தைப் பற்றிக் கேளுங்கள். Claude செயலியின் "Plugins"-இல் சேர்க்க, கீழே உள்ள படிகளைப் பின்பற்றவும்.',
         appBadge: "மிக எளிது",
         appBlurb: "Claude டெஸ்க்டாப் பயன்பாட்டில் உரையாடுங்கள்.",
         appKeepOpen: "Vaulted Money-ஐத் திறந்தே வைத்திருங்கள்.",
