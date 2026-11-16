@@ -345,15 +345,20 @@ const EFFECTS = {
       return 0.5 * env * filter(rand(), 1200 + 6000 * (x / 0.4), 3, rate).band;
     });
   },
-  /** A device lands: a soft, low thump with a little snap. */
+  /**
+   * A device lands: a low thump, with a knock and a snap on top so phone
+   * speakers (which drop everything under ~200 Hz) still hear it.
+   */
   thud(out, rate, { t }) {
     let phase = 0;
     const rand = noise(seedAt(t, 11));
+    const filter = svf();
     add(out, rate, t, 0.3, 0, (x) => {
       phase += (TAU * (70 + 90 * Math.exp(-x * 40))) / rate;
       return (
-        0.55 * Math.exp(-x * 14) * Math.sin(phase) +
-        0.12 * Math.exp(-x * 160) * rand()
+        0.45 * Math.exp(-x * 14) * Math.sin(phase) +
+        0.3 * Math.exp(-x * 28) * Math.sin(TAU * 230 * x) +
+        0.35 * Math.exp(-x * 120) * filter(rand(), 2600, 1.2, rate).band
       );
     });
   },
@@ -414,12 +419,20 @@ const EFFECTS = {
       bell(out, rate, t + i * 0.07, note, 0.1, -0.45 + i * 0.3, 1.6),
     );
   },
-  /** The end card: a deep boom under the crash. */
+  /** The end card: a deep boom with a punchy hit on top, under the crash. */
   boom(out, rate, { t }) {
     let phase = 0;
+    let hit = 0;
+    const rand = noise(seedAt(t, 14));
+    const filter = svf();
     add(out, rate, t, 1.6, 0, (x) => {
       phase += (TAU * (38 + 50 * Math.exp(-x * 9))) / rate;
-      return 0.7 * Math.exp(-x * 2.6) * Math.sin(phase);
+      hit += (TAU * (110 + 160 * Math.exp(-x * 25))) / rate;
+      return (
+        0.6 * Math.exp(-x * 2.6) * Math.sin(phase) +
+        0.4 * Math.exp(-x * 9) * Math.sin(hit) +
+        0.3 * Math.exp(-x * 30) * filter(rand(), 1800, 0.9, rate).band
+      );
     });
   },
 };
@@ -553,7 +566,7 @@ export function renderScore({ seconds, cues = [], sampleRate = 48000 }) {
             music,
             rate,
             t,
-            chord.bass + interval - 12,
+            chord.bass + interval,
             len * STEP * 0.92,
             0.13,
           );
@@ -602,7 +615,8 @@ export function renderScore({ seconds, cues = [], sampleRate = 48000 }) {
     0.1,
   );
 
-  // Sum, fade, soft-limit and normalise to -1 dBFS.
+  // Sum, fade, soft-limit and normalise. The groove is denser than the social
+  // cut, so it peaks at -4 dBFS to land near its loudness (about -15 LUFS).
   const fadeIn = 0.05 * rate;
   const fadeOut = Math.min(1.5 * rate, length / 3);
   const out = bus(length);
@@ -620,7 +634,7 @@ export function renderScore({ seconds, cues = [], sampleRate = 48000 }) {
       out[side][i] = Math.tanh(v * g * 1.1);
       peak = Math.max(peak, Math.abs(out[side][i]));
     }
-  const gain = peak > 0 ? 0.89 / peak : 1;
+  const gain = peak > 0 ? 0.63 / peak : 1;
   for (const side of out) for (let i = 0; i < length; i++) side[i] *= gain;
   return out;
 }

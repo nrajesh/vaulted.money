@@ -130,8 +130,9 @@ describe("keynote cut timeline", () => {
     // @ts-expect-error plain ES module without type declarations
     const { screenWindows } = await import("./duo/overlay.mjs");
     const windows = screenWindows();
-    // A device's entrance ends 0.3 s after the moment it lands.
-    expect(moments.bigIpad.t + 0.3).toBeLessThan(windows.ipad.from);
-    expect(moments.bigDuo.t + 0.3).toBeLessThan(windows.duo.from);
+    // A device's entrance (keynote.mjs poseDevice: 0.6 s, overshoot 1.2)
+    // ends 0.6 × (1 − 1 / 2.2) ≈ 0.33 s after the moment it lands.
+    expect(moments.bigIpad.t + 0.33).toBeLessThan(windows.ipad.from);
+    expect(moments.bigDuo.t + 0.33).toBeLessThan(windows.duo.from);
   });
 });

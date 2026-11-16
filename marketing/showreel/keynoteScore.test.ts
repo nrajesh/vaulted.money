@@ -47,9 +47,29 @@ describe("keynote score", () => {
       for (const v of ch) expect(Math.abs(v)).toBeLessThanOrEqual(1);
   });
 
-  it.each(EFFECTS)("makes a %s audible where it is cued", (kind) => {
-    const quiet = render({ seconds: 3, cues: [] })[0];
-    const cued = render({ seconds: 3, cues: [{ t: 2, kind }] })[0];
+  // Phone and laptop speakers play little below 200 Hz, so every effect
+  // must still be heard with the lows taken out.
+  const highPass = (ch: Float32Array) => {
+    const out = new Float32Array(ch.length);
+    const k = Math.exp((-2 * Math.PI * 200) / 48000);
+    let x1 = 0;
+    let y = 0;
+    for (let i = 0; i < ch.length; i++) {
+      y = k * (y + ch[i] - x1);
+      x1 = ch[i];
+      out[i] = y;
+    }
+    return out;
+  };
+  // Four poles: 24 dB an octave, roughly a phone speaker's roll-off.
+  const smallSpeaker = (ch: Float32Array) =>
+    highPass(highPass(highPass(highPass(ch))));
+
+  it.each(EFFECTS)("makes a %s audible on a phone where it is cued", (kind) => {
+    const quiet = smallSpeaker(render({ seconds: 3, cues: [] })[0]);
+    const cued = smallSpeaker(
+      render({ seconds: 3, cues: [{ t: 2, kind }] })[0],
+    );
     // Sweeps and whooshes rise into their mark; the rest start on it.
     const from = ["whoosh", "sweep"].includes(kind) ? 1.6 : 2;
     // Both are normalised, so compare how much louder the cue's moment is
