@@ -32,7 +32,7 @@ const PHRASES = [
     time: CUES.everywhere,
     plain: "Every",
     serif: "device.",
-    sub: "iPHONE · iPAD · ANDROID · MAC · WINDOWS · LINUX · WEB",
+    sub: "iPHONE · iPHONE DUO · iPAD · ANDROID · MAC · WINDOWS · LINUX · WEB",
   },
   {
     time: CUES.currency,
