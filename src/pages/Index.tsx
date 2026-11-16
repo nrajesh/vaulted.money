@@ -124,7 +124,7 @@ const Index = () => {
             <h1 className="app-gradient-title app-page-title">
               {t("nav.items.overview", { defaultValue: "Overview" })}
             </h1>
-            <p className="app-page-subtitle">
+            <p className="app-page-about">
               {t("pages.overview.subtitle", {
                 defaultValue: "Where your money stands, and what's next.",
               })}

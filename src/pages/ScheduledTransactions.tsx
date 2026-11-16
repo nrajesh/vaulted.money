@@ -310,7 +310,7 @@ const ScheduledTransactionsPage = () => {
               </h1>
               <FeatureHint id="scheduled" />
             </div>
-            <p className="app-page-subtitle">
+            <p className="app-page-about">
               {t("pages.scheduled.subtitle", {
                 defaultValue: "Bills, paydays, and transfers that repeat.",
               })}

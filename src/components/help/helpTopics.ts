@@ -224,6 +224,86 @@ const SCREEN_CARDS: Array<{ paths: string[]; cards: HelpCardId[] }> = [
   { paths: ["/ledgers"], cards: ["ledgers", "demo"] },
 ];
 
+/**
+ * The one-line description of each screen. Screens no longer print it under
+ * their title; the help drawer shows it instead ("On this screen").
+ */
+const SCREEN_ABOUT: Array<{ path: string; key: string; text: string }> = [
+  {
+    path: "/dashboard",
+    key: "pages.overview.subtitle",
+    text: "Where your money stands, and what's next.",
+  },
+  {
+    path: "/transactions",
+    key: "pages.transactions.subtitle",
+    text: "Every payment and deposit, easy to search.",
+  },
+  {
+    path: "/accounts",
+    key: "pages.accounts.subtitle",
+    text: "Your bank accounts, cards and cash.",
+  },
+  {
+    path: "/budgets",
+    key: "pages.budgets.subtitle",
+    text: "Spending limits, and how much is left.",
+  },
+  {
+    path: "/calendar",
+    key: "pages.calendar.subtitle",
+    text: "See which days money comes and goes.",
+  },
+  {
+    path: "/scheduled",
+    key: "pages.scheduled.subtitle",
+    text: "Bills, paydays, and transfers that repeat.",
+  },
+  {
+    path: "/insights",
+    key: "pages.insights.subtitle",
+    text: "Where your money went, versus your budgets.",
+  },
+  {
+    path: "/analytics",
+    key: "pages.charts.subtitle",
+    text: "Spending and trends for any period.",
+  },
+  {
+    path: "/categories",
+    key: "pages.categories.subtitle",
+    text: "Groups like Groceries that make spending clear.",
+  },
+  {
+    path: "/vendors",
+    key: "pages.payees.subtitle",
+    text: "Who you pay, and who pays you.",
+  },
+  {
+    path: "/ai-providers",
+    key: "pages.ai.subtitle",
+    text: "Optional, and off until you turn it on.",
+  },
+  {
+    path: "/data-management",
+    key: "pages.yourData.subtitle",
+    text: "Save, restore, reset, or try demo data.",
+  },
+  {
+    path: "/backup",
+    key: "pages.backup.subtitle",
+    text: "Save a copy of your data locally.",
+  },
+  {
+    path: "/currencies",
+    key: "pages.currencies.subtitle",
+    text: "Currencies you use and their exchange rates.",
+  },
+];
+
+export const screenAboutForPath = (pathname: string) =>
+  SCREEN_ABOUT.find(({ path }) => path === pathname) ?? null;
+
 const FALLBACK_CARDS: HelpCardId[] = ["privacy", "ledgers"];
 
 const matches = (pattern: string, pathname: string) =>

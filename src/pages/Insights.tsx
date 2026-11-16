@@ -124,12 +124,21 @@ export default function Insights() {
 
         if (isOverBudget) {
           status = "critical";
-          message = `You have exceeded your planned ${formatCurrency(total, budget.currency)} by ${formatCurrency(spent - total, budget.currency)}.`;
+          message = t("budgets.card.over", {
+            amount: formatCurrency(spent - total, budget.currency),
+            defaultValue: "{{amount}} over budget",
+          });
         } else if (percentage > 85) {
           status = "warning";
-          message = `You have used ${percentage.toFixed(0)}% of your budget. Be careful with upcoming expenses.`;
+          message = t("budgets.card.remaining", {
+            amount: formatCurrency(total - spent, budget.currency),
+            defaultValue: "{{amount}} remaining",
+          });
         } else {
-          message = `You've spent ${formatCurrency(spent, budget.currency)} of ${formatCurrency(total, budget.currency)}.`;
+          message = t("budgets.card.remaining", {
+            amount: formatCurrency(total - spent, budget.currency),
+            defaultValue: "{{amount}} remaining",
+          });
         }
 
         return {
@@ -148,6 +157,7 @@ export default function Insights() {
     vendors,
     convertBetweenCurrencies,
     formatCurrency,
+    t,
   ]);
 
   const sortedInsights = useMemo(() => {
@@ -522,7 +532,7 @@ export default function Insights() {
         <h1 className="app-gradient-title app-page-title">
           {t("nav.items.insights", { defaultValue: "Spending insights" })}
         </h1>
-        <p className="app-page-subtitle">
+        <p className="app-page-about">
           {t("pages.insights.subtitle", {
             defaultValue: "Where your money went, versus your budgets.",
           })}
@@ -607,9 +617,18 @@ export default function Insights() {
                         />
                       </div>
 
-                      <div className="bg-muted/50 p-3 rounded-md text-sm italic border border-border/50">
-                        "{item.message}"
-                      </div>
+                      <p
+                        className={cn(
+                          "text-sm font-semibold",
+                          item.status === "critical"
+                            ? "text-red-700 dark:text-red-400"
+                            : item.status === "warning"
+                              ? "text-amber-700 dark:text-amber-400"
+                              : "text-emerald-700 dark:text-emerald-400",
+                        )}
+                      >
+                        {item.message}
+                      </p>
 
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                         <span className="text-xs text-muted-foreground mr-2 group-hover:hidden">

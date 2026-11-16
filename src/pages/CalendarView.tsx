@@ -150,7 +150,7 @@ export default function CalendarView() {
           <h1 className="app-gradient-title app-page-title">
             {t("layout.nav.calendar", { defaultValue: "Calendar" })}
           </h1>
-          <p className="app-page-subtitle max-w-2xl">
+          <p className="app-page-about">
             {t("pages.calendar.subtitle", {
               defaultValue: "See which days money comes and goes.",
             })}

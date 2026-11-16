@@ -4,8 +4,6 @@ import {
   Card,
   CardContent,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageActionBar } from "@/components/layout/PageActionBar";
@@ -215,7 +213,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
             <h2 className="app-gradient-title app-page-title">{title}</h2>
             {titleHint}
           </div>
-          {subtitle && <div className="app-page-subtitle">{subtitle}</div>}
+          {subtitle && <div className="app-page-about">{subtitle}</div>}
         </div>
         <PageActionBar
           primary={{
@@ -340,15 +338,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
         />
       </div>
       <Card className="app-table-shell">
-        <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-100">
-            {t("management.manageYour", {
-              name: title,
-              defaultValue: "Manage Your {{name}}",
-            })}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4 sm:pt-6">
           <div
             className={`app-table-toolbar ${
               numSelected > 0

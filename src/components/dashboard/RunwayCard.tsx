@@ -57,11 +57,6 @@ export const RunwayCard = () => {
                 defaultValue: "Financial Runway",
               })}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {t("dashboard.runway.subtitle", {
-                defaultValue: "Based on fixed expenses + recent spending",
-              })}
-            </p>
           </div>
           <div
             className={`p-2 rounded-full ${isInfinite ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : runwayMonths < 3 ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"}`}

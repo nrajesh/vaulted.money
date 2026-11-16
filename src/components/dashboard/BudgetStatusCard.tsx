@@ -82,11 +82,6 @@ export const BudgetStatusCard = () => {
                 defaultValue: "Budget Status",
               })}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {t("dashboard.budgetStatus.subtitle", {
-                defaultValue: "Monthly spending vs limits",
-              })}
-            </p>
           </div>
           <div
             className={`text-xs font-bold px-2 py-1 rounded-full ${isOverBudget ? "bg-rose-100 text-rose-700" : "bg-blue-100 text-blue-700"}`}

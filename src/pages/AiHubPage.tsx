@@ -366,7 +366,7 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
             </h1>
             <FeatureHint id="connectApps" />
           </div>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("pages.ai.subtitle", {
               defaultValue: "Optional, and off until you turn it on.",
             })}
@@ -382,11 +382,6 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
           <label htmlFor="ai-features" className="text-sm font-medium">
             {t("settings.agent.hubSwitch", { defaultValue: "AI features" })}
           </label>
-          <span className="text-xs text-muted-foreground">
-            {t("settings.agent.hubSwitchHint", {
-              defaultValue: "Off hides AI and blocks agent access.",
-            })}
-          </span>
         </div>
       </div>
 
