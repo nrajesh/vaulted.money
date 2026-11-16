@@ -1,10 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageActionBar } from "@/components/layout/PageActionBar";
 import { Input } from "@/components/ui/input";
