@@ -40,7 +40,7 @@ node marketing/showreel/soundtrack.mjs                   # just the audio → ou
 ### The keynote cut and the finished files
 
 ```bash
-node marketing/showreel/render.mjs --cut keynote         # the 78 s tour, store ending
+node marketing/showreel/render.mjs --cut keynote         # the 80 s film, store ending
 node marketing/showreel/render.mjs --cut keynote --web   # website ending → ...-keynote-site.mp4
 node marketing/showreel/duo/overlay.mjs                  # plays the iPad and Duo recordings on it
 node marketing/showreel/render.mjs --bpm 108             # relaxed social cut (60 s) → ...-relaxed.mp4
@@ -57,13 +57,28 @@ copies light copies (each under GitHub's 100 MB limit) to `final/`:
 `vaulted-money-showreel-social-relaxed.mp4`. Those are committed; keep only the
 current cut there.
 
-The keynote has its own score (`keynoteScore.mjs`): an upbeat 120 BPM groove
-with a plucked hook, built from the cues in `timelines/keynote.mjs`. Every card
-that lands there (a headline, a phone, a chip, a label, a badge) is a
-`MOMENTS` entry on the half-beat grid with its own sound (a swish, a thud, a
-pop), and `keynote.mjs` springs each card in to land on that beat. Change a
-time there and the picture and the sound move together. The App Store preview
-keeps the calm score (`calmScore.mjs`).
+The keynote tells one story, "from mess to clarity": money worries drift
+down in the grey, other apps only look back (and sell what they see), then the
+logo lands, the mess snaps into tidy rows and the groove drops. Each chapter
+after that asks a question a careful person asks and answers it with the idea
+in motion first (a shield closing round your devices, your words turning into
+filters, budget meters filling, the road ahead, a switch, a terminal and an
+agent) and the real app as proof. A finale cuts through the app's screens on
+the beat into the end card. Each logo appears on the theme it was drawn for.
+
+Every word on screen lives in `COPY` in `timelines/keynote.mjs`, and the tests
+hold it to the owner's rules: at most six words a line, questions and answers
+in the positive, and taglines quoted from the README.
+
+Its score (`keynoteScore.mjs`) uses the relaxed social cut's instruments and
+arc at the same 108 BPM (copied, so the social cuts never change): a riser and
+a drop at the turn, a four-on-the-floor groove, a breakdown under the big
+screens, and a finale that is the loudest and busiest stretch. The tune is
+written first and the cards are hung on it: every card from the turn on lands
+on a note of the melody that belongs to the chord under it and plays that
+note, so the cards play the tune. The App Store preview keeps the calm score
+(`calmScore.mjs`). The finale uses the social cut's captures, so run
+`pnpm showreel:capture` before rendering the keynote.
 
 The relaxed social cut is the same film at 108 BPM instead of 128. Every
 cue is written in beats (`timeline.mjs`), so the picture and the music slow

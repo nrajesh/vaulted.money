@@ -22,12 +22,12 @@ export { HANDOVER };
 /**
  * Seconds into each recording (after its story's start mark) where the
  * footage begins, read off the current recordings (the mark lands about a
- * second after the story really starts): the iPad is on the table just
- * before "List and details"; the Duo shows Northwind AG just before the first
+ * second after the story really starts): the iPad is already on "List and
+ * details" (its table view read as the web app, so the film skips it); the Duo shows Northwind AG just before the first
  * tap. Re-check these after re-recording.
  */
 export const RECORDINGS = {
-  ipad: { skip: 0.9 },
+  ipad: { skip: 2.0 },
   duo: { skip: 1.3 },
 };
 

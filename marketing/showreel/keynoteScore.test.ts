@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error plain ES module without type declarations
 import { renderScore } from "./keynoteScore.mjs";
+// @ts-expect-error plain ES module without type declarations
+import { DURATION, chapter, scoreCues } from "./timelines/keynote.mjs";
 
-type Cue = { t: number; kind: string; i?: number };
+type Cue = { t: number; kind: string; note?: number };
+const at = (id: string) => chapter(id) as { start: number; end: number };
+const cues = (scoreCues as (web: boolean) => Cue[])(true);
 const render = renderScore as (opts: {
   seconds: number;
   cues: Cue[];
@@ -17,16 +21,13 @@ const rms = (ch: Float32Array, from: number, to: number, rate = 48000) => {
   return Math.sqrt(sum / (b - a));
 };
 
-const EFFECTS = [
-  "swish",
-  "pop",
-  "tick",
-  "thud",
-  "ding",
-  "whoosh",
-  "sweep",
-  "shimmer",
-  "boom",
+// Every kind of card sound, each at a note it really plays.
+const SOUNDS: Cue[] = [
+  { t: 0, kind: "card", note: 72 },
+  { t: 0, kind: "mess", note: 70 },
+  { t: 0, kind: "snap", note: 76 },
+  { t: 0, kind: "stamp", note: 40 },
+  { t: 0, kind: "logo", note: 65 },
 ];
 
 describe("keynote score", () => {
@@ -36,16 +37,11 @@ describe("keynote score", () => {
     expect(right).toHaveLength(96_000);
   });
 
-  it("never clips, with every effect and section cue", () => {
-    const cues: Cue[] = [
-      { t: 1, kind: "drop" },
-      { t: 4, kind: "break" },
-      { t: 6, kind: "drop" },
-      ...EFFECTS.map((kind, i) => ({ t: 1.5 + i * 0.5, kind })),
-    ];
-    for (const ch of render({ seconds: 8, cues }))
-      for (const v of ch) expect(Math.abs(v)).toBeLessThanOrEqual(1);
-  });
+  it("never clips over the whole film", () => {
+    for (const ch of render({ seconds: DURATION, cues }))
+      for (let i = 0; i < ch.length; i += 7)
+        expect(Math.abs(ch[i])).toBeLessThanOrEqual(1);
+  }, 60_000);
 
   // Phone and laptop speakers play little below 200 Hz, so every effect
   // must still be heard with the lows taken out.
@@ -65,49 +61,72 @@ describe("keynote score", () => {
   const smallSpeaker = (ch: Float32Array) =>
     highPass(highPass(highPass(highPass(ch))));
 
-  it.each(EFFECTS)("makes a %s audible on a phone where it is cued", (kind) => {
-    const quiet = smallSpeaker(render({ seconds: 3, cues: [] })[0]);
-    const cued = smallSpeaker(
-      render({ seconds: 3, cues: [{ t: 2, kind }] })[0],
+  it.each(SOUNDS)(
+    "makes a $kind audible on a phone where it is cued",
+    ({ kind, note }) => {
+      const quiet = smallSpeaker(render({ seconds: 3, cues: [] })[0]);
+      const cued = smallSpeaker(
+        render({ seconds: 3, cues: [{ t: 2, kind, note }] })[0],
+      );
+      // Both are normalised, so compare how much louder the cue's moment is
+      // than an earlier stretch, with and without the cue.
+      const lift = (ch: Float32Array) => rms(ch, 2, 2.3) / rms(ch, 0.6, 0.9);
+      expect(lift(cued), kind).toBeGreaterThan(lift(quiet) * 1.25);
+    },
+  );
+
+  it("stays quiet through the worries and grooves from the first chorus", () => {
+    const [left] = render({ seconds: 22, cues });
+    const privacy = at("privacy").start;
+    expect(rms(left, privacy + 1, privacy + 6)).toBeGreaterThan(
+      rms(left, 1, 6) * 1.5,
     );
-    // Sweeps and whooshes rise into their mark; the rest start on it.
-    const from = ["whoosh", "sweep"].includes(kind) ? 1.6 : 2;
-    // Both are normalised, so compare how much louder the cue's moment is
-    // than an earlier stretch, with and without the cue.
-    const span = 2.3 - from;
-    const lift = (ch: Float32Array) =>
-      rms(ch, from, 2.3) / rms(ch, 0.6, 0.6 + span);
-    expect(lift(cued), kind).toBeGreaterThan(lift(quiet) * 1.25);
-  });
+  }, 30_000);
 
-  it("is quiet before the first drop and grooves after it", () => {
-    const [left] = render({ seconds: 12, cues: [{ t: 5, kind: "drop" }] });
-    expect(rms(left, 6, 10)).toBeGreaterThan(rms(left, 1, 4) * 1.5);
-  });
-
-  it("drops the kick in a break, and brings it back at the next drop", () => {
-    const cues = [
-      { t: 1, kind: "drop" },
-      { t: 5, kind: "break" },
-      { t: 9, kind: "drop" },
-    ];
-    const [left] = render({ seconds: 13, cues });
+  it("drops the kick for the big screens, and brings it back for the devices", () => {
+    const [left] = render({ seconds: DURATION, cues });
     // Low end only: the kick lives under 120 Hz.
-    const low = (from: number, to: number) => {
-      let y = 0;
-      const out = new Float32Array(left.length);
-      const k = 1 - Math.exp((-2 * Math.PI * 120) / 48000);
-      for (let i = 0; i < left.length; i++) out[i] = y += k * (left[i] - y);
-      return rms(out, from, to);
-    };
-    expect(low(5.5, 8.5)).toBeLessThan(low(1.5, 4.5) * 0.6);
-    expect(low(9.5, 12.5)).toBeGreaterThan(low(5.5, 8.5) * 1.5);
-  });
+    let y = 0;
+    const low = new Float32Array(left.length);
+    const k = 1 - Math.exp((-2 * Math.PI * 120) / 48000);
+    for (let i = 0; i < left.length; i++) low[i] = y += k * (left[i] - y);
+    const big = at("bigScreens");
+    const before = at("ai");
+    const after = at("devices");
+    const inBreak = rms(low, big.start + 1, big.end - 1);
+    expect(inBreak).toBeLessThan(rms(low, before.start, before.end) * 0.6);
+    expect(rms(low, after.start + 0.5, after.end)).toBeGreaterThan(
+      inBreak * 1.5,
+    );
+  }, 60_000);
+
+  it("builds to the finale: its busiest and loudest stretch", () => {
+    const [left] = render({ seconds: DURATION, cues });
+    // Above ~5 kHz: hats, claps, crashes and rolls, the sound of "busy".
+    let x1 = 0;
+    let y = 0;
+    const k = Math.exp((-2 * Math.PI * 5000) / 48000);
+    const high = new Float32Array(left.length);
+    for (let i = 0; i < left.length; i++) {
+      y = k * (y + left[i] - x1);
+      x1 = left[i];
+      high[i] = y;
+    }
+    const finale = at("montage");
+    for (const id of ["privacy", "search", "budgets", "open"]) {
+      const c = at(id);
+      expect(rms(left, finale.start, finale.end), id).toBeGreaterThan(
+        rms(left, c.start, c.end),
+      );
+      expect(rms(high, finale.start, finale.end), id).toBeGreaterThan(
+        rms(high, c.start, c.end),
+      );
+    }
+  }, 60_000);
 
   it("is the same every time", () => {
-    const cues = [{ t: 0.5, kind: "drop" }];
-    const a = render({ seconds: 1, cues })[0];
-    const b = render({ seconds: 1, cues })[0];
+    const a = render({ seconds: 1, cues: SOUNDS })[0];
+    const b = render({ seconds: 1, cues: SOUNDS })[0];
     expect(Array.from(a.slice(0, 4000))).toEqual(Array.from(b.slice(0, 4000)));
   });
 });

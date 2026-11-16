@@ -1,642 +1,851 @@
 /**
  * The keynote cut's score, synthesised from scratch (no samples, nothing to
- * license): an upbeat 120 BPM pop groove with a plucked hook, and a short,
- * snappy sound on every card that lands.
+ * license). Its instruments and arc are the relaxed social cut's
+ * (soundtrack.mjs), copied rather than shared so the committed social cuts
+ * never change: a four-on-the-floor house groove at 108 BPM, a sidechained
+ * saw pad, an off-beat bass, a plucked arpeggio, risers, a breakdown, a snare
+ * roll into the finale and an impact on the logo.
  *
- * C – G – Am – F, one chord a bar. A soft intro (pads and a rising arpeggio)
- * builds into the first `drop`, where the kick, claps, hats, a bouncing bass
- * and the hook come in. A `break` drops the kick and bass while the big-screen
- * recordings play; the next `drop` brings them back, and `outro` lets the last
- * chord ring under the end card. `fill` marks the other chapter changes.
- * Each section restarts the chord loop and the hook, so every drop opens on C.
+ * The song (chords, melody, chapters) lives in timelines/keynote.mjs, and
+ * every card that lands from the turn on is a note of the melody, played out
+ * loud on the lead pluck with a bell above it, so the cards play the tune:
  *
- * Effects (from timelines/keynote.mjs `scoreCues`): swish (a headline flies
- * in), thud (a device lands), tick (a line of text), pop (a chip or label;
- * `i` steps it up the scale), ding (a spotlight), sweep (the light-mode wipe),
- * whoosh, shimmer (the opening logo) and boom (the end card).
+ * - worry / rearview: a low drone, each worry a stray, slightly out-of-tune
+ *   glass note (`mess`); the lines and the SOLD stamp a dull clunk (`stamp`).
+ * - turn: the logo lands with an impact (`logo`), the rows snap into place
+ *   on the eighths (`snap`), a riser and a snare roll lead into the drop.
+ * - privacy … open (`drop`): the full groove, busier from "search" on.
+ * - bigScreens (`break`): the drums rest; a bell arpeggio rises into the
+ *   devices, where the drums slam back (`drop`).
+ * - montage (`finale`): the densest part, a crash every bar, a snare roll and
+ *   a riser into the end card.
+ * - end (`outro`): an impact on Cmaj9, a bell cascade, and the chord rings.
  *
  *   renderScore({ seconds, cues }) → [left, right] Float32Array at 48 kHz
  */
+import { random } from "./lib/motion.mjs";
+import {
+  BAR,
+  BEAT,
+  CHAPTERS,
+  SONG_BARS,
+  chordOf,
+  melody,
+  sectionOf,
+} from "./timelines/keynote.mjs";
+
+const SAMPLE_RATE = 48000;
 const TAU = Math.PI * 2;
-const BPM = 120;
-const BEAT = 60 / BPM;
-const BAR = BEAT * 4;
-const STEP = BEAT / 4; // a sixteenth
-const hz = (note) => 440 * Math.pow(2, (note - 69) / 12);
+const midi = (note) => 440 * Math.pow(2, (note - 69) / 12);
+const beat = (n) => n * BEAT;
 
-// One chord a bar, voiced around middle C; the bass plays the first note.
-const PROGRESSION = [
-  { bass: 36, tones: [55, 60, 64, 67] }, // C
-  { bass: 43, tones: [55, 59, 62, 67] }, // G
-  { bass: 45, tones: [57, 60, 64, 69] }, // Am
-  { bass: 41, tones: [57, 60, 65, 69] }, // F
-];
+/** Samples in the render; set by renderScore before anything is placed. */
+let LENGTH = 0;
+/** 0..1 ducking per sample from the latest kick (the "pump"). */
+let duckCurve = new Float32Array(0);
 
-// The hook: [sixteenth, note, length in sixteenths] per bar, A then B.
-const HOOK_A = [
-  [
-    [0, 76, 2],
-    [2, 79, 2],
-    [4, 84, 2],
-    [6, 79, 2],
-    [8, 81, 2],
-    [10, 79, 1],
-    [11, 76, 3],
-    [14, 74, 2],
-  ],
-  [
-    [0, 74, 2],
-    [2, 79, 2],
-    [4, 83, 2],
-    [6, 79, 2],
-    [8, 81, 1],
-    [9, 79, 1],
-    [10, 74, 4],
-    [14, 71, 2],
-  ],
-  [
-    [0, 72, 2],
-    [2, 76, 2],
-    [4, 81, 2],
-    [6, 76, 2],
-    [8, 79, 2],
-    [10, 76, 1],
-    [11, 72, 3],
-    [14, 74, 2],
-  ],
-  [
-    [0, 77, 2],
-    [2, 76, 2],
-    [4, 74, 2],
-    [6, 72, 2],
-    [8, 74, 3],
-    [11, 76, 1],
-    [12, 79, 4],
-  ],
-];
-const HOOK_B = [
-  [
-    [0, 84, 3],
-    [3, 83, 1],
-    [4, 79, 2],
-    [6, 76, 2],
-    [8, 79, 3],
-    [11, 81, 1],
-    [12, 79, 4],
-  ],
-  [
-    [0, 83, 3],
-    [3, 81, 1],
-    [4, 79, 2],
-    [6, 74, 2],
-    [8, 79, 3],
-    [11, 81, 1],
-    [12, 83, 4],
-  ],
-  [
-    [0, 84, 3],
-    [3, 83, 1],
-    [4, 81, 2],
-    [6, 76, 2],
-    [8, 81, 3],
-    [11, 83, 1],
-    [12, 84, 4],
-  ],
-  [
-    [0, 81, 2],
-    [2, 79, 2],
-    [4, 77, 2],
-    [6, 76, 2],
-    [8, 74, 4],
-    [12, 79, 4],
-  ],
-];
-// A bouncing bass line: [sixteenth, semitones above the root, length].
-const BASS = [
-  [0, 0, 2],
-  [2, 0, 1],
-  [3, 12, 1],
-  [4, 0, 2],
-  [6, 0, 1],
-  [7, 12, 1],
-  [8, 0, 2],
-  [10, 0, 1],
-  [11, 7, 1],
-  [12, 0, 2],
-  [14, 12, 1],
-  [15, 7, 1],
-];
-// Pops climb a major pentatonic from G5.
-const POP_NOTES = [79, 81, 84, 86, 88, 91];
-
-// Deterministic noise (mulberry32), seeded per sound so the score is the
-// same every render and one sound never changes another.
-function noise(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(a ^ (a >>> 15), a | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return (((t ^ (t >>> 14)) >>> 0) / 4294967296) * 2 - 1;
-  };
-}
-const seedAt = (t, salt) => Math.round(t * 1000) * 31 + salt;
-
-/** A state-variable filter step: returns { low, band, high } per sample. */
-function svf() {
-  let low = 0;
-  let band = 0;
-  return (x, freq, q, rate) => {
-    const f = 2 * Math.sin((Math.PI * Math.min(freq, rate * 0.2)) / rate);
-    low += f * band;
-    const high = x - low - band / q;
-    band += f * high;
-    return { low, band, high };
-  };
+// ── Buses ───────────────────────────────────────────────────────────────────
+function makeBus() {
+  return { left: new Float32Array(LENGTH), right: new Float32Array(LENGTH) };
 }
 
-function bus(length) {
-  return [new Float32Array(length), new Float32Array(length)];
-}
-
-/** Adds a mono voice `fn(localTime)` for `duration` s at `start`, panned. */
-function add([left, right], rate, start, duration, pan, fn) {
-  const from = Math.max(0, Math.floor(start * rate));
-  const to = Math.min(left.length, Math.floor((start + duration) * rate));
-  const l = Math.cos(((pan + 1) * Math.PI) / 4) * Math.SQRT2;
-  const r = Math.sin(((pan + 1) * Math.PI) / 4) * Math.SQRT2;
-  for (let i = from; i < to; i++) {
-    const v = fn(i / rate - start);
-    left[i] += v * l;
-    right[i] += v * r;
+/**
+ * Render a mono voice `generate(localTime, index)` into the dry bus (and the
+ * reverb send), with equal-power panning.
+ */
+function place(
+  buses,
+  start,
+  duration,
+  generate,
+  { gain = 1, pan = 0, send = 0, duck = 0 } = {},
+) {
+  const first = Math.max(0, Math.ceil(start * SAMPLE_RATE));
+  const last = Math.min(LENGTH, Math.ceil((start + duration) * SAMPLE_RATE));
+  const angle = ((pan + 1) / 2) * (Math.PI / 2);
+  const leftGain = Math.cos(angle) * gain;
+  const rightGain = Math.sin(angle) * gain;
+  for (let index = first; index < last; index++) {
+    const localTime = Math.max(0, index / SAMPLE_RATE - start);
+    let value = generate(localTime, index);
+    if (duck) value *= 1 - duck * duckCurve[index];
+    buses.dry.left[index] += value * leftGain;
+    buses.dry.right[index] += value * rightGain;
+    if (send) {
+      buses.wet.left[index] += value * leftGain * send;
+      buses.wet.right[index] += value * rightGain * send;
+    }
   }
+}
+
+// ── DSP building blocks ─────────────────────────────────────────────────────
+/** RBJ biquad; coefficients can be retuned per sample for sweeps. */
+class Biquad {
+  constructor(type, frequency, q = 0.707) {
+    this.type = type;
+    this.x1 = this.x2 = this.y1 = this.y2 = 0;
+    this.set(frequency, q);
+  }
+
+  set(frequency, q = this.q) {
+    this.q = q;
+    const omega = (TAU * Math.min(frequency, SAMPLE_RATE * 0.45)) / SAMPLE_RATE;
+    const alpha = Math.sin(omega) / (2 * q);
+    const cos = Math.cos(omega);
+    let b0;
+    let b1;
+    let b2;
+    if (this.type === "lowpass") {
+      b0 = (1 - cos) / 2;
+      b1 = 1 - cos;
+      b2 = (1 - cos) / 2;
+    } else if (this.type === "highpass") {
+      b0 = (1 + cos) / 2;
+      b1 = -(1 + cos);
+      b2 = (1 + cos) / 2;
+    } else {
+      b0 = alpha;
+      b1 = 0;
+      b2 = -alpha;
+    }
+    const a0 = 1 + alpha;
+    this.b0 = b0 / a0;
+    this.b1 = b1 / a0;
+    this.b2 = b2 / a0;
+    this.a1 = (-2 * cos) / a0;
+    this.a2 = (1 - alpha) / a0;
+  }
+
+  process(input) {
+    const output =
+      this.b0 * input +
+      this.b1 * this.x1 +
+      this.b2 * this.x2 -
+      this.a1 * this.y1 -
+      this.a2 * this.y2;
+    this.x2 = this.x1;
+    this.x1 = input;
+    this.y2 = this.y1;
+    this.y1 = output;
+    return output;
+  }
+}
+
+const noiseSource = (seed) => {
+  const next = random(seed);
+  return () => next() * 2 - 1;
+};
+
+/** Band-limited-enough sawtooth via polyBLEP; phase seeded per voice. */
+function sawVoice(frequency, seed) {
+  let phase = random(seed)();
+  const increment = frequency / SAMPLE_RATE;
+  return () => {
+    phase += increment;
+    if (phase >= 1) phase -= 1;
+    let value = 2 * phase - 1;
+    if (phase < increment) {
+      const t = phase / increment;
+      value -= t + t - t * t - 1;
+    } else if (phase > 1 - increment) {
+      const t = (phase - 1) / increment;
+      value -= t * t + t + t + 1;
+    }
+    return value;
+  };
+}
+const seedOf = (time, salt) => Math.floor(time * 1000) * 31 + salt;
+
+const envelope = (time, attack, decay) =>
+  time < attack ? time / attack : Math.exp(-(time - attack) / decay);
+
+// ── Drums ───────────────────────────────────────────────────────────────────
+function kick(buses, time, { gain = 0.95, sub = false } = {}) {
+  const click = noiseSource(seedOf(time, 1));
+  const length = sub ? 1.6 : 0.42;
+  let phase = 0;
+  place(
+    buses,
+    time,
+    length,
+    (t) => {
+      const frequency = (sub ? 34 : 46) + 120 * Math.exp(-t * 32);
+      phase += (TAU * frequency) / SAMPLE_RATE;
+      const body = Math.sin(phase) * envelope(t, 0.002, sub ? 0.5 : 0.16);
+      const transient = t < 0.004 ? click() * (1 - t / 0.004) * 0.5 : 0;
+      return Math.tanh((body + transient) * 1.6);
+    },
+    { gain },
+  );
+}
+
+function clap(buses, time, gain = 0.42) {
+  const noise = noiseSource(seedOf(time, 2));
+  const band = new Biquad("bandpass", 1500, 1.1);
+  const high = new Biquad("highpass", 700);
+  place(
+    buses,
+    time - 0.012,
+    0.35,
+    (t) => {
+      // Three quick bursts, then a tail: how a real clap sounds.
+      const bursts = [0, 0.009, 0.019].reduce(
+        (sum, offset) =>
+          sum + (t >= offset ? Math.exp(-(t - offset) / 0.006) : 0),
+        0,
+      );
+      const tail = t >= 0.019 ? Math.exp(-(t - 0.019) / 0.09) : 0;
+      return high.process(band.process(noise())) * (bursts * 0.6 + tail) * 2.2;
+    },
+    { gain, send: 0.35, pan: 0.05 },
+  );
+}
+
+function hat(buses, time, { gain = 0.1, open = false, pan = 0.25 } = {}) {
+  const noise = noiseSource(seedOf(time, 3));
+  const high = new Biquad("highpass", 7500, 0.9);
+  place(
+    buses,
+    time,
+    open ? 0.25 : 0.06,
+    (t) => high.process(noise()) * envelope(t, 0.001, open ? 0.08 : 0.018),
+    { gain, pan },
+  );
+}
+
+/** Snare hit (noise plus a short tone), for rolls into a drop. */
+function snare(buses, time, gain) {
+  const noise = noiseSource(seedOf(time, 4));
+  const band = new Biquad("bandpass", 1900, 0.8);
+  let phase = 0;
+  place(
+    buses,
+    time,
+    0.18,
+    (t) => {
+      phase += (TAU * 190) / SAMPLE_RATE;
+      return (
+        band.process(noise()) * envelope(t, 0.001, 0.05) * 1.6 +
+        Math.sin(phase) * envelope(t, 0.001, 0.03) * 0.4
+      );
+    },
+    { gain, send: 0.25 },
+  );
+}
+
+/** A crash: two bright noise tails. */
+function crash(buses, time, gain = 0.3) {
+  for (const [salt, pan] of [
+    [5, -0.1],
+    [6, 0.1],
+  ]) {
+    const noise = noiseSource(seedOf(time, salt));
+    const high = new Biquad("highpass", 3400, 0.7);
+    place(
+      buses,
+      time,
+      2.2,
+      (t) => high.process(noise()) * envelope(t, 0.002, 0.48),
+      { gain, send: 0.7, pan },
+    );
+  }
+}
+
+/** Deep cinematic hit: sub drop, kick and a crash. */
+function impact(buses, time, { gain = 1, crash: amount = 0.35 } = {}) {
+  kick(buses, time, { gain: 1.05 * gain, sub: true });
+  crash(buses, time, amount * gain);
+}
+
+// ── Harmony ─────────────────────────────────────────────────────────────────
+function pad(
+  buses,
+  start,
+  duration,
+  notes,
+  {
+    gain = 0.05,
+    cutoff = 2400,
+    attack = 0.08,
+    release = 0.5,
+    duck = 0.65,
+  } = {},
+) {
+  notes.forEach((note, noteIndex) => {
+    for (const detune of [-0.11, 0, 0.12]) {
+      const voice = sawVoice(
+        midi(note + detune),
+        seedOf(start, noteIndex * 7 + 40),
+      );
+      const filter = new Biquad("lowpass", cutoff, 0.8);
+      const pan = (noteIndex % 2 ? 1 : -1) * (0.25 + detune) * 1.6;
+      place(
+        buses,
+        start,
+        duration + release,
+        (t) => {
+          const level =
+            t < attack
+              ? t / attack
+              : t > duration
+                ? Math.exp(-(t - duration) / (release / 3))
+                : 1;
+          return filter.process(voice()) * level;
+        },
+        {
+          gain,
+          pan: Math.max(-0.9, Math.min(0.9, pan)),
+          send: 0.45,
+          duck,
+        },
+      );
+    }
+  });
+}
+
+function bass(buses, start, duration, root, gain = 0.3) {
+  const voice = sawVoice(midi(root), seedOf(start, 50));
+  const filter = new Biquad("lowpass", 320, 1.1);
+  let phase = 0;
+  place(
+    buses,
+    start,
+    duration + 0.08,
+    (t) => {
+      phase += (TAU * midi(root)) / SAMPLE_RATE;
+      const level =
+        Math.min(1, t / 0.01) *
+        (t > duration ? Math.exp(-(t - duration) / 0.03) : 1);
+      return (filter.process(voice()) * 0.7 + Math.sin(phase) * 0.6) * level;
+    },
+    { gain, duck: 0.85 },
+  );
+}
+
+function pluck(buses, time, note, { gain = 0.06, pan = 0, decay = 0.09 } = {}) {
+  const voice = sawVoice(midi(note), seedOf(time, 60 + note));
+  const filter = new Biquad("lowpass", 4000, 1.4);
+  place(
+    buses,
+    time,
+    decay * 4,
+    (t, index) => {
+      if (index % 16 === 0) filter.set(400 + 3600 * Math.exp(-t / 0.05), 1.4);
+      return filter.process(voice()) * envelope(t, 0.002, decay);
+    },
+    { gain, pan, send: 0.3 },
+  );
+}
+
+/** FM bell: bright, glassy, a little inharmonic. */
+function bell(
+  buses,
+  time,
+  frequency,
+  {
+    gain = 0.12,
+    pan = 0,
+    decay = 0.6,
+    ratio = 3.5,
+    index = 3,
+    send = 0.5,
+  } = {},
+) {
+  let carrier = 0;
+  let modulator = 0;
+  place(
+    buses,
+    time,
+    decay * 5,
+    (t) => {
+      modulator += (TAU * frequency * ratio) / SAMPLE_RATE;
+      const depth = index * Math.exp(-t / (decay * 0.4));
+      carrier += (TAU * frequency) / SAMPLE_RATE;
+      return (
+        Math.sin(carrier + depth * Math.sin(modulator)) *
+        envelope(t, 0.001, decay)
+      );
+    },
+    { gain, pan, send },
+  );
+}
+
+// ── Sound design ────────────────────────────────────────────────────────────
+/** Filtered-noise sweep: whooshes and risers. */
+function sweep(
+  buses,
+  start,
+  duration,
+  {
+    from = 300,
+    to = 5000,
+    gain = 0.2,
+    q = 1.2,
+    shape = "swell",
+    seed = 1,
+  } = {},
+) {
+  const noise = noiseSource(seed);
+  const filter = new Biquad("bandpass", from, q);
+  const first = Math.max(0, Math.ceil(start * SAMPLE_RATE));
+  const last = Math.min(LENGTH, Math.ceil((start + duration) * SAMPLE_RATE));
+  for (let index = first; index < last; index++) {
+    const progress = Math.min(
+      1,
+      Math.max(0, (index / SAMPLE_RATE - start) / duration),
+    );
+    if (index % 16 === 0) filter.set(from * Math.pow(to / from, progress), q);
+    const level =
+      shape === "swell"
+        ? Math.pow(progress, 2.2) *
+          (progress > 0.97 ? (1 - progress) / 0.03 : 1)
+        : Math.sin(Math.PI * progress) ** 2;
+    const value = filter.process(noise()) * level * gain * 3;
+    buses.dry.left[index] += value * 0.7;
+    buses.dry.right[index] += value * 0.7;
+    buses.wet.left[index] += value * 0.2;
+    buses.wet.right[index] += value * 0.2;
+  }
+}
+
+function tick(buses, time, { frequency = 4200, gain = 0.06, pan = 0 } = {}) {
+  let phase = 0;
+  place(
+    buses,
+    time,
+    0.05,
+    (t) => {
+      phase += (TAU * frequency) / SAMPLE_RATE;
+      return Math.sin(phase) * envelope(t, 0.0005, 0.008);
+    },
+    { gain, pan, send: 0.25 },
+  );
+}
+
+function blip(buses, time, note, { gain = 0.07, pan = 0, decay = 0.08 } = {}) {
+  let phase = 0;
+  place(
+    buses,
+    time,
+    decay * 5,
+    (t) => {
+      phase +=
+        (TAU * midi(note) * (1 + 0.5 * Math.exp(-t / 0.01))) / SAMPLE_RATE;
+      return (
+        (Math.sin(phase) + 0.25 * Math.sin(phase * 2)) *
+        envelope(t, 0.001, decay)
+      );
+    },
+    { gain, pan, send: 0.3 },
+  );
+}
+
+/** A metallic lock "clunk": low thump plus inharmonic ring. */
+function clunk(buses, time, gain = 0.5) {
+  let phase = 0;
+  place(
+    buses,
+    time,
+    0.4,
+    (t) => {
+      phase += (TAU * (70 + 60 * Math.exp(-t * 40))) / SAMPLE_RATE;
+      return Math.sin(phase) * envelope(t, 0.001, 0.07);
+    },
+    { gain },
+  );
+  for (const [frequency, level] of [
+    [612, 0.5],
+    [1473, 0.35],
+    [2318, 0.25],
+  ]) {
+    let ring = 0;
+    place(
+      buses,
+      time,
+      0.9,
+      (t) => {
+        ring += (TAU * frequency) / SAMPLE_RATE;
+        return Math.sin(ring) * envelope(t, 0.0008, 0.12) * level;
+      },
+      { gain: gain * 0.35, send: 0.5 },
+    );
+  }
+}
+
+/** A snare roll of sixteenths over `beats`, swelling into `end`. */
+function roll(buses, end, beats, from = 0.06, to = 0.22) {
+  const steps = beats * 4;
+  for (let step = 0; step < steps; step++)
+    snare(
+      buses,
+      end - beat(beats) + beat(step / 4),
+      from + (to - from) * (step / (steps - 1)),
+    );
+}
+
+/** A rising tone and a noise riser into `end`. */
+function riser(buses, end, length, seed, gain = 0.3) {
+  sweep(buses, end - length, length, {
+    from: 200,
+    to: 9000,
+    gain,
+    shape: "swell",
+    q: 0.8,
+    seed,
+  });
+  let phase = 0;
+  place(
+    buses,
+    end - length,
+    length,
+    (t) => {
+      const amount = t / length;
+      phase += (TAU * (200 + 1800 * amount * amount)) / SAMPLE_RATE;
+      return Math.sin(phase) * amount ** 3 * 0.5;
+    },
+    { gain: 0.08, send: 0.4 },
+  );
+}
+
+// ── Card sounds ─────────────────────────────────────────────────────────────
+const SOUNDS = {
+  /** A card on the tune: its melody note on the lead, a bell an octave up. */
+  card(buses, { t, note }) {
+    pluck(buses, t, note, { gain: 0.15, decay: 0.16 });
+    bell(buses, t, midi(note + 12), {
+      gain: 0.035,
+      decay: 0.35,
+      ratio: 2,
+      index: 1,
+      send: 0.4,
+    });
+  },
+  /** A worry: a stray glass note, a little out of tune. */
+  mess(buses, { t, note }) {
+    const cents = ((Math.round(t * 100) % 7) - 3) * 6;
+    bell(buses, t, midi(note) * Math.pow(2, cents / 1200), {
+      gain: 0.09,
+      decay: 0.7,
+      ratio: 3.5,
+      index: 1.6,
+      pan: ((note % 5) - 2) * 0.3,
+      send: 0.7,
+    });
+  },
+  /** A row snapping into place: a bright blip and a tick. */
+  snap(buses, { t, note }) {
+    blip(buses, t, note, { gain: 0.09, decay: 0.12, pan: (note % 3) - 1 });
+    tick(buses, t, { frequency: 3600, gain: 0.04 });
+  },
+  /** A dull clunk with a low bell. */
+  stamp(buses, { t, note }) {
+    clunk(buses, t, 0.45);
+    bell(buses, t, midi(note + 12), {
+      gain: 0.08,
+      decay: 0.8,
+      ratio: 1.41,
+      index: 1.2,
+    });
+  },
+  /** The logo: an impact with a bell cascade up the chord. */
+  logo(buses, { t, note }) {
+    impact(buses, t, { gain: 0.75, crash: 0.25 });
+    [0, 4, 7, 11, 14].forEach((step, i) =>
+      bell(buses, t + 0.05 + i * 0.06, midi(note + 12 + step), {
+        gain: 0.05,
+        decay: 0.9,
+        ratio: 2,
+        index: 0.8,
+        pan: -0.5 + i * 0.25,
+        send: 0.7,
+      }),
+    );
+  },
+};
+
+// ── Reverb (Freeverb-style) ─────────────────────────────────────────────────
+function reverb(wet) {
+  const scale = SAMPLE_RATE / 44100;
+  const combs = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617];
+  const allpasses = [556, 441, 341, 225];
+  const output = makeBus();
+  for (const [channel, spread] of [
+    ["left", 0],
+    ["right", 23],
+  ]) {
+    const input = wet[channel];
+    const result = output[channel];
+    for (const length of combs) {
+      const size = Math.round((length + spread) * scale);
+      const buffer = new Float32Array(size);
+      let position = 0;
+      let store = 0;
+      for (let index = 0; index < LENGTH; index++) {
+        const delayed = buffer[position];
+        store = delayed * 0.78 + store * 0.22;
+        buffer[position] = input[index] * 0.015 + store * 0.86;
+        result[index] += delayed;
+        if (++position >= size) position = 0;
+      }
+    }
+    for (const length of allpasses) {
+      const size = Math.round((length + spread) * scale);
+      const buffer = new Float32Array(size);
+      let position = 0;
+      for (let index = 0; index < LENGTH; index++) {
+        const delayed = buffer[position];
+        const value = result[index];
+        buffer[position] = value + delayed * 0.5;
+        result[index] = delayed - value;
+        if (++position >= size) position = 0;
+      }
+    }
+  }
+  return output;
 }
 
 // ── Arrangement ─────────────────────────────────────────────────────────────
 
-/**
- * Sections from the cues: [{ kind, start, end }]. The intro runs from 0 to
- * the first section cue; its bars are counted back from there so the drop
- * lands on a downbeat.
- */
-function sections(cues, seconds) {
-  const marks = cues
-    .filter((c) => ["drop", "break", "outro"].includes(c.kind))
-    .sort((a, b) => a.t - b.t);
-  const list = [];
-  const firstAt = marks.length ? marks[0].t : seconds;
-  list.push({ kind: "intro", start: 0, end: firstAt, anchor: firstAt });
-  marks.forEach((m, i) =>
-    list.push({
-      kind: m.kind === "drop" ? "groove" : m.kind,
-      start: m.t,
-      end: i + 1 < marks.length ? marks[i + 1].t : seconds,
-      anchor: m.t,
-    }),
+/** The section each moment is in, from the cues. */
+function sectionAt(cues, t) {
+  let kind = "intro";
+  for (const c of cues)
+    if (
+      ["drop", "break", "finale", "outro"].includes(c.kind) &&
+      c.t <= t + 1e-9
+    )
+      kind = c.kind === "drop" ? "groove" : c.kind;
+  return kind;
+}
+
+function arrange(buses, cues, seconds) {
+  const bars = Math.min(SONG_BARS, Math.ceil(seconds / BAR));
+  const first = (kind) => cues.find((c) => c.kind === kind)?.t;
+  const turn = CHAPTERS.find((c) => c.id === "turn").start;
+  const search = CHAPTERS.find((c) => c.id === "search").start;
+  const budgets = CHAPTERS.find((c) => c.id === "budgets").start;
+
+  // The opening: a low drone that holds until the turn.
+  let dronePhase = 0;
+  place(
+    buses,
+    0,
+    turn + 0.3,
+    (t) => {
+      dronePhase += (TAU * midi(33)) / SAMPLE_RATE;
+      const level =
+        Math.min(1, t / 0.8) * (t > turn ? Math.exp(-(t - turn) / 0.08) : 1);
+      return (Math.sin(dronePhase) + 0.3 * Math.sin(dronePhase * 2)) * level;
+    },
+    { gain: 0.12 },
   );
-  return list;
-}
 
-/** Every sixteenth in a section: { t, bar, step } (bar 0 starts at its anchor). */
-function* steps(section) {
-  const first = Math.ceil((section.start - section.anchor) / STEP - 1e-9);
-  for (let n = first; ; n++) {
-    const t = section.anchor + n * STEP;
-    if (t >= section.end - 1e-9) return;
-    yield { t, bar: Math.floor(n / 16), step: ((n % 16) + 16) % 16 };
-  }
-}
-const chordOf = (bar) => PROGRESSION[((bar % 4) + 4) % 4];
+  for (let bar = 0; bar < bars; bar++) {
+    const start = bar * BAR;
+    const chord = chordOf(bar);
+    const part = sectionOf(bar);
+    const kind = sectionAt(cues, start + 1e-6);
 
-// ── Instruments ─────────────────────────────────────────────────────────────
-
-/** A bright pluck: additive, higher partials die faster (no aliasing). */
-function pluck(out, rate, t0, note, length, gain, pan) {
-  const f = hz(note);
-  const dur = length + 0.35;
-  add(out, rate, t0, dur, pan, (t) => {
-    const env =
-      Math.min(1, t / 0.003) *
-      Math.exp(-t * 3.2) *
-      (t > length ? Math.exp(-(t - length) * 14) : 1);
-    let v = 0;
-    for (let k = 1; k <= 7; k++)
-      v += (Math.sin(TAU * f * k * t) / k) * Math.exp(-t * k * 4);
-    return gain * env * v;
-  });
-}
-
-function pad(out, rate, t0, length, chord, gain) {
-  chord.tones.forEach((note, i) => {
-    const f = hz(note);
-    const pan = (i / (chord.tones.length - 1)) * 1.2 - 0.6;
-    add(out, rate, t0, length + 0.3, pan, (t) => {
-      const env = Math.min(1, t / 0.08) * Math.min(1, (length + 0.3 - t) / 0.3);
-      return (
-        gain *
-        env *
-        (Math.sin(TAU * f * t) +
-          0.6 * Math.sin(TAU * f * 1.006 * t + 1) +
-          0.3 * Math.sin(TAU * f * 2.003 * t))
-      );
-    });
-  });
-}
-
-function bassNote(out, rate, t0, note, length, gain) {
-  const f = hz(note);
-  add(out, rate, t0, length + 0.05, 0, (t) => {
-    const env =
-      Math.min(1, t / 0.004) *
-      (0.55 + 0.45 * Math.exp(-t * 10)) *
-      Math.min(1, (length + 0.05 - t) / 0.04);
-    let v = 0;
-    for (let k = 1; k <= 6; k++)
-      v += (Math.sin(TAU * f * k * t) / k) * Math.exp(-t * (k - 1) * 9);
-    return gain * env * v;
-  });
-}
-
-function kick(out, rate, t0, gain) {
-  let phase = 0;
-  add(out, rate, t0, 0.4, 0, (t) => {
-    phase += (TAU * (48 + 110 * Math.exp(-t * 32))) / rate;
-    return gain * Math.exp(-t * 7) * Math.sin(phase);
-  });
-}
-
-function clap(out, rate, t0, gain) {
-  const rand = noise(seedAt(t0, 2));
-  const filter = svf();
-  add(out, rate, t0, 0.25, -0.1, (t) => {
-    const bursts = [0, 0.011, 0.022].reduce(
-      (acc, o) => acc + (t >= o ? Math.exp(-(t - o) * 180) : 0),
-      0,
-    );
-    const env = bursts * 0.5 + Math.exp(-t * 18) * 0.6;
-    return gain * env * filter(rand(), 1300, 1.2, rate).band * 2.2;
-  });
-}
-
-function hat(out, rate, t0, gain, open = false) {
-  const rand = noise(seedAt(t0, 3));
-  const filter = svf();
-  add(out, rate, t0, open ? 0.3 : 0.06, 0.3, (t) => {
-    const env = Math.exp(-t * (open ? 14 : 80));
-    return gain * env * filter(rand(), 7500, 0.9, rate).high;
-  });
-}
-
-function snare(out, rate, t0, gain) {
-  const rand = noise(seedAt(t0, 4));
-  const filter = svf();
-  add(out, rate, t0, 0.18, -0.15, (t) => {
-    const body = Math.sin(TAU * 190 * t) * Math.exp(-t * 30);
-    const hiss = filter(rand(), 3500, 0.8, rate).high * Math.exp(-t * 22);
-    return gain * (0.5 * body + hiss);
-  });
-}
-
-function crash(out, rate, t0, gain) {
-  const rand = noise(seedAt(t0, 5));
-  const filter = svf();
-  add(out, rate, t0, 2.2, 0.2, (t) => {
-    const env = Math.min(1, t / 0.002) * Math.exp(-t * 2.2);
-    return gain * env * filter(rand(), 5000, 0.7, rate).high;
-  });
-}
-
-/** Filtered noise rising into `t1`, with a climbing tone underneath. */
-function riser(out, rate, t1, length, gain) {
-  const rand = noise(seedAt(t1, 6));
-  const filter = svf();
-  let phase = 0;
-  add(out, rate, t1 - length, length, 0, (t) => {
-    const p = t / length;
-    phase += (TAU * (200 + 900 * p * p)) / rate;
-    const swish = filter(rand(), 300 + 7000 * p * p, 2, rate).band;
-    return gain * p * p * (swish * 1.2 + 0.15 * Math.sin(phase));
-  });
-}
-
-function bell(out, rate, t0, note, gain, pan, decay = 2.2) {
-  const f = hz(note);
-  add(out, rate, t0, 3 / decay + 0.2, pan, (t) => {
-    const env = Math.min(1, t / 0.002) * Math.exp(-t * decay);
-    return (
-      gain *
-      env *
-      (Math.sin(TAU * f * t) +
-        0.45 * Math.sin(TAU * f * 2.76 * t) * Math.exp(-t * 3) +
-        0.2 * Math.sin(TAU * f * 5.4 * t) * Math.exp(-t * 6))
-    );
-  });
-}
-
-// ── Effects ─────────────────────────────────────────────────────────────────
-
-const EFFECTS = {
-  /** A headline flies in: a quick airy swish up. */
-  swish(out, rate, { t }) {
-    const rand = noise(seedAt(t, 10));
-    const filter = svf();
-    add(out, rate, t - 0.12, 0.4, 0, (x) => {
-      const env = Math.sin(Math.PI * Math.min(1, x / 0.4)) ** 2;
-      return 0.5 * env * filter(rand(), 1200 + 6000 * (x / 0.4), 3, rate).band;
-    });
-  },
-  /**
-   * A device lands: a low thump, with a knock and a snap on top so phone
-   * speakers (which drop everything under ~200 Hz) still hear it.
-   */
-  thud(out, rate, { t }) {
-    let phase = 0;
-    const rand = noise(seedAt(t, 11));
-    const filter = svf();
-    add(out, rate, t, 0.3, 0, (x) => {
-      phase += (TAU * (70 + 90 * Math.exp(-x * 40))) / rate;
-      return (
-        0.45 * Math.exp(-x * 14) * Math.sin(phase) +
-        0.3 * Math.exp(-x * 28) * Math.sin(TAU * 230 * x) +
-        0.35 * Math.exp(-x * 120) * filter(rand(), 2600, 1.2, rate).band
-      );
-    });
-  },
-  /** A line of text: a woody tick. */
-  tick(out, rate, { t }) {
-    add(out, rate, t, 0.08, 0.25, (x) => {
-      const env = Math.exp(-x * 70);
-      return (
-        0.4 * env * (Math.sin(TAU * 1750 * x) + 0.5 * Math.sin(TAU * 2900 * x))
-      );
-    });
-  },
-  /** A chip or label: a bubbly pop, `i` steps up the scale. */
-  pop(out, rate, { t, i = 0 }) {
-    const f = hz(POP_NOTES[i % POP_NOTES.length]);
-    let phase = 0;
-    add(out, rate, t, 0.16, i % 2 ? 0.2 : -0.2, (x) => {
-      phase += (TAU * f * (1 - 0.45 * Math.exp(-x * 120))) / rate;
-      return (
-        0.32 * Math.min(1, x / 0.002) * Math.exp(-x * 26) * Math.sin(phase)
-      );
-    });
-  },
-  /** A spotlight: a bright two-note bell. */
-  ding(out, rate, { t }) {
-    bell(out, rate, t, 88, 0.16, 0.2);
-    bell(out, rate, t + 0.06, 95, 0.1, 0.35);
-  },
-  /** A transition: noise swelling into `t`. */
-  whoosh(out, rate, { t }) {
-    const rand = noise(seedAt(t, 12));
-    const filter = svf();
-    const length = 0.5;
-    add(out, rate, t - length, length + 0.15, 0, (x) => {
-      const p = Math.min(1, x / length);
-      const env = x < length ? p * p : Math.exp(-(x - length) * 30);
-      return 0.45 * env * filter(rand(), 600 + 4000 * p, 1.5, rate).band;
-    });
-  },
-  /** The light-mode wipe: a swell across the stereo field, centred on `t`. */
-  sweep(out, rate, { t }) {
-    const rand = noise(seedAt(t, 13));
-    const filter = svf();
-    for (const [side, pan] of [
-      [0, -0.6],
-      [1, 0.6],
-    ]) {
-      add(out, rate, t - 0.5, 1.0, pan, (x) => {
-        const env = Math.sin(Math.PI * x) ** 2;
-        const freq = 500 + 5000 * Math.sin((Math.PI * x) / 2);
-        return (side ? 0.3 : 0.25) * env * filter(rand(), freq, 2, rate).band;
+    if (part === "worry" || part === "rearview") {
+      pad(buses, start, BAR - 0.02, chord.tones, {
+        gain: 0.022,
+        cutoff: 900,
+        attack: 0.6,
+        duck: 0,
       });
+      continue;
     }
-  },
-  /** The opening logo: a quick sparkle up a C major chord. */
-  shimmer(out, rate, { t }) {
-    [84, 88, 91, 96].forEach((note, i) =>
-      bell(out, rate, t + i * 0.07, note, 0.1, -0.45 + i * 0.3, 1.6),
-    );
-  },
-  /** The end card: a deep boom with a punchy hit on top, under the crash. */
-  boom(out, rate, { t }) {
-    let phase = 0;
-    let hit = 0;
-    const rand = noise(seedAt(t, 14));
-    const filter = svf();
-    add(out, rate, t, 1.6, 0, (x) => {
-      phase += (TAU * (38 + 50 * Math.exp(-x * 9))) / rate;
-      hit += (TAU * (110 + 160 * Math.exp(-x * 25))) / rate;
-      return (
-        0.6 * Math.exp(-x * 2.6) * Math.sin(phase) +
-        0.4 * Math.exp(-x * 9) * Math.sin(hit) +
-        0.3 * Math.exp(-x * 30) * filter(rand(), 1800, 0.9, rate).band
-      );
+    if (part === "turn") {
+      // The lift: a brighter pad each bar and a sustained bass.
+      pad(buses, start, BAR - 0.02, chord.tones, {
+        gain: 0.05,
+        cutoff: 1800 + (bar - turn / BAR) * 1600,
+        attack: 0.05,
+        duck: 0,
+      });
+      bass(buses, start, BAR - 0.05, chord.root, 0.08);
+      continue;
+    }
+    if (kind === "outro") continue;
+
+    // Pads every bar; open, wider filter in the finale.
+    pad(buses, start, BAR - 0.02, chord.tones, {
+      gain: kind === "break" ? 0.07 : kind === "finale" ? 0.08 : 0.06,
+      cutoff:
+        kind === "break"
+          ? 1600 + (bar % 4) * 900
+          : kind === "finale"
+            ? 3400
+            : 2200 + (bar % 6) * 300,
+      attack: kind === "break" ? 0.25 : 0.03,
     });
-  },
-};
 
-// ── Mix ─────────────────────────────────────────────────────────────────────
-
-/** A small stereo room: a few feedback delays per side. */
-function room([left, right], rate, amount) {
-  const taps = [
-    [0.0297, 0.0371, 0.0533],
-    [0.0411, 0.0437, 0.0611],
-  ];
-  const out = [new Float32Array(left.length), new Float32Array(left.length)];
-  [left, right].forEach((src, side) => {
-    for (const seconds of taps[side]) {
-      const delay = Math.round(seconds * rate);
-      const line = new Float32Array(src.length);
-      for (let i = delay; i < src.length; i++)
-        line[i] = src[i - delay] * 0.5 + line[i - delay] * 0.66;
-      for (let i = 0; i < src.length; i++) out[side][i] += amount * line[i];
-    }
-  });
-  return out;
-}
-
-/** A dotted-eighth ping-pong echo, the classic lift for a plucked hook. */
-function echo([left, right], rate, amount) {
-  const delay = Math.round(BEAT * 0.75 * rate);
-  const out = [new Float32Array(left.length), new Float32Array(left.length)];
-  for (let i = delay; i < left.length; i++) {
-    out[0][i] = (right[i - delay] + out[1][i - delay]) * 0.5;
-    out[1][i] = (left[i - delay] + out[0][i - delay]) * 0.5;
-  }
-  for (let i = 0; i < left.length; i++) {
-    out[0][i] *= amount;
-    out[1][i] *= amount;
-  }
-  return out;
-}
-
-export function renderScore({ seconds, cues = [], sampleRate = 48000 }) {
-  const rate = sampleRate;
-  const length = Math.round(seconds * rate);
-  const music = bus(length); // pads, arpeggio, bass (ducked by the kick)
-  const lead = bus(length); // the hook (echoed)
-  const drums = bus(length);
-  const sfx = bus(length);
-  const kicks = [];
-
-  const list = sections(cues, seconds);
-  const drops = cues.filter((c) => c.kind === "drop").map((c) => c.t);
-
-  for (const s of list) {
-    // Pads: one chord a bar.
-    for (const { t, bar, step } of steps(s)) {
-      if (step !== 0 && t > s.start + 1e-9) continue;
-      const barEnd = Math.min(s.anchor + (bar + 1) * BAR, s.end);
-      const level = { intro: 0.012, groove: 0.014, break: 0.02, outro: 0.022 };
-      pad(music, rate, t, barEnd - t, chordOf(bar), level[s.kind]);
-    }
-    if (s.kind === "outro") {
-      bassNote(
-        music,
-        rate,
-        s.start,
-        PROGRESSION[0].bass,
-        s.end - s.start,
-        0.12,
-      );
-      [72, 79, 84].forEach((note, i) =>
-        bell(lead, rate, s.start + i * 0.09, note, 0.09, -0.3 + i * 0.3, 0.9),
-      );
+    if (kind === "break") {
+      // Sustained sub, no pumping bass; a glassy bell arpeggio in eighths.
+      bass(buses, start, BAR - 0.05, chord.root, 0.07);
+      for (let step = 0; step < 8; step++)
+        bell(
+          buses,
+          start + beat(step / 2),
+          midi(chord.tones[(step * 2) % chord.tones.length] + 24),
+          {
+            gain: 0.04 + step * 0.002,
+            decay: 0.45,
+            ratio: 2,
+            index: 0.9,
+            pan: step % 2 ? 0.4 : -0.4,
+            send: 0.7,
+          },
+        );
       continue;
     }
 
-    for (const { t, bar, step } of steps(s)) {
-      const chord = chordOf(bar);
-      const beatStep = step % 4 === 0;
-      const intoIntro = s.kind === "intro" ? Math.min(1, t / s.end + 0.3) : 1;
-
-      // Arpeggio: sixteenths up and down the chord, quiet under the hook.
-      const arp = [0, 1, 2, 3, 2, 1, 2, 3][step % 8];
-      const arpGain = { intro: 0.05, groove: 0.022, break: 0.04 }[s.kind];
-      pluck(
-        music,
-        rate,
-        t,
-        chord.tones[arp] + 12,
-        STEP,
-        arpGain * intoIntro,
-        arp % 2 ? 0.35 : -0.35,
-      );
-
-      if (s.kind === "intro") continue;
-
-      // Hook: A then B, every four bars.
-      const hook = Math.floor(bar / 4) % 2 ? HOOK_B : HOOK_A;
-      for (const [at, note, len] of hook[((bar % 4) + 4) % 4])
-        if (at === step)
-          pluck(
-            lead,
-            rate,
-            t,
-            note,
-            len * STEP,
-            s.kind === "break" ? 0.05 : 0.075,
-            0.08,
-          );
-
-      // Hats: off-beat eighths, quiet sixteenths in between.
-      if (step % 4 === 2)
-        hat(
-          drums,
-          rate,
-          t,
-          s.kind === "break" ? 0.16 : 0.24,
-          s.kind === "groove" && step === 14,
-        );
-      else if (step % 2 === 1) hat(drums, rate, t, 0.07);
-
-      if (s.kind !== "groove") continue;
-
-      if (beatStep) {
-        kick(drums, rate, t, 0.85);
-        kicks.push(t);
+    // The groove: four on the floor, claps on two and four, off-beat hats.
+    for (let step = 0; step < 4; step++)
+      kick(buses, start + beat(step), {
+        gain: kind === "finale" ? 0.64 : 0.55,
+      });
+    clap(buses, start + beat(1));
+    clap(buses, start + beat(3));
+    for (let step = 0; step < 4; step++) {
+      hat(buses, start + beat(step + 0.5), { gain: 0.12, pan: 0.3 });
+      // Busier sixteenths once the questions get going.
+      if (start >= search - 1e-6) {
+        hat(buses, start + beat(step + 0.25), { gain: 0.05, pan: -0.35 });
+        hat(buses, start + beat(step + 0.75), { gain: 0.05, pan: -0.35 });
       }
-      if (step === 4 || step === 12) clap(drums, rate, t, 0.5);
-      for (const [at, interval, len] of BASS)
-        if (at === step)
-          bassNote(
-            music,
-            rate,
-            t,
-            chord.bass + interval,
-            len * STEP * 0.92,
-            0.13,
-          );
+    }
+    if ((start >= budgets - 1e-6 && bar % 2 === 0) || kind === "finale")
+      hat(buses, start + beat(3.5), { gain: 0.07, open: true, pan: 0.15 });
+    if (kind === "finale") crash(buses, start, 0.2);
+
+    // Bass pumps on the off-beats, house-style, over a held root.
+    for (let step = 0; step < 4; step++)
+      bass(buses, start + beat(step + 0.5), beat(0.42), chord.root + 12, 0.14);
+    bass(buses, start, BAR - 0.05, chord.root, 0.08);
+
+    // A plucked arpeggio under the tune from "search" on, louder at the end.
+    if (start >= search - 1e-6) {
+      const pattern = [0, 2, 4, 1, 3, 2, 4, 3];
+      for (let step = 0; step < 16; step++)
+        pluck(
+          buses,
+          start + beat(step / 4),
+          chord.tones[pattern[step % 8] % chord.tones.length] + 12,
+          {
+            gain: (kind === "finale" ? 0.07 : 0.05) + (step % 4 ? 0 : 0.012),
+            pan: step % 2 ? 0.45 : -0.45,
+          },
+        );
     }
   }
 
-  // Into each drop: a riser (and a snare roll out of a break), then a crash.
-  drops.forEach((t, n) => {
-    const before = list.find((s) => s.end === t);
-    const length = !before || before.kind !== "groove" ? Math.min(4, t) : 2;
-    if (length > 0.5) riser(sfx, rate, t, length, 0.3);
-    if (before?.kind === "break")
-      for (let k = 0; k < 16; k++)
-        snare(drums, rate, t - BAR + k * STEP, 0.08 + 0.2 * (k / 15));
-    crash(drums, rate, t, n === 0 ? 0.3 : 0.38);
-  });
-  // Other chapter changes: a quick snare pickup and a light crash.
-  for (const { t } of cues.filter((c) => c.kind === "fill")) {
-    for (let k = 0; k < 4; k++)
-      snare(drums, rate, t - BEAT + k * (BEAT / 4), 0.1 + 0.05 * k);
-    crash(drums, rate, t, 0.18);
-    EFFECTS.whoosh(sfx, rate, { t });
-  }
-  for (const c of cues) EFFECTS[c.kind]?.(sfx, rate, c);
-
-  // Duck the pads and bass under each kick, so the groove breathes.
-  const duck = new Float32Array(length).fill(1);
-  for (const t of kicks) {
-    const from = Math.floor(t * rate);
-    const to = Math.min(length, from + Math.floor(BEAT * rate));
-    for (let i = from; i < to; i++) {
-      const x = (i - from) / rate;
-      duck[i] = Math.min(duck[i], 1 - 0.55 * Math.exp(-x * 9));
-    }
-  }
-
-  const echoes = echo(lead, rate, 0.32);
-  const wet = room(
-    [0, 1].map((side) => {
-      const mix = new Float32Array(length);
-      for (let i = 0; i < length; i++)
-        mix[i] = music[side][i] * 0.6 + lead[side][i] + sfx[side][i] * 0.5;
-      return mix;
-    }),
-    rate,
-    0.1,
+  // The tune underneath: quiet, so the cards carry it. Card notes are played
+  // by their card.
+  const carded = new Set(
+    cues.filter((c) => c.kind === "card").map((c) => c.t.toFixed(4)),
   );
+  for (const n of melody()) {
+    if (n.t >= seconds || carded.has(n.t.toFixed(4))) continue;
+    pluck(buses, n.t, n.note, { gain: 0.05, decay: 0.14, pan: -0.05 });
+  }
 
-  // Sum, fade, soft-limit and normalise. The groove is denser than the social
-  // cut, so it peaks at -4 dBFS to land near its loudness (about -15 LUFS).
-  const fadeIn = 0.05 * rate;
-  const fadeOut = Math.min(1.5 * rate, length / 3);
-  const out = bus(length);
+  // Into the first drop: a riser and a snare roll; every drop hits.
+  const drops = cues.filter((c) => c.kind === "drop").map((c) => c.t);
+  if (drops[0] !== undefined) {
+    riser(buses, drops[0], BAR, 81);
+    roll(buses, drops[0], 2);
+  }
+  for (const t of drops) impact(buses, t, { gain: 0.8, crash: 0.28 });
+  // Out of the break: a riser and a roll back into the drums.
+  if (drops[1] !== undefined) {
+    riser(buses, drops[1], BAR, 82, 0.25);
+    roll(buses, drops[1], 1);
+  }
+  // The finale builds into the end card: a full-bar roll and a long riser,
+  // then the logo lands on Cmaj9 and rings.
+  const outro = first("outro");
+  if (outro !== undefined && outro < seconds) {
+    roll(buses, outro, 4, 0.05, 0.26);
+    riser(buses, outro, 2 * BAR, 83, 0.32);
+    impact(buses, outro, { gain: 1.1, crash: 0.34 });
+    const ring = seconds - outro;
+    const { tones, root } = chordOf(Math.floor(outro / BAR + 1e-6));
+    pad(buses, outro, ring - 0.3, tones, {
+      gain: 0.05,
+      cutoff: 3200,
+      attack: 0.01,
+      release: 0.9,
+      duck: 0,
+    });
+    bass(buses, outro, ring - 0.4, root - 12, 0.12);
+    [72, 76, 79, 83, 86, 91].forEach((note, index) =>
+      bell(buses, outro + beat(0.55) + index * 0.06, midi(note), {
+        gain: 0.045,
+        decay: 0.9,
+        ratio: 2,
+        index: 0.8,
+        pan: -0.6 + index * 0.24,
+        send: 0.7,
+      }),
+    );
+  }
+
+  for (const c of cues) SOUNDS[c.kind]?.(buses, c);
+}
+
+// ── Mixdown ─────────────────────────────────────────────────────────────────
+export function renderScore({ seconds, cues = [] }) {
+  LENGTH = Math.round(seconds * SAMPLE_RATE);
+  // The pump follows every kick of the groove.
+  const kicks = [];
+  const bars = Math.min(SONG_BARS, Math.ceil(seconds / BAR));
+  for (let bar = 0; bar < bars; bar++) {
+    const kind = sectionAt(cues, bar * BAR + 1e-6);
+    if (["worry", "rearview", "turn"].includes(sectionOf(bar))) continue;
+    if (kind === "groove" || kind === "finale")
+      for (let step = 0; step < 4; step++) kicks.push(bar * BAR + beat(step));
+  }
+  duckCurve = new Float32Array(LENGTH);
+  let next = 0;
+  let latest = -1;
+  for (let index = 0; index < LENGTH; index++) {
+    const time = index / SAMPLE_RATE;
+    while (next < kicks.length && kicks[next] <= time) latest = kicks[next++];
+    duckCurve[index] = latest < 0 ? 0 : Math.exp(-(time - latest) / 0.11);
+  }
+
+  const buses = { dry: makeBus(), wet: makeBus() };
+  arrange(buses, cues, seconds);
+  const tail = reverb(buses.wet);
+
+  const left = new Float32Array(LENGTH);
+  const right = new Float32Array(LENGTH);
+  const highLeft = new Biquad("highpass", 36);
+  const highRight = new Biquad("highpass", 36);
   let peak = 0;
-  for (let side = 0; side < 2; side++)
-    for (let i = 0; i < length; i++) {
-      const g = Math.min(1, i / fadeIn, (length - i) / fadeOut);
-      const v =
-        music[side][i] * duck[i] +
-        lead[side][i] +
-        echoes[side][i] +
-        drums[side][i] +
-        sfx[side][i] +
-        wet[side][i];
-      out[side][i] = Math.tanh(v * g * 1.1);
-      peak = Math.max(peak, Math.abs(out[side][i]));
-    }
-  const gain = peak > 0 ? 0.63 / peak : 1;
-  for (const side of out) for (let i = 0; i < length; i++) side[i] *= gain;
-  return out;
+  for (let index = 0; index < LENGTH; index++) {
+    const time = index / SAMPLE_RATE;
+    // Follow the picture's fade to black.
+    const fade =
+      time > seconds - 0.4 ? Math.max(0, (seconds - time) / 0.4) ** 1.5 : 1;
+    const l =
+      highLeft.process(buses.dry.left[index] + tail.left[index] * 0.9) * fade;
+    const r =
+      highRight.process(buses.dry.right[index] + tail.right[index] * 0.9) *
+      fade;
+    // Gentle saturation glues the mix.
+    left[index] = Math.tanh(l * 1.15);
+    right[index] = Math.tanh(r * 1.15);
+    peak = Math.max(peak, Math.abs(left[index]), Math.abs(right[index]));
+  }
+  // Leave headroom for inter-sample peaks so the AAC encode never clips.
+  const normalise = peak > 0 ? 0.7 / peak : 1;
+  for (let index = 0; index < LENGTH; index++) {
+    left[index] *= normalise;
+    right[index] *= normalise;
+  }
+  return [left, right];
 }
 
 export { writeWav } from "./calmScore.mjs";

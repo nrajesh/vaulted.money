@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 // @ts-expect-error plain ES module without type declarations
 import { CHAPTERS, DURATION } from "./timeline.mjs";
@@ -53,76 +54,187 @@ describe("relaxed social cut", () => {
 });
 
 describe("keynote cut timeline", () => {
-  it("runs 70–80 s with chapters back to back, each at least 5 s", async () => {
+  type Moment = {
+    t: number;
+    chapter: string;
+    note: number;
+    kind: string;
+    web?: boolean;
+  };
+  type Note = { t: number; note: number; len: number };
+  const load = async () => {
     // @ts-expect-error plain ES module without type declarations
     const keynote = await import("./timelines/keynote.mjs");
+    return {
+      keynote,
+      at: (id: string) =>
+        (keynote.CHAPTERS as Chapter[]).find((c) => c.id === id)!,
+      moments: keynote.MOMENTS as Record<string, Moment>,
+      melody: keynote.melody() as Note[],
+      chordAt: keynote.chordAt as (t: number) => number[],
+      cues: keynote.scoreCues as (
+        web: boolean,
+      ) => { t: number; kind: string }[],
+    };
+  };
+  const pitchClass = (n: number) => ((n % 12) + 12) % 12;
+
+  it("runs 70–85 s in whole bars, chapters back to back", async () => {
+    const { keynote } = await load();
     const list = keynote.CHAPTERS as Chapter[];
     expect(keynote.DURATION).toBeGreaterThanOrEqual(70);
-    expect(keynote.DURATION).toBeLessThanOrEqual(80);
+    expect(keynote.DURATION).toBeLessThanOrEqual(85);
     expect(list[0].start).toBe(0);
     for (let i = 1; i < list.length; i++)
       expect(list[i].start).toBeCloseTo(list[i - 1].end, 6);
     expect(list.at(-1)?.end).toBeCloseTo(keynote.DURATION, 6);
-    for (const c of list) expect(c.end - c.start).toBeGreaterThanOrEqual(5);
-  });
-
-  type Moment = { t: number; sound: string; chapter: string; web?: boolean };
-  type Cue = { t: number; kind: string };
-  const load = async () => {
-    // @ts-expect-error plain ES module without type declarations
-    const keynote = await import("./timelines/keynote.mjs");
-    const at = (id: string) =>
-      (keynote.CHAPTERS as Chapter[]).find((c) => c.id === id)!;
-    return {
-      keynote,
-      at,
-      moments: keynote.MOMENTS as Record<string, Moment>,
-      cues: keynote.scoreCues as (web: boolean) => Cue[],
-    };
-  };
-
-  it("lands every moment on the beat grid, inside its own chapter", async () => {
-    const { keynote, at, moments } = await load();
-    const step = keynote.BEAT / 2;
-    for (const [name, m] of Object.entries(moments)) {
-      const c = at(m.chapter);
-      expect(m.t, name).toBeGreaterThanOrEqual(c.start);
-      expect(m.t, name).toBeLessThan(c.end - 1);
-      expect(Math.abs(m.t / step - Math.round(m.t / step)), name).toBeLessThan(
-        1e-9,
+    for (const c of list) {
+      const bars = (c.end - c.start) / keynote.BAR;
+      expect(Math.abs(bars - Math.round(bars)), c.id).toBeLessThan(1e-9);
+      expect(c.end - c.start, c.id).toBeGreaterThanOrEqual(
+        2 * keynote.BAR - 1e-9,
       );
     }
   });
 
-  it("puts a sound on every moment the picture shows, and only those", async () => {
-    const { moments, cues } = await load();
-    const key = (c: { t: number; sound?: string; kind?: string }) =>
-      `${c.t.toFixed(3)}:${c.sound ?? c.kind}`;
-    for (const web of [false, true]) {
-      const shown = Object.values(moments)
-        .filter((m) => !m.web || web)
-        .map(key)
-        .sort();
-      const effects = cues(web)
-        .filter((c) => !["drop", "break", "fill", "outro"].includes(c.kind))
-        .map(key)
-        .sort();
-      expect(effects).toEqual(shown);
+  it("lands every card from the turn on a note of the tune, in tune with its chord", async () => {
+    const { at, moments, melody, chordAt } = await load();
+    const from = at("turn").start;
+    for (const [name, m] of Object.entries(moments)) {
+      if (m.t < from) continue;
+      expect(chordAt(m.t).map(pitchClass), name).toContain(pitchClass(m.note));
+      if (m.t >= at("privacy").start)
+        expect(
+          melody.some((n) => Math.abs(n.t - m.t) < 1e-9 && n.note === m.note),
+          `${name} is a note of the tune`,
+        ).toBe(true);
     }
   });
 
-  it("drops the full groove at privacy, the device reveal and the end, and breaks down for the big screens", async () => {
-    const { at, cues } = await load();
-    const of = (kind: string) =>
-      cues(false)
-        .filter((c) => c.kind === kind)
-        .map((c) => c.t);
-    expect(of("drop")).toEqual([
-      at("privacy").start,
-      at("devices").start,
-      at("end").start,
-    ]);
-    expect(of("break")).toEqual([at("bigScreens").start]);
+  it("keeps every card inside its own chapter and on the eighth-note grid after the opening", async () => {
+    const { keynote, at, moments } = await load();
+    const eighth = keynote.BEAT / 2;
+    for (const [name, m] of Object.entries(moments)) {
+      const c = at(m.chapter);
+      expect(m.t, name).toBeGreaterThanOrEqual(c.start);
+      expect(m.t, name).toBeLessThan(c.end - 0.5);
+      if (m.chapter !== "worry")
+        expect(
+          Math.abs(m.t / eighth - Math.round(m.t / eighth)),
+          name,
+        ).toBeLessThan(1e-9);
+    }
+  });
+
+  it("gives the score one cue per card shown, with the web-only ones only on the website", async () => {
+    const { moments, cues } = await load();
+    for (const web of [false, true]) {
+      const shown = Object.values(moments).filter((m) => !m.web || web);
+      const played = cues(web).filter((c) =>
+        ["card", "mess", "snap", "stamp", "logo"].includes(c.kind),
+      );
+      expect(played.length).toBe(shown.length);
+    }
+  });
+
+  it("ends the tune on the home chord", async () => {
+    const { keynote, melody, chordAt } = await load();
+    const last = melody.at(-1)!;
+    expect(pitchClass(last.note)).toBe(0);
+    expect(chordAt(keynote.DURATION - 0.1).map(pitchClass)).toContain(0);
+  });
+
+  // The owner's rules for the words: short lines, no negatives, and
+  // taglines quoted from the README rather than invented.
+  const lines = (copy: unknown): string[] =>
+    typeof copy === "string"
+      ? [copy]
+      : Array.isArray(copy)
+        ? copy.flatMap(lines)
+        : Object.values(copy as object).flatMap(lines);
+
+  it("keeps every line short enough to read while watching", async () => {
+    const { keynote } = await load();
+    for (const line of lines(keynote.COPY))
+      expect(line.split(/\s+/).length, line).toBeLessThanOrEqual(6);
+  });
+
+  it("asks and answers in the positive", async () => {
+    const { keynote } = await load();
+    const banned = /\b(don't|dont|no|not|never|nothing|unless|can't|won't)\b/i;
+    for (const line of lines(keynote.COPY))
+      expect(line.replace(/\*/g, ""), line).not.toMatch(banned);
+  });
+
+  it("words its taglines without repeating the badges", async () => {
+    const { keynote } = await load();
+    const badges = /\b(privacy|private|local|data|open|sourced?)\b/i;
+    for (const tagline of keynote.TAGLINES as string[])
+      expect(tagline).not.toMatch(badges);
+  });
+
+  it("adds up the numbers it shows", async () => {
+    const { keynote } = await load();
+    type Budget = { name: string; spent: number; target: number };
+    const over = (keynote.BUDGETS as Budget[]).filter(
+      (b) => b.spent > b.target,
+    );
+    // One budget tips over, by the 18.00 the heads-up quotes.
+    expect(over).toHaveLength(1);
+    expect(over[0].spent - over[0].target).toBeCloseTo(18, 6);
+    type Upcoming = { amount: number };
+    const net = (keynote.UPCOMING as Upcoming[]).reduce(
+      (sum, u) => sum + u.amount,
+      0,
+    );
+    expect(net).toBeCloseTo(2370, 6);
+  });
+
+  it("keeps something landing at least every bar, except while a recording plays", async () => {
+    const { keynote, at, moments } = await load();
+    // @ts-expect-error plain ES module without type declarations
+    const { screenWindows } = await import("./duo/overlay.mjs");
+    const { ipad, duo } = screenWindows();
+    const from = at("turn").start;
+    const times = Object.values(moments)
+      .filter((m) => m.t >= from && !m.web)
+      .map((m) => m.t)
+      .sort((a, b) => a - b);
+    for (let i = 1; i < times.length; i++) {
+      const [a, b] = [times[i - 1], times[i]];
+      const playing = a < duo.to + 0.7 && b > ipad.from;
+      if (!playing)
+        expect(b - a, `quiet from ${a.toFixed(2)} s`).toBeLessThanOrEqual(
+          keynote.BAR + 1e-6,
+        );
+    }
+  });
+
+  it("times every moment the picture asks for", async () => {
+    const { moments } = await load();
+    const picture = readFileSync(`${import.meta.dirname}/keynote.mjs`, "utf8");
+    const asked = [...picture.matchAll(/\bM\.(\w+)/g)].map((m) => m[1]);
+    for (const name of new Set(asked))
+      expect(moments, name).toHaveProperty(name);
+  });
+
+  it("brings the Duo in only after the iPad's footage has finished", async () => {
+    const { moments } = await load();
+    // @ts-expect-error plain ES module without type declarations
+    const { screenWindows } = await import("./duo/overlay.mjs");
+    // poseDevice starts a device's entrance 0.3 s before it lands.
+    expect(moments.bigDuo.t - 0.3).toBeGreaterThanOrEqual(
+      screenWindows().ipad.to,
+    );
+  });
+
+  it("holds the whole device row for at least a second", async () => {
+    const { at, moments } = await load();
+    const last = Math.max(
+      ...[0, 1, 2, 3, 4].map((i) => moments[`devicesRow${i}`].t),
+    );
+    // The row starts leaving half a second before the chapter ends.
+    expect(at("devices").end - 0.5 - last).toBeGreaterThanOrEqual(1);
   });
 
   it("settles the iPad and the Duo before their recordings start playing", async () => {

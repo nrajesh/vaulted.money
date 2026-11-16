@@ -51,7 +51,7 @@ const option = (name, fallback) => {
     : fallback;
 };
 
-// --cut social (the original fast cut) or keynote (the 78 s tour);
+// --cut social (the original fast cut) or keynote (the 80 s film);
 // --web adds the website ending to the keynote cut (written as
 // ...-keynote-site.mp4, so it never clashes with a "-web" light copy).
 const cut = option("cut", "social");
@@ -443,12 +443,20 @@ export function encodeWebCopy(masterFile) {
   });
 }
 
-/** The keynote cut uses the store screenshot captures (run them first). */
+/** The keynote cut uses the store screenshot captures and, for its finale, the social cut's (run both first). */
 function copyKeynoteScreens() {
   const from = join(ROOT, "../store-screenshots/out/captures");
   if (!existsSync(from))
     throw new Error(
       "No store captures yet: run pnpm marketing:screenshots first",
+    );
+  // The finale cuts through the social cut's captures.
+  const missing = timeline.MONTAGE.map(([name]) => name).filter(
+    (name) => !existsSync(join(OUT_DIR, "screens", `${name}.png`)),
+  );
+  if (missing.length)
+    throw new Error(
+      `The keynote's finale needs the social cut's captures (${missing.join(", ")}): run pnpm showreel:capture first`,
     );
   const to = join(OUT_DIR, "keynote");
   mkdirSync(to, { recursive: true });
