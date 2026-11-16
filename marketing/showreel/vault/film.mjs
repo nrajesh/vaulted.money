@@ -13,6 +13,7 @@ import {
   CHAPTERS as C,
   COPY,
   DURATION,
+  BADGES,
   TAGLINE,
   moments,
 } from "./timeline.mjs";
@@ -36,18 +37,36 @@ const set = (node, props) => {
 const SCREEN = { w: 414, h: 900, pad: 10, bar: 34 };
 const VIEW = { cx: 1390, cy: 540 }; // where the camera looks, right of the words
 
-/** Where a point of the screen (fractions) lands on the stage for a pose. */
-const place = (pose, fx, fy) => ({
-  x: pose.left + (SCREEN.pad + fx * SCREEN.w) * pose.scale,
-  y: pose.top + (SCREEN.pad + SCREEN.bar + fy * SCREEN.h) * pose.scale,
+/** The phone's own point (px) for a point of the screen (fractions). */
+const local = (fx, fy) => ({
+  x: SCREEN.pad + fx * SCREEN.w,
+  y: SCREEN.pad + SCREEN.bar + fy * SCREEN.h,
 });
-/** A pose that puts the screen point (fx, fy) at (cx, cy). */
-const look = (scale, fx, fy, cx = VIEW.cx, cy = VIEW.cy) => ({
+/**
+ * A pose: the screen point (fx, fy) sits at (cx, cy) at `scale`, and the
+ * phone is turned about that point by `ry` (left-right) and `rx` (up-down)
+ * degrees, so every beat shows it from a different angle.
+ */
+const look = (scale, fx, fy, ry = 0, rx = 0, cx = VIEW.cx, cy = VIEW.cy) => ({
   scale,
-  left: cx - (SCREEN.pad + fx * SCREEN.w) * scale,
-  top: cy - (SCREEN.pad + SCREEN.bar + fy * SCREEN.h) * scale,
+  fx,
+  fy,
+  ry,
+  rx,
+  cx,
+  cy,
 });
+/** Where a screen point lands on the stage for a pose seen straight on. */
+const place = (pose, fx, fy) => {
+  const o = local(pose.fx, pose.fy);
+  const p = local(fx, fy);
+  return {
+    x: pose.cx + (p.x - o.x) * pose.scale,
+    y: pose.cy + (p.y - o.y) * pose.scale,
+  };
+};
 
+const TURN = 2; // how far the phone turns for each degree in the camera list
 const WHOLE = 1.1; // the whole phone, nearly the height of the frame
 let M; // moments, known once the query length is
 let NOTES;
@@ -74,9 +93,9 @@ function caption(text, theme, extra = "") {
 }
 /** Words rise in from `start`; everything fades by `end`. */
 function poseCaption(node, t, start, end) {
-  const out = 1 - tween(t, end - 0.45, end, ease.inCubic);
+  const out = 1 - tween(t, end - 0.3, end, ease.inCubic);
   [...node.querySelectorAll(".word")].forEach((w, i) => {
-    const p = tween(t, start + i * 0.06, start + i * 0.06 + 0.55);
+    const p = tween(t, start + i * 0.05, start + i * 0.05 + 0.38);
     set(w, { opacity: p * out, transform: `translateY(${(1 - p) * 40}px)` });
   });
   set(node, {
@@ -85,7 +104,7 @@ function poseCaption(node, t, start, end) {
   return out;
 }
 const fadeIn = (node, t, at, out = 1) => {
-  const p = tween(t, at, at + 0.5);
+  const p = tween(t, at, at + 0.35);
   set(node, { opacity: p * out, transform: `translateY(${(1 - p) * 22}px)` });
 };
 
@@ -157,9 +176,11 @@ const desktop = el(
 );
 
 const [first, second] = TAGLINE.split(". ");
+const badges = BADGES.map((b) => `<span>${b}</span>`).join("");
 const end = el(`<div id="end">${logoSvg("end", "dark")}
   <h2>Vaulted <em>Money</em></h2>
   <div class="tag"><span class="a">${first}.</span> <span class="b">${second}</span></div>
+  <div class="badges">${badges}</div>
   <div class="action">${COPY.action}</div></div>`);
 const black = el('<div id="black"></div>');
 
@@ -189,33 +210,36 @@ function buildCamera() {
   const su = NOTES["search-understood"];
   const b = NOTES.budgets;
   const whole = look(WHOLE, 0.5, 0.5);
+  const ringY = ring.y + ring.h / 2;
+  const budgetY = (b.over.y + b.left.y) / 2;
   CAMERA = [
     [C.turn.start, whole],
-    [C.where.start + 0.9, whole],
-    [C.where.start + 2.2, look(2.05, 0.5, ring.y + ring.h / 2)],
-    [C.where.start + 4.0, look(2.05, 0.5, ring.y + ring.h / 2)],
-    [C.where.start + 4.9, look(2.05, 0.5, 0.36)],
-    [C.ask.start - 0.2, look(2.05, 0.5, 0.36)],
-    [C.ask.start + 0.5, look(2.05, 0.5, su.input.y + 0.04)],
-    [M.askUnderstood, look(2.05, 0.5, su.input.y + 0.04)],
-    [M.askUnderstood + 0.8, look(2.05, 0.5, su.apply.y + 0.04)],
-    [M.askApply, look(2.05, 0.5, su.apply.y + 0.04)],
-    [M.askResult + 0.8, look(1.3, 0.5, 0.47)],
-    [C.track.start - 0.2, look(1.3, 0.5, 0.47)],
-    [C.track.start + 1.0, look(1.75, 0.5, (b.over.y + b.left.y) / 2)],
-    [C.ahead.start - 0.2, look(1.75, 0.5, (b.over.y + b.left.y) / 2)],
-    [C.ahead.start + 0.8, look(1.2, 0.5, 0.46)],
-    [C.ahead.start + 2.4, look(1.2, 0.5, 0.46)],
-    [C.ahead.start + 3.6, look(1.95, 0.5, 0.44)],
-    [C.only.start - 0.1, look(1.95, 0.5, 0.44)],
-    [C.only.start + 1.0, whole],
-    [M.dark + 0.3, whole],
-    [M.offlineKeys[0], look(1.6, 0.5, 0.25)],
-    [M.offlineApply, look(1.6, 0.5, 0.25)],
-    [M.offlineResult + 0.9, whole],
+    [C.where.start - 0.3, whole],
+    [C.where.start + 0.5, look(WHOLE, 0.5, 0.5, -16, 3)],
+    [C.where.start + 1.3, look(2.05, 0.5, ringY, -12, 4)],
+    [C.where.start + 2.3, look(2.1, 0.5, ringY, -4, 3)],
+    [C.where.start + 3.0, look(2.05, 0.5, 0.36, 12, 2)],
+    [C.ask.start - 0.2, look(2.05, 0.5, 0.36, 14, 2)],
+    [C.ask.start + 0.35, look(2.05, 0.5, su.input.y + 0.04, -10, 4)],
+    [M.askUnderstood, look(2.1, 0.5, su.input.y + 0.04, -6, 3)],
+    [M.askUnderstood + 0.6, look(2.05, 0.5, su.apply.y + 0.04, 8, 2)],
+    [M.askApply, look(2.1, 0.5, su.apply.y + 0.04, 10, 2)],
+    [M.askResult + 0.6, look(1.3, 0.5, 0.47, -14, 3)],
+    [C.track.start - 0.2, look(1.34, 0.5, 0.47, -10, 3)],
+    [C.track.start + 0.7, look(1.75, 0.5, budgetY, 14, 5)],
+    [C.ahead.start - 0.2, look(1.8, 0.5, budgetY, 9, 4)],
+    [C.ahead.start + 0.6, look(1.2, 0.5, 0.46, -15, 2)],
+    [C.ahead.start + 1.6, look(1.24, 0.5, 0.46, -11, 2)],
+    [C.ahead.start + 2.4, look(1.95, 0.5, 0.44, 8, 5)],
+    [C.only.start - 0.1, look(2.0, 0.5, 0.44, 5, 4)],
+    [C.only.start + 0.8, whole],
+    [M.dark + 0.2, whole],
+    [M.offlineKeys[0], look(1.6, 0.5, 0.25, 11, 3)],
+    [M.offlineApply, look(1.64, 0.5, 0.25, 6, 3)],
+    [M.offlineResult + 0.6, whole],
     [C.devices.start - 0.1, whole],
-    [C.devices.start + 1.0, look(0.8, 0.5, 0.5, 270, 660)],
-    [DURATION, look(0.8, 0.5, 0.5, 270, 660)],
+    [C.devices.start + 0.8, look(0.8, 0.5, 0.5, 20, 0, 270, 660)],
+    [DURATION, look(0.8, 0.5, 0.5, 14, 0, 270, 660)],
   ];
 }
 function cameraAt(t) {
@@ -225,11 +249,9 @@ function cameraAt(t) {
     if (t > t1) continue;
     const [t0, a] = CAMERA[i - 1];
     const p = tween(t, t0, t1, ease.inOutCubic);
-    return {
-      scale: lerp(a.scale, b.scale, p),
-      left: lerp(a.left, b.left, p),
-      top: lerp(a.top, b.top, p),
-    };
+    return Object.fromEntries(
+      Object.keys(a).map((key) => [key, lerp(a[key], b[key], p)]),
+    );
   }
   return CAMERA.at(-1)[1];
 }
@@ -240,14 +262,14 @@ const pad = (n) => String(n).padStart(2, "0");
 const typedCount = (t, keys) => keys.filter((k) => t >= k).length;
 
 function shotAt(t) {
-  const fade = (from, to, at, len = 0.45) => {
+  const fade = (from, to, at, len = 0.3) => {
     const mix = tween(t, at, at + len, ease.inOutCubic);
     return mix <= 0 ? [from] : mix >= 1 ? [to] : [from, to, mix];
   };
   if (t < C.where.start + 0.25)
     return fade("list", "charts", C.where.start - 0.2);
   if (t < C.ask.start - 0.25)
-    return fade("charts", "charts-categories", C.where.start + 4.1, 0.7);
+    return fade("charts", "charts-categories", C.where.start + 2.55, 0.2);
   if (t < M.askKeys[0])
     return fade("charts-categories", "search-00", C.ask.start - 0.25);
   if (t < M.askUnderstood) return [`search-${pad(typedCount(t, M.askKeys))}`];
@@ -256,8 +278,8 @@ function shotAt(t) {
     return fade("search-result", "budgets", C.track.start - 0.2);
   if (t < C.ahead.start + 0.3)
     return fade("budgets", "calendar", C.ahead.start - 0.2);
-  if (t < M.offlineKeys[0] - 0.4)
-    return fade("calendar", "dark-list", M.dark, 0.5);
+  if (t < M.offlineKeys[0] - 0.3)
+    return fade("calendar", "dark-list", M.dark, 0.4);
   if (t < M.offlineKeys[0]) return ["offline-00"];
   if (t < M.offlineUnderstood)
     return [`offline-${pad(typedCount(t, M.offlineKeys))}`];
@@ -287,8 +309,8 @@ function render(seconds) {
   // from the status bar as the network goes off. Never a fade through grey.
   const lightP = tween(
     t,
-    C.turn.start + 1.3,
-    C.turn.start + 2.5,
+    C.turn.start + 0.8,
+    C.turn.start + 1.7,
     ease.inOutCubic,
   );
   const centre = place(look(WHOLE, 0.5, 0.5), 0.5, 0.5);
@@ -296,7 +318,7 @@ function render(seconds) {
     clipPath: `circle(${lightP * 2300}px at ${centre.x}px ${centre.y}px)`,
     visibility: t < M.dark + 1.3 ? "visible" : "hidden",
   });
-  const darkP = tween(t, M.dark, M.dark + 1.1, ease.inOutCubic);
+  const darkP = tween(t, M.dark, M.dark + 0.8, ease.inOutCubic);
   const bar = place(look(WHOLE, 0.5, 0.5), 0.86, -0.02);
   set(bgDark, {
     clipPath: `circle(${darkP * 2400}px at ${bar.x}px ${bar.y}px)`,
@@ -306,19 +328,19 @@ function render(seconds) {
   {
     const fly = tween(
       t,
-      C.turn.start + 0.5,
-      C.turn.start + 1.7,
+      C.turn.start + 0.3,
+      C.turn.start + 1.1,
       ease.inOutCubic,
     );
-    const gone = tween(t, C.turn.start + 1.7, C.turn.start + 2.1);
+    const gone = tween(t, C.turn.start + 1.1, C.turn.start + 1.4);
     const landing = look(WHOLE, 0.5, 0.5);
     worries.forEach((w, i) => {
       const drift = Math.sin(t * 0.7 + i * 1.7) * 14;
       const inP = w.row
         ? 1
-        : 1 - tween(t, C.turn.start + 0.2, C.turn.start + 0.9);
+        : 1 - tween(t, C.turn.start + 0.1, C.turn.start + 0.6);
       let x = w.x + drift;
-      let y = w.y + Math.cos(t * 0.6 + i) * 10 - t * 6;
+      let y = w.y + Math.cos(t * 0.6 + i) * 10 - t * 14;
       let size = 1;
       let rotate = w.rotate;
       if (w.row) {
@@ -334,19 +356,27 @@ function render(seconds) {
         opacity: inP * (1 - gone),
         transform: `rotate(${rotate}deg) scale(${size})`,
         transformOrigin: "0 0",
-        visibility: t < C.turn.start + 2.1 ? "visible" : "hidden",
+        visibility: t < C.turn.start + 1.4 ? "visible" : "hidden",
       });
     });
   }
 
   // Phone
   {
-    const inP = tween(t, C.turn.start + 0.1, C.turn.start + 1.1, ease.outQuart);
-    const outP = tween(t, C.end.start - 0.5, C.end.start, ease.inCubic);
+    const inP = tween(
+      t,
+      C.turn.start + 0.05,
+      C.turn.start + 0.8,
+      ease.outQuart,
+    );
+    const outP = tween(t, C.end.start - 0.35, C.end.start, ease.inCubic);
+    const origin = local(pose.fx, pose.fy);
     set(phone, {
-      left: `${pose.left}px`,
-      top: `${pose.top + (1 - inP) * 260}px`,
-      transform: `scale(${pose.scale})`,
+      left: `${pose.cx - origin.x}px`,
+      top: `${pose.cy - origin.y + (1 - inP) * 260}px`,
+      transformOrigin: `${origin.x}px ${origin.y}px`,
+      // Bold enough to read as a turn: a close lens, and a slight roll with it.
+      transform: `perspective(1300px) rotateY(${pose.ry * TURN}deg) rotateX(${pose.rx * 1.5}deg) rotateZ(${pose.ry * -0.1}deg) scale(${pose.scale})`,
       opacity: inP * (1 - outP),
       visibility: t >= C.turn.start && t < C.end.start ? "visible" : "hidden",
     });
@@ -358,8 +388,8 @@ function render(seconds) {
     if (net.innerHTML !== want) net.innerHTML = want;
 
     // The hexagon closes around the phone on "Only you."
-    const drawP = tween(t, M.onlyYou, M.onlyYou + 1.4, ease.inOutCubic);
-    const hexOut = tween(t, C.devices.start - 0.4, C.devices.start);
+    const drawP = tween(t, M.onlyYou, M.onlyYou + 0.9, ease.inOutCubic);
+    const hexOut = tween(t, C.devices.start - 0.3, C.devices.start);
     set(hex.querySelector("polygon"), {
       strokeDasharray: "1",
       strokeDashoffset: 1 - drawP,
@@ -368,15 +398,15 @@ function render(seconds) {
   }
 
   // Words
-  poseCaption(capWorry, t, -1, C.turn.start + 0.5);
+  poseCaption(capWorry, t, -1, C.turn.start + 0.4);
   {
-    const out = 1 - tween(t, C.where.start - 0.45, C.where.start, ease.inCubic);
-    const p = tween(t, C.turn.start + 2.0, C.turn.start + 2.7);
+    const out = 1 - tween(t, C.where.start - 0.3, C.where.start, ease.inCubic);
+    const p = tween(t, C.turn.start + 1.2, C.turn.start + 1.6);
     set(capBrand, {
       opacity: p * out,
       transform: `translateY(${(1 - p) * 30}px)`,
       visibility:
-        t >= C.turn.start + 1.9 && t < C.where.start ? "visible" : "hidden",
+        t >= C.turn.start + 1.1 && t < C.where.start ? "visible" : "hidden",
     });
   }
   poseCaption(capWhere, t, C.where.start + 0.1, C.ask.start);
@@ -385,16 +415,16 @@ function render(seconds) {
     const n = typedCount(t, M.askKeys);
     const text = `${NOTES.query.slice(0, n)}<span class="caret"></span>`;
     if (typed.innerHTML !== text) typed.innerHTML = text;
-    const out = 1 - tween(t, M.askUnderstood + 0.9, M.askUnderstood + 1.3);
+    const out = 1 - tween(t, M.askUnderstood + 0.6, M.askUnderstood + 0.9);
     set(capTyped, {
       opacity: tween(t, C.ask.start + 0.1, C.ask.start + 0.4) * out,
       visibility:
-        t >= C.ask.start && t < M.askUnderstood + 1.3 ? "visible" : "hidden",
+        t >= C.ask.start && t < M.askUnderstood + 0.9 ? "visible" : "hidden",
     });
   }
   {
-    const out = poseCaption(capAsk, t, M.askUnderstood + 1.3, C.track.start);
-    fadeIn(capAsk.querySelector(".note"), t, M.askUnderstood + 2.2, out);
+    const out = poseCaption(capAsk, t, M.askUnderstood + 0.9, C.track.start);
+    fadeIn(capAsk.querySelector(".note"), t, M.askUnderstood + 1.6, out);
   }
   poseCaption(capTrack, t, C.track.start + 0.1, C.ahead.start);
   poseCaption(capAhead, t, C.ahead.start + 0.1, C.only.start);
@@ -402,7 +432,7 @@ function render(seconds) {
     // The question stays while the picture turns dark and the network goes off.
     const out = poseCaption(capWho, t, C.only.start + 0.1, M.onlyYou);
     capWho.className = `cap on-${dark ? "dark" : "light"}`;
-    fadeIn(capWho.querySelector(".note"), t, M.dark + 0.5, out);
+    fadeIn(capWho.querySelector(".note"), t, M.dark + 0.3, out);
   }
   {
     const out = poseCaption(capOnly, t, M.onlyYou, C.devices.start);
@@ -410,25 +440,26 @@ function render(seconds) {
       fadeIn(line, t, M.proof[i], out);
     });
   }
-  poseCaption(capDevices, t, C.devices.start + 0.2, C.end.start);
+  poseCaption(capDevices, t, C.devices.start + 0.55, C.end.start);
 
   // Device family: the tablet and the desktop arrive beside the phone.
   {
-    const out = 1 - tween(t, C.end.start - 0.5, C.end.start, ease.inCubic);
+    const out = 1 - tween(t, C.end.start - 0.35, C.end.start, ease.inCubic);
     [
-      [tablet, 500, 290, 540, 0.5],
-      [desktop, 1080, 400, 800, 0.8],
-    ].forEach(([node, x, y, width, delay]) => {
+      [tablet, 500, 290, 540, 0.3, 6],
+      [desktop, 1080, 400, 800, 0.55, -14],
+    ].forEach(([node, x, y, width, delay, turn]) => {
       const p = tween(
         t,
         C.devices.start + delay,
-        C.devices.start + delay + 0.9,
+        C.devices.start + delay + 0.7,
         ease.outQuart,
       );
       set(node, {
         left: `${x}px`,
         top: `${y + (1 - p) * 200}px`,
         width: `${width}px`,
+        transform: `perspective(1300px) rotateY(${turn * 1.6 + (1 - p) * 24}deg)`,
         opacity: p * out,
         visibility: t >= C.devices.start + delay ? "visible" : "hidden",
       });
@@ -439,16 +470,17 @@ function render(seconds) {
   {
     const s = C.end.start;
     set(end, { visibility: t >= s ? "visible" : "hidden" });
-    const logoP = tween(t, s + 0.1, s + 1.0, ease.outQuart);
+    const logoP = tween(t, s + 0.05, s + 0.6, ease.outQuart);
     set(end.querySelector(".logo-svg"), {
       opacity: logoP,
       transform: `scale(${lerp(0.85, 1, logoP)})`,
     });
-    set(end.querySelector("h2"), { opacity: tween(t, s + 0.5, s + 1.1) });
-    fadeIn(end.querySelector(".a"), t, s + 1.3);
-    fadeIn(end.querySelector(".b"), t, s + 2.2);
-    fadeIn(end.querySelector(".action"), t, s + 3.2);
-    set(black, { opacity: tween(t, DURATION - 0.7, DURATION, ease.inCubic) });
+    set(end.querySelector("h2"), { opacity: tween(t, s + 0.3, s + 0.7) });
+    fadeIn(end.querySelector(".a"), t, s + 0.8);
+    fadeIn(end.querySelector(".b"), t, s + 1.35);
+    fadeIn(end.querySelector(".badges"), t, s + 1.9);
+    fadeIn(end.querySelector(".action"), t, s + 2.3);
+    set(black, { opacity: tween(t, DURATION - 0.5, DURATION, ease.inCubic) });
   }
 }
 

@@ -1,7 +1,8 @@
 /**
  * The clock and the words of "You see everything. We see nothing.".
  *
- * 27 bars at 108 BPM = 60 s. The film proves its tagline in order: three
+ * 19 bars at 108 BPM = 42 s, cut fast: no beat lasts longer than nine
+ * seconds and the phone turns to a new angle on every one. The film proves its tagline in order: three
  * questions answered by the real app (you see everything), then the same
  * search answering with the network off (we see nothing), then the name.
  * Picture (film.mjs) and sound (score.mjs) both read from here.
@@ -13,17 +14,17 @@ export const BPM = 108;
 export const BEAT = 60 / BPM;
 export const BAR = BEAT * 4;
 
-// No three beats of the same length in a row.
+// Short beats, none the same length three times running.
 const LENGTHS = [
-  ["worry", 2],
-  ["turn", 2],
-  ["where", 3],
-  ["ask", 4],
-  ["track", 3],
-  ["ahead", 3],
-  ["only", 5],
+  ["worry", 1],
+  ["turn", 1],
+  ["where", 2],
+  ["ask", 3],
+  ["track", 2],
+  ["ahead", 2],
+  ["only", 4],
   ["devices", 2],
-  ["end", 3],
+  ["end", 2],
 ];
 let at = 0;
 export const CHAPTERS = Object.fromEntries(
@@ -35,7 +36,9 @@ export const CHAPTERS = Object.fromEntries(
 );
 export const DURATION = at;
 
-export const TAGLINE = "You see everything. We see nothing.";
+export const TAGLINE = "Private vault. Open code.";
+/** The three badges under it. */
+export const BADGES = ["Private vault", "Local data", "Auditable code"];
 
 /** Headlines: the word in *asterisks* is the accent. */
 export const COPY = {
@@ -47,7 +50,11 @@ export const COPY = {
   ahead: "What's coming *up?*",
   who: "Who else can see *this?*",
   only: "*Only you.*",
-  proof: ["No sign-up.", "No cloud.", "AI off until you switch it on."],
+  proof: [
+    "No sign-up. No cloud.",
+    "AI off until you switch it on.",
+    "Open code. Audit it.",
+  ],
   offline: "Network off",
   devices: "Every *device.*",
   action: "Try the demo at vaulted.money",
@@ -61,17 +68,17 @@ export function moments(queryLength) {
   const ask = CHAPTERS.ask.start;
   const only = CHAPTERS.only.start;
   return {
-    askKeys: keys(ask + 0.5, ask + 3.3, queryLength),
-    askUnderstood: ask + 3.55,
-    askApply: ask + 5.7,
-    askResult: ask + 5.95,
-    // "We see nothing": the picture turns dark as the network goes off.
-    dark: only + 2.0,
-    offlineKeys: keys(only + 3.0, only + 4.7, queryLength),
-    offlineUnderstood: only + 4.85,
-    offlineApply: only + 6.0,
-    offlineResult: only + 6.25,
-    onlyYou: only + 7.2,
-    proof: [only + 8.3, only + 8.9, only + 9.5],
+    askKeys: keys(ask + 0.3, ask + 2.1, queryLength),
+    askUnderstood: ask + 2.25,
+    askApply: ask + 3.7,
+    askResult: ask + 3.9,
+    // The private half: the picture turns dark as the network goes off.
+    dark: only + 1.2,
+    offlineKeys: keys(only + 1.9, only + 3.0, queryLength),
+    offlineUnderstood: only + 3.1,
+    offlineApply: only + 3.9,
+    offlineResult: only + 4.1,
+    onlyYou: only + 4.9,
+    proof: [only + 5.7, only + 6.3, only + 6.9],
   };
 }

@@ -290,9 +290,22 @@ body {
 #end .tag .b {
   color: var(--teal);
 }
+#end .badges {
+  margin-top: 36px;
+  display: flex;
+  gap: 16px;
+  font-size: 34px;
+  font-weight: 600;
+}
+#end .badges span {
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: 2px solid rgba(134, 222, 222, 0.55);
+  color: #dff7f7;
+}
 #end .action {
-  margin-top: 48px;
-  font-size: 44px;
+  margin-top: 40px;
+  font-size: 40px;
   font-weight: 600;
   color: #dbe7f5;
 }

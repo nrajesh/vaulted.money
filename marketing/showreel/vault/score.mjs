@@ -1,16 +1,16 @@
 /**
  * The film's sound, synthesised from scratch (no samples, nothing to
- * license), on the picture's own clock (timeline.mjs).
+ * license), on the picture's own clock (timeline.mjs). A house groove at the
+ * film's tempo, in the spirit of the relaxed social cut:
  *
- * An arc, not a loop:
  * - worry: a low drone and stray, slightly out-of-tune pings.
- * - turn: the pings stop on one held note as the list settles.
- * - where … ahead: warm chords, a soft pulse that grows a little each beat;
- *   every key of the typed search ticks and "Apply all" clicks.
- * - only: almost nothing while the network is off (keys only), then a swell
- *   into "Only you."
- * - devices: the pulse returns, fuller.
- * - end: a low impact and a bell chord that rings out.
+ * - turn: the pings stop on one note and a riser leads into the drop.
+ * - where … ahead: four-on-the-floor kick, off-beat hats and bass, a plucked
+ *   arpeggio over one chord a bar; a clap joins from the search on. Every key
+ *   of the typed search ticks and "Apply all" clicks.
+ * - only: the drums stop while the network is off (keys only), then slam
+ *   back on "Only you."
+ * - devices: the fullest bars. end: an impact and a bell chord.
  *
  *   renderScore({ seconds }) → [left, right] Float32Array at 48 kHz
  */
@@ -121,41 +121,64 @@ export function renderScore({ seconds, queryLength = 28 }) {
     );
   });
   [
-    [0.15, 79, 0.012],
-    [0.7, 86, -0.02],
-    [1.25, 74, 0.018],
-    [1.7, 83, -0.014],
-    [2.3, 77, 0.02],
-    [2.75, 88, -0.01],
-    [3.3, 81, 0.016],
-    [3.8, 75, -0.018],
+    [0.1, 79, 0.012],
+    [0.4, 86, -0.02],
+    [0.75, 74, 0.018],
+    [1.05, 83, -0.014],
+    [1.4, 77, 0.02],
+    [1.7, 88, -0.01],
+    [2.0, 81, 0.016],
   ].forEach(([t, note, detune], i) =>
     bell(t, note, 0.07, i % 2 ? 0.6 : -0.6, detune),
   );
 
   // The turn: everything lands on one clear note.
-  bell(C.turn.start + 1.7, 72, 0.16);
-  bell(C.turn.start + 1.7, 60, 0.12);
+  bell(C.turn.start + 1.1, 72, 0.16);
+  bell(C.turn.start + 1.1, 60, 0.12);
 
-  // Chords from the turn to the end, thinner while the network is off.
-  const first = C.turn.start + 2 * BEAT;
-  for (let bar = 0, t = first; t < C.end.start; bar++, t += BAR * 2) {
-    const quiet = t >= M.dark - BAR && t < M.onlyYou - 0.5;
-    pad(t, BAR * 2, CHORDS[bar % CHORDS.length], quiet ? 0.004 : 0.03);
-  }
-  // Pulse: grows through the questions, rests for the offline search.
-  for (let t = C.where.start; t < C.end.start - 0.01; t += BEAT) {
-    if (t >= C.only.start && t < C.devices.start) continue;
-    const grow =
-      t < C.ask.start
-        ? 0.1
-        : t < C.track.start
-          ? 0.14
-          : t < C.only.start
-            ? 0.18
-            : 0.24;
-    kick(t, grow);
-    if (t >= C.ask.start) tick(t + BEAT / 2, 0.035, -0.3);
+  // The groove: one chord a bar from the drop ("where") to the end card,
+  // resting while the network is off.
+  const drop = C.where.start;
+  const resting = (t) => t >= M.dark - 0.01 && t < M.onlyYou - 0.01;
+  const hat = (t, gain) =>
+    voice(t, 0.04, gain, 0.35, (s) => Math.exp(-s * 190) * rand());
+  const clap = (t) =>
+    voice(t, 0.16, 0.12, -0.1, (s) => Math.exp(-s * 38) * rand());
+  const pluck = (t, note, gain, pan) =>
+    voice(t, 0.32, gain, pan, (s) => {
+      const f = hz(note);
+      const saw = 2 * ((f * s) % 1) - 1;
+      return Math.exp(-s * 11) * (0.6 * saw + Math.sin(TAU * f * s));
+    });
+  const bass = (t, note) =>
+    voice(t, BEAT * 0.45, 0.2, 0, (s) => {
+      const f = hz(note);
+      const env = Math.min(1, s / 0.01) * Math.exp(-s * 5);
+      return env * (Math.sin(TAU * f * s) + 0.3 * Math.sin(TAU * f * 2 * s));
+    });
+  swell(drop - BEAT * 2, BEAT * 2, 0.12);
+  for (let bar = 0, t = drop; t < C.end.start - 0.01; bar++, t += BAR) {
+    const chord = CHORDS[bar % CHORDS.length];
+    const quiet = resting(t + BAR / 2);
+    pad(t, BAR, chord, quiet ? 0.004 : 0.02);
+    const full = t >= C.devices.start - 0.01;
+    for (let step = 0; step < 8; step++) {
+      const at = t + (step * BEAT) / 2;
+      if (resting(at)) continue;
+      if (step % 2 === 0) kick(at, full ? 0.34 : 0.28);
+      else {
+        hat(at, 0.05);
+        bass(at, chord[0] - 12);
+      }
+      if (at >= C.ask.start - 0.01 && (step === 2 || step === 6)) clap(at);
+      // Arpeggio: up the chord, an octave above, panned side to side.
+      pluck(
+        at,
+        chord[1 + (step % 4)] + 12,
+        full ? 0.07 : 0.05,
+        step % 2 ? 0.5 : -0.5,
+      );
+    }
   }
   // A melody note at the start of each question.
   [
@@ -163,7 +186,8 @@ export function renderScore({ seconds, queryLength = 28 }) {
     [C.ask.start, 79],
     [C.track.start, 81],
     [C.ahead.start, 84],
-  ].forEach(([t, note]) => bell(t, note, 0.11, 0.2));
+    [C.devices.start, 88],
+  ].forEach(([t, note]) => bell(t, note, 0.1, 0.2));
 
   // Typing and "Apply all": what the hand does on screen.
   M.askKeys.forEach((t) => tick(t));
@@ -174,7 +198,7 @@ export function renderScore({ seconds, queryLength = 28 }) {
   bell(M.offlineResult, 88, 0.07, 0.3);
 
   // "Only you.": a swell, then a warm chord.
-  swell(M.onlyYou - 1.2, 1.2, 0.1);
+  swell(M.onlyYou - 0.8, 0.8, 0.12);
   [60, 67, 76].forEach((note, i) => bell(M.onlyYou, note, 0.12, i - 1));
   M.proof.forEach((t, i) => bell(t, [79, 81, 84][i], 0.06, 0.3));
 
@@ -196,7 +220,7 @@ export function renderScore({ seconds, queryLength = 28 }) {
   );
 
   // Fade out with the picture, then keep peaks in range.
-  const fade = Math.round(0.9 * RATE);
+  const fade = Math.round(0.6 * RATE);
   for (let i = 0; i < fade; i++) {
     const g = i / fade;
     L[n - 1 - i] *= g;

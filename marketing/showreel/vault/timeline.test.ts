@@ -15,8 +15,9 @@ const chapters = Object.values(CHAPTERS) as Chapter[];
 const M = moments(28);
 
 describe("vault film timeline", () => {
-  it("is sixty seconds, with chapters back to back", () => {
-    expect(DURATION).toBeCloseTo(60, 6);
+  it("is about forty seconds, with chapters back to back", () => {
+    expect(DURATION).toBeGreaterThan(38);
+    expect(DURATION).toBeLessThan(45);
     expect(chapters[0].start).toBe(0);
     for (let i = 1; i < chapters.length; i++)
       expect(chapters[i].start).toBeCloseTo(chapters[i - 1].end, 6);
@@ -35,10 +36,13 @@ describe("vault film timeline", () => {
     expect(M.askApply).toBeLessThan(M.askResult);
     // The result stays up for at least two seconds.
     expect(CHAPTERS.ask.end - M.askResult).toBeGreaterThan(2);
+    // No beat drags: none is longer than nine seconds.
+    for (const c of chapters) expect(c.end - c.start).toBeLessThan(9);
   });
 
   it("types the offline search only after the network is shown off", () => {
     expect(M.offlineKeys[0]).toBeGreaterThan(M.dark + 0.5);
+    expect(M.dark).toBeGreaterThan(CHAPTERS.only.start + 1);
     expect(M.offlineResult).toBeLessThan(M.onlyYou);
     expect(M.proof.at(-1)).toBeLessThan(CHAPTERS.only.end - 1);
   });
@@ -63,6 +67,6 @@ describe("vault film timeline", () => {
   });
 
   it("signs off with the one tagline", () => {
-    expect(TAGLINE).toBe("You see everything. We see nothing.");
+    expect(TAGLINE).toBe("Private vault. Open code.");
   });
 });
