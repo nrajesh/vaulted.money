@@ -135,6 +135,7 @@
     "directories": {
       "output": "release"
     },
+    "afterAllArtifactBuild": "scripts/notarize-dmg.cjs",
     "files": [
       "dist/**/*",
       "dist-electron/**/*"
@@ -154,7 +155,8 @@
         {
           "target": "dmg",
           "arch": [
-            "universal"
+            "arm64",
+            "x64"
           ]
         }
       ],

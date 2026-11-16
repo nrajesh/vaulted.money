@@ -217,7 +217,7 @@ Use the clean reinstall flow after icon updates. iOS and Android can cache launc
 
 Publishing a GitHub release keeps GitHub's default source ZIP/TAR assets and also uploads:
 
-- macOS Electron DMG
+- macOS Electron DMGs (Apple silicon and Intel; unsigned, as CI has no signing certificate)
 - Windows installers (x64 and Arm; unsigned)
 - Linux AppImage and .deb packages (x64 and arm64)
 - Android release APK
