@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 // @ts-expect-error plain ES module without type declarations
 import { CHAPTERS, DURATION } from "./timeline.mjs";
 
@@ -16,6 +16,39 @@ describe("social cut timeline", () => {
   it("stays about fifty seconds long", () => {
     expect(DURATION).toBeGreaterThan(45);
     expect(DURATION).toBeLessThan(55);
+  });
+});
+
+describe("relaxed social cut", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it("slows every cue and the whole film by the same factor at a lower tempo", async () => {
+    vi.resetModules();
+    // @ts-expect-error plain ES module without type declarations
+    const normal = await import("./timeline.mjs");
+    vi.resetModules();
+    vi.stubEnv("SHOWREEL_BPM", "108");
+    // @ts-expect-error plain ES module without type declarations
+    const relaxed = await import("./timeline.mjs");
+    const factor = 128 / 108;
+    expect(relaxed.BPM).toBe(108);
+    expect(relaxed.DURATION).toBeCloseTo(60, 6);
+    expect(relaxed.CUES.montage).toBeCloseTo(normal.CUES.montage * factor, 6);
+    expect(relaxed.chapter("lockup").start).toBeCloseTo(
+      normal.chapter("lockup").start * factor,
+      6,
+    );
+  });
+
+  it("ignores a tempo outside the range the music is written for", async () => {
+    vi.stubEnv("SHOWREEL_BPM", "20");
+    vi.resetModules();
+    // @ts-expect-error plain ES module without type declarations
+    const timeline = await import("./timeline.mjs");
+    expect(timeline.BPM).toBe(128);
   });
 });
 

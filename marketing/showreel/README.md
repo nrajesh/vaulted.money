@@ -43,6 +43,7 @@ node marketing/showreel/soundtrack.mjs                   # just the audio → ou
 node marketing/showreel/render.mjs --cut keynote         # the calm 78 s cut, store ending
 node marketing/showreel/render.mjs --cut keynote --web   # website ending → ...-keynote-site.mp4
 node marketing/showreel/duo/overlay.mjs                  # plays the iPad and Duo recordings on it
+node marketing/showreel/render.mjs --bpm 108             # relaxed social cut (60 s) → ...-relaxed.mp4
 pnpm showreel:finals                                     # everything below, in 4K
 ```
 
@@ -51,9 +52,14 @@ marketing:screenshots` first) and the iPad and iPhone Duo simulator
 recordings (see `marketing/app-preview/README.md`). `pnpm showreel:finals`
 re-captures the social cut, renders both cuts in 4K, adds the recordings and
 copies light copies (each under GitHub's 100 MB limit) to `final/`:
-`vaulted-money-keynote.mp4`, `vaulted-money-keynote-website.mp4` and
-`vaulted-money-showreel-social.mp4`. Those are committed; keep only the
+`vaulted-money-keynote.mp4`, `vaulted-money-keynote-website.mp4`,
+`vaulted-money-showreel-social.mp4` and
+`vaulted-money-showreel-social-relaxed.mp4`. Those are committed; keep only the
 current cut there.
+
+The relaxed social cut is the same film at 108 BPM instead of 128. Every
+cue is written in beats (`timeline.mjs`), so the picture and the music slow
+down together; fades and quick moves written in seconds keep their speed.
 
 Requirements: Node 22+ (for the built-in `WebSocket`), Chromium or Chrome, and an
 ffmpeg build with `libx264` and `aac`. Point at them with `CHROME_PATH` and
@@ -110,7 +116,7 @@ npx serve marketing/showreel   # then open http://localhost:3000
 | 14–16 | 24.4 s | **See where it goes**                                         | An isometric wall of real reports rises (Sankey cash flow, Analytics, Essential Reports, Calendar, Insights); export formats pop. The camera leans into Analytics and a cursor hovers the line, switches to bars and hovers, then to a pie and clicks a slice. |
 | 17–18 | 30.0 s | **Day or night**                                              | The cursor clicks the theme toggle and a circular wipe turns the world light: the navy-and-gold mark builds itself beside real light-mode screens. The music breaks down.                                                                                      |
 | 19–21 | 33.8 s | **Every device, every currency, fully offline**               | Real screens on desktop (Accounts, then Currencies), tablet (Scheduled) and phone (Calendar); the demo ledgers' currencies; offline badges. One bar per claim.                                                                                                 |
-| 22–23 | 39.4 s | **Free & open source. Install it today.**                     | A terminal types the clone and install commands from vaulted.money, then one command per platform: web, desktop, Android, iOS.                                                                                                                                 |
+| 22–23 | 39.4 s | **Free & open source. Install it today.**                     | A terminal types the clone and install commands from vaulted.money, then one command per platform: web, desktop (Mac, Windows, Linux), Android, iOS.                                                                                                           |
 | 24    | 43.1 s | **Highlights**                                                | Seven hard cuts on the eighth notes through the busiest screens, each named.                                                                                                                                                                                   |
 | 25–27 | 45.0 s | **Vaulted Money · Privacy-first · Data-local · Open-sourced** | The shield assembles from struts flung in from every direction; the wordmark, the three badges from the vaulted.money hero, the address, and a fade to black.                                                                                                  |
 

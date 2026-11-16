@@ -134,7 +134,7 @@ export const HELP_CARDS = {
   reports: {
     guide: "budgets",
     title: "Simple or Detailed",
-    body: "Simple reports answer everyday questions; Detailed ones break things down further. Both export to PDF, Excel or CSV.",
+    body: "Simple reports answer everyday questions; Detailed ones break things down further. Both export to PDF or CSV.",
   },
   insights: {
     guide: "budgets",

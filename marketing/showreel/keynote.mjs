@@ -277,7 +277,7 @@ const row = [
   },
   {
     node: device("mac-dark-6", "dark", "laptop", 620),
-    label: "Mac",
+    label: "Mac · Windows · Linux",
     x: 1220,
     y: 460,
   },

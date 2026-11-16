@@ -36,7 +36,6 @@ import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderScore, writeWav } from "./calmScore.mjs";
 import { RECORDINGS, screenWindows } from "./duo/overlay.mjs";
-import { renderSoundtrack } from "./soundtrack.mjs";
 import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -56,6 +55,10 @@ const option = (name, fallback) => {
 // --web adds the website ending to the keynote cut (written as
 // ...-keynote-site.mp4, so it never clashes with a "-web" light copy).
 const cut = option("cut", "social");
+// --bpm 108 renders the relaxed social cut: same film, slower picture and
+// music. Must be set before timeline.mjs is imported.
+const bpm = option("bpm", "");
+if (bpm) process.env.SHOWREEL_BPM = bpm;
 const web = flag("web");
 const timeline =
   cut === "keynote"
@@ -79,7 +82,7 @@ const outputFile = option(
   "out",
   join(
     OUT_DIR,
-    `vaulted-money-showreel${cut === "keynote" ? `-keynote${web ? "-site" : ""}` : ""}${draft ? "-draft" : ""}.mp4`,
+    `vaulted-money-showreel${cut === "keynote" ? `-keynote${web ? "-site" : ""}` : ""}${bpm ? "-relaxed" : ""}${draft ? "-draft" : ""}.mp4`,
   ),
 );
 
@@ -241,7 +244,11 @@ async function renderVideo(pages) {
       renderScore({ seconds: DURATION, cues: timeline.SCORE_CUES }),
       48000,
     );
-  else writeFileSync(audioPath, renderSoundtrack());
+  else {
+    // Imported here, after --bpm has set the tempo the music reads.
+    const { renderSoundtrack } = await import("./soundtrack.mjs");
+    writeFileSync(audioPath, renderSoundtrack());
+  }
 
   const firstFrame = Math.floor(fromSeconds * fps);
   const lastFrame = Math.ceil(toSeconds * fps) - 1;
@@ -486,7 +493,7 @@ async function main() {
 
   const server = await startStaticServer();
   const page = cut === "keynote" ? "keynote.html" : "index.html";
-  const pageUrl = `http://127.0.0.1:${server.address().port}/${page}?render${web ? "&web" : ""}`;
+  const pageUrl = `http://127.0.0.1:${server.address().port}/${page}?render${web ? "&web" : ""}${bpm ? `&bpm=${bpm}` : ""}`;
   const workerCount = stills.length
     ? Math.min(workers, stills.length)
     : workers;

@@ -901,8 +901,9 @@ function arrange(buses) {
       decay: 0.18,
     }),
   );
-  for (let index = 0; index < 4; index++) {
-    blip(buses, beat(53) + index * beat(0.5), [79, 83, 86, 91][index], {
+  // One blip per export chip: the "Export" label, PDF and CSV.
+  for (let index = 0; index < 3; index++) {
+    blip(buses, beat(53) + index * beat(0.5), [79, 83, 86][index], {
       gain: 0.05,
       decay: 0.1,
       pan: -0.5,
