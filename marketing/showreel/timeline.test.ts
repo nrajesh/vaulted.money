@@ -66,14 +66,72 @@ describe("keynote cut timeline", () => {
     for (const c of list) expect(c.end - c.start).toBeGreaterThanOrEqual(5);
   });
 
-  it("gives the music a lift at privacy, the device reveal and the end", async () => {
+  type Moment = { t: number; sound: string; chapter: string; web?: boolean };
+  type Cue = { t: number; kind: string };
+  const load = async () => {
     // @ts-expect-error plain ES module without type declarations
     const keynote = await import("./timelines/keynote.mjs");
-    const lifts = (keynote.SCORE_CUES as { t: number; kind: string }[])
-      .filter((c) => c.kind === "lift")
-      .map((c) => c.t);
     const at = (id: string) =>
-      (keynote.CHAPTERS as Chapter[]).find((c) => c.id === id)!.start;
-    expect(lifts).toEqual([at("privacy"), at("devices"), at("end")]);
+      (keynote.CHAPTERS as Chapter[]).find((c) => c.id === id)!;
+    return {
+      keynote,
+      at,
+      moments: keynote.MOMENTS as Record<string, Moment>,
+      cues: keynote.scoreCues as (web: boolean) => Cue[],
+    };
+  };
+
+  it("lands every moment on the beat grid, inside its own chapter", async () => {
+    const { keynote, at, moments } = await load();
+    const step = keynote.BEAT / 2;
+    for (const [name, m] of Object.entries(moments)) {
+      const c = at(m.chapter);
+      expect(m.t, name).toBeGreaterThanOrEqual(c.start);
+      expect(m.t, name).toBeLessThan(c.end - 1);
+      expect(Math.abs(m.t / step - Math.round(m.t / step)), name).toBeLessThan(
+        1e-9,
+      );
+    }
+  });
+
+  it("puts a sound on every moment the picture shows, and only those", async () => {
+    const { moments, cues } = await load();
+    const key = (c: { t: number; sound?: string; kind?: string }) =>
+      `${c.t.toFixed(3)}:${c.sound ?? c.kind}`;
+    for (const web of [false, true]) {
+      const shown = Object.values(moments)
+        .filter((m) => !m.web || web)
+        .map(key)
+        .sort();
+      const effects = cues(web)
+        .filter((c) => !["drop", "break", "fill", "outro"].includes(c.kind))
+        .map(key)
+        .sort();
+      expect(effects).toEqual(shown);
+    }
+  });
+
+  it("drops the full groove at privacy, the device reveal and the end, and breaks down for the big screens", async () => {
+    const { at, cues } = await load();
+    const of = (kind: string) =>
+      cues(false)
+        .filter((c) => c.kind === kind)
+        .map((c) => c.t);
+    expect(of("drop")).toEqual([
+      at("privacy").start,
+      at("devices").start,
+      at("end").start,
+    ]);
+    expect(of("break")).toEqual([at("bigScreens").start]);
+  });
+
+  it("settles the iPad and the Duo before their recordings start playing", async () => {
+    const { moments } = await load();
+    // @ts-expect-error plain ES module without type declarations
+    const { screenWindows } = await import("./duo/overlay.mjs");
+    const windows = screenWindows();
+    // A device's entrance ends 0.3 s after the moment it lands.
+    expect(moments.bigIpad.t + 0.3).toBeLessThan(windows.ipad.from);
+    expect(moments.bigDuo.t + 0.3).toBeLessThan(windows.duo.from);
   });
 });

@@ -1,5 +1,6 @@
 /**
- * The keynote cut: a calm, 76-second tour in the store screenshots' look.
+ * The keynote cut: a 78-second tour in the store screenshots' look, with
+ * every card landing on the beat of its score (timelines/keynote.mjs MOMENTS).
  *
  * Every frame is a pure function of time: `window.__render(seconds)` poses all
  * layers for that instant, so render.mjs (--cut keynote) can draw frames in
@@ -7,8 +8,14 @@
  * captures (marketing/store-screenshots/out/captures, copied to out/keynote).
  * `?web` adds "Free & open source" to the end card (website version).
  */
-import { CHAPTERS, DURATION, chapter } from "./timelines/keynote.mjs";
-import { ease, lerp, progress, tween } from "./lib/motion.mjs";
+import {
+  CHAPTERS,
+  DURATION,
+  HANDOVER,
+  MOMENTS,
+  chapter,
+} from "./timelines/keynote.mjs";
+import { ease, progress, tween } from "./lib/motion.mjs";
 import { logoSvg } from "./lib/logo.mjs";
 
 const params = new URLSearchParams(location.search);
@@ -97,50 +104,79 @@ function caption({ headline, sub, body, theme, centre = false }) {
   </div>`);
 }
 
-/** Words rise in from `start`, sub and body follow; all fade by `end`. */
-function poseCaption(node, t, start, end, { subAt = 1.6, bodyAt = 2.2 } = {}) {
-  const out = 1 - tween(t, end - 0.6, end, ease.inCubic);
+/**
+ * Springs from 0 to 1 with an overshoot, first reaching 1 at `at` (outBack
+ * crosses 1 at 1 / (overshoot + 1) of its length), so a card lands on the
+ * beat its sound plays on.
+ */
+function popIn(t, at, length = 0.4, overshoot = 2) {
+  const start = at - length / (overshoot + 1);
+  return ease.outBack(progress(t, start, start + length), overshoot);
+}
+/** Fades in over the short run-up to `at`. */
+const appear = (t, at, lead = 0.18) => progress(t, at - lead, at - 0.02);
+
+/**
+ * Headline words spring up one after another from `at`, the sub and body pop
+ * in at theirs, and the words lift away just before `end`.
+ */
+function poseCaption(node, t, { at, sub, body, end }) {
   [...node.querySelectorAll(".word")].forEach((w, i) => {
-    const p = tween(t, start + i * 0.07, start + i * 0.07 + 0.7, ease.outCubic);
-    set(w, { opacity: p * out, transform: `translateY(${(1 - p) * 46}px)` });
+    const land = at + i * 0.05;
+    const p = popIn(t, land, 0.5, 1.4);
+    const gone = tween(
+      t,
+      end - 0.5 + i * 0.025,
+      end - 0.2 + i * 0.025,
+      ease.inCubic,
+    );
+    set(w, {
+      opacity: appear(t, land) * (1 - gone),
+      transform: `translateY(${(1 - p) * 70 - gone * 40}px) rotate(${(1 - p) * 6}deg)`,
+    });
   });
-  const sub = node.querySelector(".sub");
-  if (sub) {
-    const p = tween(t, start + subAt, start + subAt + 0.6);
-    set(sub, { opacity: p * out, transform: `translateY(${(1 - p) * 24}px)` });
-  }
-  const body = node.querySelector("p");
-  if (body) {
-    const p = tween(t, start + bodyAt, start + bodyAt + 0.6);
-    set(body, { opacity: p * out, transform: `translateY(${(1 - p) * 24}px)` });
+  const out = 1 - tween(t, end - 0.5, end, ease.inCubic);
+  for (const [part, when] of [
+    [node.querySelector(".sub"), sub],
+    [node.querySelector("p"), body],
+  ]) {
+    if (!part) continue;
+    const p = popIn(t, when, 0.4, 1.6);
+    set(part, {
+      opacity: appear(t, when) * out,
+      transform: `translateY(${(1 - p) * 28}px) scale(${0.94 + 0.06 * p})`,
+    });
   }
   set(node, {
-    visibility: t >= start - 0.1 && t <= end ? "visible" : "hidden",
+    visibility: t >= at - 0.3 && t <= end ? "visible" : "hidden",
   });
 }
 
-/** A device glides up into place, holds, and sinks away. */
-function poseDevice(
-  node,
-  t,
-  start,
-  end,
-  { x, y, rotate = 0, rotateY = 0, delay = 0.3 },
-) {
-  const inP = tween(t, start + delay, start + delay + 1.1, ease.outQuart);
-  const outP = tween(t, end - 0.7, end, ease.inCubic);
+/** A device springs up into place, landing on `land`, and drops away by `end`. */
+function poseDevice(node, t, land, end, { x, y, rotate = 0, rotateY = 0 }) {
+  const p = popIn(t, land, 0.6, 1.2);
+  const outP = tween(t, end - 0.5, end, ease.inBack);
   set(node, {
     left: `${x}px`,
-    top: `${y + (1 - inP) * 140 + outP * 80}px`,
-    opacity: inP * (1 - outP),
-    transform: `perspective(1600px) rotateY(${rotateY}deg) rotate(${rotate * (1 - inP)}deg)`,
-    visibility: t >= start && t <= end ? "visible" : "hidden",
+    top: `${y + (1 - p) * 160 + outP * 120}px`,
+    opacity: appear(t, land, 0.25) * (1 - Math.max(0, outP)),
+    transform: `perspective(1600px) rotateY(${rotateY}deg) rotate(${rotate * (1 - p)}deg) scale(${0.9 + 0.1 * p})`,
+    visibility: t >= land - 0.3 && t <= end ? "visible" : "hidden",
+  });
+}
+
+/** A chip, label or badge pops in at `at`; `base` keeps its own transform. */
+function popCard(node, t, at, until, base = "") {
+  const p = popIn(t, at, 0.4, 2.2);
+  set(node, {
+    opacity: appear(t, at, 0.12) * (1 - tween(t, until - 0.5, until)),
+    transform: `${base} translateY(${(1 - p) * 18}px) scale(${0.6 + 0.4 * p})`,
   });
 }
 
 /**
- * Spotlight: from `at` until `until`, dims the screen around the part to
- * look at (the box the capture recorded) and rings it in the brand teal.
+ * Spotlight: at `at`, dims the screen around the part to look at (the box
+ * the capture recorded) and snaps a brand-teal ring onto it; gone by `until`.
  */
 function spotlight(node, t, at, until) {
   const box = NOTES[node.dataset.name]?.highlight;
@@ -148,12 +184,14 @@ function spotlight(node, t, at, until) {
   if (!box) return;
   const img = node.querySelector("img");
   const pad = 6;
+  const p = popIn(t, at, 0.35, 2);
   set(spot, {
     left: `${img.offsetLeft + box.x * img.offsetWidth - pad}px`,
     top: `${img.offsetTop + box.y * img.offsetHeight - pad}px`,
     width: `${box.w * img.offsetWidth + pad * 2}px`,
     height: `${box.h * img.offsetHeight + pad * 2}px`,
-    opacity: tween(t, at, at + 0.7) * (1 - tween(t, until - 0.6, until)),
+    opacity: appear(t, at, 0.12) * (1 - tween(t, until - 0.5, until)),
+    transform: `scale(${1.25 - 0.25 * p})`,
   });
 }
 
@@ -311,147 +349,168 @@ function render(seconds) {
   }, 0);
   set(bgLight, { opacity: lightness });
 
-  // Intro: the shield settles, the name follows.
+  const M = Object.fromEntries(
+    Object.entries(MOMENTS).map(([name, m]) => [name, m.t]),
+  );
+
+  // Intro: the shield pops in with a sparkle, the name follows.
   {
-    const { start, end: stop } = C.intro;
-    const p = tween(t, start + 0.2, start + 1.8, ease.outQuart);
-    const out = 1 - tween(t, stop - 0.7, stop, ease.inCubic);
+    const { end: stop } = C.intro;
+    const out = 1 - tween(t, stop - 0.6, stop, ease.inCubic);
     set(intro, {
-      opacity: p * out,
-      transform: `scale(${lerp(0.88, 1, p)})`,
+      opacity: out,
       visibility: t < stop ? "visible" : "hidden",
     });
-    set(intro.querySelector("h2"), {
-      opacity: tween(t, start + 1.4, start + 2.2),
+    const p = popIn(t, M.introLogo, 0.6, 1.6);
+    set(intro.querySelector("svg"), {
+      opacity: appear(t, M.introLogo, 0.3),
+      transform: `scale(${0.6 + 0.4 * p})`,
     });
+    popCard(intro.querySelector("h2"), t, M.introName, stop + 1);
   }
 
   // Privacy face-off
   {
-    const { start, end: stop } = C.privacy;
-    poseCaption(privacyCap, t, start + 0.3, stop, { subAt: 2.6, bodyAt: 3.8 });
-    poseDevice(privacyL, t, start, stop, {
+    const { end: stop } = C.privacy;
+    poseCaption(privacyCap, t, {
+      at: M.privacyHeadline,
+      sub: M.privacySub,
+      body: M.privacyBody,
+      end: stop,
+    });
+    poseDevice(privacyL, t, M.privacyLeft, stop, {
       x: 1000,
       y: 210,
       rotateY: 26,
       rotate: -6,
-      delay: 0.5,
     });
-    poseDevice(privacyR, t, start, stop, {
+    poseDevice(privacyR, t, M.privacyRight, stop, {
       x: 1400,
       y: 210,
       rotateY: -26,
       rotate: 6,
-      delay: 0.8,
     });
   }
 
   // Search: push into the "Understood as" panel
   {
-    const { start, end: stop } = C.search;
-    poseCaption(searchCap, t, start + 0.3, stop);
-    poseDevice(searchPhone, t, start, stop, { x: 1150, y: 150 });
-    spotlight(searchPhone, t, start + 3, stop - 0.7);
+    const { end: stop } = C.search;
+    poseCaption(searchCap, t, {
+      at: M.searchHeadline,
+      body: M.searchBody,
+      end: stop,
+    });
+    poseDevice(searchPhone, t, M.searchPhone, stop, { x: 1150, y: 150 });
+    spotlight(searchPhone, t, M.searchSpot, stop - 0.7);
   }
 
   // Labels: a light sweep across the same screen
   {
-    const { start, end: stop } = C.labels;
-    poseCaption(labelsCap, t, start + 0.3, stop);
-    poseDevice(labelsDark, t, start, stop, { x: 1150, y: 150 });
-    poseDevice(labelsLight, t, start, stop, { x: 1150, y: 150 });
-    const sweep = tween(t, start + 3.4, start + 4.6, ease.inOutCubic);
+    const { end: stop } = C.labels;
+    poseCaption(labelsCap, t, {
+      at: M.labelsHeadline,
+      body: M.labelsBody,
+      end: stop,
+    });
+    poseDevice(labelsDark, t, M.labelsPhone, stop, { x: 1150, y: 150 });
+    poseDevice(labelsLight, t, M.labelsPhone, stop, { x: 1150, y: 150 });
+    const sweep = tween(
+      t,
+      M.labelsSweep - 0.5,
+      M.labelsSweep + 0.5,
+      ease.inOutCubic,
+    );
     set(labelsLight, { clipPath: `circle(${sweep * 140}% at 100% 0%)` });
   }
 
   // AI: the switch, then the two notes
   {
     const { start, end: stop } = C.ai;
-    poseCaption(aiCap, t, start + 0.3, stop);
+    poseCaption(aiCap, t, { at: M.aiHeadline, body: M.aiBody, end: stop });
     // Low enough that the agent card's "Needs the Mac app" note stays below
     // the frame, as in the store images.
-    poseDevice(aiPhone, t, start, stop, { x: 1180, y: 500 });
-    spotlight(aiPhone, t, start + 2.0, start + 3.4);
+    poseDevice(aiPhone, t, M.aiPhone, stop, { x: 1180, y: 500 });
+    spotlight(aiPhone, t, M.aiSpot, M.aiSpot + 1.4);
     [chip1, chip2].forEach((chip, i) => {
-      const p = tween(
-        t,
-        start + 3.2 + i * 0.7,
-        start + 4.0 + i * 0.7,
-        ease.outBack,
-      );
-      const out = 1 - tween(t, stop - 0.6, stop, ease.inCubic);
       const below = aiCap.offsetTop + aiCap.offsetHeight + 56;
       set(chip, {
-        left: `${150 + (1 - p) * -60}px`,
+        left: "150px",
         top: `${below + i * 104}px`,
-        opacity: Math.min(1, p) * out,
         visibility: t >= start && t <= stop ? "visible" : "hidden",
       });
+      popCard(chip, t, i ? M.aiChip2 : M.aiChip1, stop);
     });
   }
 
   // Budgets: push into the first over-budget card
   {
-    const { start, end: stop } = C.budgets;
-    poseCaption(budgetsCap, t, start + 0.3, stop);
-    poseDevice(budgetsPhone, t, start, stop, { x: 1150, y: 150 });
-    spotlight(budgetsPhone, t, start + 2.5, stop - 0.7);
+    const { end: stop } = C.budgets;
+    poseCaption(budgetsCap, t, {
+      at: M.budgetsHeadline,
+      body: M.budgetsBody,
+      end: stop,
+    });
+    poseDevice(budgetsPhone, t, M.budgetsPhone, stop, { x: 1150, y: 150 });
+    spotlight(budgetsPhone, t, M.budgetsSpot, stop - 0.7);
   }
 
   // Big screens: iPad, then the iPhone Duo, each playing its simulator
   // recording once still.
   {
     const { start, end: stop } = C.bigScreens;
-    poseCaption(bigCap, t, start + 0.3, stop);
+    poseCaption(bigCap, t, { at: M.bigHeadline, body: M.bigBody, end: stop });
     // The iPad's recording switches from the table to list and details, so
-    // it needs no spotlight; the Duo's opens rows (see duo/overlay.mjs,
-    // which mirrors these times as HANDOVER).
-    const handover = start + 5.0;
-    poseDevice(ipad, t, start, handover + 0.7, { x: 1100, y: 140 });
+    // it needs no spotlight; the Duo's opens rows (duo/overlay.mjs plays the
+    // recordings once each device has settled).
+    const handover = start + HANDOVER;
+    poseDevice(ipad, t, M.bigIpad, handover + 0.7, { x: 1100, y: 140 });
     // Once its footage has played, each leaves showing the footage's end.
     showRecordingEnd(ipad, t >= handover);
     showRecordingEnd(duo, t >= stop - 0.7);
-    poseDevice(duo, t, handover, stop, { x: 960, y: 300, delay: 0.1 });
-    const labelFor = (label, node, from, to) =>
+    poseDevice(duo, t, M.bigDuo, stop, { x: 960, y: 300 });
+    const labelFor = (label, node, at, until) => {
       set(label, {
         left: `${node.offsetLeft + node.offsetWidth / 2}px`,
         top: `${node.offsetTop + node.offsetHeight + 22}px`,
-        opacity: tween(t, from, from + 0.5) * (1 - tween(t, to - 0.6, to)),
       });
-    labelFor(ipadLabel, ipad, start + 1.2, handover + 0.4);
-    labelFor(duoLabel, duo, handover + 1.2, stop);
+      popCard(label, t, at, until, "translateX(-50%)");
+    };
+    labelFor(ipadLabel, ipad, M.bigIpadLabel, handover + 0.4);
+    labelFor(duoLabel, duo, M.bigDuoLabel, stop);
   }
 
-  // Every device: five glide into a row, named
+  // Every device: five spring into a row, one a beat, each named
   {
-    const { start, end: stop } = C.devices;
-    poseCaption(devicesCap, t, start + 0.2, stop);
+    const { end: stop } = C.devices;
+    poseCaption(devicesCap, t, { at: M.devicesHeadline, end: stop });
     row.forEach((r, i) => {
-      poseDevice(r.node, t, start, stop, {
-        x: r.x,
-        y: r.y,
-        delay: 0.6 + i * 0.35,
-      });
+      poseDevice(r.node, t, M[`devicesRow${i}`], stop, { x: r.x, y: r.y });
       const h = r.node.offsetHeight;
-      const p = tween(t, start + 1.4 + i * 0.35, start + 2.0 + i * 0.35);
-      const out = 1 - tween(t, stop - 0.6, stop);
       set(labels[i], {
         left: `${r.x + r.node.offsetWidth / 2}px`,
         top: `${Math.min(r.y + h + 24, 1010)}px`,
-        opacity: p * out,
       });
+      popCard(labels[i], t, M[`devicesLabel${i}`], stop, "translateX(-50%)");
     });
   }
 
-  // End card, then a fade to black
+  // End card: the shield lands with a boom, then the name, the line and the
+  // badges pop in one by one; then a fade to black.
   {
     const { start, end: stop } = C.end;
-    const p = tween(t, start + 0.2, start + 1.6, ease.outQuart);
-    set(end, {
-      opacity: p,
-      transform: `scale(${lerp(0.94, 1, p)})`,
-      visibility: t >= start ? "visible" : "hidden",
+    set(end, { visibility: t >= start - 0.3 ? "visible" : "hidden" });
+    const p = popIn(t, M.endLogo, 0.6, 1.6);
+    set(end.querySelector("svg"), {
+      opacity: appear(t, M.endLogo, 0.3),
+      transform: `scale(${0.6 + 0.4 * p})`,
     });
+    popCard(end.querySelector("h2"), t, M.endName, stop + 1);
+    popCard(end.querySelector("p"), t, M.endTagline, stop + 1);
+    const extra = end.querySelector(".extra");
+    if (extra) popCard(extra, t, M.endExtra, stop + 1);
+    end
+      .querySelectorAll(".badges span")
+      .forEach((badge, i) => popCard(badge, t, M[`endBadge${i}`], stop + 1));
     set(black, { opacity: tween(t, stop - 1.2, stop, ease.inCubic) });
   }
 }

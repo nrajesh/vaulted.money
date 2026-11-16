@@ -34,7 +34,7 @@ import {
 import { readFile } from "node:fs/promises";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderScore, writeWav } from "./calmScore.mjs";
+import { renderScore, writeWav } from "./keynoteScore.mjs";
 import { RECORDINGS, screenWindows } from "./duo/overlay.mjs";
 import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
@@ -51,7 +51,7 @@ const option = (name, fallback) => {
     : fallback;
 };
 
-// --cut social (the original fast cut) or keynote (the calm, 76 s cut);
+// --cut social (the original fast cut) or keynote (the 78 s tour);
 // --web adds the website ending to the keynote cut (written as
 // ...-keynote-site.mp4, so it never clashes with a "-web" light copy).
 const cut = option("cut", "social");
@@ -241,7 +241,7 @@ async function renderVideo(pages) {
   if (cut === "keynote")
     writeWav(
       audioPath,
-      renderScore({ seconds: DURATION, cues: timeline.SCORE_CUES }),
+      renderScore({ seconds: DURATION, cues: timeline.scoreCues(web) }),
       48000,
     );
   else {

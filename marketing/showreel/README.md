@@ -40,7 +40,7 @@ node marketing/showreel/soundtrack.mjs                   # just the audio → ou
 ### The keynote cut and the finished files
 
 ```bash
-node marketing/showreel/render.mjs --cut keynote         # the calm 78 s cut, store ending
+node marketing/showreel/render.mjs --cut keynote         # the 78 s tour, store ending
 node marketing/showreel/render.mjs --cut keynote --web   # website ending → ...-keynote-site.mp4
 node marketing/showreel/duo/overlay.mjs                  # plays the iPad and Duo recordings on it
 node marketing/showreel/render.mjs --bpm 108             # relaxed social cut (60 s) → ...-relaxed.mp4
@@ -56,6 +56,14 @@ copies light copies (each under GitHub's 100 MB limit) to `final/`:
 `vaulted-money-showreel-social.mp4` and
 `vaulted-money-showreel-social-relaxed.mp4`. Those are committed; keep only the
 current cut there.
+
+The keynote has its own score (`keynoteScore.mjs`): an upbeat 120 BPM groove
+with a plucked hook, built from the cues in `timelines/keynote.mjs`. Every card
+that lands there (a headline, a phone, a chip, a label, a badge) is a
+`MOMENTS` entry on the half-beat grid with its own sound (a swish, a thud, a
+pop), and `keynote.mjs` springs each card in to land on that beat. Change a
+time there and the picture and the sound move together. The App Store preview
+keeps the calm score (`calmScore.mjs`).
 
 The relaxed social cut is the same film at 108 BPM instead of 128. Every
 cue is written in beats (`timeline.mjs`), so the picture and the music slow
@@ -140,6 +148,10 @@ showreel.mjs      Boot, font and screen loading, render loop, browser preview
 timeline.mjs      Tempo, chapters and named cues (shared with the audio)
 capture.mjs       Runs the real app and screenshots it → out/screens/
 soundtrack.mjs    Synthesised music and sound design → WAV
+keynote.mjs       The keynote cut's picture (keynote.html)
+keynoteScore.mjs  The keynote cut's music and sound effects
+calmScore.mjs     The App Store preview's calm score
+timelines/        The keynote cut's chapters and moments
 render.mjs        Headless Chromium over CDP → ffmpeg → MP4
 icons.mjs         Lucide icon geometry
 lib/              Motion maths, logo geometry, CDP client, screen helpers

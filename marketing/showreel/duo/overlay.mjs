@@ -15,10 +15,9 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { chapter } from "../timelines/keynote.mjs";
+import { HANDOVER, chapter } from "../timelines/keynote.mjs";
 
-/** keynote.mjs: the iPad hands over to the Duo this long into the scene. */
-export const HANDOVER = 5.0;
+export { HANDOVER };
 
 /**
  * Seconds into each recording (after its story's start mark) where the
