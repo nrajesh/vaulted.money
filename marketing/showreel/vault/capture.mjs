@@ -1,14 +1,11 @@
 /**
- * Captures the real app for the "You see everything. We see nothing." film.
+ * Captures the real app for the Vaulted Money film: one feature per device.
  *
  * Every picture of the app in the film comes from here: the running app with
- * its demo data, driven like a person would (typing a search one key at a
- * time, applying it, opening pages) and photographed after every step. The
- * film plays those photographs back in order, so what moves on screen is what
- * the app did. The clock and Math.random are pinned (FIXED_NOW, SEED from
- * marketing/shared/capture.mjs), so every figure agrees across shots.
- *
- * The offline shot is taken with the browser's network switched off.
+ * its demo data, at each device's own screen size, driven like a person would
+ * (the search is typed one key at a time and photographed after each key).
+ * The clock and Math.random are pinned (FIXED_NOW, SEED from
+ * marketing/shared/capture.mjs), so every figure agrees across devices.
  *
  *   pnpm dev                                         # in another terminal
  *   node marketing/showreel/vault/capture.mjs        # → vault/out/shots/
@@ -20,6 +17,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { FIXED_NOW, SEED } from "../../shared/capture.mjs";
 import { findAntiGoals } from "../../shared/antiGoals.mjs";
+import { DEVICES } from "./capture.devices.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE ?? "playwright");
@@ -28,9 +26,7 @@ const BASE = process.env.APP_URL ?? "http://127.0.0.1:8081";
 const OUT = path.join(import.meta.dirname, "out/shots");
 mkdirSync(OUT, { recursive: true });
 
-const PHONE = { width: 440, height: 956 };
 const QUERY = "groceries over 20 last month";
-const OFFLINE_QUERY = QUERY; // the same question, with the network off
 
 // Same generator as marketing/shared/capture.mjs, so the demo ledger matches
 // the store screenshots.
@@ -51,37 +47,43 @@ const seedRandom = (seed) => {
     `${hex(8)}-${hex(4)}-4${hex(3)}-${"89ab"[Math.floor(Math.random() * 4)]}${hex(3)}-${hex(12)}`;
 };
 
-/** The box of the first visible element whose text matches, as fractions of the viewport. */
-const boxOf = (page, locator) =>
-  locator
+const notes = { query: QUERY };
+
+/** The box of a locator's first match, as fractions of the viewport. */
+const boxOf = async (page, locator) => {
+  const b = await locator
     .first()
     .boundingBox()
-    .then((b) => {
-      if (!b) return null;
-      const { width, height } = page.viewportSize();
-      return {
-        x: b.x / width,
-        y: b.y / height,
-        w: b.width / width,
-        h: b.height / height,
-      };
-    })
     .catch(() => null);
-
-const notes = {};
+  if (!b) return null;
+  const { width, height } = page.viewportSize();
+  return {
+    x: b.x / width,
+    y: b.y / height,
+    w: b.width / width,
+    h: b.height / height,
+  };
+};
 
 async function shoot(page, name, { check = true } = {}) {
   if (check) {
-    const text = await page.locator("body").innerText();
-    // "0 selected" is an empty toolbar the app now hides; the rest are the
-    // repo's never-show list for videos.
-    const problems = findAntiGoals(text, "mac");
+    const problems = findAntiGoals(
+      await page.locator("body").innerText(),
+      "mac",
+    );
     if (problems.length) throw new Error(`${name}: ${problems.join("; ")}`);
   }
   await page.screenshot({ path: path.join(OUT, `${name}.png`) });
 }
 
-async function openLedger(context, theme) {
+async function open(browser, device) {
+  const spec = DEVICES[device];
+  const context = await browser.newContext({
+    viewport: { width: spec.width, height: spec.height },
+    deviceScaleFactor: spec.scale,
+    isMobile: spec.mobile,
+    hasTouch: spec.mobile,
+  });
   await context.addInitScript(seedRandom, SEED);
   const page = await context.newPage();
   await page.clock.setFixedTime(FIXED_NOW);
@@ -99,198 +101,163 @@ async function openLedger(context, theme) {
       if (attempt === 3) throw error;
     }
   }
-  await page.evaluate((t) => localStorage.setItem("vite-ui-theme", t), theme);
-  await page.emulateMedia({ colorScheme: theme });
-  return page;
+  await page.evaluate(
+    (t) => localStorage.setItem("vite-ui-theme", t),
+    spec.theme,
+  );
+  await page.emulateMedia({ colorScheme: spec.theme });
+  return { context, page };
 }
 
 const go = async (page, route) => {
   await page.goto(`${BASE}${route}`);
   await page.waitForLoadState("networkidle").catch(() => {});
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1800);
 };
 
-/** Types `text` into the search box, photographing after every key. */
-async function typeSearch(page, prefix, text) {
-  await page.getByRole("combobox").first().click();
-  await page.waitForTimeout(400);
-  await shoot(page, `${prefix}-00`, { check: false });
-  for (let i = 0; i < text.length; i++) {
-    await page.keyboard.type(text[i]);
-    await page.waitForTimeout(90);
-    await shoot(page, `${prefix}-${String(i + 1).padStart(2, "0")}`, {
-      check: false,
-    });
-  }
-  await page.keyboard.type(" ");
-  await page.waitForTimeout(900);
-  await shoot(page, `${prefix}-understood`, { check: false });
-  notes[`${prefix}-understood`] = {
-    input: await boxOf(page, page.getByRole("combobox")),
-    panel: await boxOf(page, page.getByText("Understood as")),
-    apply: await boxOf(page, page.getByText(/^Apply all/)),
-  };
-  await page
-    .getByText(/^Apply all/)
-    .first()
-    .click();
-  await page.waitForTimeout(500);
-  const done = page.getByRole("button", { name: "Done", exact: true });
-  if (
-    await done
-      .first()
-      .isVisible()
-      .catch(() => false)
-  )
-    await done.first().click();
-  await page.keyboard.press("Escape").catch(() => {});
+/** Scrolls so `locator` sits `offset` px below the top of the screen. */
+const bringTo = async (page, locator, offset) => {
+  await locator.first().scrollIntoViewIfNeeded();
+  const box = await locator.first().boundingBox();
+  await page.mouse.wheel(0, box.y - offset);
   await page.waitForTimeout(1200);
-  await shoot(page, `${prefix}-result`, { check: false });
-  notes[`${prefix}-result`] = { frames: text.length };
+};
+
+/** Applies a search off camera (the film shows typing once, on the iPhone). */
+async function applySearch(page, text, pick) {
+  await page.getByRole("combobox").first().click();
+  await page.keyboard.type(`${text} `);
+  await page.waitForTimeout(900);
+  await page.getByText(pick).first().click();
+  await page.waitForTimeout(400);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(1200);
 }
 
 const browser = await chromium.launch();
 try {
-  // ── Phone, light theme: "you see everything" ────────────────────────────
+  // ── iPhone: plain-English search, typed key by key ──────────────────────
   {
-    const context = await browser.newContext({
-      viewport: PHONE,
-      deviceScaleFactor: 3,
-      isMobile: true,
-      hasTouch: true,
-    });
-    const page = await openLedger(context, "light");
-
+    const { context, page } = await open(browser, "iphone");
     await go(page, "/transactions");
-    await shoot(page, "list");
-    // The rows the opening's loose amounts fly to: text and position.
-    notes.list = {
-      rows: await page.evaluate(() => {
-        const W = innerWidth;
-        const H = innerHeight;
-        const out = [];
-        for (const el of document.querySelectorAll("main *")) {
-          if (el.children.length) continue;
-          const text = el.textContent.trim();
-          if (!/^[-+]?[€$£]|^-?[A-Z]{0,3}\$?[€$£]?-?\d[\d,.]*$/.test(text))
-            continue;
-          if (!/\d\.\d\d$/.test(text)) continue;
-          const r = el.getBoundingClientRect();
-          if (r.width === 0 || r.top < 150 || r.bottom > H - 80) continue;
-          out.push({
-            text,
-            x: r.left / W,
-            y: r.top / H,
-            w: r.width / W,
-            h: r.height / H,
-          });
-        }
-        return out;
-      }),
+    await shoot(page, "iphone-list");
+    // The rows the opening's loose amounts fly to.
+    notes.rows = await page.evaluate(() => {
+      const out = [];
+      for (const el of document.querySelectorAll("main *")) {
+        if (el.children.length) continue;
+        const text = el.textContent.trim();
+        if (!/^-?[€$£]?-?[\d,]+\.\d\d$/.test(text.replace(/^US/, ""))) continue;
+        const r = el.getBoundingClientRect();
+        if (!r.width || r.top < 150 || r.bottom > innerHeight - 80) continue;
+        out.push({
+          text,
+          x: r.left / innerWidth,
+          y: r.top / innerHeight,
+          h: r.height / innerHeight,
+        });
+      }
+      return out;
+    });
+    await page.getByRole("combobox").first().click();
+    await page.waitForTimeout(400);
+    await shoot(page, "iphone-search-00", { check: false });
+    for (let i = 0; i < QUERY.length; i++) {
+      await page.keyboard.type(QUERY[i]);
+      await page.waitForTimeout(90);
+      await shoot(page, `iphone-search-${String(i + 1).padStart(2, "0")}`, {
+        check: false,
+      });
+    }
+    await page.keyboard.type(" ");
+    await page.waitForTimeout(900);
+    await shoot(page, "iphone-understood", { check: false });
+    notes.ask = {
+      input: await boxOf(page, page.getByRole("combobox")),
+      chips: await boxOf(page, page.getByText(/^Apply all/)),
     };
-
-    await go(page, "/analytics");
-    await page.mouse.wheel(0, 150);
     await page
-      .getByRole("button", { name: "Pie chart", exact: true })
+      .getByText(/^Apply all/)
       .first()
       .click();
-    await page.waitForTimeout(1500);
-    await shoot(page, "charts");
-    notes.charts = {
-      total: await boxOf(page, page.getByText("Total spent")),
-      ring: await boxOf(page, page.locator("svg.recharts-surface")),
-    };
-    await page.mouse.wheel(0, 420);
-    await page.waitForTimeout(800);
-    await shoot(page, "charts-categories");
+    await page.waitForTimeout(500);
+    await page.keyboard.press("Escape").catch(() => {});
+    await page.waitForTimeout(1200);
+    await shoot(page, "iphone-result", { check: false });
+    await context.close();
+  }
 
-    await go(page, "/transactions");
-    await typeSearch(page, "search", QUERY);
+  // ── Android: subscriptions and bills that are coming up ─────────────────
+  {
+    const { context, page } = await open(browser, "android");
+    await go(page, "/scheduled");
+    // Narrow the list to subscriptions and household bills.
+    for (const category of ["entertainment", "utilities"]) {
+      try {
+        await applySearch(
+          page,
+          category,
+          new RegExp(`^Category: ${category}`, "i"),
+        );
+      } catch {
+        await page.keyboard.press("Escape").catch(() => {});
+      }
+    }
+    await bringTo(page, page.getByRole("checkbox").nth(0), 250);
+    await shoot(page, "android-bills");
+    notes.bills = { first: await boxOf(page, page.getByRole("checkbox")) };
+    await context.close();
+  }
 
-    // Spending insights: one budget over beside budgets with money left.
+  // ── iPad: this month's spending insights ────────────────────────────────
+  {
+    const { context, page } = await open(browser, "ipad");
     await go(page, "/insights");
-    const over = page.getByText(/over budget$/).last();
-    await over.scrollIntoViewIfNeeded();
-    const y = (await over.boundingBox()).y;
-    await page.mouse.wheel(0, y - 300);
-    await page.waitForTimeout(800);
-    await shoot(page, "budgets");
-    notes.budgets = {
-      over: await boxOf(page, page.getByText(/over budget$/).last()),
-      left: await boxOf(page, page.getByText(/\d remaining$/)),
+    await shoot(page, "ipad-month");
+    notes.month = {
+      budgets: await boxOf(page, page.getByText("Budget Analysis")),
+      payees: await boxOf(page, page.getByText("Top Payee Spending")),
     };
-
-    await go(page, "/calendar");
-    await shoot(page, "calendar");
-    // Open a day that is still to come.
-    await page
-      .getByRole("button", { name: /25/ })
-      .first()
-      .click()
-      .catch(() => {});
-    await page.waitForTimeout(700);
-    await shoot(page, "calendar-day");
     await context.close();
   }
 
-  // ── Phone, dark theme, network off: "we see nothing" ────────────────────
+  // ── iPhone Duo, sideways: the money flow, then the forecast ─────────────
   {
-    const context = await browser.newContext({
-      viewport: PHONE,
-      deviceScaleFactor: 3,
-      isMobile: true,
-      hasTouch: true,
-    });
-    const page = await openLedger(context, "dark");
-    await go(page, "/transactions");
-    await shoot(page, "dark-list");
-    await go(page, "/analytics");
-    await page.mouse.wheel(0, 150);
-    await page
-      .getByRole("button", { name: "Pie chart", exact: true })
-      .first()
-      .click();
-    await page.waitForTimeout(1500);
-    await shoot(page, "dark-charts");
-    await go(page, "/transactions");
-    await context.setOffline(true);
-    await typeSearch(page, "offline", OFFLINE_QUERY);
-    await context.setOffline(false);
+    const { context, page } = await open(browser, "duo");
+    await go(page, "/reports/advanced");
+    await applySearch(page, "this year", /^Date:/);
+    await bringTo(page, page.getByText("Financial Flow"), 60);
+    await page.mouse.wheel(0, 300);
+    await page.waitForTimeout(1000);
+    await shoot(page, "duo-flow");
+    await bringTo(page, page.getByText("Net Income Trend"), 70);
+    // Scrolling leaves the pointer over the chart, which opens its tooltip;
+    // move it up to the top bar.
+    await page.mouse.move(600, 8);
+    await page.waitForTimeout(700);
+    await shoot(page, "duo-forecast");
     await context.close();
   }
 
-  // ── Bigger screens, dark: the device family ─────────────────────────────
-  for (const [name, viewport, scale, mobile] of [
-    ["tablet", { width: 1032, height: 1376 }, 2, true],
-    ["desktop", { width: 1440, height: 900 }, 2, false],
-  ]) {
-    const context = await browser.newContext({
-      viewport,
-      deviceScaleFactor: scale,
-      isMobile: mobile,
-      hasTouch: mobile,
-    });
-    const page = await openLedger(context, "dark");
+  // ── Desktop: where the month went ───────────────────────────────────────
+  {
+    const { context, page } = await open(browser, "desktop");
     await go(page, "/analytics");
     await page
       .getByRole("button", { name: "Pie chart", exact: true })
       .first()
       .click();
     await page.waitForTimeout(1500);
-    await shoot(page, `${name}-charts`);
+    // Park the pointer where it opens nothing (the sidebar widens on hover).
+    await page.mouse.move(1000, 890);
+    await page.waitForTimeout(600);
+    await shoot(page, "desktop-spent");
+    notes.spent = { total: await boxOf(page, page.getByText("Total spent")) };
     await context.close();
   }
 } finally {
   await browser.close();
 }
 
-writeFileSync(
-  path.join(OUT, "notes.json"),
-  JSON.stringify(
-    { query: QUERY, offlineQuery: OFFLINE_QUERY, ...notes },
-    null,
-    1,
-  ),
-);
+writeFileSync(path.join(OUT, "notes.json"), JSON.stringify(notes, null, 1));
 console.log(`✓ captures in ${OUT}`);

@@ -5,16 +5,24 @@
  *
  * - worry: a low drone and stray, slightly out-of-tune pings.
  * - turn: the pings stop on one note and a riser leads into the drop.
- * - where … ahead: four-on-the-floor kick, off-beat hats and bass, a plucked
- *   arpeggio over one chord a bar; a clap joins from the search on. Every key
- *   of the typed search ticks and "Apply all" clicks.
- * - only: the drums stop while the network is off (keys only), then slam
- *   back on "Only you."
- * - devices: the fullest bars. end: an impact and a bell chord.
+ * - the five features: four-on-the-floor kick, off-beat hats and bass, a
+ *   plucked arpeggio over one chord a bar; a clap joins from the second
+ *   device. Each flip to the next device has a whoosh and a melody note;
+ *   every key of the typed search ticks and "Apply all" clicks.
+ * - every device: the fullest bars, then the drums rest for one bar as the
+ *   devices fold into the logo.
+ * - end: an impact and a bell chord.
  *
  *   renderScore({ seconds }) → [left, right] Float32Array at 48 kHz
  */
-import { BAR, BEAT, CHAPTERS as C, moments } from "./timeline.mjs";
+import {
+  BAR,
+  BEAT,
+  CHAPTERS as C,
+  FEATURES,
+  FLIP,
+  moments,
+} from "./timeline.mjs";
 
 const RATE = 48000;
 const TAU = Math.PI * 2;
@@ -136,10 +144,11 @@ export function renderScore({ seconds, queryLength = 28 }) {
   bell(C.turn.start + 1.1, 72, 0.16);
   bell(C.turn.start + 1.1, 60, 0.12);
 
-  // The groove: one chord a bar from the drop ("where") to the end card,
-  // resting while the network is off.
-  const drop = C.where.start;
-  const resting = (t) => t >= M.dark - 0.01 && t < M.onlyYou - 0.01;
+  // The groove: one chord a bar from the drop (the first feature) to the
+  // end card. The drums rest for the last bar before the devices fold into
+  // the logo, so the end card lands.
+  const drop = C.ask.start;
+  const resting = (t) => t >= M.merge - BAR && t < C.end.start - 0.01;
   const hat = (t, gain) =>
     voice(t, 0.04, gain, 0.35, (s) => Math.exp(-s * 190) * rand());
   const clap = (t) =>
@@ -161,7 +170,7 @@ export function renderScore({ seconds, queryLength = 28 }) {
     const chord = CHORDS[bar % CHORDS.length];
     const quiet = resting(t + BAR / 2);
     pad(t, BAR, chord, quiet ? 0.004 : 0.02);
-    const full = t >= C.devices.start - 0.01;
+    const full = t >= C.flow.start - 0.01;
     for (let step = 0; step < 8; step++) {
       const at = t + (step * BEAT) / 2;
       if (resting(at)) continue;
@@ -170,7 +179,7 @@ export function renderScore({ seconds, queryLength = 28 }) {
         hat(at, 0.05);
         bass(at, chord[0] - 12);
       }
-      if (at >= C.ask.start - 0.01 && (step === 2 || step === 6)) clap(at);
+      if (at >= C.bills.start - 0.01 && (step === 2 || step === 6)) clap(at);
       // Arpeggio: up the chord, an octave above, panned side to side.
       pluck(
         at,
@@ -180,30 +189,26 @@ export function renderScore({ seconds, queryLength = 28 }) {
       );
     }
   }
-  // A melody note at the start of each question.
-  [
-    [C.where.start, 76],
-    [C.ask.start, 79],
-    [C.track.start, 81],
-    [C.ahead.start, 84],
-    [C.devices.start, 88],
-  ].forEach(([t, note]) => bell(t, note, 0.1, 0.2));
+  // Each device flips into the next with a soft whoosh and a melody note.
+  FEATURES.forEach((feature, index) => {
+    const at = C[feature.id].start;
+    if (index > 0) swell(at - FLIP, FLIP * 2, 0.09);
+    bell(at, [76, 79, 81, 84, 88][index], 0.1, index % 2 ? 0.3 : -0.3);
+  });
+  bell(M.forecast, 86, 0.07, 0.3);
+  // The pull-back to every device.
+  swell(C.everywhere.start - 0.5, 0.9, 0.1);
+  [60, 67, 76].forEach((note, i) =>
+    bell(C.everywhere.start + 0.5, note, 0.11, i - 1),
+  );
 
   // Typing and "Apply all": what the hand does on screen.
   M.askKeys.forEach((t) => tick(t));
   click(M.askApply);
   bell(M.askResult, 88, 0.07, 0.3);
-  M.offlineKeys.forEach((t) => tick(t, 0.05));
-  click(M.offlineApply);
-  bell(M.offlineResult, 88, 0.07, 0.3);
-
-  // "Only you.": a swell, then a warm chord.
-  swell(M.onlyYou - 0.8, 0.8, 0.12);
-  [60, 67, 76].forEach((note, i) => bell(M.onlyYou, note, 0.12, i - 1));
-  M.proof.forEach((t, i) => bell(t, [79, 81, 84][i], 0.06, 0.3));
 
   // End card: an impact and a bell chord for each half of the line.
-  swell(C.end.start - 1.0, 1.0, 0.1);
+  swell(M.merge, C.end.start - M.merge, 0.14);
   voice(
     C.end.start,
     2.5,
@@ -213,10 +218,10 @@ export function renderScore({ seconds, queryLength = 28 }) {
   );
   pad(C.end.start, 5.5, CHORDS[0], 0.035);
   [72, 76, 79].forEach((note, i) =>
-    bell(C.end.start + 1.3 + i * 0.08, note, 0.1, i - 1),
+    bell(C.end.start + 0.8 + i * 0.07, note, 0.1, i - 1),
   );
   [79, 83, 86].forEach((note, i) =>
-    bell(C.end.start + 2.2 + i * 0.08, note, 0.1, 1 - i),
+    bell(C.end.start + 1.35 + i * 0.07, note, 0.1, 1 - i),
   );
 
   // Fade out with the picture, then keep peaks in range.

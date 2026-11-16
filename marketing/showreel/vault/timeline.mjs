@@ -1,10 +1,10 @@
 /**
- * The clock and the words of "You see everything. We see nothing.".
+ * The clock and the words of the Vaulted Money film.
  *
- * 19 bars at 108 BPM = 42 s, cut fast: no beat lasts longer than nine
- * seconds and the phone turns to a new angle on every one. The film proves its tagline in order: three
- * questions answered by the real app (you see everything), then the same
- * search answering with the network off (we see nothing), then the name.
+ * 20 bars at 108 BPM = 44 s. One feature per device: the camera sits close on
+ * a device while it shows one thing, then the device flips over into the next
+ * one. Five features, five devices. At the end the camera pulls back once to
+ * show them all, and they fold into the logo.
  * Picture (film.mjs) and sound (score.mjs) both read from here.
  */
 export const WIDTH = 1920;
@@ -14,17 +14,68 @@ export const BPM = 108;
 export const BEAT = 60 / BPM;
 export const BAR = BEAT * 4;
 
-// Short beats, none the same length three times running.
+/** The slogan, the same wherever the name appears, and the badges under it. */
+export const TAGLINE = "Private Vault. Open Code.";
+export const BADGES = ["Private vault", "Local data", "Auditable code"];
+
+/**
+ * The feature beats, in order: which device shows what, under which words.
+ * `*accent*` marks the serif words. Headlines are short enough to sit on one
+ * or two even lines; none leaves a single word alone on a line.
+ */
+export const FEATURES = [
+  {
+    id: "ask",
+    device: "iphone",
+    label: "iPhone",
+    bars: 3,
+    headline: "Ask it like *you'd say it.*",
+    note: "No AI. No cloud.",
+  },
+  {
+    id: "bills",
+    device: "android",
+    label: "Android",
+    bars: 2,
+    headline: "Every subscription, *before it bills.*",
+  },
+  {
+    id: "month",
+    device: "ipad",
+    label: "iPad",
+    bars: 2,
+    headline: "Your month, *at a glance.*",
+  },
+  {
+    id: "flow",
+    device: "duo",
+    label: "iPhone Duo",
+    bars: 3,
+    headline: "Follow the flow. *See what's ahead.*",
+  },
+  {
+    id: "spent",
+    device: "desktop",
+    label: "Mac · Windows · Linux",
+    bars: 2,
+    headline: "Every cent, *accounted for.*",
+  },
+];
+
+export const COPY = {
+  worry: "Money on your *mind?*",
+  everywhere: "Yours alone, on *every device.*",
+  proof: ["No sign-up", "No cloud", "AI off until you switch it on"],
+  action: "Try the demo at vaulted.money",
+};
+
+// No three beats of the same length in a row.
 const LENGTHS = [
   ["worry", 1],
   ["turn", 1],
-  ["where", 2],
-  ["ask", 3],
-  ["track", 2],
-  ["ahead", 2],
-  ["only", 4],
-  ["devices", 2],
-  ["end", 2],
+  ...FEATURES.map((f) => [f.id, f.bars]),
+  ["everywhere", 3],
+  ["end", 3],
 ];
 let at = 0;
 export const CHAPTERS = Object.fromEntries(
@@ -36,49 +87,25 @@ export const CHAPTERS = Object.fromEntries(
 );
 export const DURATION = at;
 
-export const TAGLINE = "Private Vault. Open Code.";
-/** The three badges under it. */
-export const BADGES = ["Private vault", "Local data", "Auditable code"];
+/** How long a device takes to flip away, and the next to flip in. */
+export const FLIP = 0.28;
 
-/** Headlines: the word in *asterisks* is the accent. */
-export const COPY = {
-  worry: "Money on your *mind?*",
-  where: "Where did it all *go?*",
-  ask: "Ask it like *you'd say it.*",
-  askNote: "No AI. No cloud.",
-  track: "Am I on *track?*",
-  ahead: "What's coming *up?*",
-  who: "Who else can see *this?*",
-  only: "*Only you.*",
-  proof: [
-    "No sign-up. No cloud.",
-    "AI off until you switch it on.",
-    "Open code. Audit it.",
-  ],
-  offline: "Network off",
-  devices: "Every *device.*",
-  action: "Try the demo at vaulted.money",
-};
-
-/** Typing: when each key of a query of `length` lands. */
-const keys = (from, to, length) =>
-  Array.from({ length }, (_, i) => from + ((to - from) * i) / (length - 1));
-
+/** Typing: when each key of a query of `length` lands, and what follows. */
 export function moments(queryLength) {
   const ask = CHAPTERS.ask.start;
-  const only = CHAPTERS.only.start;
+  const from = ask + 0.45;
+  const to = ask + 2.3;
   return {
-    askKeys: keys(ask + 0.3, ask + 2.1, queryLength),
-    askUnderstood: ask + 2.25,
-    askApply: ask + 3.7,
-    askResult: ask + 3.9,
-    // The private half: the picture turns dark as the network goes off.
-    dark: only + 1.2,
-    offlineKeys: keys(only + 1.9, only + 3.0, queryLength),
-    offlineUnderstood: only + 3.1,
-    offlineApply: only + 3.9,
-    offlineResult: only + 4.1,
-    onlyYou: only + 4.9,
-    proof: [only + 5.7, only + 6.3, only + 6.9],
+    askKeys: Array.from(
+      { length: queryLength },
+      (_, i) => from + ((to - from) * i) / (queryLength - 1),
+    ),
+    askUnderstood: ask + 2.45,
+    askApply: ask + 3.9,
+    askResult: ask + 4.1,
+    // The flow beat shows two charts on the Duo: the flow, then the forecast.
+    forecast: CHAPTERS.flow.start + 3.4,
+    // The devices fold into the logo this long before the end card.
+    merge: CHAPTERS.end.start - 0.9,
   };
 }
