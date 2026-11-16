@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { Budget } from "../../types/budgets";
@@ -61,6 +62,8 @@ export function BudgetCard({
 }: BudgetCardProps) {
   const { accounts } = useTransactions();
   const { t, i18n } = useTranslation();
+  // Phones show the frequency only; a tap on it reveals the dates and scope.
+  const [showWhen, setShowWhen] = useState(false);
   const navigate = useNavigate();
 
   // Goal progress (only computed when is_goal)
@@ -213,14 +216,21 @@ export function BudgetCard({
           )}
         </CardTitle>
         <CardDescription className="text-slate-600 dark:text-slate-400">
-          {frequencyLabel(budget.frequency, t)}
-          {/* Dates and scope are in the edit dialog; phones show the
-              frequency only. */}
-          <span className="hidden sm:inline">
+          <button
+            type="button"
+            className="border-0 bg-transparent p-0 text-left underline decoration-dotted underline-offset-4 sm:cursor-default sm:no-underline"
+            aria-expanded={showWhen}
+            onClick={() => setShowWhen((shown) => !shown)}
+          >
+            {frequencyLabel(budget.frequency, t)}
+          </button>
+          <span className={showWhen ? "inline" : "hidden sm:inline"}>
             {" · "}
             {formattedStartDate} - {formattedEndDate}
           </span>
-          <span className="hidden text-xs text-slate-500 dark:text-slate-400 sm:block">
+          <span
+            className={`text-xs text-slate-500 dark:text-slate-400 ${showWhen ? "block" : "hidden sm:block"}`}
+          >
             {t("budgets.card.scope", {
               scope:
                 budget.account_scope === "GROUP"

@@ -100,7 +100,7 @@ and a scrubber:
 npx serve marketing/showreel   # then open http://localhost:3000
 ```
 
-### The film: "Private vault. Open code." (42 s)
+### The film: "Private Vault. Open Code." (42 s)
 
 A separate, faster film in [`vault/`](vault/README.md): three questions
 answered by the real app, then the same search with the network off. Its

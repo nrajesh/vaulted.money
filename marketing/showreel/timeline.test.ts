@@ -166,11 +166,10 @@ describe("keynote cut timeline", () => {
       expect(line.replace(/\*/g, ""), line).not.toMatch(banned);
   });
 
-  it("words its taglines without repeating the badges", async () => {
+  it("signs off with the one slogan", async () => {
     const { keynote } = await load();
-    const badges = /\b(privacy|private|local|data|open|sourced?)\b/i;
     for (const tagline of keynote.TAGLINES as string[])
-      expect(tagline).not.toMatch(badges);
+      expect(tagline).toBe("Private Vault. Open Code.");
   });
 
   it("adds up the numbers it shows", async () => {

@@ -61,7 +61,7 @@ export const HANDOVER = 6 * BEAT;
 
 /**
  * Every line on screen. Short on purpose: people watch and read at once.
- * `*accent*` marks the serif accent words. Taglines come from the README.
+ * `*accent*` marks the serif accent words. The slogan is the same everywhere.
  */
 export const COPY = {
   worry: { headline: "Money on your *mind?*" },
@@ -69,7 +69,7 @@ export const COPY = {
     headline: "Most apps only look *back.*",
     sub: "Some sell what they see.",
   },
-  turn: { name: "Vaulted Money", tagline: "Your money, in focus." },
+  turn: { name: "Vaulted Money", tagline: "Private Vault. Open Code." },
   privacy: {
     headline: "Who else can see *this?*",
     answer: "Only you.",
@@ -106,16 +106,13 @@ export const COPY = {
   devices: { headline: "Every *device.*" },
   end: {
     name: "Vaulted Money",
-    tagline: "See it all. Keep it yours.",
+    tagline: "Private Vault. Open Code.",
     extra: "Free & open source · vaulted.money",
     badges: ["Privacy-first", "Data-local", "Open-sourced"],
   },
 };
 
-/**
- * The taglines: the owner asked for our own, worded so they never repeat
- * what the end card's badges already say.
- */
+/** The slogan, the same wherever the name appears. */
 export const TAGLINES = [COPY.turn.tagline, COPY.end.tagline];
 
 /** Budgets the film shows (and the agent quotes): spent of target. */

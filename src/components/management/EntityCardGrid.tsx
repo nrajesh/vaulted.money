@@ -12,6 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /**
  * One column of an entity list. On a card, the "name" column is the title,
@@ -190,15 +195,36 @@ export const EntityCardGrid = <T extends { id: string; name: string }>({
         {/* The rest of the card opens the details. It sits under the name,
             checkbox and buttons, which keep their own clicks. */}
         {!editing && (
-          <button
-            type="button"
-            className="absolute inset-0 rounded-[inherit] border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
-            onClick={() => setDetailsId(item.id)}
-            aria-label={t("management.actions.detailsNamed", {
-              name: item.name,
-              defaultValue: "Details: {{name}}",
-            })}
-          />
+          // Hovering (or focusing) a card previews what the details hold.
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="absolute inset-0 rounded-[inherit] border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                onClick={() => setDetailsId(item.id)}
+                aria-label={t("management.actions.detailsNamed", {
+                  name: item.name,
+                  defaultValue: "Details: {{name}}",
+                })}
+              />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <dl className="space-y-0.5 text-xs">
+                {detailColumns.map((col) => {
+                  const value = plain(col, item);
+                  if (isBlank(value)) return null;
+                  return (
+                    <div key={col.header} className="flex gap-3">
+                      <dt className="opacity-80">{col.header}</dt>
+                      <dd className="ml-auto font-medium tabular-nums">
+                        {value}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </TooltipContent>
+          </Tooltip>
         )}
       </li>
     );

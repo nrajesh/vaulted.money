@@ -67,6 +67,6 @@ describe("vault film timeline", () => {
   });
 
   it("signs off with the one tagline", () => {
-    expect(TAGLINE).toBe("Private vault. Open code.");
+    expect(TAGLINE).toBe("Private Vault. Open Code.");
   });
 });

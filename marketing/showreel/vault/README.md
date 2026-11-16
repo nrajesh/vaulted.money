@@ -2,7 +2,7 @@
 
 About 42 seconds (1920×1080, 30 fps), cut fast: three questions answered by
 the real app, then the same search answering with the network off, then the
-name and its line, "Private vault. Open code." The phone turns to a new angle
+name and its line, "Private Vault. Open Code." The phone turns to a new angle
 on every beat, and the score is a house groove at 108 BPM in the spirit of
 the relaxed social cut.
 
@@ -16,7 +16,7 @@ the relaxed social cut.
 | 0:20 | What's coming up?                | Calendar                                                           |
 | 0:24 | Who else can see this? Only you. | The same search with the network off                               |
 | 0:33 | Every device.                    | Phone, tablet and desktop on the same ledger                       |
-| 0:38 | Private vault. Open code.        | Name, line, three badges, one action                               |
+| 0:38 | Private Vault. Open Code.        | Name, line, three badges, one action                               |
 
 The end line and badges are `TAGLINE` and `BADGES` in `timeline.mjs`.
 

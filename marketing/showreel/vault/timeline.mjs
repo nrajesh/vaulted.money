@@ -36,7 +36,7 @@ export const CHAPTERS = Object.fromEntries(
 );
 export const DURATION = at;
 
-export const TAGLINE = "Private vault. Open code.";
+export const TAGLINE = "Private Vault. Open Code.";
 /** The three badges under it. */
 export const BADGES = ["Private vault", "Local data", "Auditable code"];
 

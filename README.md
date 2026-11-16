@@ -2,7 +2,7 @@
   <a href="https://vaulted.money/ledgers?demo=1">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="documentation/readme/hero-dark.png">
-      <img src="documentation/readme/hero-light.png" alt="Vaulted Money: Ask your ledger. Keep control. The app turning the sentence 'groceries over 50 last month' into date, amount and category filters." width="820" />
+      <img src="documentation/readme/hero-light.png" alt="Vaulted Money: Private Vault. Open Code. The app turning the sentence 'groceries over 50 last month' into date, amount and category filters." width="820" />
     </picture>
   </a>
 </p>
