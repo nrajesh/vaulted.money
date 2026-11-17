@@ -114,13 +114,15 @@ const wide = (scale, fx, fy, ry = 0, rx = 0) =>
   look(scale, fx, fy, ry, rx, ...WIDE);
 
 // The line-up at the end: every device upright, side by side.
+// Sizes follow the real devices (about 2.45 stage px per millimetre): a phone
+// is the smallest thing here and the laptop the largest. They stand on one
+// line, the Duo in front.
 const SLOTS = {
-  // Big enough to fill the frame edge to edge; the Duo sits in front.
-  android: look(0.8, 0.5, 0.5, 12, 0, 170, 610),
-  iphone: look(0.8, 0.5, 0.5, 7, 0, 480, 610),
-  ipad: look(0.68, 0.5, 0.5, -4, 0, 860, 570),
-  duo: look(0.5, 0.5, 0.5, 0, 0, 1170, 745),
-  desktop: look(0.62, 0.5, 0.5, -10, 0, 1520, 520),
+  android: look(0.41, 0.5, 0.5, 10, 0, 200, 732),
+  iphone: look(0.41, 0.5, 0.5, 6, 0, 430, 734),
+  ipad: look(0.72, 0.5, 0.5, -4, 0, 770, 587),
+  duo: look(0.41, 0.5, 0.5, 0, 0, 1100, 746),
+  desktop: look(0.6, 0.5, 0.5, -8, 0, 1440, 610),
 };
 const MERGE = [960, 290]; // where the logo stands on the end card
 
