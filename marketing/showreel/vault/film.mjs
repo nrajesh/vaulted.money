@@ -100,8 +100,8 @@ const place = (spec, pose, fx, fy) => {
 
 // Where the camera looks: tall devices sit right of the words, wide ones
 // under them.
-const TALL = [1350, 540];
-const WIDE = [960, 610];
+const TALL = [1300, 540];
+const WIDE = [960, 630];
 const tall = (scale, fx, fy, ry = 0, rx = 0) =>
   look(scale, fx, fy, ry, rx, ...TALL);
 const wide = (scale, fx, fy, ry = 0, rx = 0) =>
@@ -109,13 +109,14 @@ const wide = (scale, fx, fy, ry = 0, rx = 0) =>
 
 // The line-up at the end: every device upright, side by side.
 const SLOTS = {
-  android: look(0.62, 0.5, 0.5, 12, 0, 165, 590),
-  iphone: look(0.62, 0.5, 0.5, 7, 0, 425, 590),
-  duo: look(0.37, 0.5, 0.5, 0, 0, 775, 640),
-  ipad: look(0.55, 0.5, 0.5, -6, 0, 1150, 590),
-  desktop: look(0.45, 0.5, 0.5, -12, 0, 1575, 620),
+  // Big enough to fill the frame edge to edge; the Duo sits in front.
+  android: look(0.8, 0.5, 0.5, 12, 0, 170, 610),
+  iphone: look(0.8, 0.5, 0.5, 7, 0, 480, 610),
+  ipad: look(0.68, 0.5, 0.5, -4, 0, 860, 570),
+  duo: look(0.5, 0.5, 0.5, 0, 0, 1170, 745),
+  desktop: look(0.62, 0.5, 0.5, -10, 0, 1520, 520),
 };
-const MERGE = [960, 330]; // where the logo stands on the end card
+const MERGE = [960, 290]; // where the logo stands on the end card
 
 let M; // moments, known once the query length is
 let NOTES;
@@ -219,38 +220,38 @@ function buildCameras() {
   CAMERAS.iphone = [
     [C.turn.start, WHOLE],
     [ask.start - 0.2, WHOLE],
-    [ask.start + 0.45, tall(2.0, 0.5, inputY, -20, 6)],
-    [M.askUnderstood, tall(2.05, 0.5, inputY, -12, 4)],
-    [M.askUnderstood + 0.5, tall(2.05, 0.5, chipsY - 0.02, 14, 4)],
-    [M.askApply, tall(2.1, 0.5, chipsY - 0.02, 18, 3)],
-    [M.askResult + 0.5, tall(1.3, 0.5, 0.47, -22, 4)],
-    [ask.end, tall(1.36, 0.5, 0.47, -14, 4)],
+    [ask.start + 0.45, tall(2.3, 0.5, inputY, -18, 6)],
+    [M.askUnderstood, tall(2.35, 0.5, inputY, -10, 4)],
+    [M.askUnderstood + 0.5, tall(2.35, 0.5, chipsY - 0.02, 12, 4)],
+    [M.askApply, tall(2.4, 0.5, chipsY - 0.02, 16, 3)],
+    [M.askResult + 0.5, tall(1.7, 0.5, 0.42, -20, 4)],
+    [ask.end, tall(1.8, 0.5, 0.46, -12, 4)],
   ];
   CAMERAS.android = [
-    [bills.start, tall(1.3, 0.5, 0.4, 22, 4)],
-    [bills.start + 1.6, tall(1.75, 0.5, 0.36, -14, 6)],
-    [bills.end, tall(1.85, 0.5, 0.5, -20, 5)],
+    [bills.start, tall(1.7, 0.5, 0.36, 20, 4)],
+    [bills.start + 1.6, tall(2.15, 0.5, 0.34, -12, 6)],
+    [bills.end, tall(2.2, 0.5, 0.5, -18, 5)],
   ];
   const b = NOTES.month.budgets;
   const p = NOTES.month.payees;
   CAMERAS.ipad = [
-    [month.start, tall(1.25, 0.5, 0.3, -20, 4)],
-    [month.start + 1.3, tall(1.6, 0.52, b.y + 0.12, 12, 5)],
-    [month.start + 2.4, tall(1.62, 0.52, b.y + 0.12, 16, 5)],
-    [month.start + 3.1, tall(1.6, 0.66, p.y + 0.12, -14, 4)],
-    [month.end, tall(1.64, 0.66, p.y + 0.12, -18, 4)],
+    [month.start, look(1.55, 0.42, b.y + 0.14, -18, 4, 1480, 540)],
+    [month.start + 1.3, look(1.9, 0.42, b.y + 0.1, 10, 5, 1480, 540)],
+    [month.start + 2.4, look(1.95, 0.42, b.y + 0.1, 14, 5, 1480, 540)],
+    [month.start + 3.1, look(1.9, 0.66, p.y + 0.08, -12, 4, 1640, 540)],
+    [month.end, look(1.95, 0.66, p.y + 0.08, -16, 4, 1640, 540)],
   ];
   CAMERAS.duo = [
-    [flow.start, wide(0.92, 0.5, 0.5, 18, 4)],
-    [flow.start + 1.4, wide(1.3, 0.52, 0.45, -10, 4)],
-    [M.forecast - 0.2, wide(1.36, 0.52, 0.5, -14, 4)],
-    [M.forecast + 0.6, wide(1.2, 0.5, 0.36, 12, 4)],
-    [flow.end, wide(1.3, 0.55, 0.36, 18, 3)],
+    [flow.start, wide(1.15, 0.5, 0.5, 16, 4)],
+    [flow.start + 1.4, wide(1.5, 0.52, 0.5, -8, 4)],
+    [M.forecast - 0.2, wide(1.56, 0.52, 0.5, -12, 4)],
+    [M.forecast + 0.6, wide(1.45, 0.5, 0.42, 10, 4)],
+    [flow.end, wide(1.55, 0.55, 0.42, 14, 3)],
   ];
   CAMERAS.desktop = [
-    [spent.start, wide(0.9, 0.5, 0.5, -18, 4)],
-    [spent.start + 1.4, wide(1.5, 0.52, 0.6, 10, 4)],
-    [spent.end - 0.1, wide(1.56, 0.52, 0.6, 14, 3)],
+    [spent.start, wide(1.12, 0.5, 0.5, -16, 4)],
+    [spent.start + 1.4, wide(1.6, 0.52, 0.56, 8, 4)],
+    [spent.end - 0.1, wide(1.68, 0.52, 0.56, 12, 3)],
     // The one pull-back: the desktop goes to its place in the line-up.
     [everywhere.start + 0.9, SLOTS.desktop],
   ];

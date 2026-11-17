@@ -45,9 +45,9 @@ body {
    headline never leaves one word alone on a line. */
 .cap {
   position: absolute;
-  left: 100px;
+  left: 84px;
   top: 0;
-  width: 700px;
+  width: 760px;
   height: 1080px;
   display: flex;
   flex-direction: column;
@@ -56,8 +56,8 @@ body {
 }
 .cap h1 {
   margin: 0;
-  font-size: 92px;
-  line-height: 1.04;
+  font-size: 112px;
+  line-height: 1.02;
   font-weight: 800;
   letter-spacing: -0.035em;
   text-wrap: balance;
@@ -82,12 +82,12 @@ body {
   border-radius: 999px;
   border: 2px solid rgba(134, 222, 222, 0.55);
   color: #dff7f7;
-  font-size: 30px;
+  font-size: 36px;
   font-weight: 600;
 }
 .cap .note {
-  margin-top: 26px;
-  font-size: 42px;
+  margin-top: 28px;
+  font-size: 52px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--teal);
@@ -124,7 +124,7 @@ body {
 }
 .cap.centre {
   left: 0;
-  top: 84px;
+  top: 34px;
   width: 1920px;
   height: auto;
   display: block;
@@ -137,7 +137,7 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  top: 940px;
+  top: 1006px;
   display: flex;
   justify-content: center;
   gap: 22px;
@@ -180,6 +180,9 @@ body {
 }
 
 /* Devices */
+.device.duo {
+  z-index: 2;
+}
 .device {
   position: absolute;
   background: #0b0f17;
@@ -268,12 +271,12 @@ body {
   text-align: center;
 }
 #end .logo-svg {
-  width: 190px;
-  height: 216px;
+  width: 250px;
+  height: 284px;
 }
 #end h2 {
-  margin: 26px 0 0;
-  font-size: 92px;
+  margin: 22px 0 0;
+  font-size: 120px;
   font-weight: 800;
   letter-spacing: -0.035em;
 }
@@ -285,7 +288,7 @@ body {
   margin-top: 30px;
   font-family: var(--serif);
   font-style: italic;
-  font-size: 104px;
+  font-size: 128px;
   line-height: 1.1;
 }
 #end .tag span {
@@ -317,4 +320,16 @@ body {
   position: absolute;
   inset: 0;
   background: #000;
+}
+
+/* Words always sit above the devices (the Duo is raised in the line-up). */
+.cap,
+#proof {
+  z-index: 3;
+}
+#end {
+  z-index: 4;
+}
+#black {
+  z-index: 5;
 }
