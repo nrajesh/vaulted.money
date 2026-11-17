@@ -21,9 +21,9 @@ const features = FEATURES as Feature[];
 const M = moments(28);
 
 describe("vault film timeline", () => {
-  it("is about forty-five seconds, with chapters back to back", () => {
+  it("is under fifty seconds, with chapters back to back", () => {
     expect(DURATION).toBeGreaterThan(40);
-    expect(DURATION).toBeLessThan(48);
+    expect(DURATION).toBeLessThan(50);
     expect(chapters[0].start).toBe(0);
     for (let i = 1; i < chapters.length; i++)
       expect(chapters[i].start).toBeCloseTo(chapters[i - 1].end, 6);
@@ -36,13 +36,26 @@ describe("vault film timeline", () => {
     for (const length of lengths) expect(length).toBeLessThan(9);
   });
 
-  it("shows one feature per device, and every device once", () => {
-    expect(features).toHaveLength(Object.keys(DEVICES).length);
-    expect(new Set(features.map((f) => f.device))).toEqual(
-      new Set(Object.keys(DEVICES)),
-    );
-    for (const feature of features)
+  it("gives every device a feature, and every feature a device", () => {
+    const used = new Set(features.map((f) => f.device));
+    for (const feature of features) {
+      expect(DEVICES[feature.device], feature.device).toBeDefined();
       expect(CHAPTERS[feature.id], feature.id).toBeDefined();
+    }
+    // The folded Duo is the same device as the Duo, before it opens.
+    for (const device of Object.keys(DEVICES))
+      if (device !== "duoFolded") expect(used.has(device), device).toBe(true);
+    // An AI feature is among them, and says it is the user's choice.
+    expect(features.some((f) => /AI/.test(f.headline))).toBe(true);
+  });
+
+  it("opens the Duo and flips the charts inside their own beats", () => {
+    expect(M.unfold).toBeGreaterThan(CHAPTERS.flow.start + 1);
+    expect(CHAPTERS.flow.end - M.unfold).toBeGreaterThan(3);
+    expect(M.chartBars).toBeGreaterThan(CHAPTERS.charts.start);
+    expect(M.chartRing).toBeGreaterThan(M.chartBars + 1);
+    expect(M.chartRing).toBeLessThan(CHAPTERS.charts.end - 1);
+    expect(M.aiOn).toBeGreaterThan(CHAPTERS.ai.start + 1);
   });
 
   it("types the search once: keys, then what was understood, then the result", () => {

@@ -46,13 +46,19 @@ const SPECS = {
   iphone: { sw: 440, sh: 956, w: 414, pad: 10, bar: 34, radius: 60 },
   android: { sw: 412, sh: 915, w: 414, pad: 9, bar: 30, radius: 44 },
   ipad: { sw: 1032, sh: 1376, w: 690, pad: 16, bar: 0, radius: 34 },
+  // Folded, the Duo is its cover screen: as tall as the opened device and
+  // about half as wide.
+  duoFolded: { sw: 466, sh: 678, w: 600, pad: 12, bar: 0, radius: 44 },
   duo: { sw: 951, sh: 669, w: 1240, pad: 12, bar: 0, radius: 44 },
   desktop: { sw: 1440, sh: 900, w: 1280, pad: 8, bar: 30, radius: 14 },
 };
 for (const spec of Object.values(SPECS)) spec.h = (spec.w * spec.sh) / spec.sw;
 
 const STATUS = {
-  iphone: '<div class="sb"><span>9:41</span><span><b>5G</b></span></div>',
+  // The two phones are told apart the way the real ones are: a pill-shaped
+  // island on the iPhone, a single punch-hole camera on the Android.
+  iphone:
+    '<div class="sb"><span>9:41</span><i class="island"></i><span><b>5G</b></span></div>',
   android:
     '<div class="sb android"><span>9:41</span><i class="cam"></i><span>▾ ▮</span></div>',
   desktop: '<div class="titlebar"><i></i><i></i><i></i></div>',
@@ -63,7 +69,7 @@ const devices = Object.fromEntries(
     const node =
       el(`<div class="device ${id}" style="width:${spec.w + spec.pad * 2}px;height:${spec.h + spec.bar + spec.pad * 2}px;padding:${spec.pad}px;border-radius:${spec.radius}px">
       <div class="glass" style="border-radius:${spec.radius - spec.pad}px">${STATUS[id] ?? ""}
-      <canvas style="top:${spec.bar}px;width:${spec.w}px;height:${spec.h}px"></canvas></div></div>`);
+      <canvas style="top:${spec.bar}px;width:${spec.w}px;height:${spec.h}px"></canvas></div>${id === "desktop" ? '<div class="deck"><i></i></div>' : ""}</div>`);
     const canvas = node.querySelector("canvas");
     return [id, { id, spec, node, canvas, ctx: null, drawn: "" }];
   }),
@@ -193,6 +199,21 @@ const AMOUNT_SPOTS = [
   [1130, 660, 5],
 ];
 
+// In the line-up each device is named, so two phones read as two platforms.
+const SLOT_NAMES = {
+  android: "Android",
+  iphone: "iPhone",
+  ipad: "iPad",
+  duo: "iPhone Duo",
+  desktop: "Mac · Windows · Linux",
+};
+const slotLabels = Object.fromEntries(
+  Object.entries(SLOT_NAMES).map(([id, name]) => [
+    id,
+    el(`<div class="slot-label">${name}</div>`),
+  ]),
+);
+
 const [first, second] = TAGLINE.split(". ");
 const end = el(`<div id="end">${logoSvg("end", "dark")}
   <h2>Vaulted <em>Money</em></h2>
@@ -207,6 +228,7 @@ stage.append(
   capBrand,
   ...featureCaps,
   capEverywhere,
+  ...Object.values(slotLabels),
   proof,
   end,
   black,
@@ -214,7 +236,7 @@ stage.append(
 
 // ── Cameras ─────────────────────────────────────────────────────────────────
 function buildCameras() {
-  const { ask, bills, month, flow, spent, everywhere } = C;
+  const { ask, bills, month, flow, charts, ai, everywhere } = C;
   const inputY = NOTES.ask.input.y + 0.04;
   const chipsY = NOTES.ask.chips.y + 0.02;
   CAMERAS.iphone = [
@@ -241,18 +263,30 @@ function buildCameras() {
     [month.start + 3.1, look(1.9, 0.66, p.y + 0.08, -12, 4, 1640, 540)],
     [month.end, look(1.95, 0.66, p.y + 0.08, -16, 4, 1640, 540)],
   ];
-  CAMERAS.duo = [
-    [flow.start, wide(1.15, 0.5, 0.5, 16, 4)],
-    [flow.start + 1.4, wide(1.5, 0.52, 0.5, -8, 4)],
-    [M.forecast - 0.2, wide(1.56, 0.52, 0.5, -12, 4)],
-    [M.forecast + 0.6, wide(1.45, 0.5, 0.42, 10, 4)],
-    [flow.end, wide(1.55, 0.55, 0.42, 14, 3)],
+  // The Duo arrives folded, straightens, and opens where it stands.
+  const closed = wide(1.05, 0.5, 0.5, 0, 0);
+  CAMERAS.duoFolded = [
+    [flow.start, wide(1.0, 0.5, 0.5, 16, 3)],
+    [M.unfold - 0.35, closed],
+    [flow.end, closed],
   ];
+  CAMERAS.duo = [
+    [M.unfold + 0.6, closed],
+    [M.unfold + 1.5, wide(1.5, 0.5, 0.5, -8, 4)],
+    [flow.end, wide(1.6, 0.52, 0.55, 12, 3)],
+  ];
+  // The laptop shows two things: three kinds of chart, then the AI switch.
+  // Close on the switch and what it says, which is all this screen holds.
+  const aiView = (scale, ry, rx) => look(scale, 0.25, 0.17, ry, rx, 960, 600);
   CAMERAS.desktop = [
-    [spent.start, wide(1.12, 0.5, 0.5, -16, 4)],
-    [spent.start + 1.4, wide(1.6, 0.52, 0.56, 8, 4)],
-    [spent.end - 0.1, wide(1.68, 0.52, 0.56, 12, 3)],
-    // The one pull-back: the desktop goes to its place in the line-up.
+    // It arrives whole, keyboard and all, before the camera goes in.
+    [charts.start, look(0.98, 0.5, 0.56, -16, 4, 960, 600)],
+    [charts.start + 1.0, wide(1.5, 0.5, 0.55, 6, 4)],
+    [charts.end, wide(1.56, 0.5, 0.55, 10, 3)],
+    [ai.start + 0.02, aiView(2.6, -12, 4)],
+    [M.aiOn, aiView(2.7, -6, 3)],
+    [ai.end - 0.1, aiView(2.8, 8, 3)],
+    // The one pull-back: the laptop goes to its place in the line-up.
     [everywhere.start + 0.9, SLOTS.desktop],
   ];
 }
@@ -287,8 +321,15 @@ const SHOTS = {
   },
   android: () => ["android-bills"],
   ipad: () => ["ipad-month"],
-  duo: (t) => fade(t, "duo-flow", "duo-forecast", M.forecast, 0.35),
-  desktop: () => ["desktop-spent"],
+  duoFolded: () => ["duo-folded"],
+  duo: () => ["duo-flow"],
+  desktop: (t) => {
+    if (t < M.chartRing)
+      return fade(t, "desktop-line", "desktop-bar", M.chartBars, 0.25);
+    if (t < C.ai.start)
+      return fade(t, "desktop-bar", "desktop-pie", M.chartRing, 0.25);
+    return fade(t, "desktop-ai-off", "desktop-ai-on", M.aiOn, 0.25);
+  },
 };
 function draw(device, [a, b, mix]) {
   const key = `${a}|${b ?? ""}|${mix?.toFixed(3) ?? ""}`;
@@ -304,16 +345,107 @@ function draw(device, [a, b, mix]) {
 }
 
 /** Puts a device on the stage in `pose`, turned a further `flip` degrees. */
-function poseDevice(device, pose, { flip = 0, opacity = 1, dy = 0 } = {}) {
+function poseDevice(
+  device,
+  pose,
+  { flip = 0, opacity = 1, dy = 0, clip = "none" } = {},
+) {
   const origin = local(device.spec, pose.fx, pose.fy);
   set(device.node, {
     left: `${pose.cx - origin.x}px`,
     top: `${pose.cy - origin.y + dy}px`,
     transformOrigin: `${origin.x}px ${origin.y}px`,
     transform: `perspective(1400px) rotateY(${pose.ry + flip}deg) rotateX(${pose.rx}deg) rotateZ(${pose.ry * -0.08}deg) scale(${pose.scale})`,
+    clipPath: clip,
     opacity,
     visibility: opacity > 0.001 ? "visible" : "hidden",
   });
+}
+
+// ── Where each device is ────────────────────────────────────────────────────
+const LINEUP = ["android", "iphone", "ipad", "duo", "desktop"];
+const firstFeature = FEATURES[0];
+const lastFeature = FEATURES.at(-1);
+
+/**
+ * A device's pose at time `t`, or null while it is off stage. During its
+ * features a device follows its camera, flipping in from the edge-on device
+ * before it and out into the next (the laptop flips once between its two
+ * features, like turning a page). In the line-up every device goes to its
+ * slot, and then all fold into the logo.
+ */
+function deviceState(id, t, mergeP) {
+  const every = C.everywhere;
+  const flow = C.flow;
+
+  // The Duo, folded: on stage from its flip-in until it has opened.
+  if (id === "duoFolded") {
+    if (t < flow.start || t >= M.unfold + 0.2) return null;
+    return {
+      pose: poseAt(CAMERAS.duoFolded, t),
+      flip: -84 * (1 - tween(t, flow.start, flow.start + FLIP, ease.outCubic)),
+      opacity: 1 - tween(t, M.unfold + 0.05, M.unfold + 0.2),
+    };
+  }
+
+  const mine = FEATURES.filter((f) => f.device === id);
+  const from = mine[0] === firstFeature ? C.turn.start : C[mine[0].id].start;
+  const until =
+    mine.at(-1) === lastFeature ? every.start + 0.9 : C[mine.at(-1).id].end;
+
+  if (t >= (id === "duo" ? M.unfold : from) && t < until) {
+    const pose = { ...poseAt(CAMERAS[id], t) };
+    let flip = 0;
+    let opacity = 1;
+    let dy = 0;
+    let clip = "none";
+    for (const feature of mine) {
+      const { start, end } = C[feature.id];
+      if (feature === firstFeature) {
+        const inP = tween(t, from + 0.05, from + 0.8, ease.outQuart);
+        dy = (1 - inP) * 260;
+        opacity = inP;
+      } else if (id !== "duo") {
+        // Only while this feature's flip-in is under way.
+        if (t >= start && t < start + FLIP)
+          flip -= 84 * (1 - tween(t, start, start + FLIP, ease.outCubic));
+      }
+      if (feature !== lastFeature && t >= end - FLIP && t < end)
+        flip += 84 * tween(t, end - FLIP, end, ease.inCubic);
+    }
+    if (id === "duo") {
+      // Opening: the right half swings out from behind the folded cover,
+      // and the device slides to the middle as it widens.
+      const open = tween(t, M.unfold, M.unfold + 0.6, ease.inOutCubic);
+      const { spec } = devices.duo;
+      const folded = devices.duoFolded.spec;
+      const outer = (s) => s.w + s.pad * 2;
+      pose.cx += ((1 - open) * (outer(spec) - outer(folded)) * pose.scale) / 2;
+      const hidden = (1 - open) * (1 - outer(folded) / outer(spec)) * 100;
+      clip = `inset(0 ${hidden.toFixed(2)}% 0 0 round ${spec.radius}px)`;
+    }
+    return { pose, flip, opacity, dy, clip };
+  }
+
+  if (t >= every.start && id !== "duoFolded") {
+    // The line-up: slide up into the slot, one after another.
+    const slot = SLOTS[id];
+    const at = every.start + 0.25 + LINEUP.indexOf(id) * 0.12;
+    const inP =
+      mine.at(-1) === lastFeature ? 1 : tween(t, at, at + 0.6, ease.outQuart);
+    return {
+      pose: {
+        ...slot,
+        scale: slot.scale * lerp(1, 0.08, mergeP),
+        cx: lerp(slot.cx, MERGE[0], mergeP),
+        cy: lerp(slot.cy, MERGE[1], mergeP),
+        ry: slot.ry * (1 - mergeP),
+      },
+      dy: (1 - inP) * 220,
+      opacity: inP * (1 - tween(t, M.merge + 0.45, C.end.start)),
+    };
+  }
+  return null;
 }
 
 // ── Render ──────────────────────────────────────────────────────────────────
@@ -374,51 +506,15 @@ function render(seconds) {
   // from the edge-on device before it and flips out into the next. In the
   // line-up every device goes to its slot, then all fold into the logo.
   const mergeP = tween(t, M.merge, C.end.start, ease.inCubic);
-  FEATURES.forEach((feature, index) => {
-    const device = devices[feature.device];
-    const chapter = C[feature.id];
-    const isFirst = index === 0;
-    const isLast = index === FEATURES.length - 1;
-    const from = isFirst ? C.turn.start : chapter.start;
-    let pose;
-    let flip = 0;
-    let opacity = 0;
-    let dy = 0;
-
-    if (t >= from && (t < chapter.end || isLast) && t < every.start + 0.9) {
-      pose = poseAt(CAMERAS[feature.device], t);
-      opacity = 1;
-      if (isFirst) {
-        const inP = tween(t, from + 0.05, from + 0.8, ease.outQuart);
-        dy = (1 - inP) * 260;
-        opacity = inP;
-      } else {
-        flip = -84 * (1 - tween(t, from, from + FLIP, ease.outCubic));
-      }
-      if (!isLast)
-        flip += 84 * tween(t, chapter.end - FLIP, chapter.end, ease.inCubic);
-    } else if (t >= every.start) {
-      // The line-up: slide up into the slot, one after another.
-      const slot = SLOTS[feature.device];
-      const at = every.start + 0.25 + index * 0.12;
-      const inP = isLast ? 1 : tween(t, at, at + 0.6, ease.outQuart);
-      pose = {
-        ...slot,
-        scale: slot.scale * lerp(1, 0.08, mergeP),
-        cx: lerp(slot.cx, MERGE[0], mergeP),
-        cy: lerp(slot.cy, MERGE[1], mergeP),
-        ry: slot.ry * (1 - mergeP),
-      };
-      dy = (1 - inP) * 220;
-      opacity = inP * (1 - tween(t, M.merge + 0.45, C.end.start));
-    }
-    if (!pose) {
+  for (const device of Object.values(devices)) {
+    const state = deviceState(device.id, t, mergeP);
+    if (!state) {
       set(device.node, { visibility: "hidden" });
-      return;
+      continue;
     }
-    draw(device, SHOTS[feature.device](t));
-    poseDevice(device, pose, { flip, opacity, dy });
-  });
+    draw(device, SHOTS[device.id](t));
+    poseDevice(device, state.pose, state);
+  }
 
   // Words
   poseCaption(capWorry, t, -1, C.turn.start + 0.4);
@@ -441,6 +537,20 @@ function render(seconds) {
   });
   {
     const out = poseCaption(capEverywhere, t, every.start + 0.5, M.merge + 0.2);
+    for (const [id, label] of Object.entries(slotLabels)) {
+      const slot = SLOTS[id];
+      const { spec } = devices[id];
+      const top =
+        slot.cy - ((spec.h + spec.bar) / 2 + spec.pad) * slot.scale - 52;
+      const p = tween(t, every.start + 1.1, every.start + 1.5);
+      set(label, {
+        left: `${slot.cx}px`,
+        top: `${top}px`,
+        opacity: p * out,
+        visibility:
+          t >= every.start + 1 && t < M.merge + 0.2 ? "visible" : "hidden",
+      });
+    }
     proof.querySelectorAll("span").forEach((line, i) => {
       fadeIn(line, t, every.start + 1.8 + i * 0.45, out);
     });
@@ -480,9 +590,13 @@ async function boot() {
     "iphone-result",
     "android-bills",
     "ipad-month",
+    "duo-folded",
     "duo-flow",
-    "duo-forecast",
-    "desktop-spent",
+    "desktop-line",
+    "desktop-bar",
+    "desktop-pie",
+    "desktop-ai-off",
+    "desktop-ai-on",
   ];
   for (let i = 0; i <= NOTES.query.length; i++)
     names.push(`iphone-search-${pad(i)}`);

@@ -100,10 +100,10 @@ and a scrubber:
 npx serve marketing/showreel   # then open http://localhost:3000
 ```
 
-### The film: "Private Vault. Open Code." (44 s)
+### The film: "Private Vault. Open Code." (49 s)
 
-A separate film in [`vault/`](vault/README.md): one feature per device
-(iPhone, Android, iPad, iPhone Duo, desktop), each flipping into the next,
+A separate film in [`vault/`](vault/README.md): six features on five devices
+(iPhone, Android, iPad, iPhone Duo, laptop), each flipping into the next,
 then all five folding into the logo. Its finished file is
 `final/vaulted-money-film.mp4`.
 

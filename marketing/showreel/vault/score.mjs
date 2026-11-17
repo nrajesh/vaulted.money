@@ -195,7 +195,13 @@ export function renderScore({ seconds, queryLength = 28 }) {
     if (index > 0) swell(at - FLIP, FLIP * 2, 0.09);
     bell(at, [76, 79, 81, 84, 88][index], 0.1, index % 2 ? 0.3 : -0.3);
   });
-  bell(M.forecast, 86, 0.07, 0.3);
+  // The Duo opens; the laptop's charts change; the AI switch goes on.
+  swell(M.unfold - 0.25, 0.7, 0.1);
+  bell(M.unfold + 0.6, 86, 0.08, 0.3);
+  click(M.chartBars);
+  click(M.chartRing);
+  click(M.aiOn);
+  bell(M.aiOn + 0.05, 91, 0.07, 0.3);
   // The pull-back to every device.
   swell(C.everywhere.start - 0.5, 0.9, 0.1);
   [60, 67, 76].forEach((note, i) =>

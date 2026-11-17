@@ -1,10 +1,11 @@
 /**
  * The clock and the words of the Vaulted Money film.
  *
- * 20 bars at 108 BPM = 44 s. One feature per device: the camera sits close on
- * a device while it shows one thing, then the device flips over into the next
- * one. Five features, five devices. At the end the camera pulls back once to
- * show them all, and they fold into the logo.
+ * 22 bars at 108 BPM = 49 s. The camera sits close on a device while it shows
+ * one thing, then the device flips over into the next: five devices, six
+ * features (the laptop shows two). The iPhone Duo starts folded and opens.
+ * At the end the camera pulls back once to show them all, and they fold into
+ * the logo.
  * Picture (film.mjs) and sound (score.mjs) both read from here.
  */
 export const WIDTH = 1920;
@@ -51,14 +52,21 @@ export const FEATURES = [
     device: "duo",
     label: "iPhone Duo",
     bars: 3,
-    headline: "Follow the flow. *See what's ahead.*",
+    headline: "Open it up. *Follow the flow.*",
   },
   {
-    id: "spent",
+    id: "charts",
     device: "desktop",
     label: "Mac · Windows · Linux",
     bars: 2,
-    headline: "Every cent, *accounted for.*",
+    headline: "One month, *three ways.*",
+  },
+  {
+    id: "ai",
+    device: "desktop",
+    label: "Mac · Windows · Linux",
+    bars: 2,
+    headline: "AI, only *when you say so.*",
   },
 ];
 
@@ -103,8 +111,13 @@ export function moments(queryLength) {
     askUnderstood: ask + 2.45,
     askApply: ask + 3.9,
     askResult: ask + 4.1,
-    // The flow beat shows two charts on the Duo: the flow, then the forecast.
-    forecast: CHAPTERS.flow.start + 3.4,
+    // The Duo starts folded, then opens out.
+    unfold: CHAPTERS.flow.start + 1.7,
+    // The laptop flips through line, bars and ring.
+    chartBars: CHAPTERS.charts.start + 1.5,
+    chartRing: CHAPTERS.charts.start + 2.9,
+    // AI is off; then the switch goes on.
+    aiOn: CHAPTERS.ai.start + 1.8,
     // The devices fold into the logo this long before the end card.
     merge: CHAPTERS.end.start - 0.9,
   };

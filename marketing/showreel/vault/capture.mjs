@@ -221,38 +221,49 @@ try {
     await context.close();
   }
 
-  // ── iPhone Duo, sideways: the money flow, then the forecast ─────────────
-  {
-    const { context, page } = await open(browser, "duo");
+  // ── iPhone Duo: the money flow, folded and then opened out ─────────────
+  for (const [device, name, offset] of [
+    ["duoFolded", "duo-folded", 150],
+    ["duo", "duo-flow", 360],
+  ]) {
+    const { context, page } = await open(browser, device);
     await go(page, "/reports/advanced");
     await applySearch(page, "this year", /^Date:/);
     await bringTo(page, page.getByText("Financial Flow"), 60);
-    await page.mouse.wheel(0, 300);
+    await page.mouse.wheel(0, offset);
     await page.waitForTimeout(1000);
-    await shoot(page, "duo-flow");
-    await bringTo(page, page.getByText("Net Income Trend"), 70);
-    // Scrolling leaves the pointer over the chart, which opens its tooltip;
-    // move it up to the top bar.
-    await page.mouse.move(600, 8);
-    await page.waitForTimeout(700);
-    await shoot(page, "duo-forecast");
+    await shoot(page, name);
     await context.close();
   }
 
-  // ── Desktop: where the month went ───────────────────────────────────────
+  // ── Desktop: the month as a line, as bars and as a ring; then AI ────────
   {
     const { context, page } = await open(browser, "desktop");
     await go(page, "/analytics");
-    await page
-      .getByRole("button", { name: "Pie chart", exact: true })
-      .first()
-      .click();
-    await page.waitForTimeout(1500);
-    // Park the pointer where it opens nothing (the sidebar widens on hover).
+    for (const [label, name] of [
+      ["Line chart", "desktop-line"],
+      ["Bar chart", "desktop-bar"],
+      ["Pie chart", "desktop-pie"],
+    ]) {
+      await page
+        .getByRole("button", { name: label, exact: true })
+        .first()
+        .click();
+      await page.waitForTimeout(1500);
+      // Park the pointer where it opens nothing (the sidebar widens on hover).
+      await page.mouse.move(1000, 890);
+      await page.waitForTimeout(500);
+      await shoot(page, name);
+    }
+    // AI is off until it is switched on: photograph both sides of the switch.
+    await go(page, "/ai-providers");
     await page.mouse.move(1000, 890);
-    await page.waitForTimeout(600);
-    await shoot(page, "desktop-spent");
-    notes.spent = { total: await boxOf(page, page.getByText("Total spent")) };
+    await shoot(page, "desktop-ai-off");
+    notes.ai = { toggle: await boxOf(page, page.getByRole("switch")) };
+    await page.getByRole("button", { name: "Turn on AI" }).click();
+    await page.waitForTimeout(1500);
+    await page.mouse.move(1000, 890);
+    await shoot(page, "desktop-ai-on");
     await context.close();
   }
 } finally {

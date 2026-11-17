@@ -333,3 +333,57 @@ body {
 #black {
   z-index: 5;
 }
+
+/* What tells the devices apart */
+.device .sb .island {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 92px;
+  height: 22px;
+  margin-left: -46px;
+  border-radius: 11px;
+  background: #05070b;
+}
+/* The laptop's keyboard deck, seen from the front. */
+.device .deck {
+  position: absolute;
+  left: -7%;
+  top: 100%;
+  width: 114%;
+  height: 104px;
+  border-radius: 6px 6px 30px 30px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
+      14px / 86% 14px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
+      34px / 86% 14px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
+      54px / 86% 14px no-repeat,
+    linear-gradient(#1a202b, #0c1017);
+  box-shadow:
+    0 0 0 2px #2c3442,
+    0 30px 60px rgba(0, 0, 0, 0.5);
+}
+.device .deck i {
+  position: absolute;
+  left: 38%;
+  bottom: 8px;
+  width: 24%;
+  height: 20px;
+  border-radius: 6px;
+  background: #232a36;
+}
+.slot-label {
+  position: absolute;
+  z-index: 3;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(10, 19, 34, 0.85);
+  border: 2px solid rgba(134, 222, 222, 0.55);
+  color: #dff7f7;
+  font-size: 28px;
+  font-weight: 600;
+}

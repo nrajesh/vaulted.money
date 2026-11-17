@@ -1,23 +1,25 @@
 # Vaulted Money: the film
 
-About 44 seconds (1920×1080, 30 fps). One feature per device: the camera
-sits close on a device while it shows one thing, then the device flips over
-into the next. At the end the camera pulls back once to show all five, and
-they fold into the logo and the slogan, "Private Vault. Open Code."
+About 49 seconds (1920×1080, 30 fps). The camera sits close on a device
+while it shows one thing, then the device flips over into the next: five
+devices, six features. At the end the camera pulls back once to show all
+five, named, and they fold into the logo and the slogan, "Private Vault.
+Open Code."
 
-| Time | Device     | Words                                | What the app shows                                               |
-| ---- | ---------- | ------------------------------------ | ---------------------------------------------------------------- |
-| 0:00 |            | Money on your mind?                  | Loose amounts and reminders, which land in the phone             |
-| 0:04 | iPhone     | Ask it like you'd say it.            | Search typed key by key, what it understood, the filtered list   |
-| 0:11 | Android    | Every subscription, before it bills. | Upcoming bills, narrowed to subscriptions and utilities          |
-| 0:16 | iPad       | Your month, at a glance.             | Spending insights: budgets, then where spending rose             |
-| 0:20 | iPhone Duo | Follow the flow. See what's ahead.   | The money-flow chart, then the income forecast                   |
-| 0:27 | Desktop    | Every cent, accounted for.           | Charts: the month's spending ring                                |
-| 0:31 | All five   | Yours alone, on every device.        | The line-up; no sign-up, no cloud, AI off until switched on      |
-| 0:38 |            | Private Vault. Open Code.            | The devices fold into the logo; name, slogan, badges, one action |
+| Time | Device     | Words                                | What the app shows                                                             |
+| ---- | ---------- | ------------------------------------ | ------------------------------------------------------------------------------ |
+| 0:00 |            | Money on your mind?                  | Loose amounts and reminders, which land in the phone                           |
+| 0:04 | iPhone     | Ask it like you'd say it.            | Search typed key by key, what it understood, the filtered list                 |
+| 0:11 | Android    | Every subscription, before it bills. | Upcoming bills, narrowed to subscriptions and utilities                        |
+| 0:16 | iPad       | Your month, at a glance.             | Spending insights: budgets, then where spending rose                           |
+| 0:20 | iPhone Duo | Open it up. Follow the flow.         | The money-flow chart on the folded cover screen, then opened out               |
+| 0:27 | Laptop     | One month, three ways.               | Charts: the month as a line, as bars and as a ring                             |
+| 0:31 | Laptop     | AI, only when you say so.            | The AI switch, off and then on                                                 |
+| 0:36 | All five   | Yours alone, on every device.        | The line-up, each device named; no sign-up, no cloud, AI off until switched on |
+| 0:42 |            | Private Vault. Open Code.            | The devices fold into the logo; name, slogan, badges, one action               |
 
-Features, devices and words are `FEATURES` in `timeline.mjs` (a test keeps
-them one to one); the slogan and badges are `TAGLINE` and `BADGES` there.
+Features, devices and words are `FEATURES` in `timeline.mjs` (a test checks
+every device has a feature and that one of them is AI); the slogan and badges are `TAGLINE` and `BADGES` there.
 
 ## Make it
 
@@ -46,8 +48,10 @@ Everything in `out/` is generated and ignored; only the finished video in
   year, both through the app's own search box. The chips on screen say so.
 - **The devices are screen sizes, not the store builds.** Each is the web
   app in a browser at that device's size; the frames, status bars and title
-  bar are drawn by the film. The iPhone Duo is the unfolded screen turned
-  sideways.
+  bar are drawn by the film, as are the iPhone's island, the Android's
+  camera hole and the laptop's keyboard. The iPhone Duo is first its cover
+  screen and then its unfolded screen turned sideways; the opening between
+  them is the film's, not a recording of a device unfolding.
 - **Drawn by the film:** the opening's floating notes (the four amounts are
   read from the first rows of the Transactions list they fly to), the words,
   the device frames and the end card.
@@ -58,7 +62,7 @@ Everything in `out/` is generated and ignored; only the finished video in
 ## Files
 
 ```
-timeline.mjs   The clock (20 bars at 108 BPM), features, every word on screen
+timeline.mjs   The clock (22 bars at 108 BPM), features, every word on screen
 capture.devices.mjs   Each device's screen size, pixel ratio and theme
 capture.mjs    Runs the real app and photographs each step
 film.html/.css/.mjs   The stage; window.__render(seconds) poses any frame
