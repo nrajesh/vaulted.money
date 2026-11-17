@@ -12,11 +12,80 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { Transaction } from "@/data/finance-data";
 import { Payee } from "@/components/dialogs/AddEditPayeeDialog";
 
-const NODE_COLOURS = {
-  Income: "#10b981",
-  Account: "#3b82f6",
-  Expense: "#f59e0b",
-} as const;
+// The Charts page's colours, so a category looks the same here as in the
+// spending ring.
+const FLOW_COLOURS = [
+  "#6366f1",
+  "#ec4899",
+  "#22c55e",
+  "#f59e0b",
+  "#06b6d4",
+  "#8b5cf6",
+  "#ef4444",
+  "#14b8a6",
+  "#f97316",
+  "#3b82f6",
+];
+
+/** A colour that stays the same for a name from one render to the next. */
+const colourFor = (name = "") => {
+  // Money coming in is always green, never the red a hash might pick.
+  if (name.startsWith("Income")) return "#10b981";
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return FLOW_COLOURS[hash % FLOW_COLOURS.length];
+};
+
+/**
+ * A flow between two nodes, shaded from the colour of where the money came
+ * from to the colour of where it went.
+ */
+const FlowLink = (props: {
+  sourceX?: number;
+  targetX?: number;
+  sourceY?: number;
+  targetY?: number;
+  sourceControlX?: number;
+  targetControlX?: number;
+  linkWidth?: number;
+  index?: number;
+  payload?: { source?: { name: string }; target?: { name: string } };
+}) => {
+  const {
+    sourceX = 0,
+    targetX = 0,
+    sourceY = 0,
+    targetY = 0,
+    sourceControlX = 0,
+    targetControlX = 0,
+    linkWidth = 0,
+    index = 0,
+    payload,
+  } = props;
+  const gradientId = `flow-link-${index}`;
+  return (
+    <g>
+      <defs>
+        <linearGradient
+          id={gradientId}
+          gradientUnits="userSpaceOnUse"
+          x1={sourceX}
+          x2={targetX}
+        >
+          <stop offset="0" stopColor={colourFor(payload?.source?.name)} />
+          <stop offset="1" stopColor={colourFor(payload?.target?.name)} />
+        </linearGradient>
+      </defs>
+      <path
+        d={`M${sourceX},${sourceY} C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
+        fill="none"
+        stroke={`url(#${gradientId})`}
+        strokeWidth={Math.max(linkWidth, 1)}
+        strokeOpacity={0.5}
+      />
+    </g>
+  );
+};
 
 /**
  * A node with its name beside it, so the chart reads without hovering:
@@ -42,7 +111,7 @@ const FlowNode = (props: {
         width={width}
         height={Math.max(height, 2)}
         rx={2}
-        fill={NODE_COLOURS[kind as keyof typeof NODE_COLOURS] ?? "#64748b"}
+        fill={colourFor(payload?.name)}
       />
       <text
         x={onLeft ? x - 8 : x + width + 8}
@@ -195,7 +264,7 @@ const SankeyChart: React.FC<SankeyChartProps> = ({
                 top: 5,
                 bottom: 5,
               }}
-              link={{ stroke: "#94a3b8", strokeOpacity: 0.35 }}
+              link={<FlowLink />}
               node={<FlowNode />}
             >
               <Tooltip
