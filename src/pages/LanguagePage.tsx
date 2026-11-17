@@ -192,7 +192,7 @@ const LanguagePage = () => {
               defaultValue: "Language and Localization",
             })}
           </h1>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("settings.cards.language.description", {
               defaultValue:
                 "Use one primary language (mother tongue). Add custom languages by code and translation JSON.",

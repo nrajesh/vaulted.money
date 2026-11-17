@@ -5,7 +5,7 @@ export const homeLanding: AreaTranslations = {
   en: {
     home: {
       hero: {
-        headline: "Ask your ledger. Keep control.",
+        headline: "Private Vault. Open Code.",
         positioning:
           "Private, local-first money tracking. No account. Open source. Search needs no AI or cloud.",
         tryDemo: "Try it with demo data",
@@ -94,7 +94,7 @@ export const homeLanding: AreaTranslations = {
   es: {
     home: {
       hero: {
-        headline: "Tu dinero, bajo tu control.",
+        headline: "Bóveda privada. Código abierto.",
         positioning:
           "Dinero privado y local. Sin cuenta. Código abierto. Busca sin IA ni nube.",
         tryDemo: "Pruébalo con datos de ejemplo",
@@ -185,7 +185,7 @@ export const homeLanding: AreaTranslations = {
   zh: {
     home: {
       hero: {
-        headline: "用日常语言问账本。",
+        headline: "私密金库。开放代码。",
         positioning:
           "私密、本地优先的记账。无需账户，开源。搜索无需 AI 或云服务。",
         tryDemo: "用示例数据试用",
@@ -269,7 +269,7 @@ export const homeLanding: AreaTranslations = {
   nl: {
     home: {
       hero: {
-        headline: "Je geld, onder jouw regie.",
+        headline: "Privékluis. Open code.",
         positioning:
           "Privé en lokaal geldbeheer. Geen account. Open source. Zoeken zonder AI of cloud.",
         tryDemo: "Probeer met demodata",
@@ -360,7 +360,7 @@ export const homeLanding: AreaTranslations = {
   ta: {
     home: {
       hero: {
-        headline: "உங்கள் லெட்ஜரைக் கேளுங்கள். கட்டுப்பாடு உங்களிடம்.",
+        headline: "தனியார் பெட்டகம். திறந்த நிரல்.",
         positioning:
           "தனிப்பட்ட, உள்ளூர் பணக் கணக்கு. கணக்கு தேவையில்லை. திறந்த மூலம். தேடலுக்கு AI அல்லது மேகம் தேவையில்லை.",
         tryDemo: "மாதிரி தரவுடன் முயற்சி செய்",
@@ -370,8 +370,7 @@ export const homeLanding: AreaTranslations = {
       },
       demos: {
         title: "செயலில் பாருங்கள்",
-        intro:
-          "உண்மையான செயலியின் குறுங்காணொளிகள். இயக்கும் வரை எதுவும் ஏற்றப்படாது.",
+        intro: "உண்மையான செயலியின் குறுங்காணொளிகள். இயக்கும் வரை எதுவும் ஏற்றப்படாது.",
         play: "காணொளியை இயக்கு: {{title}}",
         comingSoon: "விரைவில்",
         ai: {

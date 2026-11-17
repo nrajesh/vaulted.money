@@ -271,8 +271,7 @@ export const transactionsTable: AreaTranslations = {
       scheduleSelected: "தேர்ந்தெடுத்தவற்றைத் திட்டமிடு",
       linkPairTitle: "தேர்ந்தெடுத்த ஜோடியை இணை",
       linkPair: "ஜோடியை இணை",
-      selectAllPage:
-        "இந்தப் பக்கத்தில் உள்ள அனைத்துப் பரிவர்த்தனைகளையும் தேர்ந்தெடு",
+      selectAllPage: "இந்தப் பக்கத்தில் உள்ள அனைத்துப் பரிவர்த்தனைகளையும் தேர்ந்தெடு",
       headers: {
         date: "தேதி",
         category: "வகை",

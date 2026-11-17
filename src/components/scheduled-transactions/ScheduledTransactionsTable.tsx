@@ -195,7 +195,8 @@ export function ScheduledTransactionsTable({
         className={`app-table-toolbar ${
           selectedIds.size > 0
             ? "app-table-toolbar-active"
-            : "app-table-toolbar-idle"
+            : // Nothing selected: an empty "0 selected" bar only takes space.
+              "app-table-toolbar-idle hidden"
         }`}
       >
         <div className="flex min-h-12 flex-wrap items-center justify-between gap-3">

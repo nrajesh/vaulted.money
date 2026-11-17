@@ -22,11 +22,11 @@ export const SearchFilterBar = () => {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2">
       <TransactionSearchBox filters={filters} />
 
-      {/* Additional Controls */}
-      <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
+      {/* One compact row: the switch on the left, reset as an icon. */}
+      <div className="flex items-center justify-between gap-3 px-1">
         <div className="flex min-w-0 items-center gap-2">
           <Switch
             id="exclude-transfers"
@@ -47,12 +47,12 @@ export const SearchFilterBar = () => {
         </div>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={handleReset}
-          className="h-9 w-full justify-center sm:h-8 sm:w-auto"
+          className="h-9 shrink-0 px-2 text-muted-foreground sm:h-8"
         >
-          <RefreshCw className="mr-2 h-3 w-3" />
+          <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
           {t("filters.searchBar.reset", { defaultValue: "Reset" })}
         </Button>
       </div>

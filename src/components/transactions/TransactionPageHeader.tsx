@@ -110,7 +110,7 @@ export const TransactionPageHeader: React.FC<TransactionPageHeaderProps> = ({
           </h1>
           <FeatureHint id="transfers" />
         </div>
-        <p className="app-page-subtitle">
+        <p className="app-page-about">
           {t("pages.transactions.subtitle", {
             defaultValue: "Every payment and deposit, easy to search.",
           })}

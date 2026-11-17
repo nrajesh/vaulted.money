@@ -8,6 +8,10 @@ import type { AreaTranslations } from "./types";
  */
 export const plainLanguage: AreaTranslations = {
   en: {
+    dashboard: {
+      overview: { net: "Net" },
+      runway: { perMonth: "+{{amount}} / month" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "e.g., Joint Checking, Savings, Visa Card",
@@ -143,6 +147,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   es: {
+    dashboard: {
+      overview: { net: "Neto" },
+      runway: { perMonth: "+{{amount}} / mes" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount:
@@ -279,6 +287,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   zh: {
+    dashboard: {
+      overview: { net: "净额" },
+      runway: { perMonth: "+{{amount}} / 月" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "例如：联名支票账户、储蓄、Visa 卡",
@@ -412,6 +424,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   nl: {
+    dashboard: {
+      overview: { net: "Netto" },
+      runway: { perMonth: "+{{amount}} / maand" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount:
@@ -549,6 +565,10 @@ export const plainLanguage: AreaTranslations = {
     },
   },
   ta: {
+    dashboard: {
+      overview: { net: "நிகரம்" },
+      runway: { perMonth: "+{{amount}} / மாதம்" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "எ.கா., கூட்டுக் கணக்கு, சேமிப்பு, Visa அட்டை",
@@ -603,8 +623,7 @@ export const plainLanguage: AreaTranslations = {
       descriptions: {
         detectTransfers: "உங்கள் கணக்குகளுக்கு இடையிலான பணத்தை இணைக்கவும்",
         cleanupDuplicates: "இருமுறை பதிந்தவற்றைக் கண்டு நீக்கவும்",
-        categorizeMissing:
-          "AI வகைகளைப் பரிந்துரைக்கும் (பெறுநர் பெயர்கள் மட்டும்)",
+        categorizeMissing: "AI வகைகளைப் பரிந்துரைக்கும் (பெறுநர் பெயர்கள் மட்டும்)",
         importBankCsv: "உங்கள் வங்கியிலிருந்து எடுத்த கோப்பைச் சேர்க்கவும்",
         exportView: "காண்பதை CSV கோப்பாகச் சேமிக்கவும்",
         reconcile: "பயன்பாட்டு இருப்பை வங்கியுடன் பொருத்தவும்",
@@ -668,8 +687,7 @@ export const plainLanguage: AreaTranslations = {
     aiConsent: {
       title: "பெறுநர் பெயர்களை {{provider}}-க்கு அனுப்பவா?",
       what: 'வகைகளைப் பரிந்துரைக்க, நீங்கள் வகைப்படுத்தும் பெறுநர் பெயர்களையும் (எ.கா. "Starbucks") உங்கள் வகைப் பெயர்களையும் Vaulted Money {{provider}}-க்கு அனுப்பும்.',
-      notSent:
-        "தொகைகள், தேதிகள், கணக்குகள், குறிப்புகள் ஒருபோதும் அனுப்பப்படாது.",
+      notSent: "தொகைகள், தேதிகள், கணக்குகள், குறிப்புகள் ஒருபோதும் அனுப்பப்படாது.",
       policy:
         "{{provider}} அவற்றைத் தன் சொந்தத் தனியுரிமைக் கொள்கையின்படி கையாளும். இந்த வழங்குநருக்கு ஒருமுறை மட்டுமே கேட்கப்படும்.",
       decline: "இப்போது வேண்டாம்",

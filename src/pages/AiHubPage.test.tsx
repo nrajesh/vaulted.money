@@ -227,6 +227,34 @@ describe("AiHubPage", () => {
     }
   });
 
+  it("shows one half per menu item", async () => {
+    const view = render(
+      <MemoryRouter>
+        <AiHubPage only="inApp" />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("AI inside the app")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Chat with your money using an external AI agent"),
+    ).not.toBeInTheDocument();
+    view.unmount();
+
+    render(
+      <MemoryRouter>
+        <AiHubPage only="agents" />
+      </MemoryRouter>,
+    );
+    expect(
+      await screen.findByText(
+        "Chat with your money using an external AI agent",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("AI inside the app")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Connect other AI apps" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the providers and the agent steps on one page, with no tabs", async () => {
     win.electron = bridge();
     renderPage();

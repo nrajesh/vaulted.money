@@ -77,20 +77,20 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
     remaining >= 0 ? "text-green-700 dark:text-green-400" : "text-red-600";
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid grid-cols-3 gap-2 md:gap-4">
       <Card className="bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 md:p-6 md:pb-2">
+          <CardTitle className="text-xs font-medium text-slate-700 dark:text-slate-200 md:text-sm">
             {t("budgets.summary.avgBudget", {
               defaultValue: "Avg. Monthly Budget",
             })}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+        <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+          <div className="break-words text-base font-bold text-slate-900 dark:text-slate-100 md:text-2xl">
             {formatCurrency(totalTarget, currency)}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="hidden text-xs text-slate-500 dark:text-slate-400 md:block">
             {t("budgets.summary.avgBudgetHint", {
               defaultValue: "Normalized across all budgets",
             })}
@@ -98,18 +98,18 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
         </CardContent>
       </Card>
       <Card className="bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 md:p-6 md:pb-2">
+          <CardTitle className="text-xs font-medium text-slate-700 dark:text-slate-200 md:text-sm">
             {t("budgets.summary.avgSpent", {
               defaultValue: "Avg. Monthly Spent",
             })}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+        <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+          <div className="break-words text-base font-bold text-slate-900 dark:text-slate-100 md:text-2xl">
             {formatCurrency(totalSpent, currency)}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="hidden text-xs text-slate-500 dark:text-slate-400 md:block">
             {t("budgets.summary.avgSpentHint", {
               defaultValue: "Based on spending to date",
             })}
@@ -117,18 +117,20 @@ export function BudgetSummary({ budgets, isLoading }: BudgetSummaryProps) {
         </CardContent>
       </Card>
       <Card className="bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 md:p-6 md:pb-2">
+          <CardTitle className="text-xs font-medium text-slate-700 dark:text-slate-200 md:text-sm">
             {t("budgets.summary.avgRemaining", {
               defaultValue: "Avg. Monthly Remaining",
             })}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${remainingColor}`}>
+        <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+          <div
+            className={`break-words text-base font-bold md:text-2xl ${remainingColor}`}
+          >
             {formatCurrency(remaining, currency)}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="hidden text-xs text-slate-500 dark:text-slate-400 md:block">
             {remaining >= 0
               ? t("budgets.summary.under", {
                   defaultValue: "Under monthly average",

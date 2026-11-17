@@ -86,7 +86,7 @@ const SettingsPage = () => {
           <h1 className="app-gradient-title app-page-title">
             {t("layout.nav.settings", { defaultValue: "Settings" })}
           </h1>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("appSettings.subtitle", {
               defaultValue:
                 "Settings for the open ledger come first, then the ones that apply to every ledger on this device.",
@@ -115,11 +115,6 @@ const SettingsPage = () => {
                     defaultValue: "Default Currency",
                   })}
                 </ThemedCardTitle>
-                <ThemedCardDescription>
-                  {t("settings.cards.currency.description", {
-                    defaultValue: "Select your preferred currency for display.",
-                  })}
-                </ThemedCardDescription>
               </ThemedCardHeader>
               <ThemedCardContent>
                 <Select
@@ -151,12 +146,6 @@ const SettingsPage = () => {
                     defaultValue: "Ledger Settings",
                   })}
                 </ThemedCardTitle>
-                <ThemedCardDescription>
-                  {t("settings.cards.ledger.description", {
-                    defaultValue:
-                      "Manage your current ledger details or create a new one.",
-                  })}
-                </ThemedCardDescription>
               </ThemedCardHeader>
               <ThemedCardContent className="grid grid-cols-2 gap-2">
                 <Button
@@ -258,12 +247,6 @@ const SettingsPage = () => {
                 <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 {t("nav.items.aiAssistant", { defaultValue: "AI assistant" })}
               </ThemedCardTitle>
-              <ThemedCardDescription>
-                {t("appSettings.ai.description", {
-                  defaultValue:
-                    "Providers, API keys, local models and AI agents are all set up on one page.",
-                })}
-              </ThemedCardDescription>
             </ThemedCardHeader>
             <ThemedCardContent className="flex flex-wrap items-center gap-3">
               <Button asChild>

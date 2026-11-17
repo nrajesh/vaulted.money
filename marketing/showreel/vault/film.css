@@ -1,0 +1,389 @@
+/* "You see everything. We see nothing.": a 1920×1080 stage. */
+:root {
+  --navy: #1c2433;
+  --apricot: #d9793b;
+  --teal: #86dede;
+  --display: "Inter Tight", "Inter Display", "Inter", system-ui, sans-serif;
+  --serif: "Instrument Serif", "DejaVu Serif", serif;
+  --mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  background: #000;
+}
+#stage {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  font-family: var(--display);
+}
+.layer {
+  position: absolute;
+  inset: 0;
+}
+/* Three grounds: worry (dim grey), you see everything (light), we see nothing (dark). */
+.bg-grey {
+  background: radial-gradient(
+    120% 90% at 50% 0%,
+    #6b7280 0%,
+    #3d4450 55%,
+    #2b303a 100%
+  );
+}
+.bg-dark {
+  background:
+    radial-gradient(80% 60% at 50% 110%, #12606b 0%, transparent 70%),
+    radial-gradient(120% 90% at 50% 0%, #142844 0%, #0a1322 70%);
+}
+
+/* Headlines: beside tall devices, above wide ones. Lines are balanced, so a
+   headline never leaves one word alone on a line. */
+.cap {
+  position: absolute;
+  left: 84px;
+  top: 0;
+  width: 760px;
+  height: 1080px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
+}
+.cap h1 {
+  margin: 0;
+  font-size: 112px;
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.cap h1 em {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--teal);
+}
+.cap .word {
+  display: inline-block;
+}
+.cap.on-grey h1 em {
+  color: #f3b27a;
+}
+.cap .label {
+  align-self: flex-start;
+  margin-bottom: 26px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 2px solid rgba(134, 222, 222, 0.55);
+  color: #dff7f7;
+  font-size: 36px;
+  font-weight: 600;
+}
+.cap .note {
+  margin-top: 28px;
+  font-size: 52px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--teal);
+}
+.cap.wide {
+  left: 90px;
+  top: 44px;
+  width: 1740px;
+  height: auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 30px;
+}
+/* A dark band behind the words, so a wide device pushed in close never
+   runs under them. */
+.cap.wide::before {
+  content: "";
+  position: absolute;
+  left: -90px;
+  top: -44px;
+  width: 1920px;
+  height: 210px;
+  z-index: -1;
+  background: linear-gradient(#0a1322 62%, rgba(10, 19, 34, 0));
+}
+.cap.wide h1 {
+  font-size: 72px;
+  white-space: nowrap;
+}
+.cap.wide .label {
+  align-self: center;
+  margin-bottom: 0;
+}
+.cap.centre {
+  left: 0;
+  top: 34px;
+  width: 1920px;
+  height: auto;
+  display: block;
+  text-align: center;
+}
+.cap.centre h1 {
+  font-size: 96px;
+}
+#proof {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 1006px;
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  font-size: 36px;
+  font-weight: 600;
+  color: #dbe7f5;
+}
+#proof span {
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Worries */
+.worry {
+  position: absolute;
+  white-space: nowrap;
+  color: #e8ecf2;
+  font-family: var(--mono);
+  font-size: 54px;
+  font-weight: 500;
+}
+.worry.pill {
+  font-family: var(--display);
+  font-size: 34px;
+  font-weight: 600;
+  padding: 14px 26px;
+  border-radius: 18px;
+  background: #1f2530;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.worry.pill::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 14px;
+  border-radius: 50%;
+  background: #f3a15f;
+}
+
+/* Devices */
+.device.duo {
+  z-index: 2;
+}
+.device {
+  position: absolute;
+  background: #0b0f17;
+  box-shadow:
+    0 0 0 2px #2c3442,
+    0 40px 90px rgba(0, 0, 0, 0.45);
+  backface-visibility: hidden;
+}
+.device .glass {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+}
+.device.android .glass,
+.device.duo .glass,
+.device.desktop .glass {
+  background: #1e222b;
+}
+.device canvas {
+  position: absolute;
+  left: 0;
+}
+.device .sb {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 34px;
+  padding: 10px 30px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+.device .sb.android {
+  height: 30px;
+  padding: 7px 22px 0;
+  font-size: 13px;
+  color: #fff;
+}
+.device .sb .cam {
+  position: absolute;
+  left: 50%;
+  top: 9px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: #05070b;
+  box-shadow: 0 0 0 1px #2c3442;
+}
+.device .titlebar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 30px;
+  background: #151922;
+}
+.device .titlebar i {
+  position: absolute;
+  top: 9px;
+  left: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff5f57;
+}
+.device .titlebar i:nth-child(2) {
+  left: 34px;
+  background: #febc2e;
+}
+.device .titlebar i:nth-child(3) {
+  left: 54px;
+  background: #28c840;
+}
+
+/* End card */
+#end {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+}
+#end .logo-svg {
+  width: 250px;
+  height: 284px;
+}
+#end h2 {
+  margin: 22px 0 0;
+  font-size: 120px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+#end h2 em {
+  font-style: normal;
+  color: var(--teal);
+}
+#end .tag {
+  margin-top: 30px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 128px;
+  line-height: 1.1;
+}
+#end .tag span {
+  display: inline-block;
+}
+#end .tag .b {
+  color: var(--teal);
+}
+#end .badges {
+  margin-top: 36px;
+  display: flex;
+  gap: 16px;
+  font-size: 34px;
+  font-weight: 600;
+}
+#end .badges span {
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: 2px solid rgba(134, 222, 222, 0.55);
+  color: #dff7f7;
+}
+#end .action {
+  margin-top: 40px;
+  font-size: 40px;
+  font-weight: 600;
+  color: #dbe7f5;
+}
+#black {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+/* Words always sit above the devices (the Duo is raised in the line-up). */
+.cap,
+#proof {
+  z-index: 3;
+}
+#end {
+  z-index: 4;
+}
+#black {
+  z-index: 5;
+}
+
+/* What tells the devices apart */
+.device .sb .island {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 92px;
+  height: 22px;
+  margin-left: -46px;
+  border-radius: 11px;
+  background: #05070b;
+}
+/* The laptop's keyboard deck, seen from the front. */
+.device .deck {
+  position: absolute;
+  left: -7%;
+  top: 100%;
+  width: 114%;
+  height: 104px;
+  border-radius: 6px 6px 30px 30px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
+      14px / 86% 14px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
+      34px / 86% 14px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
+      54px / 86% 14px no-repeat,
+    linear-gradient(#1a202b, #0c1017);
+  box-shadow:
+    0 0 0 2px #2c3442,
+    0 30px 60px rgba(0, 0, 0, 0.5);
+}
+.device .deck i {
+  position: absolute;
+  left: 38%;
+  bottom: 8px;
+  width: 24%;
+  height: 20px;
+  border-radius: 6px;
+  background: #232a36;
+}
+.slot-label {
+  position: absolute;
+  z-index: 3;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(10, 19, 34, 0.85);
+  border: 2px solid rgba(134, 222, 222, 0.55);
+  color: #dff7f7;
+  font-size: 28px;
+  font-weight: 600;
+}

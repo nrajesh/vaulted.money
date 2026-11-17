@@ -34,9 +34,8 @@ import {
 import { readFile } from "node:fs/promises";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderScore, writeWav } from "./calmScore.mjs";
+import { renderScore, writeWav } from "./keynoteScore.mjs";
 import { RECORDINGS, screenWindows } from "./duo/overlay.mjs";
-import { renderSoundtrack } from "./soundtrack.mjs";
 import { chromePath, launchChrome } from "./lib/chrome.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -52,10 +51,14 @@ const option = (name, fallback) => {
     : fallback;
 };
 
-// --cut social (the original fast cut) or keynote (the calm, 76 s cut);
+// --cut social (the original fast cut) or keynote (the 80 s film);
 // --web adds the website ending to the keynote cut (written as
 // ...-keynote-site.mp4, so it never clashes with a "-web" light copy).
 const cut = option("cut", "social");
+// --bpm 108 renders the relaxed social cut: same film, slower picture and
+// music. Must be set before timeline.mjs is imported.
+const bpm = option("bpm", "");
+if (bpm) process.env.SHOWREEL_BPM = bpm;
 const web = flag("web");
 const timeline =
   cut === "keynote"
@@ -79,7 +82,7 @@ const outputFile = option(
   "out",
   join(
     OUT_DIR,
-    `vaulted-money-showreel${cut === "keynote" ? `-keynote${web ? "-site" : ""}` : ""}${draft ? "-draft" : ""}.mp4`,
+    `vaulted-money-showreel${cut === "keynote" ? `-keynote${web ? "-site" : ""}` : ""}${bpm ? "-relaxed" : ""}${draft ? "-draft" : ""}.mp4`,
   ),
 );
 
@@ -238,10 +241,14 @@ async function renderVideo(pages) {
   if (cut === "keynote")
     writeWav(
       audioPath,
-      renderScore({ seconds: DURATION, cues: timeline.SCORE_CUES }),
+      renderScore({ seconds: DURATION, cues: timeline.scoreCues(web) }),
       48000,
     );
-  else writeFileSync(audioPath, renderSoundtrack());
+  else {
+    // Imported here, after --bpm has set the tempo the music reads.
+    const { renderSoundtrack } = await import("./soundtrack.mjs");
+    writeFileSync(audioPath, renderSoundtrack());
+  }
 
   const firstFrame = Math.floor(fromSeconds * fps);
   const lastFrame = Math.ceil(toSeconds * fps) - 1;
@@ -436,12 +443,20 @@ export function encodeWebCopy(masterFile) {
   });
 }
 
-/** The keynote cut uses the store screenshot captures (run them first). */
+/** The keynote cut uses the store screenshot captures and, for its finale, the social cut's (run both first). */
 function copyKeynoteScreens() {
   const from = join(ROOT, "../store-screenshots/out/captures");
   if (!existsSync(from))
     throw new Error(
       "No store captures yet: run pnpm marketing:screenshots first",
+    );
+  // The finale cuts through the social cut's captures.
+  const missing = timeline.MONTAGE.map(([name]) => name).filter(
+    (name) => !existsSync(join(OUT_DIR, "screens", `${name}.png`)),
+  );
+  if (missing.length)
+    throw new Error(
+      `The keynote's finale needs the social cut's captures (${missing.join(", ")}): run pnpm showreel:capture first`,
     );
   const to = join(OUT_DIR, "keynote");
   mkdirSync(to, { recursive: true });
@@ -486,7 +501,7 @@ async function main() {
 
   const server = await startStaticServer();
   const page = cut === "keynote" ? "keynote.html" : "index.html";
-  const pageUrl = `http://127.0.0.1:${server.address().port}/${page}?render${web ? "&web" : ""}`;
+  const pageUrl = `http://127.0.0.1:${server.address().port}/${page}?render${web ? "&web" : ""}${bpm ? `&bpm=${bpm}` : ""}`;
   const workerCount = stills.length
     ? Math.min(workers, stills.length)
     : workers;

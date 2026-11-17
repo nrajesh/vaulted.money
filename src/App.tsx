@@ -145,7 +145,9 @@ function App() {
                               />
                               <Route
                                 path="/connect-agent"
-                                element={<AiHubPage focus="agents" />}
+                                element={
+                                  <AiHubPage focus="agents" only="agents" />
+                                }
                               />
                               <Route
                                 path="/language"
@@ -162,7 +164,7 @@ function App() {
                               />
                               <Route
                                 path="/ai-providers"
-                                element={<AiHubPage />}
+                                element={<AiHubPage only="inApp" />}
                               />
                               {!Capacitor.isNativePlatform() && (
                                 <Route

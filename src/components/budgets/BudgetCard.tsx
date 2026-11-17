@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { Budget } from "../../types/budgets";
@@ -61,6 +62,8 @@ export function BudgetCard({
 }: BudgetCardProps) {
   const { accounts } = useTransactions();
   const { t, i18n } = useTranslation();
+  // Phones show the frequency only; a tap on it reveals the dates and scope.
+  const [showWhen, setShowWhen] = useState(false);
   const navigate = useNavigate();
 
   // Goal progress (only computed when is_goal)
@@ -188,9 +191,9 @@ export function BudgetCard({
           />
         </div>
       )}
-      <CardHeader>
+      <CardHeader className="p-4 pb-2 pr-12">
         <CardTitle
-          className="flex items-baseline gap-2 cursor-pointer hover:underline hover:text-primary transition-colors text-slate-900 dark:text-slate-50"
+          className="flex items-baseline gap-2 text-lg cursor-pointer hover:underline hover:text-primary transition-colors text-slate-900 dark:text-slate-50"
           onClick={handleTitleClick}
         >
           {budgetScope === "account" && (
@@ -213,11 +216,21 @@ export function BudgetCard({
           )}
         </CardTitle>
         <CardDescription className="text-slate-600 dark:text-slate-400">
-          {frequencyLabel(budget.frequency, t)}
-          <br />
-          {formattedStartDate} - {formattedEndDate}
-          <br />
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <button
+            type="button"
+            className="border-0 bg-transparent p-0 text-left underline decoration-dotted underline-offset-4 sm:cursor-default sm:no-underline"
+            aria-expanded={showWhen}
+            onClick={() => setShowWhen((shown) => !shown)}
+          >
+            {frequencyLabel(budget.frequency, t)}
+          </button>
+          <span className={showWhen ? "inline" : "hidden sm:inline"}>
+            {" · "}
+            {formattedStartDate} - {formattedEndDate}
+          </span>
+          <span
+            className={`text-xs text-slate-500 dark:text-slate-400 ${showWhen ? "block" : "hidden sm:block"}`}
+          >
             {t("budgets.card.scope", {
               scope:
                 budget.account_scope === "GROUP"
@@ -233,7 +246,7 @@ export function BudgetCard({
           </span>
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-2 p-4 pt-0">
         <div className="flex justify-between text-sm font-medium text-slate-700 dark:text-slate-300">
           <span>
             {t("budgets.card.spent", {
@@ -250,10 +263,10 @@ export function BudgetCard({
         </div>
         <Progress
           value={percentage}
-          className="bg-slate-300/50 dark:bg-slate-700 h-3"
+          className="bg-slate-300/50 dark:bg-slate-700 h-2"
           indicatorClassName={isOverBudget ? "bg-red-500" : "bg-budget-bar"}
         />
-        <div className="text-sm">
+        <div className="flex items-center justify-between gap-2 text-sm">
           {remaining >= 0 ? (
             <span className="text-green-700 dark:text-green-400 font-medium">
               {t("budgets.card.remaining", {
@@ -269,44 +282,46 @@ export function BudgetCard({
               })}
             </span>
           )}
+          <div className="flex shrink-0">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => onEdit(budget)}
+                  aria-label={t("budgets.card.edit", {
+                    defaultValue: "Edit budget",
+                  })}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t("budgets.card.edit", { defaultValue: "Edit budget" })}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text"
+                  onClick={() => onDelete(budget.id)}
+                  aria-label={t("budgets.card.delete", {
+                    defaultValue: "Delete budget",
+                  })}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t("budgets.card.delete", { defaultValue: "Delete budget" })}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end space-x-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onEdit(budget)}
-              aria-label={t("budgets.card.edit", {
-                defaultValue: "Edit budget",
-              })}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {t("budgets.card.edit", { defaultValue: "Edit budget" })}
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => onDelete(budget.id)}
-              aria-label={t("budgets.card.delete", {
-                defaultValue: "Delete budget",
-              })}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {t("budgets.card.delete", { defaultValue: "Delete budget" })}
-          </TooltipContent>
-        </Tooltip>
-      </CardFooter>
     </Card>
   );
 }

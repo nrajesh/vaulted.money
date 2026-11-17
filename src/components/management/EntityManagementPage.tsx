@@ -1,12 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageActionBar } from "@/components/layout/PageActionBar";
 import { Input } from "@/components/ui/input";
@@ -31,7 +25,7 @@ import {
 } from "lucide-react";
 import LoadingOverlay from "@/components/feedback/LoadingOverlay";
 import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
-import { EntityTable, ColumnDefinition } from "./EntityTable";
+import { EntityCardGrid, ColumnDefinition } from "./EntityCardGrid";
 
 interface EntityManagementPageProps<T extends { id: string; name: string }> {
   title: string;
@@ -142,7 +136,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
   groupBy,
   groupLabel,
   disablePagination = false,
-  TableComponent = EntityTable,
+  TableComponent = EntityCardGrid,
 }: EntityManagementPageProps<T> & {
   disablePagination?: boolean;
   TableComponent?: React.ComponentType<{
@@ -215,7 +209,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
             <h2 className="app-gradient-title app-page-title">{title}</h2>
             {titleHint}
           </div>
-          {subtitle && <div className="app-page-subtitle">{subtitle}</div>}
+          {subtitle && <div className="app-page-about">{subtitle}</div>}
         </div>
         <PageActionBar
           primary={{
@@ -340,15 +334,7 @@ const EntityManagementPage = <T extends { id: string; name: string }>({
         />
       </div>
       <Card className="app-table-shell">
-        <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-100">
-            {t("management.manageYour", {
-              name: title,
-              defaultValue: "Manage Your {{name}}",
-            })}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4 sm:pt-6">
           <div
             className={`app-table-toolbar ${
               numSelected > 0

@@ -156,9 +156,7 @@ export const CurrencyManagement = () => {
             <div className="min-w-0">
               <ThemedCardTitle>Active Currencies</ThemedCardTitle>
               <ThemedCardDescription>
-                Manage exchange rates relative to your base currency (
-                {selectedCurrency}).
-                <span className="block mt-2 max-w-xs text-xs leading-snug text-muted-foreground">
+                <span className="block max-w-xs text-xs leading-snug text-muted-foreground">
                   Data sourced from{" "}
                   <a
                     href={FRANKFURTER_WEB_URL}

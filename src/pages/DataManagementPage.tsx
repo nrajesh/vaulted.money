@@ -242,7 +242,7 @@ const DataManagementPage = () => {
           <h1 className="app-gradient-title app-page-title">
             {t("nav.items.yourData", { defaultValue: "Your data" })}
           </h1>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("pages.yourData.subtitle", {
               defaultValue: "Save, restore, reset, or try demo data.",
             })}
@@ -257,12 +257,6 @@ const DataManagementPage = () => {
               defaultValue: "Manual Backup & Restore",
             })}
           </ThemedCardTitle>
-          <ThemedCardDescription>
-            {t("dataManagement.manual.description", {
-              defaultValue:
-                "Export your data to a local file immediately, or restore from a previous backup.",
-            })}
-          </ThemedCardDescription>
         </ThemedCardHeader>
         <ThemedCardContent className="space-y-4">
           <Alert className="bg-blue-100/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">

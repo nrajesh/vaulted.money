@@ -10,7 +10,7 @@ const BackupPage = () => {
           <h1 className="app-gradient-title app-page-title">
             {t("backup.page.title", { defaultValue: "Backup" })}
           </h1>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("pages.backup.subtitle", {
               defaultValue: "Save a copy of your data locally.",
             })}

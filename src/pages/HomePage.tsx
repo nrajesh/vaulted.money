@@ -544,7 +544,7 @@ const HomePage = () => {
 
             <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-tight text-[hsl(var(--brand-accent-text))] sm:text-5xl dark:text-[hsl(var(--brand-accent-soft))] lg:text-6xl">
               {t("home.hero.headline", {
-                defaultValue: "Ask your ledger. Keep control.",
+                defaultValue: "Private Vault. Open Code.",
               })}
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-700 dark:text-slate-200 sm:text-xl">

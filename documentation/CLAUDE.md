@@ -19,6 +19,7 @@ Generated outputs that must stay out of git:
 | `marketing/node_modules/` | `npm ci --prefix marketing` |
 | `marketing/store-screenshots/out/` | `pnpm marketing:screenshots` |
 | `marketing/app-preview/out/`, `marketing/showreel/out/` | `pnpm marketing:preview`, `pnpm showreel` |
+| `marketing/showreel/vault/out/` | `node marketing/showreel/vault/capture.mjs`, then `render.mjs` |
 | `node_modules/`, `.cache/` | `pnpm install` |
 | `android/app/src/main/assets/public/` | `cap sync android` |
 | `ios/App/App/public/` | `cap sync ios` |
@@ -189,6 +190,12 @@ jsdom's focus bookkeeping changes between patch releases. `document.hasFocus()` 
 
 **Type Radix checkbox handlers as `CheckedState`**
 `@radix-ui/react-checkbox` 1.4 declares `onCheckedChange` as a property instead of a method, so TypeScript now checks its parameter strictly. A handler typed `(checked: boolean) => void` fails `tsc` (and so `pnpm build`), because the callback can also receive `"indeterminate"`. Accept the `CheckedState` value and convert it explicitly, e.g. `(checked) => onSelect(checked === true)`.
+
+**Type translation callbacks as i18next's `TFunction`**
+i18next 27 tightened `TFunction`'s overloads, so passing `t` to a helper typed `(key: string, options?: Record<string, unknown>) => string` fails `tsc`. Type the parameter as `TFunction` (`import type { TFunction } from "i18next"`).
+
+**Prettier minor bumps can reformat translations**
+Prettier 3.10 measures Tamil and other Indic strings differently, which rewrapped 17 files in `src/i18n/`. When a Prettier bump fails `format:check`, run `pnpm exec prettier --write "src/**/*.{ts,tsx,css}"` and commit the result.
 
 **Commit the regenerated acknowledgments**
 `pnpm build` and the test suite regenerate `src/data/acknowledgments.generated.ts` from installed versions. Commit the regenerated file along with the dependency bump so the Acknowledgments page lists the versions that actually ship.
