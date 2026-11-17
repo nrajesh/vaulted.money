@@ -56,6 +56,10 @@ describe("HelpDrawer", () => {
   beforeEach(() => {
     localStorage.clear();
     resetDisplayPreferencesCache();
+    Object.defineProperty(window, "electron", {
+      configurable: true,
+      value: undefined,
+    });
     document.documentElement.removeAttribute("data-text-size");
     document.documentElement.removeAttribute("data-contrast");
     document.documentElement.removeAttribute("data-reduce-motion");
@@ -103,7 +107,25 @@ describe("HelpDrawer", () => {
     });
   });
 
+  it("hides Ask AI outside Electron and falls back to help when requested", async () => {
+    renderDrawer();
+    await userEvent.click(screen.getByText("open ask"));
+    const dialog = await screen.findByRole("dialog", { name: "Help" });
+
+    expect(
+      within(dialog).queryByRole("tab", { name: "Ask AI" }),
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Where your money lives")).toBeVisible();
+    expect(
+      within(dialog).queryByText("Questions to try"),
+    ).not.toBeInTheDocument();
+  });
+
   it("guides asking AI without a chat, and links to setup", async () => {
+    Object.defineProperty(window, "electron", {
+      configurable: true,
+      value: {},
+    });
     renderDrawer("/dashboard");
     await userEvent.click(screen.getByText("open ask"));
     const dialog = await screen.findByRole("dialog", { name: "Help" });

@@ -16,25 +16,30 @@ Open Code."
 | 0:27 | Laptop     | One month, three ways.               | Charts: the month as a line, as bars and as a ring                             |
 | 0:31 | Laptop     | AI, only when you say so.            | The AI switch, off and then on                                                 |
 | 0:36 | All five   | Yours alone, on every device.        | The line-up, each device named; no sign-up, no cloud, AI off until switched on |
-| 0:42 |            | Private Vault. Open Code.            | The devices fold into the logo; name, slogan, badges, one action               |
+| 0:42 |            | Private Vault, Open Code             | The devices fold into the logo; name, slogan, badges, one action               |
 
 Features, devices and words are `FEATURES` in `timeline.mjs` (a test checks
-every device has a feature and that one of them is AI); the slogan and badges are `TAGLINE` and `BADGES` there.
+every device has a feature and that one of them is AI); the slogan and badges
+are `TAGLINE` and `BADGES` there. The Duo's inner screen opens on a hinge, and
+the laptop camera moves between its chart and AI scenes without flipping the
+screen.
 
 ## Make it
 
 ```bash
 pnpm dev                                        # the app, in another terminal
 node marketing/showreel/vault/capture.mjs       # photographs the app → out/shots/
-node marketing/showreel/vault/render.mjs        # → out/ and ../final/vaulted-money-film.mp4
+node marketing/showreel/vault/render.mjs        # 1080p30 → out/ and ../final/
+node marketing/showreel/vault/render.mjs --scale 2 # 4K30 → out/ and ../final/
 node marketing/showreel/vault/render.mjs --stills 6,12,30    # PNG stills to check a moment
 node marketing/showreel/vault/render.mjs --draft             # 960×540 for a quick look
 ```
 
 Needs Playwright with Chromium (set `PLAYWRIGHT_MODULE` to its path if it is
-not resolvable) and ffmpeg. Fonts are downloaded once into `out/fonts/`.
-Everything in `out/` is generated and ignored; only the finished video in
-`../final/` is committed.
+not resolvable, or `CHROME_PATH` to a Chromium executable) and ffmpeg. Fonts
+are downloaded once into `out/fonts/`.
+Everything in `out/` is generated and ignored; the finished 1080p and 4K films
+in `../final/` are committed.
 
 ## What is real and what is not
 
@@ -49,7 +54,7 @@ Everything in `out/` is generated and ignored; only the finished video in
 - **The devices are screen sizes, not the store builds.** Each is the web
   app in a browser at that device's size; the frames, status bars and title
   bar are drawn by the film, as are the iPhone's island, the Android's
-  camera hole and the laptop's keyboard. The iPhone Duo is first its cover
+  camera hole and the laptop's slim base. The iPhone Duo is first its cover
   screen and then its unfolded screen turned sideways; the opening between
   them is the film's, not a recording of a device unfolding.
 - **Drawn by the film:** the opening's floating notes (the four amounts are

@@ -18,6 +18,7 @@ import {
   CHAPTERS as C,
   COPY,
   DURATION,
+  DUO_OPEN_SECONDS,
   FEATURES,
   FLIP,
   TAGLINE,
@@ -69,9 +70,24 @@ const devices = Object.fromEntries(
     const node =
       el(`<div class="device ${id}" style="width:${spec.w + spec.pad * 2}px;height:${spec.h + spec.bar + spec.pad * 2}px;padding:${spec.pad}px;border-radius:${spec.radius}px">
       <div class="glass" style="border-radius:${spec.radius - spec.pad}px">${STATUS[id] ?? ""}
-      <canvas style="top:${spec.bar}px;width:${spec.w}px;height:${spec.h}px"></canvas></div>${id === "desktop" ? '<div class="deck"><i></i></div>' : ""}</div>`);
-    const canvas = node.querySelector("canvas");
-    return [id, { id, spec, node, canvas, ctx: null, drawn: "" }];
+      <canvas class="screen" style="top:${spec.bar}px;width:${spec.w}px;height:${spec.h}px"></canvas>
+      ${id === "duo" ? '<div class="duo-panel"><div class="duo-panel-front"><canvas></canvas></div><div class="duo-panel-back"></div></div>' : ""}</div>
+      ${id === "desktop" ? '<div class="deck"><div class="trackpad"></div></div>' : ""}</div>`);
+    const canvas = node.querySelector(".screen");
+    const panelCanvas = node.querySelector(".duo-panel canvas");
+    return [
+      id,
+      {
+        id,
+        spec,
+        node,
+        canvas,
+        ctx: null,
+        panelCanvas,
+        panelCtx: null,
+        drawn: "",
+      },
+    ];
   }),
 );
 
@@ -216,10 +232,10 @@ const slotLabels = Object.fromEntries(
   ]),
 );
 
-const [first, second] = TAGLINE.split(". ");
+const [first, second] = TAGLINE.split(", ");
 const end = el(`<div id="end">${logoSvg("end", "dark")}
   <h2>Vaulted <em>Money</em></h2>
-  <div class="tag"><span class="a">${first}.</span> <span class="b">${second}</span></div>
+  <div class="tag"><span class="a">${first},</span> <span class="b">${second}</span></div>
   <div class="badges">${BADGES.map((b) => `<span>${b}</span>`).join("")}</div>
   <div class="action">${COPY.action}</div></div>`);
 const black = el('<div id="black"></div>');
@@ -244,28 +260,28 @@ function buildCameras() {
   CAMERAS.iphone = [
     [C.turn.start, WHOLE],
     [ask.start - 0.2, WHOLE],
-    [ask.start + 0.45, tall(2.3, 0.5, inputY, -18, 6)],
-    [M.askUnderstood, tall(2.35, 0.5, inputY, -10, 4)],
-    [M.askUnderstood + 0.5, tall(2.35, 0.5, chipsY - 0.02, 12, 4)],
-    [M.askApply, tall(2.4, 0.5, chipsY - 0.02, 16, 3)],
-    [M.askResult + 0.5, tall(1.7, 0.5, 0.42, -20, 4)],
-    [ask.end, tall(1.8, 0.5, 0.46, -12, 4)],
+    [ask.start + 0.45, tall(1.3, 0.5, inputY, -12, 4)],
+    [M.askUnderstood, tall(1.35, 0.5, inputY, -8, 3)],
+    [M.askUnderstood + 0.5, tall(1.35, 0.5, chipsY - 0.02, 8, 3)],
+    [M.askApply, tall(1.4, 0.5, chipsY - 0.02, 12, 2)],
+    [M.askResult + 0.5, tall(1.15, 0.5, 0.42, -12, 3)],
+    [ask.end, tall(1.2, 0.5, 0.46, -8, 3)],
   ];
   CAMERAS.android = [
-    [bills.start, tall(1.7, 0.5, 0.36, 20, 4)],
-    [bills.start + 1.6, tall(2.15, 0.5, 0.34, -12, 6)],
-    [bills.end, tall(2.2, 0.5, 0.5, -18, 5)],
+    [bills.start, tall(1.2, 0.5, 0.36, 12, 3)],
+    [bills.start + 1.6, tall(1.3, 0.5, 0.34, -8, 4)],
+    [bills.end, tall(1.35, 0.5, 0.5, -12, 4)],
   ];
   const b = NOTES.month.budgets;
   const p = NOTES.month.payees;
   CAMERAS.ipad = [
-    [month.start, look(1.55, 0.42, b.y + 0.14, -18, 4, 1480, 540)],
-    [month.start + 1.3, look(1.9, 0.42, b.y + 0.1, 10, 5, 1480, 540)],
-    [month.start + 2.4, look(1.95, 0.42, b.y + 0.1, 14, 5, 1480, 540)],
-    [month.start + 3.1, look(1.9, 0.66, p.y + 0.08, -12, 4, 1640, 540)],
-    [month.end, look(1.95, 0.66, p.y + 0.08, -16, 4, 1640, 540)],
+    [month.start, look(1.05, 0.42, b.y + 0.14, -12, 3, 1480, 540)],
+    [month.start + 1.3, look(1.2, 0.42, b.y + 0.1, 7, 4, 1480, 540)],
+    [month.start + 2.4, look(1.25, 0.42, b.y + 0.1, 10, 4, 1480, 540)],
+    [month.start + 3.1, look(1.2, 0.66, p.y + 0.08, -8, 3, 1640, 540)],
+    [month.end, look(0.9, 0.66, p.y + 0.08, -12, 3, 1450, 540)],
   ];
-  // The Duo arrives folded, straightens, and opens where it stands.
+  // The Duo's inner screen swings out from the hinge before the camera moves in.
   const closed = wide(1.05, 0.5, 0.5, 0, 0);
   CAMERAS.duoFolded = [
     [flow.start, wide(1.0, 0.5, 0.5, 16, 3)],
@@ -273,21 +289,20 @@ function buildCameras() {
     [flow.end, closed],
   ];
   CAMERAS.duo = [
-    [M.unfold + 0.6, closed],
-    [M.unfold + 1.5, wide(1.5, 0.5, 0.5, -8, 4)],
-    [flow.end, wide(1.6, 0.52, 0.55, 12, 3)],
+    [M.unfold + DUO_OPEN_SECONDS, closed],
+    [M.unfold + DUO_OPEN_SECONDS + 0.8, wide(1.05, 0.5, 0.5, -5, 2)],
+    [flow.end, wide(1.1, 0.52, 0.55, 8, 2)],
   ];
-  // The laptop shows two things: three kinds of chart, then the AI switch.
-  // Close on the switch and what it says, which is all this screen holds.
-  const aiView = (scale, ry, rx) => look(scale, 0.25, 0.17, ry, rx, 960, 600);
+  // The laptop camera moves between features without flipping the same screen.
+  const aiView = (scale, ry, rx) => look(scale, 0.5, 0.5, ry, rx, 960, 540);
   CAMERAS.desktop = [
-    // It arrives whole, keyboard and all, before the camera goes in.
-    [charts.start, look(0.98, 0.5, 0.56, -16, 4, 960, 600)],
-    [charts.start + 1.0, wide(1.5, 0.5, 0.55, 6, 4)],
-    [charts.end, wide(1.56, 0.5, 0.55, 10, 3)],
-    [ai.start + 0.02, aiView(2.6, -12, 4)],
-    [M.aiOn, aiView(2.7, -6, 3)],
-    [ai.end - 0.1, aiView(2.8, 8, 3)],
+    // It arrives whole, screen and slim base visible, before the camera goes in.
+    [charts.start, look(0.98, 0.5, 0.56, -12, 3, 960, 600)],
+    [charts.start + 1.0, wide(1.0, 0.5, 0.55, 4, 2)],
+    [charts.end, wide(1.05, 0.5, 0.55, 8, 2)],
+    [ai.start + 0.35, aiView(0.95, -4, 2)],
+    [M.aiOn, aiView(1.0, -2, 2)],
+    [ai.end - 0.1, aiView(1.05, 4, 2)],
     // The one pull-back: the laptop goes to its place in the line-up.
     [everywhere.start + 0.9, SLOTS.desktop],
   ];
@@ -313,6 +328,19 @@ const fade = (t, from, to, at, len = 0.3) => {
   const mix = tween(t, at, at + len, ease.inOutCubic);
   return mix <= 0 ? [from] : mix >= 1 ? [to] : [from, to, mix];
 };
+const fadeThroughDark = (t, from, to, at, len = 0.2) => {
+  const midpoint = at + len / 2;
+  if (t <= at) return [from];
+  if (t >= at + len) return [to];
+  if (t < midpoint)
+    return [
+      from,
+      undefined,
+      1 - tween(t, at, midpoint, ease.inOutCubic),
+      "dark",
+    ];
+  return [to, undefined, tween(t, midpoint, at + len, ease.inOutCubic), "dark"];
+};
 const SHOTS = {
   iphone: (t) => {
     if (t < M.askKeys[0])
@@ -330,19 +358,58 @@ const SHOTS = {
       return fade(t, "desktop-line", "desktop-bar", M.chartBars, 0.25);
     if (t < C.ai.start)
       return fade(t, "desktop-bar", "desktop-pie", M.chartRing, 0.25);
+    if (t < C.ai.start + 0.35)
+      return fadeThroughDark(t, "desktop-pie", "desktop-ai-off", C.ai.start);
     return fade(t, "desktop-ai-off", "desktop-ai-on", M.aiOn, 0.25);
   },
 };
-function draw(device, [a, b, mix]) {
-  const key = `${a}|${b ?? ""}|${mix?.toFixed(3) ?? ""}`;
+function draw(device, [a, b, mix, transition]) {
+  const key = `${a}|${b ?? ""}|${mix?.toFixed(3) ?? ""}|${transition ?? ""}`;
   if (key === device.drawn) return;
   device.drawn = key;
   const { ctx, canvas } = device;
   ctx.globalAlpha = 1;
-  ctx.drawImage(bitmaps[a], 0, 0, canvas.width, canvas.height);
+  if (transition === "dark") {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = mix;
+    ctx.drawImage(bitmaps[a], 0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.drawImage(bitmaps[a], 0, 0, canvas.width, canvas.height);
+  }
   if (b) {
     ctx.globalAlpha = mix;
     ctx.drawImage(bitmaps[b], 0, 0, canvas.width, canvas.height);
+  }
+  ctx.globalAlpha = 1;
+  if (device.panelCtx) {
+    const panel = device.panelCanvas;
+    const half = bitmaps[a].width / 2;
+    device.panelCtx.globalAlpha = 1;
+    device.panelCtx.drawImage(
+      bitmaps[a],
+      half,
+      0,
+      half,
+      bitmaps[a].height,
+      0,
+      0,
+      panel.width,
+      panel.height,
+    );
+    if (b) {
+      device.panelCtx.globalAlpha = mix;
+      device.panelCtx.drawImage(
+        bitmaps[b],
+        half,
+        0,
+        half,
+        bitmaps[b].height,
+        0,
+        0,
+        panel.width,
+        panel.height,
+      );
+    }
   }
 }
 
@@ -350,7 +417,7 @@ function draw(device, [a, b, mix]) {
 function poseDevice(
   device,
   pose,
-  { flip = 0, opacity = 1, dy = 0, clip = "none" } = {},
+  { flip = 0, opacity = 1, dy = 0, clip = "none", open = 1 } = {},
 ) {
   const origin = local(device.spec, pose.fx, pose.fy);
   set(device.node, {
@@ -362,6 +429,16 @@ function poseDevice(
     opacity,
     visibility: opacity > 0.001 ? "visible" : "hidden",
   });
+  if (device.id === "duo") {
+    device.node.style.setProperty("--duo-open", String(open));
+    device.node.style.setProperty(
+      "--duo-hinge-shadow",
+      String(0.15 + (1 - open) * 0.65),
+    );
+    set(device.node.querySelector(".duo-panel"), {
+      transform: `rotateY(${-90 * (1 - open)}deg)`,
+    });
+  }
 }
 
 // ── Where each device is ────────────────────────────────────────────────────
@@ -401,32 +478,36 @@ function deviceState(id, t, mergeP) {
     let opacity = 1;
     let dy = 0;
     let clip = "none";
+    let open = 1;
     for (const feature of mine) {
       const { start, end } = C[feature.id];
       if (feature === firstFeature) {
         const inP = tween(t, from + 0.05, from + 0.8, ease.outQuart);
         dy = (1 - inP) * 260;
         opacity = inP;
-      } else if (id !== "duo") {
+      } else if (id !== "duo" && feature.flipIn !== false) {
         // Only while this feature's flip-in is under way.
         if (t >= start && t < start + FLIP)
           flip -= 84 * (1 - tween(t, start, start + FLIP, ease.outCubic));
       }
-      if (feature !== lastFeature && t >= end - FLIP && t < end)
+      if (
+        feature.flipOut !== false &&
+        feature !== lastFeature &&
+        t >= end - FLIP &&
+        t < end
+      )
         flip += 84 * tween(t, end - FLIP, end, ease.inCubic);
     }
     if (id === "duo") {
-      // Opening: the right half swings out from behind the folded cover,
-      // and the device slides to the middle as it widens.
-      const open = tween(t, M.unfold, M.unfold + 0.6, ease.inOutCubic);
+      open = tween(t, M.unfold, M.unfold + DUO_OPEN_SECONDS, ease.outCubic);
       const { spec } = devices.duo;
       const folded = devices.duoFolded.spec;
       const outer = (s) => s.w + s.pad * 2;
       pose.cx += ((1 - open) * (outer(spec) - outer(folded)) * pose.scale) / 2;
-      const hidden = (1 - open) * (1 - outer(folded) / outer(spec)) * 100;
+      const hidden = (1 - open) * 50;
       clip = `inset(0 ${hidden.toFixed(2)}% 0 0 round ${spec.radius}px)`;
     }
-    return { pose, flip, opacity, dy, clip };
+    return { pose, flip, opacity, dy, clip, open };
   }
 
   if (t >= every.start && id !== "duoFolded") {
@@ -615,6 +696,11 @@ async function boot() {
     device.canvas.width = sample.width;
     device.canvas.height = sample.height;
     device.ctx = device.canvas.getContext("2d");
+    if (device.panelCanvas) {
+      device.panelCanvas.width = sample.width / 2;
+      device.panelCanvas.height = sample.height;
+      device.panelCtx = device.panelCanvas.getContext("2d");
+    }
   }
 
   NOTES.rows.slice(0, AMOUNT_SPOTS.length).forEach((row, i) => {

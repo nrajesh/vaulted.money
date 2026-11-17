@@ -32,6 +32,7 @@ import {
 import { useAiFeatures } from "@/hooks/useAiFeatures";
 import { useAIConfig } from "@/hooks/useAIConfig";
 import { useLocalApi } from "@/hooks/useLocalApi";
+import { isElectron } from "@/utils/electron";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import { InlinePreview } from "./InlinePreview";
@@ -430,14 +431,15 @@ const AskTab = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
 
 /**
  * The help drawer: offline help for the current screen with display
- * settings, and a guide to asking AI about your money. Slides in from the
- * right on desktop and up from the bottom on phones.
+ * settings, plus AI guidance in the desktop app.
  */
 export const HelpDrawer = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isOpen, setOpen, tab, setTab } = useHelpDrawer();
+  const canAskAI = isElectron();
+  const activeTab = canAskAI ? tab : "help";
   const titleId = React.useId();
   const descriptionId = React.useId();
 
@@ -467,31 +469,39 @@ export const HelpDrawer = () => {
           </SheetTitle>
           <SheetDescription id={descriptionId}>
             {t("helpDrawer.description", {
-              defaultValue:
-                "Tips for this screen, display settings and asking AI.",
+              defaultValue: "Tips for this screen and display settings.",
             })}
           </SheetDescription>
         </SheetHeader>
         <Tabs
-          value={tab}
+          value={activeTab}
           onValueChange={(value) => setTab(value as HelpDrawerTab)}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <TabsList className="mx-5 grid h-11 grid-cols-2">
+          <TabsList
+            className={cn(
+              "mx-5 grid h-11",
+              canAskAI ? "grid-cols-2" : "grid-cols-1",
+            )}
+          >
             <TabsTrigger value="help" className="h-9">
               {t("helpDrawer.tabHelp", { defaultValue: "Help & display" })}
             </TabsTrigger>
-            <TabsTrigger value="ask" className="h-9">
-              {t("helpDrawer.tabAsk", { defaultValue: "Ask AI" })}
-            </TabsTrigger>
+            {canAskAI && (
+              <TabsTrigger value="ask" className="h-9">
+                {t("helpDrawer.tabAsk", { defaultValue: "Ask AI" })}
+              </TabsTrigger>
+            )}
           </TabsList>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4">
             <TabsContent value="help" className="mt-0">
               <HelpTab />
             </TabsContent>
-            <TabsContent value="ask" className="mt-0">
-              <AskTab onNavigate={goTo} />
-            </TabsContent>
+            {canAskAI && (
+              <TabsContent value="ask" className="mt-0">
+                <AskTab onNavigate={goTo} />
+              </TabsContent>
+            )}
           </div>
         </Tabs>
       </SheetContent>

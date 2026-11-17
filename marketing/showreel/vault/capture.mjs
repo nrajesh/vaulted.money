@@ -134,7 +134,9 @@ async function applySearch(page, text, pick) {
   await page.waitForTimeout(1200);
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  executablePath: process.env.CHROME_PATH || undefined,
+});
 try {
   // ── iPhone: plain-English search, typed key by key ──────────────────────
   {

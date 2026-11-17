@@ -192,8 +192,11 @@ export function renderScore({ seconds, queryLength = 28 }) {
   // Each device flips into the next with a soft whoosh and a melody note.
   FEATURES.forEach((feature, index) => {
     const at = C[feature.id].start;
-    if (index > 0) swell(at - FLIP, FLIP * 2, 0.09);
-    bell(at, [76, 79, 81, 84, 88][index], 0.1, index % 2 ? 0.3 : -0.3);
+    if (index > 0)
+      swell(at - FLIP, FLIP * 2, feature.id === "ai" ? 0.16 : 0.09);
+    // The sixth feature is the laptop's AI scene. Give its flip a clear
+    // landing note as well; the old five-note list made this cue silent.
+    bell(at, [76, 79, 81, 84, 88, 91][index], 0.1, index % 2 ? 0.3 : -0.3);
   });
   // The Duo opens; the laptop's charts change; the AI switch goes on.
   swell(M.unfold - 0.25, 0.7, 0.1);

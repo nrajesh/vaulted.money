@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { Clock, Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import searchDemoVideo from "../../../marketing/search-demo/final/vaulted-money-search.mp4";
+import searchDemoPoster from "@/assets/search-demo-poster.svg";
 import aiDemoVideo from "../../../marketing/search-demo/final/vaulted-money-ai.mp4";
 import aiDemoPoster from "@/assets/ai-demo-poster.jpg";
 import agentDemoVideo from "../../../marketing/search-demo/final/vaulted-money-agent.mp4";
@@ -22,9 +24,9 @@ interface DemoCard {
 
 /**
  * A row of demo videos under the hero, one card per selling point, so all of
- * them are in view at once (no carousel). A card is only its poster until
- * someone presses play: the video file is not fetched before that
- * (`preload="none"`). On a phone the row scrolls sideways.
+ * them can be browsed in a horizontally scrollable row. A card is only its
+ * poster until someone presses play: the video file is not fetched before
+ * that (`preload="none"`).
  *
  * To add a video: import the MP4 from `marketing/search-demo/final/` and a
  * poster from `@/assets/`, then set `video` and `poster` on its card below.
@@ -36,6 +38,15 @@ const HomeDemoCards = () => {
   const [started, setStarted] = useState<Record<string, boolean>>({});
 
   const cards: DemoCard[] = [
+    {
+      id: "search",
+      title: t("home.demos.search.title", { defaultValue: "Search" }),
+      body: t("home.demos.search.body", {
+        defaultValue: "Ask in plain English. No AI or cloud needed.",
+      }),
+      video: searchDemoVideo,
+      poster: searchDemoPoster,
+    },
     {
       id: "ai",
       title: t("home.demos.ai.title", { defaultValue: "AI, Your Call" }),
@@ -104,11 +115,11 @@ const HomeDemoCards = () => {
           })}
         </p>
 
-        <ul className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 lg:pb-0">
+        <ul className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-3">
           {cards.map((card) => (
             <li
               key={card.id}
-              className="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-auto"
+              className="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[calc((100%-3rem)/4)]"
             >
               <div className="relative overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-md shadow-slate-950/10 dark:border-slate-600 dark:shadow-black/30">
                 {card.video ? (

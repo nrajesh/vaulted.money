@@ -14,10 +14,11 @@ export const FPS = 30;
 export const BPM = 108;
 export const BEAT = 60 / BPM;
 export const BAR = BEAT * 4;
+export const DUO_OPEN_SECONDS = 1.1;
 
 /** The slogan, the same wherever the name appears, and the badges under it. */
-export const TAGLINE = "Private Vault. Open Code.";
-export const BADGES = ["Private vault", "Local data", "Auditable code"];
+export const TAGLINE = "Private Vault, Open Code";
+export const BADGES = ["Privacy-first", "Data-local", "Open-sourced"];
 
 /**
  * The feature beats, in order: which device shows what, under which words.
@@ -60,6 +61,7 @@ export const FEATURES = [
     label: "Mac · Windows · Linux",
     bars: 2,
     headline: "One month, *three ways.*",
+    flipOut: false,
   },
   {
     id: "ai",
@@ -67,6 +69,7 @@ export const FEATURES = [
     label: "Mac · Windows · Linux",
     bars: 2,
     headline: "AI, only *when you say so.*",
+    flipIn: false,
   },
 ];
 

@@ -81,6 +81,7 @@ export const scheduledScreens: AreaTranslations = {
         noSubCategory: "No sub-category found.",
         amount: "Amount",
         frequency: "Frequency",
+        frequencyUnitLabel: "Unit",
         days: "Days",
         weeks: "Weeks",
         months: "Months",
@@ -213,6 +214,7 @@ export const scheduledScreens: AreaTranslations = {
         noSubCategory: "No se encontró ninguna subcategoría.",
         amount: "Importe",
         frequency: "Frecuencia",
+        frequencyUnitLabel: "Unidad",
         days: "Días",
         weeks: "Semanas",
         months: "Meses",
@@ -342,6 +344,7 @@ export const scheduledScreens: AreaTranslations = {
         noSubCategory: "未找到子分类。",
         amount: "金额",
         frequency: "频率",
+        frequencyUnitLabel: "单位",
         days: "天",
         weeks: "周",
         months: "个月",
@@ -473,6 +476,7 @@ export const scheduledScreens: AreaTranslations = {
         noSubCategory: "Geen subcategorie gevonden.",
         amount: "Bedrag",
         frequency: "Frequentie",
+        frequencyUnitLabel: "Eenheid",
         days: "Dagen",
         weeks: "Weken",
         months: "Maanden",
@@ -562,7 +566,8 @@ export const scheduledScreens: AreaTranslations = {
         pageOf: "பக்கம் {{page}} / {{total}}",
         contextError: "அட்டவணைச் சூழலை ஏற்றுவதில் பிழை.",
         ended: "முடிவடைந்தது",
-        endedTitle: "{{date}} அன்று முடிவடைந்தது. இனி பரிவர்த்தனைகள் உருவாக்கப்படாது.",
+        endedTitle:
+          "{{date}} அன்று முடிவடைந்தது. இனி பரிவர்த்தனைகள் உருவாக்கப்படாது.",
         endsOn: "{{date}} அன்று முடிகிறது",
         lastRun: "கடைசியாக இயக்கப்பட்டது",
       },
@@ -582,7 +587,8 @@ export const scheduledScreens: AreaTranslations = {
         description:
           "இன்று வரையிலான நிகழ்வுகள் உங்கள் பரிவர்த்தனைகளில் தானாகச் சேர்க்கப்படும்.",
         startDate: "தொடக்க தேதி",
-        startDateHint: "எதிர்கால தேதிகளை (நாளை முதல்) மட்டுமே தேர்ந்தெடுக்க முடியும்.",
+        startDateHint:
+          "எதிர்கால தேதிகளை (நாளை முதல்) மட்டுமே தேர்ந்தெடுக்க முடியும்.",
         endDate: "முடிவு தேதி (விருப்பம்)",
         endDateHint: "தொடக்க தேதிக்குப் பிறகு இருக்க வேண்டும்.",
         account: "கணக்கு",
@@ -603,6 +609,7 @@ export const scheduledScreens: AreaTranslations = {
         noSubCategory: "துணை வகை எதுவும் இல்லை.",
         amount: "தொகை",
         frequency: "அடிக்கடி",
+        frequencyUnitLabel: "அலகு",
         days: "நாட்கள்",
         weeks: "வாரங்கள்",
         months: "மாதங்கள்",
@@ -639,7 +646,8 @@ export const scheduledScreens: AreaTranslations = {
         create: "{{count}} அட்டவணைகளை உருவாக்கு",
         noneSelected: {
           title: "உருப்படிகள் எதுவும் தேர்ந்தெடுக்கப்படவில்லை",
-          description: "திட்டமிட குறைந்தது ஒரு பரிவர்த்தனையைத் தேர்ந்தெடுக்கவும்.",
+          description:
+            "திட்டமிட குறைந்தது ஒரு பரிவர்த்தனையைத் தேர்ந்தெடுக்கவும்.",
         },
         noLedger: "செயலில் உள்ள பேரேடு தேர்ந்தெடுக்கப்படவில்லை",
         created: "{{count}} தொடர் பரிவர்த்தனை(கள்) திட்டமிடப்பட்டன.",
@@ -650,7 +658,8 @@ export const scheduledScreens: AreaTranslations = {
       },
       batch: {
         title: "{{count}} பரிவர்த்தனைகளைத் திட்டமிடு",
-        description: "இந்தப் பரிவர்த்தனைகள் தொடர் திட்டமிட்ட பரிவர்த்தனைகளாக மாற்றப்படும்.",
+        description:
+          "இந்தப் பரிவர்த்தனைகள் தொடர் திட்டமிட்ட பரிவர்த்தனைகளாக மாற்றப்படும்.",
         startDate: "தொடக்க தேதி",
         frequency: "அடிக்கடி",
         scheduleAll: "அனைத்தையும் திட்டமிடு",

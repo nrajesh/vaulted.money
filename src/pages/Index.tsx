@@ -78,9 +78,7 @@ const Index = () => {
         selectedCurrency || "USD",
       );
 
-      // Money moved between the user's own accounts is neither income nor
-      // spending, whatever the "Exclude Transfers" switch says about lists.
-      if (t.category === "Transfer") return;
+      // The shared filter state decides whether transfers belong in these totals.
       if (t.amount > 0) income += amount;
       else expenses += Math.abs(amount);
       balance += amount;

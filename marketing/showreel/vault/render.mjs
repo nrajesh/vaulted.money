@@ -3,6 +3,7 @@
  *
  *   node marketing/showreel/vault/capture.mjs            # once (app running)
  *   node marketing/showreel/vault/render.mjs             # 1080p30 → out/ and ../final/
+ *   node marketing/showreel/vault/render.mjs --scale 2   # 4K30 → out/ and ../final/
  *   node marketing/showreel/vault/render.mjs --stills 2,12,20
  *   node marketing/showreel/vault/render.mjs --draft     # 960×540, quick check
  *   node marketing/showreel/vault/render.mjs --reuse     # new sound on the last run's frames
@@ -40,7 +41,7 @@ const option = (name) => {
 };
 const ffmpeg = process.env.FFMPEG_PATH ?? "ffmpeg";
 const draft = flag("draft");
-const scale = draft ? 0.5 : 1;
+const scale = draft ? 0.5 : Number(option("scale") ?? 1);
 const workers = Number(option("workers") ?? 4);
 const stills = option("stills")?.split(",").map(Number);
 mkdirSync(path.join(OUT, "stills"), { recursive: true });
@@ -103,7 +104,9 @@ await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const url = `http://127.0.0.1:${server.address().port}/vault/film.html`;
 
 await ensureFonts();
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  executablePath: process.env.CHROME_PATH || undefined,
+});
 async function openPage() {
   const page = await browser.newPage({
     viewport: { width: WIDTH, height: HEIGHT },
@@ -134,7 +137,10 @@ try {
     }
   } else {
     const frames = Math.round(DURATION * FPS);
-    const dir = path.join(OUT, draft ? "frames-draft" : "frames");
+    const dir = path.join(
+      OUT,
+      draft ? "frames-draft" : scale > 1 ? `frames-${scale}x` : "frames",
+    );
     mkdirSync(dir, { recursive: true });
     let next = 0;
     let done = 0;
@@ -151,6 +157,7 @@ try {
               path: path.join(dir, `f${String(n).padStart(5, "0")}.jpg`),
               type: "jpeg",
               quality: 96,
+              timeout: 120_000,
             });
             if (++done % 150 === 0) console.log(`  ${done}/${frames} frames`);
           }
@@ -182,7 +189,9 @@ try {
     if (!Number.isFinite(loudness))
       throw new Error("Could not measure loudness");
     const gain = (-14 - loudness).toFixed(2);
-    const name = `vaulted-money-film${draft ? "-draft" : ""}.mp4`;
+    const resolutionSuffix =
+      scale === 2 ? "-4k" : scale > 1 ? `-${Math.round(WIDTH * scale)}p` : "";
+    const name = `vaulted-money-film${draft ? "-draft" : resolutionSuffix}.mp4`;
     const target = path.join(OUT, name);
     const result = spawnSync(
       ffmpeg,
@@ -202,6 +211,8 @@ try {
         "libx264",
         "-preset",
         "slow",
+        "-g",
+        "60",
         "-crf",
         draft ? "24" : "17",
         "-pix_fmt",
@@ -222,8 +233,9 @@ try {
     );
     if (result.status !== 0) throw new Error("ffmpeg failed");
     console.log(`✓ ${target}`);
-    if (!draft) {
-      const final = path.join(HERE, "../final/vaulted-money-film.mp4");
+    if (!draft && (scale === 1 || scale === 2)) {
+      const suffix = scale === 2 ? "-4k" : "";
+      const final = path.join(HERE, `../final/vaulted-money-film${suffix}.mp4`);
       copyFileSync(target, final);
       console.log(`✓ ${final}`);
     }

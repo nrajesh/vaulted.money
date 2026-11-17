@@ -118,7 +118,7 @@ const FlowNode = (props: {
         y={y + height / 2}
         textAnchor={onLeft ? "end" : "start"}
         dominantBaseline="middle"
-        className="fill-slate-700 text-[11px] font-medium dark:fill-slate-200"
+        className="fill-slate-700 text-[10px] font-medium dark:fill-slate-200"
       >
         {label}
       </text>
@@ -269,6 +269,7 @@ const SankeyChart: React.FC<SankeyChartProps> = ({
             >
               <Tooltip
                 formatter={(value: unknown) => formatCurrency(value as number)}
+                contentStyle={{ fontSize: "12px" }}
               />
             </Sankey>
           </ResponsiveContainer>

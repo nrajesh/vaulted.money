@@ -38,8 +38,8 @@ import SiteFooter from "@/components/SiteFooter";
 import BrandLockup from "@/components/BrandLockup";
 import HomeDemoCards from "@/components/homepage/HomeDemoCards";
 import { DEMO_VIDEO_ATTRIBUTE, pauseOtherDemoVideos } from "@/utils/demoVideos";
-import searchDemoVideo from "../../marketing/search-demo/final/vaulted-money-search.mp4";
-import searchDemoPoster from "@/assets/search-demo-poster.svg";
+import productFilm from "../../marketing/showreel/final/vaulted-money-film.mp4";
+import productFilmPoster from "@/assets/product-film-poster.jpg";
 
 const webInstallCommand = `git clone https://github.com/nrajesh/vaulted.money.git
 cd vaulted.money
@@ -544,7 +544,7 @@ const HomePage = () => {
 
             <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-tight text-[hsl(var(--brand-accent-text))] sm:text-5xl dark:text-[hsl(var(--brand-accent-soft))] lg:text-6xl">
               {t("home.hero.headline", {
-                defaultValue: "Private Vault. Open Code.",
+                defaultValue: "Private Vault, Open Code",
               })}
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-700 dark:text-slate-200 sm:text-xl">
@@ -585,10 +585,10 @@ const HomePage = () => {
                 {...{ [DEMO_VIDEO_ATTRIBUTE]: "" }}
                 onPlay={(event) => pauseOtherDemoVideos(event.currentTarget)}
                 className="aspect-video w-full bg-slate-950 object-cover"
-                src={searchDemoVideo}
-                poster={searchDemoPoster}
+                src={productFilm}
+                poster={productFilmPoster}
                 aria-label={t("home.hero.videoLabel", {
-                  defaultValue: "Natural-language search demo video",
+                  defaultValue: "Vaulted Money product film",
                 })}
                 autoPlay={!prefersReducedMotion}
                 loop={!prefersReducedMotion}
@@ -601,7 +601,7 @@ const HomePage = () => {
               <div className="absolute inset-x-0 bottom-14 z-10 flex items-center justify-between gap-2 px-3 sm:px-4">
                 <span className="pointer-events-none min-w-0 text-2xl font-black leading-none tracking-tight text-white drop-shadow sm:text-3xl">
                   {t("home.hero.videoTitle", {
-                    defaultValue: "Ask. Don’t Search.",
+                    defaultValue: "Private Vault, Open Code",
                   })}
                 </span>
                 <Button

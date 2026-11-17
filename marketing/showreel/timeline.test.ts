@@ -169,7 +169,7 @@ describe("keynote cut timeline", () => {
   it("signs off with the one slogan", async () => {
     const { keynote } = await load();
     for (const tagline of keynote.TAGLINES as string[])
-      expect(tagline).toBe("Private Vault. Open Code.");
+      expect(tagline).toBe("Private Vault, Open Code");
   });
 
   it("adds up the numbers it shows", async () => {

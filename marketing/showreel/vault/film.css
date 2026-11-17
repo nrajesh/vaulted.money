@@ -56,7 +56,7 @@ body {
 }
 .cap h1 {
   margin: 0;
-  font-size: 112px;
+  font-size: 96px;
   line-height: 1.02;
   font-weight: 800;
   letter-spacing: -0.035em;
@@ -67,6 +67,7 @@ body {
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.01em;
+  font-size: 0.9em;
   color: var(--teal);
 }
 .cap .word {
@@ -82,12 +83,12 @@ body {
   border-radius: 999px;
   border: 2px solid rgba(134, 222, 222, 0.55);
   color: #dff7f7;
-  font-size: 36px;
+  font-size: 30px;
   font-weight: 600;
 }
 .cap .note {
   margin-top: 28px;
-  font-size: 52px;
+  font-size: 42px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--teal);
@@ -115,7 +116,7 @@ body {
   background: linear-gradient(#0a1322 62%, rgba(10, 19, 34, 0));
 }
 .cap.wide h1 {
-  font-size: 72px;
+  font-size: 64px;
   white-space: nowrap;
 }
 .cap.wide .label {
@@ -131,7 +132,7 @@ body {
   text-align: center;
 }
 .cap.centre h1 {
-  font-size: 96px;
+  font-size: 88px;
 }
 #proof {
   position: absolute;
@@ -288,8 +289,9 @@ body {
   margin-top: 30px;
   font-family: var(--serif);
   font-style: italic;
-  font-size: 128px;
+  font-size: 88px;
   line-height: 1.1;
+  letter-spacing: -0.015em;
 }
 #end .tag span {
   display: inline-block;
@@ -301,18 +303,29 @@ body {
   margin-top: 36px;
   display: flex;
   gap: 16px;
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 600;
 }
 #end .badges span {
   padding: 10px 26px;
   border-radius: 999px;
-  border: 2px solid rgba(134, 222, 222, 0.55);
-  color: #dff7f7;
+  border: 2px solid;
+}
+#end .badges span:nth-child(1) {
+  border-color: rgba(126, 224, 170, 0.68);
+  color: #8ee4b3;
+}
+#end .badges span:nth-child(2) {
+  border-color: rgba(99, 196, 255, 0.68);
+  color: #7ccfff;
+}
+#end .badges span:nth-child(3) {
+  border-color: rgba(247, 199, 77, 0.72);
+  color: #ffd35f;
 }
 #end .action {
   margin-top: 40px;
-  font-size: 40px;
+  font-size: 32px;
   font-weight: 600;
   color: #dbe7f5;
 }
@@ -345,34 +358,85 @@ body {
   border-radius: 11px;
   background: #05070b;
 }
-/* The laptop's keyboard deck, seen from the front. */
+/* Keep the laptop base quiet so the screen carries the detail. */
 .device .deck {
   position: absolute;
   left: -7%;
   top: 100%;
   width: 114%;
-  height: 104px;
-  border-radius: 6px 6px 30px 30px;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
-      14px / 86% 14px no-repeat,
-    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
-      34px / 86% 14px no-repeat,
-    repeating-linear-gradient(90deg, transparent 0 6px, #2b3340 6px 62px) 50%
-      54px / 86% 14px no-repeat,
-    linear-gradient(#1a202b, #0c1017);
-  box-shadow:
-    0 0 0 2px #2c3442,
-    0 30px 60px rgba(0, 0, 0, 0.5);
+  height: 42px;
+  border: 1px solid #aeb6bf;
+  border-radius: 4px 4px 12px 12px;
+  clip-path: polygon(1.5% 0, 98.5% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, #e1e4e8 0%, #c8cdd3 28%, #adb5bd 100%);
+  filter: drop-shadow(0 0 2px #929ba5)
+    drop-shadow(0 18px 36px rgba(0, 0, 0, 0.45));
 }
-.device .deck i {
+.device .trackpad {
   position: absolute;
-  left: 38%;
-  bottom: 8px;
-  width: 24%;
-  height: 20px;
-  border-radius: 6px;
-  background: #232a36;
+  left: 40%;
+  bottom: 4px;
+  width: 20%;
+  height: 10px;
+  border: 1px solid rgba(54, 64, 76, 0.25);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.device.duo .glass {
+  overflow: hidden;
+  perspective: 1300px;
+  transform-style: preserve-3d;
+}
+.device.duo .screen {
+  z-index: 2;
+  clip-path: inset(0 50% 0 0);
+  transform: translateZ(2px);
+}
+.device.duo .glass::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  inset: 0 auto 0 50%;
+  width: 5px;
+  pointer-events: none;
+  opacity: var(--duo-hinge-shadow, 0.15);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.55),
+    rgba(220, 235, 250, 0.42),
+    rgba(0, 0, 0, 0.45)
+  );
+}
+.duo-panel {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.duo-panel-front,
+.duo-panel-back {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 0 32px 32px 0;
+  backface-visibility: hidden;
+}
+.duo-panel-front {
+  border-left: 1px solid rgba(225, 238, 250, 0.28);
+}
+.duo-panel-front canvas {
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+.duo-panel-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(110deg, #343e4e, #141a24 72%);
 }
 .slot-label {
   position: absolute;

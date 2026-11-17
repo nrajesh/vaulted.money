@@ -473,12 +473,12 @@ export const AddEditScheduledTransactionDialog: React.FC<
                     </FormItem>
                   )}
                 />
-                <div className="flex items-end gap-2">
+                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(7rem,0.7fr)] items-end gap-2">
                   <FormField
                     control={form.control}
                     name="frequency_value"
                     render={({ field }) => (
-                      <FormItem className="flex-grow">
+                      <FormItem className="min-w-0">
                         <FormLabel>
                           {t("scheduled.dialog.frequency", {
                             defaultValue: "Frequency",
@@ -502,13 +502,18 @@ export const AddEditScheduledTransactionDialog: React.FC<
                     control={form.control}
                     name="frequency_unit"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="min-w-0">
+                        <FormLabel>
+                          {t("scheduled.dialog.frequencyUnitLabel", {
+                            defaultValue: "Unit",
+                          })}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>

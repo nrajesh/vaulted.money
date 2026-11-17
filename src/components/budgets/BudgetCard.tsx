@@ -210,7 +210,7 @@ export function BudgetCard({
           )}
           {displayName}
           {budgetScope === "category" && budget.sub_category_name && (
-            <span className="text-xl font-normal text-slate-500 dark:text-slate-400">
+            <span className="text-base font-normal text-slate-500 dark:text-slate-400">
               {">"} {budget.sub_category_name}
             </span>
           )}
@@ -382,10 +382,10 @@ function GoalCard({
           />
         </div>
       )}
-      <CardHeader>
-        <div className="flex items-center justify-between">
+      <CardHeader className="pr-14">
+        <div className="flex items-center justify-between gap-2">
           <CardTitle
-            className="flex items-center gap-2 cursor-pointer hover:underline hover:text-emerald-600 transition-colors text-emerald-900 dark:text-emerald-100"
+            className="flex min-w-0 flex-1 items-center gap-2 cursor-pointer hover:underline hover:text-emerald-600 transition-colors text-emerald-900 dark:text-emerald-100"
             onClick={onTitleClick}
           >
             <Target className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
@@ -402,7 +402,7 @@ function GoalCard({
           </CardTitle>
           {/* On-track / Off-track badge */}
           <div
-            className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+            className={`flex shrink-0 items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
               isOnTrack
                 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
                 : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
@@ -524,13 +524,13 @@ function GoalCard({
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-end space-x-2">
+      <CardFooter className="flex justify-end">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="border-emerald-300 dark:border-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+              className="h-9 w-9"
               onClick={() => onEdit(budget)}
               aria-label={t("budgets.card.edit", {
                 defaultValue: "Edit budget",
@@ -546,8 +546,9 @@ function GoalCard({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="destructive"
+              variant="ghost"
               size="icon"
+              className="h-9 w-9 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text"
               onClick={() => onDelete(budget.id)}
               aria-label={t("budgets.card.delete", {
                 defaultValue: "Delete budget",

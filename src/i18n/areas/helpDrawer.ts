@@ -10,7 +10,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "Help",
       title: "Help",
-      description: "Tips for this screen, display settings and asking AI.",
+      description: "Tips for this screen and display settings.",
       tabHelp: "Help & display",
       tabAsk: "Ask AI",
       onThisScreen: "On this screen",
@@ -201,8 +201,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "Ayuda",
       title: "Ayuda",
-      description:
-        "Consejos para esta pantalla, ajustes de pantalla y preguntar a la IA.",
+      description: "Consejos para esta pantalla y los ajustes de pantalla.",
       tabHelp: "Ayuda y pantalla",
       tabAsk: "Preguntar a la IA",
       onThisScreen: "En esta pantalla",
@@ -393,7 +392,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "帮助",
       title: "帮助",
-      description: "本页面的提示、显示设置以及向 AI 提问。",
+      description: "本页面的提示和显示设置。",
       tabHelp: "帮助与显示",
       tabAsk: "询问 AI",
       onThisScreen: "本页面",
@@ -583,7 +582,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "Help",
       title: "Help",
-      description: "Tips voor dit scherm, weergave-instellingen en AI vragen.",
+      description: "Tips voor dit scherm en weergave-instellingen.",
       tabHelp: "Help en weergave",
       tabAsk: "AI vragen",
       onThisScreen: "Op dit scherm",
@@ -774,7 +773,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "உதவி",
       title: "உதவி",
-      description: "இந்தத் திரைக்கான குறிப்புகள், காட்சி அமைப்புகள், AI-யிடம் கேட்பது.",
+      description: "இந்தத் திரைக்கான குறிப்புகளும் காட்சி அமைப்புகளும்.",
       tabHelp: "உதவியும் காட்சியும்",
       tabAsk: "AI-யிடம் கேளுங்கள்",
       onThisScreen: "இந்தத் திரையில்",

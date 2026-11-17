@@ -6,6 +6,6 @@ export const DEVICES = {
   // Folded: the narrow cover screen.
   duoFolded: { width: 466, height: 678, scale: 3, mobile: true, theme: "dark" },
   // Unfolded and turned sideways: room for the wide charts.
-  duo: { width: 951, height: 669, scale: 2.5, mobile: true, theme: "dark" },
-  desktop: { width: 1440, height: 900, scale: 2, mobile: false, theme: "dark" },
+  duo: { width: 951, height: 669, scale: 3, mobile: true, theme: "dark" },
+  desktop: { width: 1440, height: 900, scale: 3, mobile: false, theme: "dark" },
 };

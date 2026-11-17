@@ -4,6 +4,7 @@ import {
   CHAPTERS,
   COPY,
   DURATION,
+  DUO_OPEN_SECONDS,
   FEATURES,
   TAGLINE,
   moments,
@@ -15,7 +16,14 @@ import { DEVICES } from "./capture.devices.mjs";
 import { findAntiGoals } from "../../shared/antiGoals.mjs";
 
 type Chapter = { id: string; start: number; end: number };
-type Feature = { id: string; device: string; label: string; headline: string };
+type Feature = {
+  id: string;
+  device: string;
+  label: string;
+  headline: string;
+  flipIn?: boolean;
+  flipOut?: boolean;
+};
 const chapters = Object.values(CHAPTERS) as Chapter[];
 const features = FEATURES as Feature[];
 const M = moments(28);
@@ -51,11 +59,21 @@ describe("vault film timeline", () => {
 
   it("opens the Duo and flips the charts inside their own beats", () => {
     expect(M.unfold).toBeGreaterThan(CHAPTERS.flow.start + 1);
+    expect(M.unfold + DUO_OPEN_SECONDS).toBeLessThan(CHAPTERS.flow.end - 3);
     expect(CHAPTERS.flow.end - M.unfold).toBeGreaterThan(3);
     expect(M.chartBars).toBeGreaterThan(CHAPTERS.charts.start);
     expect(M.chartRing).toBeGreaterThan(M.chartBars + 1);
     expect(M.chartRing).toBeLessThan(CHAPTERS.charts.end - 1);
     expect(M.aiOn).toBeGreaterThan(CHAPTERS.ai.start + 1);
+  });
+
+  it("moves the laptop camera between features without flipping the same screen", () => {
+    const laptopFeatures = features.filter(
+      (feature) => feature.device === "desktop",
+    );
+    expect(laptopFeatures).toHaveLength(2);
+    expect(laptopFeatures[0].flipOut).toBe(false);
+    expect(laptopFeatures[1].flipIn).toBe(false);
   });
 
   it("types the search once: keys, then what was understood, then the result", () => {
@@ -84,6 +102,6 @@ describe("vault film timeline", () => {
   });
 
   it("signs off with the one slogan", () => {
-    expect(TAGLINE).toBe("Private Vault. Open Code.");
+    expect(TAGLINE).toBe("Private Vault, Open Code");
   });
 });

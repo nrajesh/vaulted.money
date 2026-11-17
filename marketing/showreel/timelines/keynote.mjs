@@ -69,7 +69,7 @@ export const COPY = {
     headline: "Most apps only look *back.*",
     sub: "Some sell what they see.",
   },
-  turn: { name: "Vaulted Money", tagline: "Private Vault. Open Code." },
+  turn: { name: "Vaulted Money", tagline: "Private Vault, Open Code" },
   privacy: {
     headline: "Who else can see *this?*",
     answer: "Only you.",
@@ -106,7 +106,7 @@ export const COPY = {
   devices: { headline: "Every *device.*" },
   end: {
     name: "Vaulted Money",
-    tagline: "Private Vault. Open Code.",
+    tagline: "Private Vault, Open Code",
     extra: "Free & open source · vaulted.money",
     badges: ["Privacy-first", "Data-local", "Open-sourced"],
   },
