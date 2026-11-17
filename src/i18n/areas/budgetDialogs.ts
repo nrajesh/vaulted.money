@@ -443,8 +443,7 @@ export const budgetDialogs: AreaTranslations = {
         descriptionBudget:
           "ஒரு வகை, கணக்கு அல்லது பெறுநருக்கு செலவு வரம்பை அமைக்கவும்.",
         savingsGoal: "சேமிப்பு இலக்கு",
-        savingsGoalHint:
-          "செலவு வரம்புக்குப் பதிலாக சேமிப்பு இலக்காகக் கண்காணிக்கவும்.",
+        savingsGoalHint: "செலவு வரம்புக்குப் பதிலாக சேமிப்பு இலக்காகக் கண்காணிக்கவும்.",
         trackTowards: "பரிவர்த்தனைகளைக் கண்காணிக்க வேண்டியது",
         scope: {
           category: "வகை",

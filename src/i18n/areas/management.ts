@@ -423,8 +423,7 @@ export const management: AreaTranslations = {
           singular: "கணக்கு",
           plural: "கணக்குகள்",
           title: "கணக்குகள்",
-          subtitle:
-            "உங்கள் வங்கிக் கணக்குகளையும் கடன் அட்டைகளையும் நிர்வகிக்கவும்",
+          subtitle: "உங்கள் வங்கிக் கணக்குகளையும் கடன் அட்டைகளையும் நிர்வகிக்கவும்",
         },
         vendor: {
           singular: "பெறுநர்",
@@ -436,8 +435,7 @@ export const management: AreaTranslations = {
           singular: "வகை",
           plural: "வகைகள்",
           title: "வகைகள்",
-          subtitle:
-            "வகைகள் மற்றும் துணை வகைகள் மூலம் பரிவர்த்தனைகளை ஒழுங்கமைக்கவும்",
+          subtitle: "வகைகள் மற்றும் துணை வகைகள் மூலம் பரிவர்த்தனைகளை ஒழுங்கமைக்கவும்",
         },
       },
       actions: {
@@ -465,8 +463,7 @@ export const management: AreaTranslations = {
         deselect: "தேர்வை நீக்கு",
       },
       search: {
-        accounts:
-          "பெயர் அல்லது நாணயம் மூலம் தேடவும், எ.கா. 'negative', '> 1000'...",
+        accounts: "பெயர் அல்லது நாணயம் மூலம் தேடவும், எ.கா. 'negative', '> 1000'...",
         default: "பெயரால் தேடு...",
       },
       status: {
@@ -475,8 +472,7 @@ export const management: AreaTranslations = {
         loadingShort: "ஏற்றுகிறது...",
         noItems: "உருப்படிகள் எதுவும் இல்லை.",
         selected: "{{count}} தேர்ந்தெடுக்கப்பட்டது",
-        rowsSelected:
-          "{{total}} இல் {{selected}} வரிசை(கள்) தேர்ந்தெடுக்கப்பட்டது.",
+        rowsSelected: "{{total}} இல் {{selected}} வரிசை(கள்) தேர்ந்தெடுக்கப்பட்டது.",
         showing: "{{total}} {{name}} இல் {{from}} முதல் {{to}} வரை காட்டுகிறது",
         page: "பக்கம் {{page}} / {{total}}",
         prev: "முந்தையது",
@@ -516,11 +512,9 @@ export const management: AreaTranslations = {
       },
       toasts: {
         vendorRenamed: "பெறுநர் பெயர் புதுப்பிக்கப்பட்டது!",
-        vendorRenameFailed:
-          "பெறுநர் பெயரைப் புதுப்பிக்க முடியவில்லை: {{message}}",
+        vendorRenameFailed: "பெறுநர் பெயரைப் புதுப்பிக்க முடியவில்லை: {{message}}",
         categoryRenamed: "வகை பெயர் புதுப்பிக்கப்பட்டது!",
-        categoryRenameFailed:
-          "வகை பெயரைப் புதுப்பிக்க முடியவில்லை: {{message}}",
+        categoryRenameFailed: "வகை பெயரைப் புதுப்பிக்க முடியவில்லை: {{message}}",
       },
     },
   },

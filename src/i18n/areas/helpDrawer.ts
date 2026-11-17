@@ -774,8 +774,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "உதவி",
       title: "உதவி",
-      description:
-        "இந்தத் திரைக்கான குறிப்புகள், காட்சி அமைப்புகள், AI-யிடம் கேட்பது.",
+      description: "இந்தத் திரைக்கான குறிப்புகள், காட்சி அமைப்புகள், AI-யிடம் கேட்பது.",
       tabHelp: "உதவியும் காட்சியும்",
       tabAsk: "AI-யிடம் கேளுங்கள்",
       onThisScreen: "இந்தத் திரையில்",
