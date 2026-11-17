@@ -148,7 +148,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "Simple or Detailed",
-          body: "Simple reports answer everyday questions; Detailed ones break things down further. Both export to PDF, Excel or CSV.",
+          body: "Simple reports answer everyday questions; Detailed ones break things down further. Both export to PDF or CSV.",
         },
         insights: {
           title: "Plan versus reality",
@@ -340,7 +340,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "Sencillos o detallados",
-          body: "Los sencillos responden lo cotidiano; los detallados desglosan más. Ambos se exportan a PDF, Excel o CSV.",
+          body: "Los sencillos responden lo cotidiano; los detallados desglosan más. Ambos se exportan a PDF o CSV.",
         },
         insights: {
           title: "Plan frente a realidad",
@@ -530,7 +530,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "简单或详细",
-          body: "简单报告回答日常问题，详细报告提供更细的拆分。两者都可导出为 PDF、Excel 或 CSV。",
+          body: "简单报告回答日常问题，详细报告提供更细的拆分。两者都可导出为 PDF 或 CSV。",
         },
         insights: {
           title: "计划与实际",
@@ -721,7 +721,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "Eenvoudig of gedetailleerd",
-          body: "Eenvoudige rapporten beantwoorden dagelijkse vragen; gedetailleerde gaan dieper. Beide exporteren naar PDF, Excel of CSV.",
+          body: "Eenvoudige rapporten beantwoorden dagelijkse vragen; gedetailleerde gaan dieper. Beide exporteren naar PDF of CSV.",
         },
         insights: {
           title: "Plan tegenover werkelijkheid",
@@ -913,7 +913,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "எளிமையானவை அல்லது விரிவானவை",
-          body: "எளிய அறிக்கைகள் அன்றாடக் கேள்விகளுக்குப் பதில் தரும்; விரிவானவை மேலும் பிரிக்கும். இரண்டையும் PDF, Excel, CSV ஆக ஏற்றுமதி செய்யலாம்.",
+          body: "எளிய அறிக்கைகள் அன்றாடக் கேள்விகளுக்குப் பதில் தரும்; விரிவானவை மேலும் பிரிக்கும். இரண்டையும் PDF, CSV ஆக ஏற்றுமதி செய்யலாம்.",
         },
         insights: {
           title: "திட்டமும் உண்மையும்",

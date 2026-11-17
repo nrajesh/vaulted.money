@@ -729,7 +729,6 @@ async function main() {
       fullHeight: 1900,
       queries: {
         pdf: ["button", "PDF"],
-        excel: ["button", "Excel"],
         csv: ["button", "CSV"],
         netWorth: ["div", "Net Worth Statement", 150],
       },

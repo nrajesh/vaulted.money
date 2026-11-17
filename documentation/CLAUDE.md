@@ -19,6 +19,7 @@ Generated outputs that must stay out of git:
 | `marketing/node_modules/` | `npm ci --prefix marketing` |
 | `marketing/store-screenshots/out/` | `pnpm marketing:screenshots` |
 | `marketing/app-preview/out/`, `marketing/showreel/out/` | `pnpm marketing:preview`, `pnpm showreel` |
+| `marketing/showreel/vault/out/` | `node marketing/showreel/vault/capture.mjs`, then `render.mjs` |
 | `node_modules/`, `.cache/` | `pnpm install` |
 | `android/app/src/main/assets/public/` | `cap sync android` |
 | `ios/App/App/public/` | `cap sync ios` |

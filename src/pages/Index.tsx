@@ -78,23 +78,12 @@ const Index = () => {
         selectedCurrency || "USD",
       );
 
-      // Handle Income/Expense calculation
-      if (t.amount > 0) {
-        if (t.category !== "Transfer" || !excludeTransfers) {
-          income += amount;
-        }
-      } else {
-        if (t.category !== "Transfer" || !excludeTransfers) {
-          expenses += Math.abs(amount);
-        }
-      }
-
-      // Handle Balance
-      // If excludes transfers is on, balance calc might be weird if we just sum?
-      // Usually transfers net to 0, so excluding them shouldn't change total balance unless inter-account.
-      if (t.category !== "Transfer" || !excludeTransfers) {
-        balance += amount;
-      }
+      // Money moved between the user's own accounts is neither income nor
+      // spending, whatever the "Exclude Transfers" switch says about lists.
+      if (t.category === "Transfer") return;
+      if (t.amount > 0) income += amount;
+      else expenses += Math.abs(amount);
+      balance += amount;
     });
 
     return {
@@ -102,12 +91,7 @@ const Index = () => {
       totalExpenses: expenses,
       totalBalance: balance,
     };
-  }, [
-    filteredTransactions,
-    selectedCurrency,
-    convertBetweenCurrencies,
-    excludeTransfers,
-  ]);
+  }, [filteredTransactions, selectedCurrency, convertBetweenCurrencies]);
 
   // Calculate Percentage Changes (Simplified for now - comparing to "previous period" ideally, but reused 0% logic if unknown)
   // To do this properly we'd need to fetch previous period data.
@@ -124,7 +108,7 @@ const Index = () => {
             <h1 className="app-gradient-title app-page-title">
               {t("nav.items.overview", { defaultValue: "Overview" })}
             </h1>
-            <p className="app-page-subtitle">
+            <p className="app-page-about">
               {t("pages.overview.subtitle", {
                 defaultValue: "Where your money stands, and what's next.",
               })}
@@ -145,6 +129,8 @@ const Index = () => {
         <div>
           <ConsolidatedMetricsCard
             netWorth={formatCurrency(totalBalance)}
+            // Income minus spending for the dates shown: not a net worth.
+            netLabel={t("dashboard.overview.net", { defaultValue: "Net" })}
             income={formatCurrency(totalIncome)}
             expenses={formatCurrency(totalExpenses)}
           />

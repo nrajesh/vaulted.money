@@ -69,7 +69,7 @@ const Analytics = () => {
           <h1 className="app-gradient-title app-page-title">
             {t("nav.items.charts", { defaultValue: "Charts" })}
           </h1>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("pages.charts.subtitle", {
               defaultValue: "Spending and trends for any period.",
             })}

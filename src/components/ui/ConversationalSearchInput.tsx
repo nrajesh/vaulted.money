@@ -324,11 +324,14 @@ export function ConversationalSearchInput({
     setOpen(false);
   };
 
-  // Every understood piece is its own row, so the user can take just one of
-  // them; with several left, "apply all" comes first and is the default.
+  // Every understood piece is its own chip, so the user can take just one of
+  // them; with several left, "apply all" comes first and is the default. The
+  // chips share one row that scrolls sideways, so a long sentence costs one
+  // line of the screen instead of one line per piece.
   const suggestionGroup = remaining.length > 0 && (
     <CommandGroup
       forceMount
+      className="[&_[cmdk-group-items]]:flex [&_[cmdk-group-items]]:gap-1 [&_[cmdk-group-items]]:overflow-x-auto [&_[cmdk-group-items]]:pb-1"
       // How the picked filters combine, on the heading's own line.
       heading={
         <>
@@ -351,6 +354,7 @@ export function ConversationalSearchInput({
           forceMount
           value={"suggest-all-" + input}
           onSelect={takeAllRemaining}
+          className="shrink-0 whitespace-nowrap"
         >
           <Sparkles className="mr-2 h-4 w-4 shrink-0 text-primary" />
           <span className="font-medium">
@@ -367,6 +371,7 @@ export function ConversationalSearchInput({
           forceMount
           value={`suggest-${partKey(item.part)}-${input}`}
           onSelect={() => takePiece(item)}
+          className="shrink-0 whitespace-nowrap"
         >
           {partIcon(item.part)}
           <span className="rounded-md bg-primary/10 px-2 py-0.5 text-sm">

@@ -221,7 +221,7 @@ export function mount() {
       <div class="desk-copy-line">${glyphs("See where")}</div>
       <div class="desk-copy-line serif-line">${glyphs("it goes.", "serif")}</div>
       <p class="desk-copy-sub">Cash flow, net worth and trends. Line, bar or pie, with the detail on hover.</p>
-      <div class="reports-chips"><span>Export</span><b>PDF</b><b>Excel</b><b>CSV</b></div>
+      <div class="reports-chips"><span>Export</span><b>PDF</b><b>CSV</b></div>
     </div>`);
   document.getElementById("screen-layer").append(root);
   document.getElementById("type-layer").append(title);

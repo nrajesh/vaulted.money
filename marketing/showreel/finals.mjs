@@ -9,7 +9,8 @@
  * 1. Captures the social cut's screens from the app.
  * 2. Renders the keynote cut (store ending, then website ending) and puts the
  *    iPad and iPhone Duo recordings on it (duo/overlay.mjs).
- * 3. Renders the social cut.
+ * 3. Renders the social cut, then the relaxed social cut (the same film at
+ *    108 BPM instead of 128, so 60 s instead of 50.6 s).
  * 4. Writes light copies and copies them to final/.
  *
  * Takes a long while: every frame is rendered in 4K with motion blur.
@@ -46,6 +47,15 @@ for (const web of [false, true]) {
 }
 
 node(path.join(HERE, "render.mjs"), "--cut", "social", "--scale", "2");
+node(
+  path.join(HERE, "render.mjs"),
+  "--cut",
+  "social",
+  "--bpm",
+  "108",
+  "--scale",
+  "2",
+);
 
 mkdirSync(FINAL, { recursive: true });
 const finals = [
@@ -55,6 +65,10 @@ const finals = [
     "vaulted-money-keynote-website.mp4",
   ],
   ["vaulted-money-showreel-web.mp4", "vaulted-money-showreel-social.mp4"],
+  [
+    "vaulted-money-showreel-relaxed-web.mp4",
+    "vaulted-money-showreel-social-relaxed.mp4",
+  ],
 ];
 for (const [from, to] of finals) {
   const size = statSync(out(from)).size;

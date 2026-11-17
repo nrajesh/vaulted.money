@@ -248,7 +248,7 @@ export default function BudgetsPage() {
           <h1 className="app-gradient-title app-page-title">
             {t("budgets.page.title", { defaultValue: "Budgets" })}
           </h1>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("pages.budgets.subtitle", {
               defaultValue: "Spending limits, and how much is left.",
             })}

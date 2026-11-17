@@ -42,6 +42,7 @@ import {
   USER_GUIDE_URL,
   guideUrl,
   helpCardsForPath,
+  screenAboutForPath,
   type HelpCardId,
 } from "./helpTopics";
 
@@ -195,6 +196,7 @@ const HelpTab = () => {
   const { pathname } = useLocation();
   const { dismissed } = useDismissedHints();
   const cards = helpCardsForPath(pathname);
+  const about = screenAboutForPath(pathname);
 
   return (
     <div className="space-y-8">
@@ -202,6 +204,11 @@ const HelpTab = () => {
         <SectionHeading>
           {t("helpDrawer.onThisScreen", { defaultValue: "On this screen" })}
         </SectionHeading>
+        {about && (
+          <p className="text-sm leading-relaxed text-foreground">
+            {t(about.key, { defaultValue: about.text })}
+          </p>
+        )}
         <ul className="space-y-3">
           {cards.map((id) => (
             <HelpCardView key={id} id={id} />

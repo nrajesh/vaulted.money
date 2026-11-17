@@ -366,7 +366,7 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
       <div className="app-page-header flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="app-gradient-title app-page-title">{title}</h2>
-          <div className="app-page-subtitle">{description}</div>
+          <div className="app-page-about">{description}</div>
         </div>
         {!Capacitor.isNativePlatform() && (
           <div>

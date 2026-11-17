@@ -5,7 +5,7 @@ import { usePayeeManagement } from "@/hooks/usePayeeManagement";
 import AddEditPayeeDialog, {
   Payee,
 } from "@/components/dialogs/AddEditPayeeDialog";
-import { ColumnDefinition } from "@/components/management/EntityTable";
+import { ColumnDefinition } from "@/components/management/EntityCardGrid";
 import EntityManagementPage from "@/components/management/EntityManagementPage";
 import { Input } from "@/components/ui/input";
 import { useMutation } from "@tanstack/react-query";
@@ -103,7 +103,9 @@ const VendorsPage = () => {
       header: t("management.columns.transactions", {
         defaultValue: "Transactions",
       }),
-      accessor: "totalTransactions",
+      accessor: (item) => item.totalTransactions || 0,
+      card: "meta",
+      unit: true,
       cellRenderer: (item) => (
         <span
           className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer hover:text-primary hover:underline"

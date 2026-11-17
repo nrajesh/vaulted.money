@@ -397,12 +397,7 @@ const ScheduledBackups = () => {
             })}
           </CardTitle>
           <CardDescription>
-            {t("backup.create.description", {
-              defaultValue:
-                "Automatically back up your data to a local folder.",
-            })}
-            <br />
-            <span className="text-muted-foreground font-medium flex items-center gap-1 mt-1">
+            <span className="text-muted-foreground font-medium flex items-center gap-1">
               <ShieldCheck className="h-4 w-4 text-green-700 dark:text-green-400" />
               {t("backup.create.runsInBackground", {
                 defaultValue:

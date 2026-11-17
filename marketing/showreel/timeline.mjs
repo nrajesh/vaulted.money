@@ -8,11 +8,27 @@
  */
 export const WIDTH = 1920;
 export const HEIGHT = 1080;
-export const BPM = 128;
-export const BEAT = 60 / BPM; // 0.46875 s
-export const BAR = BEAT * 4; // 1.875 s
+/**
+ * The tempo. 128 is the original cut; the relaxed cut renders the same film
+ * at 108 (exactly 60 s). Everything below is in beats, so picture and music
+ * slow down together. Set with SHOWREEL_BPM in Node and ?bpm= in the page
+ * (render.mjs --bpm sets both).
+ */
+const DEFAULT_BPM = 128;
+function requestedTempo() {
+  const raw =
+    typeof process !== "undefined" && process.env
+      ? process.env.SHOWREEL_BPM
+      : new URLSearchParams(globalThis.location?.search ?? "").get("bpm");
+  const value = Number(raw);
+  // The music and the fastest cuts are written for roughly this range.
+  return value >= 90 && value <= 140 ? value : DEFAULT_BPM;
+}
+export const BPM = requestedTempo();
+export const BEAT = 60 / BPM; // 0.46875 s at 128 BPM
+export const BAR = BEAT * 4; // 1.875 s at 128 BPM
 export const BARS = 27;
-export const DURATION = BAR * BARS; // 50.625 s
+export const DURATION = BAR * BARS; // 50.625 s at 128 BPM, 60 s at 108
 
 /** Time in seconds of beat `n` (fractions allowed: beat(4.5) is an off-beat). */
 export const beat = (n) => n * BEAT;
