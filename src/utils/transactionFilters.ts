@@ -76,7 +76,11 @@ export const applyTransactionFilters = (
   if (filters.excludeTransfers) {
     filtered = filtered.filter((transaction) => {
       const category = (transaction.category || "").trim().toLowerCase();
-      return category !== "transfer" && category !== "";
+      const transferId = transaction.transfer_id;
+      const isLinkedTransfer = Boolean(
+        transferId && !transferId.startsWith("split-"),
+      );
+      return category !== "transfer" && !isLinkedTransfer;
     });
   }
 

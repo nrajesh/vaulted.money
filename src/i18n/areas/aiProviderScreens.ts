@@ -267,10 +267,8 @@ export const aiProviderScreens: AreaTranslations = {
       dialog: {
         titleEdit: "AI வழங்குநரைத் திருத்து",
         titleAdd: "AI வழங்குநரைச் சேர்",
-        descriptionEdit:
-          "இந்த AI மாதிரி வழங்குநரின் கட்டமைப்பைப் புதுப்பிக்கவும்.",
-        descriptionAdd:
-          "தானியங்கி வகைப்படுத்தலுக்கு புதிய AI முனையத்தைச் சேர்க்கவும்.",
+        descriptionEdit: "இந்த AI மாதிரி வழங்குநரின் கட்டமைப்பைப் புதுப்பிக்கவும்.",
+        descriptionAdd: "தானியங்கி வகைப்படுத்தலுக்கு புதிய AI முனையத்தைச் சேர்க்கவும்.",
         name: "வழங்குநர் பெயர்",
         namePlaceholder: "எ.கா. உள்ளூர் Llama, Mistral Beta",
         apiType: "API வகை",

@@ -29,7 +29,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "AI inside the app",
         subtitle:
-          "Powers Auto-categorize. Add a provider with your own key, or a model running on your computer, and pick the one to use. Only payee names are sent, never amounts.",
+          "Powers Auto-categorize. Only payee names are sent, never amounts.",
         inUse: "In use",
         useThis: "Use this one",
         keyColumn: "API key",
@@ -49,7 +49,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "Off. No agent can connect.",
       },
       agents: {
-        title: "Chat with your data from an AI agent",
+        title: "Chat with your money using an external AI agent",
         matchNote:
           "Picked to match {{name}}, which you already use inside the app. Choose another any time.",
       },
@@ -99,7 +99,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "IA dentro de la app",
         subtitle:
-          "Se usa para la categorización automática. Añade un proveedor con tu propia clave, o un modelo que se ejecute en tu ordenador, y elige cuál usar. Solo se envían nombres de beneficiarios, nunca importes.",
+          "Se usa para la categorización automática. Solo se envían nombres de beneficiarios, nunca importes.",
         inUse: "En uso",
         useThis: "Usar este",
         keyColumn: "Clave de API",
@@ -119,7 +119,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "Desactivado. Ningún agente puede conectarse.",
       },
       agents: {
-        title: "Chatea con tus datos desde un agente de IA",
+        title: "Chatea con tu dinero mediante un agente de IA externo",
         matchNote:
           "Elegido para coincidir con {{name}}, que ya usas dentro de la app. Puedes elegir otro cuando quieras.",
       },
@@ -167,8 +167,7 @@ export const aiHub: AreaTranslations = {
       },
       providers: {
         title: "应用内的 AI",
-        subtitle:
-          "用于自动分类。添加使用您自己密钥的提供商，或在您电脑上运行的模型，并选择要使用的那个。只发送收款方名称，绝不发送金额。",
+        subtitle: "用于自动分类。只发送收款方名称，从不发送金额。",
         inUse: "使用中",
         useThis: "使用这个",
         keyColumn: "API 密钥",
@@ -188,7 +187,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "已关闭。任何智能体都无法连接。",
       },
       agents: {
-        title: "通过 AI 智能体与您的数据对话",
+        title: "通过外部 AI 智能体与您的财务数据对话",
         matchNote:
           "已根据您在应用内使用的 {{name}} 预选。您可以随时选择其他方式。",
       },
@@ -236,7 +235,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "AI in de app",
         subtitle:
-          "Wordt gebruikt voor automatisch categoriseren. Voeg een provider toe met je eigen sleutel, of een model dat op je computer draait, en kies welke je gebruikt. Alleen namen van begunstigden worden verstuurd, nooit bedragen.",
+          "Wordt gebruikt voor automatisch categoriseren. Alleen namen van begunstigden worden verstuurd, nooit bedragen.",
         inUse: "In gebruik",
         useThis: "Deze gebruiken",
         keyColumn: "API-sleutel",
@@ -258,7 +257,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "Uit. Geen enkele agent kan verbinden.",
       },
       agents: {
-        title: "Chat met je gegevens via een AI-agent",
+        title: "Chat met je geld via een externe AI-agent",
         matchNote:
           "Gekozen omdat je {{name}} al in de app gebruikt. Je kunt altijd iets anders kiezen.",
       },
@@ -308,7 +307,7 @@ export const aiHub: AreaTranslations = {
       providers: {
         title: "செயலிக்குள் AI",
         subtitle:
-          "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது. உங்கள் சொந்த விசையுடன் ஒரு வழங்குநரையோ, உங்கள் கணினியில் இயங்கும் மாதிரியையோ சேர்த்து, பயன்படுத்த வேண்டியதைத் தேர்வு செய்யவும். பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
+          "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது. பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
         inUse: "பயன்பாட்டில்",
         useThis: "இதைப் பயன்படுத்து",
         keyColumn: "API விசை",
@@ -318,8 +317,7 @@ export const aiHub: AreaTranslations = {
       },
       summary: {
         label: "என்ன அமைக்கப்பட்டுள்ளது",
-        inAppNone:
-          "இன்னும் அமைக்கப்படவில்லை. தொடங்க ஒரு வழங்குநரைச் சேர்க்கவும்.",
+        inAppNone: "இன்னும் அமைக்கப்படவில்லை. தொடங்க ஒரு வழங்குநரைச் சேர்க்கவும்.",
         inAppNoneInUse:
           "எந்த வழங்குநரும் பயன்பாட்டில் இல்லை. கீழே ஒன்றைத் தேர்வு செய்யவும்.",
         inAppNeedsKey: "{{name}} க்கு இன்னும் API விசை தேவை.",
@@ -331,7 +329,7 @@ export const aiHub: AreaTranslations = {
         agentsOff: "அணைக்கப்பட்டுள்ளது. எந்த முகவரும் இணைய முடியாது.",
       },
       agents: {
-        title: "AI முகவர் மூலம் உங்கள் தரவுடன் உரையாடுங்கள்",
+        title: "வெளிப்புற AI முகவர் மூலம் உங்கள் பணத்துடன் உரையாடுங்கள்",
         matchNote:
           "நீங்கள் செயலிக்குள் ஏற்கனவே பயன்படுத்தும் {{name}} உடன் பொருந்துமாறு தேர்ந்தெடுக்கப்பட்டது. எப்போது வேண்டுமானாலும் வேறொன்றைத் தேர்வு செய்யலாம்.",
       },
@@ -370,7 +368,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "No provider yet. Add one to let the app suggest categories. A model on your own computer (LM Studio, Ollama) works too and needs no key.",
+          "No provider yet. Add one to get category suggestions. A model on your own computer (LM Studio, Ollama) needs no key.",
         keyMissingLong: "Missing",
         needsKeyNote: "This provider cannot be used until you add its API key.",
         embeddingNote:
@@ -433,7 +431,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "Aún no hay ningún proveedor. Añade uno para que la app sugiera categorías. También sirve un modelo en tu propio ordenador (LM Studio, Ollama), que no necesita clave.",
+          "Aún no hay proveedor. Añade uno para recibir sugerencias de categoría. Un modelo en tu propio ordenador (LM Studio, Ollama) no necesita clave.",
         keyMissingLong: "Falta",
         needsKeyNote:
           "Este proveedor no se puede usar hasta que añadas su clave de API.",
@@ -498,7 +496,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "还没有提供商。添加一个，让应用为您建议分类。在您自己电脑上运行的模型（LM Studio、Ollama）也可以，且无需密钥。",
+          "还没有提供商。添加一个即可获得类别建议。在您自己电脑上运行的模型（LM Studio、Ollama）不需要密钥。",
         keyMissingLong: "缺失",
         needsKeyNote: "添加 API 密钥后才能使用此提供商。",
         embeddingNote:
@@ -556,7 +554,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "Nog geen provider. Voeg er een toe zodat de app categorieën kan voorstellen. Een model op je eigen computer (LM Studio, Ollama) werkt ook en heeft geen sleutel nodig.",
+          "Nog geen provider. Voeg er een toe voor categoriesuggesties. Een model op je eigen computer (LM Studio, Ollama) heeft geen sleutel nodig.",
         keyMissingLong: "Ontbreekt",
         needsKeyNote:
           "Deze provider kan pas worden gebruikt als je de API-sleutel toevoegt.",
@@ -623,7 +621,7 @@ export const aiHubFlow: AreaTranslations = {
     aiHub: {
       providers: {
         empty:
-          "இன்னும் வழங்குநர் இல்லை. செயலி வகைகளைப் பரிந்துரைக்க ஒன்றைச் சேர்க்கவும். உங்கள் சொந்தக் கணினியில் உள்ள மாதிரியும் (LM Studio, Ollama) வேலை செய்யும், அதற்கு விசை தேவையில்லை.",
+          "இன்னும் வழங்குநர் இல்லை. வகைப் பரிந்துரைகளைப் பெற ஒன்றைச் சேர்க்கவும். உங்கள் கணினியில் இயங்கும் மாதிரிக்கு (LM Studio, Ollama) சாவி தேவையில்லை.",
         keyMissingLong: "இல்லை",
         needsKeyNote:
           "API விசையைச் சேர்க்கும் வரை இந்த வழங்குநரைப் பயன்படுத்த முடியாது.",
@@ -1049,8 +1047,7 @@ export const aiHubPoints: AreaTranslations = {
     aiHub: {
       providers: {
         point1: "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது.",
-        point2:
-          "பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
+        point2: "பெறுநர் பெயர்கள் மட்டுமே அனுப்பப்படும், தொகைகள் ஒருபோதும் இல்லை.",
       },
       bars: {
         agentsNote2:
@@ -1059,12 +1056,10 @@ export const aiHubPoints: AreaTranslations = {
       agents: {
         point1:
           "AI முகவர் உங்கள் தரவைப் படிக்கவும் புதுப்பிக்கவும் அனுமதிக்கவும். அது படிப்பவை அதன் AI வழங்குநருக்கு அனுப்பப்படும்.",
-        point2:
-          "உங்கள் தரவைத் தனிப்பட்டதாக வைத்திருக்க உள்ளூர் LLM ஐப் பயன்படுத்துங்கள்.",
+        point2: "உங்கள் தரவைத் தனிப்பட்டதாக வைத்திருக்க உள்ளூர் LLM ஐப் பயன்படுத்துங்கள்.",
       },
       chat: {
-        pickOne:
-          "நான்கு விருப்பங்களில் ஒன்றைத் தேர்வு செய்ய அதைக் கிளிக் செய்யவும்.",
+        pickOne: "நான்கு விருப்பங்களில் ஒன்றைத் தேர்வு செய்ய அதைக் கிளிக் செய்யவும்.",
       },
       api: {
         inlineTitle: "ஸ்கிரிப்டுகளுக்கான உள்ளூர் API",
@@ -1081,7 +1076,7 @@ export const aiHubPoints: AreaTranslations = {
   },
 };
 
-/** Icon facts on the bars, the Mac-only notice and missing-agent blockers. Machine-written: ask a native speaker to review. */
+/** Icon facts on the bars, the desktop-only notice and missing-agent blockers. Machine-written: ask a native speaker to review. */
 export const aiHubFacts: AreaTranslations = {
   en: {
     aiHub: {
@@ -1095,7 +1090,10 @@ export const aiHubFacts: AreaTranslations = {
         switchesApi: "Its switch also runs the Local API for scripts",
       },
       summary: {
-        agentsMacOnly: "Available ONLY in the Mac app.",
+        agentsNeedsMac:
+          "Needs the desktop app. Your AI agent connects to Vaulted Money on your computer.",
+        agentsNeedsComputer:
+          "Needs Vaulted Money on a computer (Mac, Windows or Linux). Your AI agent connects to it there.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1118,7 +1116,10 @@ export const aiHubFacts: AreaTranslations = {
           "Su interruptor también controla la API local para scripts",
       },
       summary: {
-        agentsMacOnly: "Disponible SOLO en la app para Mac.",
+        agentsNeedsMac:
+          "Requiere la app de escritorio. Tu agente de IA se conecta a Vaulted Money en tu ordenador.",
+        agentsNeedsComputer:
+          "Requiere Vaulted Money en un ordenador (Mac, Windows o Linux). Tu agente de IA se conecta allí.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1140,7 +1141,10 @@ export const aiHubFacts: AreaTranslations = {
         switchesApi: "其开关同时控制供脚本使用的本地 API",
       },
       summary: {
-        agentsMacOnly: "仅在 Mac 应用中可用。",
+        agentsNeedsMac:
+          "需要桌面应用。您的 AI 智能体会连接到您电脑上的 Vaulted Money。",
+        agentsNeedsComputer:
+          "需要在电脑上使用 Vaulted Money（Mac、Windows 或 Linux）。您的 AI 智能体会连接到那里。",
       },
       chat: {
         blockNoClaudeCode: "此电脑上还没有 Claude Code。请安装后再回来。",
@@ -1160,7 +1164,10 @@ export const aiHubFacts: AreaTranslations = {
         switchesApi: "De schakelaar bedient ook de lokale API voor scripts",
       },
       summary: {
-        agentsMacOnly: "ALLEEN beschikbaar in de Mac-app.",
+        agentsNeedsMac:
+          "Vereist de desktop-app. Je AI-agent maakt verbinding met Vaulted Money op je computer.",
+        agentsNeedsComputer:
+          "Vereist Vaulted Money op een computer (Mac, Windows of Linux). Je AI-agent maakt daar verbinding.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1174,17 +1181,18 @@ export const aiHubFacts: AreaTranslations = {
     aiHub: {
       facts: {
         autoCategorize: "தானியங்கு வகைப்படுத்தலுக்குப் பயன்படுகிறது",
-        vendorNamesOnly:
-          "பெறுநர் பெயர்களை மட்டுமே அனுப்பும், தொகைகளை ஒருபோதும் இல்லை",
+        vendorNamesOnly: "பெறுநர் பெயர்களை மட்டுமே அனுப்பும், தொகைகளை ஒருபோதும் இல்லை",
         independent: "முகவர் அணுகல் இல்லாமலே வேலை செய்யும்",
         readsUpdates: "உங்கள் தரவைப் படித்துப் புதுப்பிக்கும்",
         sentToProvider: "அது படிப்பவை அதன் AI வழங்குநருக்கு அனுப்பப்படும்",
         localPrivate: "உள்ளூர் LLM உங்கள் தரவைத் தனிப்பட்டதாக வைத்திருக்கும்",
-        switchesApi:
-          "இதன் சுவிட்ச் ஸ்கிரிப்டுகளுக்கான உள்ளூர் API ஐயும் இயக்குகிறது",
+        switchesApi: "இதன் சுவிட்ச் ஸ்கிரிப்டுகளுக்கான உள்ளூர் API ஐயும் இயக்குகிறது",
       },
       summary: {
-        agentsMacOnly: "Mac செயலியில் மட்டுமே கிடைக்கும்.",
+        agentsNeedsMac:
+          "கணினி செயலி தேவை. உங்கள் AI முகவர் உங்கள் கணினியில் உள்ள Vaulted Money-உடன் இணையும்.",
+        agentsNeedsComputer:
+          "கணினியில் Vaulted Money தேவை (Mac, Windows அல்லது Linux). உங்கள் AI முகவர் அங்கே இணையும்.",
       },
       chat: {
         blockNoClaudeCode:
@@ -1229,8 +1237,7 @@ export const aiHubLocked: AreaTranslations = {
   ta: {
     aiHub: {
       chat: {
-        pickLocked:
-          "ஒன்றைத் தேர்வு செய்ய முகவர்கள் இணைய அனுமதி என்பதை இயக்கவும்.",
+        pickLocked: "ஒன்றைத் தேர்வு செய்ய முகவர்கள் இணைய அனுமதி என்பதை இயக்கவும்.",
       },
     },
   },
@@ -1248,8 +1255,7 @@ export const aiHubMobile: AreaTranslations = {
           "nothing answered at {{url}}. Check the server is running and allows requests from other apps (CORS).",
       },
       providers: {
-        emptyMobile:
-          "No provider yet. Add one to let the app suggest categories. Models running on your own computer need the desktop app.",
+        emptyMobile: "No provider yet. Add one to get category suggestions.",
       },
     },
   },
@@ -1264,7 +1270,7 @@ export const aiHubMobile: AreaTranslations = {
       },
       providers: {
         emptyMobile:
-          "Aún no hay ningún proveedor. Añade uno para que la app sugiera categorías. Los modelos que se ejecutan en tu propio ordenador necesitan la app de escritorio.",
+          "Aún no hay proveedor. Añade uno para recibir sugerencias de categoría.",
       },
     },
   },
@@ -1277,8 +1283,7 @@ export const aiHubMobile: AreaTranslations = {
           "{{url}} 没有响应。请确认服务器正在运行并允许来自其他应用的请求（CORS）。",
       },
       providers: {
-        emptyMobile:
-          "还没有提供商。添加一个，让应用为您建议分类。在您自己电脑上运行的模型需要使用桌面应用。",
+        emptyMobile: "还没有提供商。添加一个即可获得类别建议。",
       },
     },
   },
@@ -1293,7 +1298,7 @@ export const aiHubMobile: AreaTranslations = {
       },
       providers: {
         emptyMobile:
-          "Nog geen provider. Voeg er een toe zodat de app categorieën kan voorstellen. Modellen op je eigen computer hebben de desktop-app nodig.",
+          "Nog geen provider. Voeg er een toe voor categoriesuggesties.",
       },
     },
   },
@@ -1308,7 +1313,7 @@ export const aiHubMobile: AreaTranslations = {
       },
       providers: {
         emptyMobile:
-          "இன்னும் வழங்குநர் இல்லை. செயலி வகைகளைப் பரிந்துரைக்க ஒன்றைச் சேர்க்கவும். உங்கள் சொந்தக் கணினியில் இயங்கும் மாதிரிகளுக்கு டெஸ்க்டாப் செயலி தேவை.",
+          "இன்னும் வழங்குநர் இல்லை. வகைப் பரிந்துரைகளைப் பெற ஒன்றைச் சேர்க்கவும்.",
       },
     },
   },

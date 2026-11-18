@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="slide.css" />
+  </head>
+  <body>
+    <div class="slide" id="slide"></div>
+    <script type="module">
+      // Draws one store image from window.__slide (built by slide.mjs), then
+      // sets body[data-ready] so the renderer knows it can take the picture.
+      import { fitHeadline } from "../fit.mjs";
+
+      const data = window.__slide;
+      const W = data.width;
+      const H = data.height;
+      const wide = W > H;
+      // One design unit: the approved mockup was drawn 220 units wide.
+      const u = wide ? H / 300 : W / 220;
+      const root = document.documentElement.style;
+      root.setProperty("--w", `${W}px`);
+      root.setProperty("--h", `${H}px`);
+      root.setProperty("--u", `${u}px`);
+
+      const slide = document.getElementById("slide");
+      slide.className = `slide ${data.page} ${data.page}-page`;
+      if (data.devices?.length === 2) slide.classList.add("pair");
+      if (data.feature) slide.classList.add("feature");
+
+      const ICONS = {
+        monitor:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+        shield:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+      };
+
+      // Caption
+      const cap = document.createElement("div");
+      cap.className = "cap";
+      const capWidth = wide ? W * (data.feature ? 0.5 : 0.36) : W - 36 * u;
+      if (wide) {
+        cap.style.left = `${data.feature ? W * 0.36 : W * 0.06}px`;
+        cap.style.right = "auto";
+        cap.style.width = `${capWidth}px`;
+      }
+      const h1 = document.createElement("h1");
+      h1.innerHTML = data.breaks ? data.breaks.join("<br>") : data.headlineHtml;
+      const ctx = document.createElement("canvas").getContext("2d");
+      const measure = (text, px) => {
+        ctx.font = `800 ${px}px -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif`;
+        return ctx.measureText(text).width * 1.02;
+      };
+      h1.style.fontSize = `${fitHeadline(data.headline, capWidth, 21 * u, measure, 3)}px`;
+      cap.append(h1);
+      if (data.sub)
+        cap.insertAdjacentHTML(
+          "beforeend",
+          `<div class="sub">${data.sub}</div>`,
+        );
+      if (data.body) {
+        const p = document.createElement("p");
+        p.textContent = data.body;
+        cap.append(p);
+      }
+      if (data.callouts?.length) {
+        const ul = document.createElement("ul");
+        ul.className = "callouts";
+        data.callouts.forEach((text, i) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<span class="ic">${i === 0 ? ICONS.monitor : ICONS.shield}</span>`;
+          li.append(text);
+          ul.append(li);
+        });
+        cap.append(ul);
+      }
+      slide.append(cap);
+      if (wide) cap.style.top = `${(H - cap.offsetHeight) / 2}px`;
+      const capBottom = cap.offsetTop + cap.offsetHeight;
+
+      // Feature graphic: the app icon beside the caption, no devices.
+      if (data.feature) {
+        const icon = new Image();
+        icon.src = data.icon;
+        icon.className = "icon";
+        const size = H * 0.56;
+        Object.assign(icon.style, {
+          width: `${size}px`,
+          left: `${W * 0.08}px`,
+          top: `${(H - size) / 2}px`,
+        });
+        slide.append(icon);
+      }
+
+      const kind =
+        { ipad: "tablet", androidTablet: "tablet", mac: "window" }[
+          data.device
+        ] ?? "phone";
+
+      const statusBar = (theme) => {
+        const bar = document.createElement("div");
+        bar.className = `sb ${theme}`;
+        const height = (kind === "tablet" ? 11 : 13) * u;
+        Object.assign(bar.style, {
+          height: `${height}px`,
+          fontSize: `${7 * u}px`,
+        });
+        bar.innerHTML = `<span>${data.statusBar.time}</span><span class="right"><b>${data.statusBar.network}</b><span class="bat"><span></span></span></span>`;
+        return bar;
+      };
+
+      const loads = [];
+      const frame = (device, widthPx) => {
+        const el = document.createElement("div");
+        el.className = `device ${device.theme} ${device.transform} ${kind === "phone" ? "" : kind}`;
+        el.style.width = `${widthPx}px`;
+        const screen = document.createElement("div");
+        screen.className = "screen";
+        if (kind === "window") {
+          el.insertAdjacentHTML(
+            "afterbegin",
+            '<div class="titlebar"><i></i><i></i><i></i></div>',
+          );
+        } else {
+          screen.append(statusBar(device.theme));
+        }
+        const img = new Image();
+        img.src = device.image;
+        loads.push(img.decode());
+        screen.append(img);
+        el.append(screen);
+        slide.append(el);
+        return el;
+      };
+
+      const devices = data.devices ?? [];
+      if (devices.length === 2 && !wide) {
+        const w = W * 0.455;
+        const [left, right] = devices.map((d) => frame(d, w));
+        await Promise.all(loads);
+        const top = capBottom + 40 * u;
+        left.style.top = right.style.top = `${top}px`;
+        left.style.transform = "translateX(-104%) rotateY(30deg)";
+        right.style.transform = "translateX(4%) rotateY(-30deg)";
+      } else if (devices.length === 2 && wide) {
+        // Mac: two windows, dark behind, light in front.
+        const w = W * 0.5;
+        const [back, front] = devices.map((d) => frame(d, w));
+        await Promise.all(loads);
+        back.style.left = `${W * 0.44}px`;
+        back.style.top = `${H * 0.1}px`;
+        front.style.left = `${W * 0.48}px`;
+        front.style.top = `${H * 0.22}px`;
+        back.style.transform = front.style.transform = "none";
+      } else if (devices.length === 1) {
+        const d = devices[0];
+        const width = wide
+          ? W * 0.56
+          : kind === "tablet" || d.transform === "sideways"
+            ? W * 0.94
+            : W * 0.78;
+        const el = frame(d, width);
+        await Promise.all(loads);
+        if (wide) {
+          el.style.left = `${W * 0.4}px`;
+          el.style.transform = "none";
+          el.style.top = `${(H - el.offsetHeight) / 2}px`;
+        } else {
+          el.style.transform = "translateX(-50%)";
+          const naturalTop = capBottom + 22 * u;
+          // Show only the top `visibleFraction` of a cropped screen (shot 4).
+          const cropTop = H - el.offsetHeight * d.visibleFraction;
+          // A sideways device is shorter than the space under the caption:
+          // centre it there instead of leaving a gap below.
+          const spare = H - naturalTop - el.offsetHeight;
+          const top =
+            d.visibleFraction < 1
+              ? Math.max(naturalTop, cropTop)
+              : d.transform === "sideways" && spare > 0
+                ? naturalTop + spare / 2
+                : naturalTop;
+          el.style.top = `${top}px`;
+        }
+      }
+      await document.fonts.ready;
+      document.body.dataset.ready = "1";
+    </script>
+  </body>
+</html>

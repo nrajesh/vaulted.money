@@ -5,12 +5,12 @@ export const homeLanding: AreaTranslations = {
   en: {
     home: {
       hero: {
-        headline: "Ask your ledger. Keep control.",
+        headline: "Private Vault, Open Code",
         positioning:
           "Private, local-first money tracking. No account. Open source. Search needs no AI or cloud.",
         tryDemo: "Try it with demo data",
-        videoLabel: "Natural-language search demo video",
-        videoTitle: "Ask. Don’t Search.",
+        videoLabel: "Vaulted Money product film",
+        videoTitle: "Private Vault, Open Code",
         videoFullscreen: "Full screen",
       },
       demos: {
@@ -19,6 +19,10 @@ export const homeLanding: AreaTranslations = {
           "Short videos of the real app. Nothing loads until you press play.",
         play: "Play video: {{title}}",
         comingSoon: "Coming soon",
+        search: {
+          title: "Search",
+          body: "Ask in plain English. No AI or cloud needed.",
+        },
         ai: {
           title: "AI, Your Call",
           body: "AI stays off until you switch it on.",
@@ -94,12 +98,12 @@ export const homeLanding: AreaTranslations = {
   es: {
     home: {
       hero: {
-        headline: "Tu dinero, bajo tu control.",
+        headline: "Private Vault, Open Code",
         positioning:
           "Dinero privado y local. Sin cuenta. Código abierto. Busca sin IA ni nube.",
         tryDemo: "Pruébalo con datos de ejemplo",
-        videoLabel: "Vídeo de demostración de búsqueda en lenguaje natural",
-        videoTitle: "Pregunta. No busques.",
+        videoLabel: "Película de Vaulted Money",
+        videoTitle: "Private Vault, Open Code",
         videoFullscreen: "Pantalla completa",
       },
       demos: {
@@ -108,6 +112,10 @@ export const homeLanding: AreaTranslations = {
           "Vídeos cortos de la app real. Nada se carga hasta que pulsas reproducir.",
         play: "Reproducir vídeo: {{title}}",
         comingSoon: "Próximamente",
+        search: {
+          title: "Buscar",
+          body: "Busca con frases cotidianas. No necesitas IA ni la nube.",
+        },
         ai: {
           title: "IA, tú decides",
           body: "La IA sigue apagada hasta que la enciendes.",
@@ -185,12 +193,12 @@ export const homeLanding: AreaTranslations = {
   zh: {
     home: {
       hero: {
-        headline: "用日常语言问账本。",
+        headline: "Private Vault, Open Code",
         positioning:
           "私密、本地优先的记账。无需账户，开源。搜索无需 AI 或云服务。",
         tryDemo: "用示例数据试用",
-        videoLabel: "自然语言搜索演示视频",
-        videoTitle: "直接提问，不用搜索",
+        videoLabel: "Vaulted Money 产品影片",
+        videoTitle: "Private Vault, Open Code",
         videoFullscreen: "全屏",
       },
       demos: {
@@ -198,6 +206,10 @@ export const homeLanding: AreaTranslations = {
         intro: "真实应用的短视频。点击播放前不会加载任何内容。",
         play: "播放视频：{{title}}",
         comingSoon: "即将推出",
+        search: {
+          title: "搜索",
+          body: "用日常语言搜索，无需 AI 或云服务。",
+        },
         ai: {
           title: "AI，由你决定",
           body: "在你打开之前，AI 一直关闭。",
@@ -269,12 +281,12 @@ export const homeLanding: AreaTranslations = {
   nl: {
     home: {
       hero: {
-        headline: "Je geld, onder jouw regie.",
+        headline: "Private Vault, Open Code",
         positioning:
           "Privé en lokaal geldbeheer. Geen account. Open source. Zoeken zonder AI of cloud.",
         tryDemo: "Probeer met demodata",
-        videoLabel: "Demovideo voor zoeken in gewone taal",
-        videoTitle: "Vraag. Niet zoeken.",
+        videoLabel: "Vaulted Money-film",
+        videoTitle: "Private Vault, Open Code",
         videoFullscreen: "Volledig scherm",
       },
       demos: {
@@ -283,6 +295,10 @@ export const homeLanding: AreaTranslations = {
           "Korte video’s van de echte app. Er laadt niets tot je op afspelen drukt.",
         play: "Video afspelen: {{title}}",
         comingSoon: "Binnenkort",
+        search: {
+          title: "Zoeken",
+          body: "Zoek in gewone taal. Geen AI of cloud nodig.",
+        },
         ai: {
           title: "AI, jij beslist",
           body: "AI blijft uit tot jij het aanzet.",
@@ -360,20 +376,23 @@ export const homeLanding: AreaTranslations = {
   ta: {
     home: {
       hero: {
-        headline: "உங்கள் லெட்ஜரைக் கேளுங்கள். கட்டுப்பாடு உங்களிடம்.",
+        headline: "Private Vault, Open Code",
         positioning:
           "தனிப்பட்ட, உள்ளூர் பணக் கணக்கு. கணக்கு தேவையில்லை. திறந்த மூலம். தேடலுக்கு AI அல்லது மேகம் தேவையில்லை.",
         tryDemo: "மாதிரி தரவுடன் முயற்சி செய்",
-        videoLabel: "இயல்பான மொழித் தேடல் விளக்கக் காணொளி",
-        videoTitle: "கேளுங்கள். தேட வேண்டாம்.",
+        videoLabel: "Vaulted Money திரைப்படம்",
+        videoTitle: "Private Vault, Open Code",
         videoFullscreen: "முழுத்திரை",
       },
       demos: {
         title: "செயலில் பாருங்கள்",
-        intro:
-          "உண்மையான செயலியின் குறுங்காணொளிகள். இயக்கும் வரை எதுவும் ஏற்றப்படாது.",
+        intro: "உண்மையான செயலியின் குறுங்காணொளிகள். இயக்கும் வரை எதுவும் ஏற்றப்படாது.",
         play: "காணொளியை இயக்கு: {{title}}",
         comingSoon: "விரைவில்",
+        search: {
+          title: "தேடல்",
+          body: "எளிய மொழியில் தேடுங்கள். AI அல்லது மேகம் தேவையில்லை.",
+        },
         ai: {
           title: "AI, உங்கள் முடிவு",
           body: "நீங்கள் இயக்கும் வரை AI அணைந்தே இருக்கும்.",

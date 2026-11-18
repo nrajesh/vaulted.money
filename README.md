@@ -2,7 +2,7 @@
   <a href="https://vaulted.money/ledgers?demo=1">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="documentation/readme/hero-dark.png">
-      <img src="documentation/readme/hero-light.png" alt="Vaulted Money: Ask your ledger. Keep control. The app turning the sentence 'groceries over 50 last month' into date, amount and category filters." width="820" />
+      <img src="documentation/readme/hero-light.png" alt="Vaulted Money: Private Vault, Open Code. The app turning the sentence 'groceries over 50 last month' into date, amount and category filters." width="820" />
     </picture>
   </a>
 </p>
@@ -179,7 +179,7 @@ Beyond basic data entry the API covers the app's clean-up tools (detect transfer
 
 ## Use with an AI agent
 
-You can let an AI agent such as Claude read your money manager and help with it, for example "Where is my money going this month?" or "Import this bank statement". The desktop app must be running (closing the window only hides it). Setup is one switch.
+You can let an AI agent such as Claude read your money manager and help with it, for example "Where is my money going this month?" or "Import this bank statement". The desktop app must be running (closing the window only hides it; on Windows and Linux, reopen it from the tray icon). Setup is one switch.
 
 1. Open **AI & agents** (in the sidebar, or the Settings button on the ledger screen) and, under **Chat with your data from an AI agent**, switch on **Allow agents to connect**. The app tells agents how to find it, so there is no token to copy.
 2. Then pick your agent:

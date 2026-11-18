@@ -59,8 +59,7 @@ const partKey = (part: InterpretationPart): string =>
 /**
  * An account named in a sentence ("in checking account") means *only* those
  * accounts, not those on top of whatever the page had selected. Only the first
- * account taken in a search replaces the selection; further ones add to it
- * (two accounts of the same kind match either).
+ * account taken in a search replaces the selection; further ones add to it.
  */
 export interface SearchUpdateOptions {
   replaceAccounts?: boolean;
@@ -325,26 +324,37 @@ export function ConversationalSearchInput({
     setOpen(false);
   };
 
-  // Every understood piece is its own row, so the user can take just one of
-  // them; with several left, "apply all" comes first and is the default.
+  // Every understood piece is its own chip, so the user can take just one of
+  // them; with several left, "apply all" comes first and is the default. The
+  // chips share one row that scrolls sideways, so a long sentence costs one
+  // line of the screen instead of one line per piece.
   const suggestionGroup = remaining.length > 0 && (
     <CommandGroup
       forceMount
-      heading={t("filters.conversational.suggest.heading", {
-        defaultValue: "Understood as",
-      })}
+      className="[&_[cmdk-group-items]]:flex [&_[cmdk-group-items]]:gap-1 [&_[cmdk-group-items]]:overflow-x-auto [&_[cmdk-group-items]]:pb-1"
+      // How the picked filters combine, on the heading's own line.
+      heading={
+        <>
+          <span>
+            {t("filters.conversational.suggest.heading", {
+              defaultValue: "Understood as",
+            })}
+          </span>
+          <span className="font-normal">
+            {" · "}
+            {t("filters.conversational.suggest.allMustMatch", {
+              defaultValue: "all filters must match",
+            })}
+          </span>
+        </>
+      }
     >
-      <div className="px-2 pb-1 text-xs text-muted-foreground">
-        {t("filters.conversational.suggest.combineHint", {
-          defaultValue:
-            "Results must match every filter you pick. Several of the same kind (two payees) match either.",
-        })}
-      </div>
       {remaining.length > 1 && (
         <CommandItem
           forceMount
           value={"suggest-all-" + input}
           onSelect={takeAllRemaining}
+          className="shrink-0 whitespace-nowrap"
         >
           <Sparkles className="mr-2 h-4 w-4 shrink-0 text-primary" />
           <span className="font-medium">
@@ -361,6 +371,7 @@ export function ConversationalSearchInput({
           forceMount
           value={`suggest-${partKey(item.part)}-${input}`}
           onSelect={() => takePiece(item)}
+          className="shrink-0 whitespace-nowrap"
         >
           {partIcon(item.part)}
           <span className="rounded-md bg-primary/10 px-2 py-0.5 text-sm">

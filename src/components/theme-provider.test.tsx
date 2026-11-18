@@ -1,6 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 import { ThemeProvider, useTheme } from "./theme-provider";
+
+// SystemBars is a native-plugin proxy that cannot be spied on, so swap it out.
+vi.mock("@capacitor/core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@capacitor/core")>();
+  return {
+    ...actual,
+    SystemBars: { setStyle: vi.fn().mockResolvedValue(undefined) },
+  };
+});
 
 const Probe = () => {
   const { theme, resolvedTheme, setTheme } = useTheme();
@@ -18,7 +28,10 @@ describe("ThemeProvider", () => {
     localStorage.clear();
     document.documentElement.className = "";
   });
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.mocked(SystemBars.setStyle).mockClear();
+  });
 
   it("applies the default theme to <html> without rendering a script tag", () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -57,5 +70,31 @@ describe("ThemeProvider", () => {
       </ThemeProvider>,
     );
     expect(screen.getByTestId("state")).toHaveTextContent("light/light");
+  });
+
+  it("matches the phone status bar to the app theme on iOS/Android", async () => {
+    vi.spyOn(Capacitor, "isNativePlatform").mockReturnValue(true);
+    const setStyle = vi.mocked(SystemBars.setStyle);
+    render(
+      <ThemeProvider defaultTheme="dark" storageKey="t">
+        <Probe />
+      </ThemeProvider>,
+    );
+    expect(setStyle).toHaveBeenLastCalledWith({ style: SystemBarsStyle.Dark });
+
+    act(() => screen.getByText("light").click());
+    expect(setStyle).toHaveBeenLastCalledWith({
+      style: SystemBarsStyle.Light,
+    });
+  });
+
+  it("leaves the status bar alone on the web and desktop", () => {
+    const setStyle = vi.mocked(SystemBars.setStyle);
+    render(
+      <ThemeProvider defaultTheme="dark" storageKey="t">
+        <Probe />
+      </ThemeProvider>,
+    );
+    expect(setStyle).not.toHaveBeenCalled();
   });
 });

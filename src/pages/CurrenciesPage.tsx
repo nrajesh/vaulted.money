@@ -10,7 +10,7 @@ const CurrenciesPage = () => {
           <h1 className="app-gradient-title app-page-title">
             {t("nav.items.currencies", { defaultValue: "Currencies" })}
           </h1>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("pages.currencies.subtitle", {
               defaultValue: "Currencies you use and their exchange rates.",
             })}

@@ -716,8 +716,7 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       },
       openSource: {
         title: "திறந்த மூலம்",
-        description:
-          "தொடர்ந்து மேம்பாடு. குறியீடும் வழிப்படமும் GitHub-இல் பொதுவில்.",
+        description: "தொடர்ந்து மேம்பாடு. குறியீடும் வழிப்படமும் GitHub-இல் பொதுவில்.",
         previewTitle: "தணிக்கை செய்யக்கூடிய மூலம்",
         previewMeta: "MIT திட்டம்",
         previewStat: "பொது",
@@ -792,22 +791,19 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
       desktop: {
         label: "டெஸ்க்டாப்",
         title: "டெஸ்க்டாப் பயன்பாட்டை இயக்கு",
-        detail:
-          "டெஸ்க்டாப் காப்பு ஆதரவுடன் உள்ளமை பயன்பாட்டு சாளரத்திற்கு சிறந்தது.",
+        detail: "டெஸ்க்டாப் காப்பு ஆதரவுடன் உள்ளமை பயன்பாட்டு சாளரத்திற்கு சிறந்தது.",
       },
       android: {
         label: "Android",
         title: "Android பயன்பாட்டை உருவாக்கு",
-        detail:
-          "எந்த Android சாதனத்திலும் நிறுவக்கூடிய டீபக் APK ஐ உருவாக்குகிறது.",
+        detail: "எந்த Android சாதனத்திலும் நிறுவக்கூடிய டீபக் APK ஐ உருவாக்குகிறது.",
         prereq: "உங்கள் கணினியில் Android Studio மற்றும் Java SDK தேவை.",
       },
       ios: {
         label: "iOS",
         title: "iOS பயன்பாட்டை உருவாக்கு",
         detail: "iOS சிமுலேட்டருக்கு உருவாக்குகிறது (macOS மட்டும்).",
-        prereq:
-          "Xcode மற்றும் macOS தேவை. Windows அல்லது Linux இல் கிடைக்காது.",
+        prereq: "Xcode மற்றும் macOS தேவை. Windows அல்லது Linux இல் கிடைக்காது.",
       },
     },
     usage: {

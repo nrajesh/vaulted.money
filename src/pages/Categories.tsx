@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useCategoryManagement } from "@/hooks/useCategoryManagement";
 import { Category } from "@/data/finance-data";
-import { ColumnDefinition } from "@/components/management/EntityTable";
+import { ColumnDefinition } from "@/components/management/EntityCardGrid";
 import EntityManagementPage from "@/components/management/EntityManagementPage";
 import { Input } from "@/components/ui/input";
 import { useMutation } from "@tanstack/react-query";
@@ -147,6 +147,8 @@ const CategoriesPage = () => {
         defaultValue: "Sub-categories",
       }),
       accessor: (item) => counts[item.name] || 0,
+      card: "meta",
+      unit: true,
       cellRenderer: (item) => {
         const count = counts[item.name] || 0;
         const searchTerm = managementProps.searchTerm;
@@ -185,7 +187,9 @@ const CategoriesPage = () => {
       header: t("management.columns.transactions", {
         defaultValue: "Transactions",
       }),
-      accessor: "totalTransactions",
+      accessor: (item) => item.totalTransactions || 0,
+      card: "meta",
+      unit: true,
       cellRenderer: (item) => (
         <span
           className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer hover:text-primary hover:underline"

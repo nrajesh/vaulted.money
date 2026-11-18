@@ -25,6 +25,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "Choose an option below.",
+        step3Hint: "In the app you picked, not here.",
+        followSteps: "Follow these steps",
+        doItYourself: "Or do it yourself",
+        codeSetupWhere:
+          "This adds Vaulted Money to Claude Code in a terminal. It does not appear under Plugins in the Claude app. For that, follow the steps below.",
+        codeSetupReadyWhere:
+          "Done. Type claude in a terminal and ask about your money. To add it under Plugins in the Claude app, follow the steps below.",
         appBadge: "Easiest",
         appBlurb: "Chat in the Claude desktop app.",
         appKeepOpen: "Keep Vaulted Money open.",
@@ -95,7 +103,7 @@ export const connectAgent: AreaTranslations = {
           "Chat with an AI about your money manager in three quick steps.",
         disconnect: "Disconnect everything",
         disconnectWarning:
-          "This switches the Local API off and replaces the token, which cuts off every connected agent and script. Switch the Local API on again to let them reconnect on their own, with no copy-paste.",
+          "Switches the Local API off and replaces the token, disconnecting every agent and script. They reconnect by themselves when you switch it back on.",
         done: "(done)",
         download: "Download vaulted-money.mcpb from the latest release",
         enable: "Allow agents to connect",
@@ -165,6 +173,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "Elige una opción abajo.",
+        step3Hint: "En la app que elegiste, no aquí.",
+        followSteps: "Sigue estos pasos",
+        doItYourself: "O hazlo tú mismo",
+        codeSetupWhere:
+          'Esto añade Vaulted Money a Claude Code en un terminal. No aparece en "Plugins" de la app de Claude. Para eso, sigue los pasos de abajo.',
+        codeSetupReadyWhere:
+          'Listo. Escribe claude en un terminal y pregunta por tu dinero. Para añadirlo en "Plugins" de la app de Claude, sigue los pasos de abajo.',
         appBadge: "Lo más fácil",
         appBlurb: "Chatea en la aplicación de escritorio de Claude.",
         appKeepOpen: "Mantén Vaulted Money abierto.",
@@ -238,7 +254,7 @@ export const connectAgent: AreaTranslations = {
           "Chatea con una IA sobre tu gestor de finanzas en tres pasos rápidos.",
         disconnect: "Desconectar todo",
         disconnectWarning:
-          "Esto desactiva la API local y sustituye el token, lo que desconecta a todos los agentes y scripts conectados. Vuelve a activar la API local para que se reconecten solos, sin copiar ni pegar nada.",
+          "Apaga la API local y cambia el token, lo que desconecta todos los agentes y scripts. Se reconectan solos cuando vuelvas a encenderla.",
         done: "(hecho)",
         download: "Descarga vaulted-money.mcpb de la última versión",
         enable: "Permitir que se conecten agentes",
@@ -306,6 +322,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "在下方选择一个选项。",
+        step3Hint: "在你选择的应用中提问，而不是这里。",
+        followSteps: "按以下步骤操作",
+        doItYourself: "或者自己动手",
+        codeSetupWhere:
+          "这会把 Vaulted Money 添加到终端中的 Claude Code。它不会出现在 Claude 应用的“Plugins”中。如需在应用中使用，请按下面的步骤操作。",
+        codeSetupReadyWhere:
+          "完成。在终端中输入 claude，问问你的资金情况。如需将它添加到 Claude 应用的“Plugins”中，请按下面的步骤操作。",
         appBadge: "最简单",
         appBlurb: "在 Claude 桌面应用中聊天。",
         appKeepOpen: "保持 Vaulted Money 处于打开状态。",
@@ -370,7 +394,7 @@ export const connectAgent: AreaTranslations = {
         description: "只需三个简单步骤，即可与 AI 聊聊您的理财应用。",
         disconnect: "全部断开连接",
         disconnectWarning:
-          "这会关闭本地 API 并更换令牌，从而断开所有已连接的智能体和脚本。重新打开本地 API 后，它们会自动重新连接，无需复制粘贴。",
+          "关闭本地 API 并更换令牌，所有智能体和脚本都会断开。重新打开后它们会自动重连。",
         done: "（已完成）",
         download: "从最新版本下载 vaulted-money.mcpb",
         enable: "允许智能体连接",
@@ -437,6 +461,14 @@ export const connectAgent: AreaTranslations = {
     },
     settings: {
       agent: {
+        step2Hint: "Kies hieronder een optie.",
+        step3Hint: "In de app die je koos, niet hier.",
+        followSteps: "Volg deze stappen",
+        doItYourself: "Of doe het zelf",
+        codeSetupWhere:
+          'Dit voegt Vaulted Money toe aan Claude Code in een terminal. Het verschijnt niet onder "Plugins" in de Claude-app. Volg daarvoor de stappen hieronder.',
+        codeSetupReadyWhere:
+          'Klaar. Typ claude in een terminal en vraag naar je geld. Wil je het toevoegen onder "Plugins" in de Claude-app, volg dan de stappen hieronder.',
         appBadge: "Makkelijkst",
         appBlurb: "Chat in de Claude-desktopapp.",
         appKeepOpen: "Houd Vaulted Money open.",
@@ -507,7 +539,7 @@ export const connectAgent: AreaTranslations = {
           "Chat in drie snelle stappen met een AI over je geldbeheer.",
         disconnect: "Alles loskoppelen",
         disconnectWarning:
-          "Dit zet de lokale API uit en vervangt het token, waardoor elke gekoppelde agent en elk script wordt afgesloten. Zet de lokale API weer aan om ze vanzelf opnieuw te laten verbinden, zonder kopiëren en plakken.",
+          "Zet de lokale API uit en vervangt het token, waardoor alle agents en scripts de verbinding verliezen. Ze maken zelf weer verbinding als je hem weer aanzet.",
         done: "(klaar)",
         download: "Download vaulted-money.mcpb uit de nieuwste release",
         enable: "Agents toestaan te verbinden",
@@ -571,18 +603,24 @@ export const connectAgent: AreaTranslations = {
           "AI முகவருடன் உங்கள் தரவை ஆய்வு செய்யுங்கள், உரையாடுங்கள், விவாதியுங்கள்",
         aiAndAgents: "AI மற்றும் முகவர்கள்",
         connectAgentShort: "முகவரை இணை",
-        connectAgentDesktopOnly:
-          "முகவரை இணைப்பது டெஸ்க்டாப் செயலியில் கிடைக்கும்",
+        connectAgentDesktopOnly: "முகவரை இணைப்பது டெஸ்க்டாப் செயலியில் கிடைக்கும்",
       },
     },
     settings: {
       agent: {
+        step2Hint: "கீழே ஒரு விருப்பத்தைத் தேர்ந்தெடுக்கவும்.",
+        step3Hint: "நீங்கள் தேர்ந்தெடுத்த செயலியில், இங்கே அல்ல.",
+        followSteps: "இந்தப் படிகளைப் பின்பற்றவும்",
+        doItYourself: "அல்லது நீங்களே செய்யுங்கள்",
+        codeSetupWhere:
+          'இது டெர்மினலில் உள்ள Claude Code-இல் Vaulted Money-ஐச் சேர்க்கிறது. Claude செயலியின் "Plugins"-இல் இது தோன்றாது. அதற்குக் கீழே உள்ள படிகளைப் பின்பற்றவும்.',
+        codeSetupReadyWhere:
+          'முடிந்தது. டெர்மினலில் claude என டைப் செய்து உங்கள் பணத்தைப் பற்றிக் கேளுங்கள். Claude செயலியின் "Plugins"-இல் சேர்க்க, கீழே உள்ள படிகளைப் பின்பற்றவும்.',
         appBadge: "மிக எளிது",
         appBlurb: "Claude டெஸ்க்டாப் பயன்பாட்டில் உரையாடுங்கள்.",
         appKeepOpen: "Vaulted Money-ஐத் திறந்தே வைத்திருங்கள்.",
         appNoExtra: "கூடுதல் மென்பொருள் தேவையில்லை.",
-        appOpen:
-          "பதிவிறக்கிய கோப்பைத் திறக்கவும். Claude உறுதிப்படுத்தக் கேட்கும்.",
+        appOpen: "பதிவிறக்கிய கோப்பைத் திறக்கவும். Claude உறுதிப்படுத்தக் கேட்கும்.",
         appPrivacy: "Claude படிப்பவை Anthropic-க்கு அனுப்பப்படும்.",
         appRoute1:
           '"Settings"-ஐத் திறந்து, பிறகு "Customize", பிறகு "Plugins"-ஐத் திறக்கவும்.',
@@ -595,8 +633,7 @@ export const connectAgent: AreaTranslations = {
         askTitle: "உங்கள் முதல் கேள்வியைக் கேளுங்கள்",
         backToSettings: "அமைப்புகளுக்குத் திரும்பு",
         byokLink: "அமைப்புகளில் AI ஒருங்கிணைப்புகளைப் பாருங்கள்.",
-        byokNote:
-          "உங்கள் சொந்த API விசையுடன் AI வகைப்படுத்தலைத் தேடுகிறீர்களா?",
+        byokNote: "உங்கள் சொந்த API விசையுடன் AI வகைப்படுத்தலைத் தேடுகிறீர்களா?",
         chooseTitle: "எப்படி உரையாட விரும்புகிறீர்கள்?",
         codeBlurb:
           "Claude பயன்பாட்டிலோ டெர்மினலிலோ ஏற்கெனவே Claude Code பயன்படுத்துபவர்களுக்கு.",
@@ -607,24 +644,19 @@ export const connectAgent: AreaTranslations = {
         codeSetupRunning: "அமைக்கிறது. ஒரு நிமிடம் ஆகலாம்.",
         codeSetupReady:
           "முடிந்தது. Claude Code-ஐத் திறந்து உங்கள் பணம் பற்றிக் கேளுங்கள்.",
-        codeSetupFailed:
-          "அது வேலை செய்யவில்லை. கீழே உள்ள படிகளைப் பயன்படுத்துங்கள்.",
+        codeSetupFailed: "அது வேலை செய்யவில்லை. கீழே உள்ள படிகளைப் பயன்படுத்துங்கள்.",
         codeNotFound: "இந்தக் கணினியில் Claude Code கிடைக்கவில்லை.",
         codeGet: "Claude Code-ஐப் பெறு",
         appNotFound: "இந்தக் கணினியில் Claude செயலி கிடைக்கவில்லை.",
         appGet: "Claude செயலியைப் பெறு",
-        terminalNote:
-          "இதை சாதாரண டெர்மினலில் ஒட்டுங்கள், Claude Code-க்குள் அல்ல.",
+        terminalNote: "இதை சாதாரண டெர்மினலில் ஒட்டுங்கள், Claude Code-க்குள் அல்ல.",
         codexTitle: "Codex",
         codexBlurb: "OpenAI Codex பயன்படுத்துபவர்களுக்கு.",
         codexFound: "இந்த கணினியில் Codex உள்ளது.",
         codexSetupButton: "எனக்காக Codex ஐ அமை",
-        codexSetupReady:
-          "முடிந்தது. Codex ஐத் திறந்து உங்கள் பணம் பற்றிக் கேளுங்கள்.",
-        codexSetupFailed:
-          "அது வேலை செய்யவில்லை. கீழே உள்ள படிகளைப் பயன்படுத்துங்கள்.",
-        codexNodeMissing:
-          "Node 18 அல்லது புதியது தேவை. நிறுவி மீண்டும் முயலுங்கள்.",
+        codexSetupReady: "முடிந்தது. Codex ஐத் திறந்து உங்கள் பணம் பற்றிக் கேளுங்கள்.",
+        codexSetupFailed: "அது வேலை செய்யவில்லை. கீழே உள்ள படிகளைப் பயன்படுத்துங்கள்.",
+        codexNodeMissing: "Node 18 அல்லது புதியது தேவை. நிறுவி மீண்டும் முயலுங்கள்.",
         codexNotFound: "இந்த கணினியில் Codex ஐக் காண முடியவில்லை.",
         codexGet: "Codex ஐப் பெறு",
         codexInstallNote: "நிறுவி, திரும்பி வந்து அமை என்பதை அழுத்துங்கள்.",
@@ -655,16 +687,14 @@ export const connectAgent: AreaTranslations = {
           "மூன்று எளிய படிகளில் உங்கள் பண மேலாளர் பற்றி AI உடன் உரையாடுங்கள்.",
         disconnect: "அனைத்தையும் துண்டி",
         disconnectWarning:
-          "இது உள்ளூர் API-ஐ அணைத்து டோக்கனை மாற்றுகிறது, இதனால் இணைக்கப்பட்ட ஒவ்வொரு முகவரும் ஸ்கிரிப்டும் துண்டிக்கப்படும். அவை நகலெடுத்து ஒட்டாமலேயே தாமாக மீண்டும் இணைய, உள்ளூர் API-ஐ மீண்டும் இயக்குங்கள்.",
+          "உள்ளூர் API-ஐ அணைத்து டோக்கனை மாற்றுகிறது; எல்லா முகவர்களும் ஸ்கிரிப்டுகளும் துண்டிக்கப்படும். மீண்டும் இயக்கும்போது அவை தானாக இணையும்.",
         done: "(முடிந்தது)",
-        download:
-          "சமீபத்திய வெளியீட்டிலிருந்து vaulted-money.mcpb-ஐப் பதிவிறக்குங்கள்",
+        download: "சமீபத்திய வெளியீட்டிலிருந்து vaulted-money.mcpb-ஐப் பதிவிறக்குங்கள்",
         enable: "முகவர்கள் இணைய அனுமதி",
         enableHint:
           "இது முகவர்களுக்கு மட்டுமல்லாமல் ஸ்கிரிப்ட்களுக்கும் உள்ளூர் API-ஐ இயக்கும் அல்லது அணைக்கும்.",
         localBadge: "உங்கள் சாதனத்திலேயே இருக்கும்",
-        localBlurb:
-          "உங்கள் கணினியில் இயங்கும், எடுத்துக்காட்டாக LM Studio-வில்.",
+        localBlurb: "உங்கள் கணினியில் இயங்கும், எடுத்துக்காட்டாக LM Studio-வில்.",
         localModel: "கருவிகளைப் பயன்படுத்தக்கூடிய மாதிரியைத் தேர்ந்தெடுங்கள்.",
         localOpen:
           'LM Studio-வில் "Program", பிறகு "Install", பிறகு "Edit mcp.json"-ஐத் திறந்து ஒட்டுங்கள்.',

@@ -383,3 +383,110 @@ describe("demo plan: scenarios", () => {
       expect(plan.transactions.length, plan.ledger.name).toBeGreaterThan(200);
   });
 });
+
+describe("demo data names", () => {
+  // Store screenshots and videos are made from the demo data, so it must not
+  // show real companies' names (trademarks) or their products.
+  const REAL_BRANDS = [
+    "Lidl",
+    "Aldi",
+    "REWE",
+    "Edeka",
+    "Amazon",
+    "Kindle",
+    "Adobe",
+    "Allianz",
+    "Aral",
+    "Bio Company",
+    "Blue Bottle",
+    "Cinemaxx",
+    "Coursera",
+    "Decathlon",
+    "Deliveroo",
+    "Deutsche Bahn",
+    "Doctors Without Borders",
+    "Douglas",
+    "Etsy",
+    "Eventim",
+    "Figma",
+    "FitnessFirst",
+    "Flying Tiger",
+    "FreeNow",
+    "Fressnapf",
+    "Dehner",
+    "GitHub",
+    "H&M",
+    "HDFC",
+    "HUK-Coburg",
+    "Hallmark",
+    "Hiscox",
+    "Hornbach",
+    "IKEA",
+    "Babylon",
+    "McDonald",
+    "Netflix",
+    "Nintendo",
+    "Notion",
+    "OBI",
+    "ParkNow",
+    "Pizza Express",
+    "PlayStation",
+    "Red Cross",
+    "Roblox",
+    "Rossmann",
+    "Shell",
+    "Sketch",
+    "Sparkasse",
+    "Spotify",
+    "Starbucks",
+    "Steam",
+    "Telekom",
+    "Thalia",
+    "Ticketmaster",
+    "TotalEnergies",
+    "TÜV",
+    "Uber",
+    "Udemy",
+    "Uniqlo",
+    "Urban Company",
+    "Vattenfall",
+    "Vodafone",
+    "WWF",
+    "WeWork",
+    "Wolt",
+    "Zalando",
+    "Zara",
+    "eBay",
+    "Apple",
+    "MacBook",
+    "Adani",
+    "Oyster",
+  ];
+  const mentions = (text: string | null | undefined) =>
+    REAL_BRANDS.filter((brand) =>
+      new RegExp(
+        `(^|[^A-Za-z])${brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^A-Za-z])`,
+        "i",
+      ).test(text ?? ""),
+    );
+
+  it("uses no real company or product names in payees or notes", () => {
+    const found = new Set<string>();
+    for (const plan of plans as DemoLedgerPlan[]) {
+      for (const t of plan.transactions) {
+        mentions(t.vendor).forEach((b) =>
+          found.add(`${b} (payee "${t.vendor}")`),
+        );
+        mentions(t.remarks).forEach((b) =>
+          found.add(`${b} (note "${t.remarks}")`),
+        );
+      }
+      for (const s of plan.scheduled) {
+        mentions(s.vendor).forEach((b) =>
+          found.add(`${b} (schedule "${s.vendor}")`),
+        );
+      }
+    }
+    expect([...found]).toEqual([]);
+  });
+});

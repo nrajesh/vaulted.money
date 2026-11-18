@@ -300,7 +300,7 @@ export function SmartScheduleDialog({
           <DialogDescription>
             {t("scheduled.smart.description", {
               defaultValue:
-                "We detected these potential recurring transactions. Review suggested amounts and select which ones to schedule.",
+                "Repeating payments found in your history. Check the amounts and pick which to schedule.",
             })}
           </DialogDescription>
         </DialogHeader>

@@ -1142,7 +1142,7 @@ const AddEditTransactionDialog: React.FC<AddEditTransactionDialogProps> = ({
                               <FormControl>
                                 <Input
                                   type="date"
-                                  className="text-sm"
+                                  className="text-base md:text-sm"
                                   {...field}
                                 />
                               </FormControl>

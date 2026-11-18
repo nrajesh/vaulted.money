@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import * as React from "react";
+import { Capacitor } from "@capacitor/core";
 import AiHubPage from "./AiHubPage";
 import type { AIProvider } from "@/types/dataProvider";
 
@@ -59,20 +60,23 @@ describe("AiHubPage", () => {
     aiFeatures.enabled = true;
     listed.providers = [];
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
-  it("locks the agent part outside the Mac app instead of offering a bar to open", () => {
+  it("locks the agent part outside the desktop app instead of offering a bar to open", () => {
     renderPage();
     expect(
       screen.getByRole("heading", { level: 1, name: "AI assistant" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Available ONLY in the Mac app."),
+      screen.getByText(
+        "Needs the desktop app. Your AI agent connects to Vaulted Money on your computer.",
+      ),
     ).toBeInTheDocument();
     // Nothing to expand, and none of the agent setup is shown.
     expect(
       screen.queryByRole("button", {
-        name: /Chat with your data from an AI agent/,
+        name: /Chat with your money using an external AI agent/,
       }),
     ).toBeNull();
     expect(screen.queryByText("How do you want to chat?")).toBeNull();
@@ -83,6 +87,16 @@ describe("AiHubPage", () => {
     ).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("tells Android users the agent needs Vaulted Money on a computer", () => {
+    vi.spyOn(Capacitor, "getPlatform").mockReturnValue("android");
+    renderPage();
+    expect(
+      screen.getByText(
+        "Needs Vaulted Money on a computer (Mac, Windows or Linux). Your AI agent connects to it there.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("shows only the AI switch when AI features are off", () => {
     aiFeatures.enabled = false;
     renderPage();
@@ -90,7 +104,7 @@ describe("AiHubPage", () => {
     expect(screen.queryByText("provider list")).toBeNull();
     expect(
       screen.queryByRole("heading", {
-        name: "Chat with your data from an AI agent",
+        name: "Chat with your money using an external AI agent",
       }),
     ).toBeNull();
   });
@@ -211,6 +225,34 @@ describe("AiHubPage", () => {
     ]) {
       expect(screen.getByText(fact)).toBeInTheDocument();
     }
+  });
+
+  it("shows one half per menu item", async () => {
+    const view = render(
+      <MemoryRouter>
+        <AiHubPage only="inApp" />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("AI inside the app")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Chat with your money using an external AI agent"),
+    ).not.toBeInTheDocument();
+    view.unmount();
+
+    render(
+      <MemoryRouter>
+        <AiHubPage only="agents" />
+      </MemoryRouter>,
+    );
+    expect(
+      await screen.findByText(
+        "Chat with your money using an external AI agent",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("AI inside the app")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Connect other AI apps" }),
+    ).toBeInTheDocument();
   });
 
   it("shows the providers and the agent steps on one page, with no tabs", async () => {
@@ -356,7 +398,7 @@ describe("AiHubPage", () => {
     const { unmount } = renderPage();
     const inApp = screen.getByRole("button", { name: /AI inside the app/ });
     const agents = screen.getByRole("button", {
-      name: /Chat with your data from an AI agent/,
+      name: /Chat with your money using an external AI agent/,
     });
     expect(inApp).toHaveAttribute("aria-expanded", "true");
     expect(agents).toHaveAttribute("aria-expanded", "true");
@@ -372,7 +414,7 @@ describe("AiHubPage", () => {
     renderPage();
     expect(
       screen.getByRole("button", {
-        name: /Chat with your data from an AI agent/,
+        name: /Chat with your money using an external AI agent/,
       }),
     ).toHaveAttribute("aria-expanded", "false");
   });

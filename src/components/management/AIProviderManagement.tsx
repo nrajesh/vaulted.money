@@ -132,11 +132,11 @@ const AIProviderManagement = ({
             {canUseLocalModels()
               ? t("aiHub.providers.empty", {
                   defaultValue:
-                    "No provider yet. Add one to let the app suggest categories. A model on your own computer (LM Studio, Ollama) works too and needs no key.",
+                    "No provider yet. Add one to get category suggestions. A model on your own computer (LM Studio, Ollama) needs no key.",
                 })
               : t("aiHub.providers.emptyMobile", {
                   defaultValue:
-                    "No provider yet. Add one to let the app suggest categories. Models running on your own computer need the desktop app.",
+                    "No provider yet. Add one to get category suggestions.",
                 })}
           </div>
         ) : (

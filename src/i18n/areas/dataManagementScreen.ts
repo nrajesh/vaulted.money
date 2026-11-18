@@ -14,7 +14,7 @@ export const dataManagementScreen: AreaTranslations = {
           "Export your data to a local file immediately, or restore from a previous backup.",
         importantTitle: "Important",
         importantBody:
-          "Since this is a local-first app, if you clear your browser data, you will lose your records. Please export regular backups.",
+          "Clearing your browser data deletes your records. Export backups regularly.",
         exportJson: "Export JSON",
         exportEncrypted: "Export Encrypted",
         importJson: "Import JSON",
@@ -37,7 +37,7 @@ export const dataManagementScreen: AreaTranslations = {
         button: "Generate Data",
         confirmTitle: "Generate new demo data?",
         confirmDescription:
-          "This will clear all existing transactions and generate new diverse demo data. This action cannot be undone.",
+          "Replaces all your transactions with demo data. This can't be undone.",
         confirmButton: "Generate",
       },
       export: {
@@ -78,7 +78,7 @@ export const dataManagementScreen: AreaTranslations = {
           "Exporta tus datos a un archivo local de inmediato o restaura desde una copia anterior.",
         importantTitle: "Importante",
         importantBody:
-          "Como esta es una aplicación que prioriza lo local, si borras los datos del navegador perderás tus registros. Exporta copias de seguridad con regularidad.",
+          "Borrar los datos del navegador elimina tus registros. Exporta copias de seguridad con regularidad.",
         exportJson: "Exportar JSON",
         exportEncrypted: "Exportar cifrado",
         importJson: "Importar JSON",
@@ -101,7 +101,7 @@ export const dataManagementScreen: AreaTranslations = {
         button: "Generar datos",
         confirmTitle: "¿Generar nuevos datos de demostración?",
         confirmDescription:
-          "Se borrarán todas las transacciones existentes y se generarán nuevos datos de demostración variados. Esta acción no se puede deshacer.",
+          "Sustituye todas tus transacciones por datos de demostración. No se puede deshacer.",
         confirmButton: "Generar",
       },
       export: {
@@ -142,8 +142,7 @@ export const dataManagementScreen: AreaTranslations = {
         title: "手动备份与恢复",
         description: "立即将数据导出为本地文件，或从之前的备份恢复。",
         importantTitle: "重要提示",
-        importantBody:
-          "由于这是本地优先的应用，清除浏览器数据会丢失您的记录。请定期导出备份。",
+        importantBody: "清除浏览器数据会删除您的记录。请定期导出备份。",
         exportJson: "导出 JSON",
         exportEncrypted: "导出加密文件",
         importJson: "导入 JSON",
@@ -163,8 +162,7 @@ export const dataManagementScreen: AreaTranslations = {
         description: "生成多样的演示交易。这将先清除现有数据。",
         button: "生成数据",
         confirmTitle: "生成新的演示数据？",
-        confirmDescription:
-          "这将清除所有现有交易并生成新的多样演示数据。此操作无法撤销。",
+        confirmDescription: "用演示数据替换您的全部交易。此操作无法撤销。",
         confirmButton: "生成",
       },
       export: {
@@ -203,7 +201,7 @@ export const dataManagementScreen: AreaTranslations = {
           "Exporteer je gegevens direct naar een lokaal bestand of herstel vanuit een eerdere back-up.",
         importantTitle: "Belangrijk",
         importantBody:
-          "Omdat dit een lokaal-eerst-app is, raak je je gegevens kwijt als je de browsergegevens wist. Exporteer regelmatig back-ups.",
+          "Als je je browsergegevens wist, ben je je administratie kwijt. Exporteer regelmatig een back-up.",
         exportJson: "JSON exporteren",
         exportEncrypted: "Versleuteld exporteren",
         importJson: "JSON importeren",
@@ -226,7 +224,7 @@ export const dataManagementScreen: AreaTranslations = {
         button: "Gegevens genereren",
         confirmTitle: "Nieuwe demogegevens genereren?",
         confirmDescription:
-          "Hiermee worden alle bestaande transacties gewist en nieuwe, gevarieerde demogegevens gegenereerd. Dit kan niet ongedaan worden gemaakt.",
+          "Vervangt al je transacties door demogegevens. Dit kan niet ongedaan worden gemaakt.",
         confirmButton: "Genereren",
       },
       export: {
@@ -269,7 +267,7 @@ export const dataManagementScreen: AreaTranslations = {
           "உங்கள் தரவை உடனடியாக உள்ளூர் கோப்பாக ஏற்றுமதி செய்யவும் அல்லது முந்தைய காப்புப் பிரதியிலிருந்து மீட்டமைக்கவும்.",
         importantTitle: "முக்கியம்",
         importantBody:
-          "இது உள்ளூர்-முதன்மைப் பயன்பாடு என்பதால், உலாவித் தரவை அழித்தால் உங்கள் பதிவுகளை இழப்பீர்கள். தொடர்ந்து காப்புப் பிரதிகளை ஏற்றுமதி செய்யுங்கள்.",
+          "உலாவித் தரவை அழித்தால் உங்கள் பதிவுகள் நீங்கிவிடும். தவறாமல் காப்புப்பிரதிகளை ஏற்றுமதி செய்யவும்.",
         exportJson: "JSON ஏற்றுமதி",
         exportEncrypted: "குறியாக்கத்துடன் ஏற்றுமதி",
         importJson: "JSON இறக்குமதி",
@@ -292,7 +290,7 @@ export const dataManagementScreen: AreaTranslations = {
         button: "தரவை உருவாக்கு",
         confirmTitle: "புதிய டெமோ தரவை உருவாக்கவா?",
         confirmDescription:
-          "இது இருக்கும் அனைத்துப் பரிவர்த்தனைகளையும் அழித்து புதிய டெமோ தரவை உருவாக்கும். இந்தச் செயலைத் திரும்பப் பெற முடியாது.",
+          "உங்கள் எல்லாப் பரிவர்த்தனைகளையும் டெமோ தரவால் மாற்றுகிறது. இதைச் செயல்தவிர்க்க முடியாது.",
         confirmButton: "உருவாக்கு",
       },
       export: {

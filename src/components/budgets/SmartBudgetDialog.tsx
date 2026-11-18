@@ -310,7 +310,7 @@ export function SmartBudgetDialog({
           <DialogDescription>
             {t("budgets.smart.description", {
               defaultValue:
-                "We analyzed your past transactions and found these top spending categories. Adjust the proposed monthly amounts and select the budgets you want to create.",
+                "Suggested from your past spending. Adjust the amounts and pick the budgets to create.",
             })}
           </DialogDescription>
         </DialogHeader>

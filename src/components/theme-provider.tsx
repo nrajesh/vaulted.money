@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 
 /**
  * Minimal light/dark/system theme provider.
@@ -87,6 +88,19 @@ export function ThemeProvider({
     root.classList.remove("light", "dark");
     root.classList.add(resolvedTheme);
     root.style.colorScheme = resolvedTheme;
+  }, [resolvedTheme]);
+
+  // On iOS/Android the clock and battery icons follow the phone's own
+  // light/dark setting, not the app's. Match them to the app's theme so they
+  // stay readable on the header (Dark = light icons for a dark background).
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    SystemBars.setStyle({
+      style:
+        resolvedTheme === "dark" ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+    }).catch(() => {
+      // Cosmetic only; an older native shell without SystemBars is fine.
+    });
   }, [resolvedTheme]);
 
   const setTheme = React.useCallback(

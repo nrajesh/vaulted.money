@@ -3,12 +3,15 @@ import { useTranslation } from "react-i18next";
 
 interface ConsolidatedMetricsCardProps {
   netWorth: string;
+  /** Label for the first figure when it is not a net worth. */
+  netLabel?: string;
   income: string;
   expenses: string;
 }
 
 export const ConsolidatedMetricsCard = ({
   netWorth,
+  netLabel,
   income,
   expenses,
 }: ConsolidatedMetricsCardProps) => {
@@ -34,7 +37,8 @@ export const ConsolidatedMetricsCard = ({
             <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400">
               <Wallet className="w-3.5 h-3.5" />
             </div>
-            {t("dashboard.overview.netWorth", { defaultValue: "Net Worth" })}
+            {netLabel ??
+              t("dashboard.overview.netWorth", { defaultValue: "Net Worth" })}
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white">
             {netWorth}

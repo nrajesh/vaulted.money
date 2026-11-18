@@ -7,6 +7,7 @@ import {
   Cloud,
   Copy,
   Download,
+  Lightbulb,
   Loader2,
   MessageCircle,
   Power,
@@ -260,7 +261,7 @@ const ConnectToAgentPanel = ({
     <li className="flex items-start gap-3 text-sm">
       <span
         aria-hidden="true"
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-input bg-background text-xs font-medium"
       >
         {n}
       </span>
@@ -268,6 +269,22 @@ const ConnectToAgentPanel = ({
         {children}
       </div>
     </li>
+  );
+
+  // Steps the user carries out in another app. A dashed box with a bulb sets
+  // them apart from buttons that act for the user, so they read as
+  // instructions rather than as something that already happened.
+  const instructions = (title: string, children: React.ReactNode) => (
+    <div className="space-y-3 rounded-lg border border-dashed border-input bg-muted/40 p-3">
+      <p className="flex items-center gap-2 text-sm font-medium">
+        <Lightbulb
+          className="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400"
+          aria-hidden="true"
+        />
+        {title}
+      </p>
+      {children}
+    </div>
   );
 
   const privacyLine = (text: string) => (
@@ -504,10 +521,17 @@ const ConnectToAgentPanel = ({
           >
             {stepTitles.map((title, index) => {
               const done = stepsDone[index];
+              // While agents are off, step 1 is the only thing to do, so it is
+              // outlined to draw the eye to the switch inside it.
+              const highlight = index === 0 && !status.enabled;
               return (
                 <li
                   key={title}
-                  className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2"
+                  className={
+                    highlight
+                      ? "flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border-2 border-primary bg-primary/5 px-3 py-2"
+                      : "flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border-2 border-transparent bg-muted/50 px-3 py-2"
+                  }
                 >
                   <span
                     aria-hidden="true"
@@ -528,26 +552,43 @@ const ConnectToAgentPanel = ({
                       </span>
                     )}
                   </span>
+                  {index === 0 ? (
+                    // The switch sits in the step it completes, so "Switch
+                    // on" is something to do here and not just a label.
+                    <span className="flex w-full items-center justify-between gap-2">
+                      <Label
+                        htmlFor="agent-enabled"
+                        className="text-xs font-normal text-muted-foreground"
+                      >
+                        {t("settings.agent.enable", {
+                          defaultValue: "Allow agents to connect",
+                        })}
+                      </Label>
+                      <Switch
+                        id="agent-enabled"
+                        checked={status.enabled}
+                        onCheckedChange={(checked) => {
+                          onToggle(checked);
+                        }}
+                      />
+                    </span>
+                  ) : (
+                    <span className="w-full text-xs text-muted-foreground">
+                      {index === 1
+                        ? t("settings.agent.step2Hint", {
+                            defaultValue: "Choose an option below.",
+                          })
+                        : t("settings.agent.step3Hint", {
+                            defaultValue: "In the app you picked, not here.",
+                          })}
+                    </span>
+                  )}
                 </li>
               );
             })}
           </ol>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="agent-enabled">
-                {t("settings.agent.enable", {
-                  defaultValue: "Allow agents to connect",
-                })}
-              </Label>
-              <Switch
-                id="agent-enabled"
-                checked={status.enabled}
-                onCheckedChange={(checked) => {
-                  onToggle(checked);
-                }}
-              />
-            </div>
             <p className="text-xs text-muted-foreground">
               {status.enabled
                 ? t("aiHub.agents.switchOnHint", {
@@ -674,57 +715,64 @@ const ConnectToAgentPanel = ({
                     </Button>
                   </div>
                 )}
-                <ol className="space-y-3">
-                  {step(
-                    1,
-                    <Button
-                      asChild
-                      size="sm"
-                      className="h-auto whitespace-normal"
-                    >
-                      <a
-                        href={RELEASES_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Download
-                          className="mr-2 h-4 w-4 shrink-0"
-                          aria-hidden="true"
-                        />
-                        <span>
-                          {t("settings.agent.download", {
-                            defaultValue:
-                              "Download vaulted-money.mcpb from the latest release",
-                          })}
-                          <span className="sr-only">
-                            {" "}
-                            {t("settings.agent.newTab", {
-                              defaultValue: "(opens in a new tab)",
-                            })}
-                          </span>
-                        </span>
-                      </a>
-                    </Button>,
-                  )}
-                  {step(
-                    2,
-                    t("settings.agent.appOpen", {
-                      defaultValue:
-                        "Open the downloaded file. Claude asks you to confirm.",
-                    }),
-                  )}
-                  {step(
-                    3,
-                    t("settings.agent.appKeepOpen", {
-                      defaultValue: "Keep Vaulted Money open.",
-                    }),
-                  )}
-                </ol>
-                <p className="text-xs text-muted-foreground">
-                  {t("settings.agent.appNoExtra", {
-                    defaultValue: "No extra software needed.",
-                  })}
-                </p>
+                {instructions(
+                  t("settings.agent.followSteps", {
+                    defaultValue: "Follow these steps",
+                  }),
+                  <>
+                    <ol className="space-y-3">
+                      {step(
+                        1,
+                        <Button
+                          asChild
+                          size="sm"
+                          className="h-auto whitespace-normal"
+                        >
+                          <a
+                            href={RELEASES_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download
+                              className="mr-2 h-4 w-4 shrink-0"
+                              aria-hidden="true"
+                            />
+                            <span>
+                              {t("settings.agent.download", {
+                                defaultValue:
+                                  "Download vaulted-money.mcpb from the latest release",
+                              })}
+                              <span className="sr-only">
+                                {" "}
+                                {t("settings.agent.newTab", {
+                                  defaultValue: "(opens in a new tab)",
+                                })}
+                              </span>
+                            </span>
+                          </a>
+                        </Button>,
+                      )}
+                      {step(
+                        2,
+                        t("settings.agent.appOpen", {
+                          defaultValue:
+                            "Open the downloaded file. Claude asks you to confirm.",
+                        }),
+                      )}
+                      {step(
+                        3,
+                        t("settings.agent.appKeepOpen", {
+                          defaultValue: "Keep Vaulted Money open.",
+                        }),
+                      )}
+                    </ol>
+                    <p className="text-xs text-muted-foreground">
+                      {t("settings.agent.appNoExtra", {
+                        defaultValue: "No extra software needed.",
+                      })}
+                    </p>
+                  </>,
+                )}
                 {privacyLine(
                   t("settings.agent.appPrivacy", {
                     defaultValue: "What Claude reads is sent to Anthropic.",
@@ -733,37 +781,44 @@ const ConnectToAgentPanel = ({
               </TabsContent>
 
               <TabsContent value="local" className="space-y-3">
-                <ol className="space-y-3">
-                  {step(
-                    1,
-                    copyButton(
-                      "local",
-                      localModelSnippet,
-                      t("settings.agent.copySetup", {
-                        defaultValue: "Copy setup",
-                      }),
-                      "default",
-                    ),
-                  )}
-                  {step(
-                    2,
-                    t("settings.agent.localOpen", {
-                      defaultValue:
-                        "In LM Studio open Program, then Install, then Edit mcp.json, and paste.",
-                    }),
-                  )}
-                  {step(
-                    3,
-                    t("settings.agent.localModel", {
-                      defaultValue: "Choose a model that can use tools.",
-                    }),
-                  )}
-                </ol>
-                <p className="text-xs text-muted-foreground">
-                  {t("settings.agent.nodeNote", {
-                    defaultValue: "Requires Node 18 or newer.",
-                  })}
-                </p>
+                {instructions(
+                  t("settings.agent.followSteps", {
+                    defaultValue: "Follow these steps",
+                  }),
+                  <>
+                    <ol className="space-y-3">
+                      {step(
+                        1,
+                        copyButton(
+                          "local",
+                          localModelSnippet,
+                          t("settings.agent.copySetup", {
+                            defaultValue: "Copy setup",
+                          }),
+                          "default",
+                        ),
+                      )}
+                      {step(
+                        2,
+                        t("settings.agent.localOpen", {
+                          defaultValue:
+                            "In LM Studio open Program, then Install, then Edit mcp.json, and paste.",
+                        }),
+                      )}
+                      {step(
+                        3,
+                        t("settings.agent.localModel", {
+                          defaultValue: "Choose a model that can use tools.",
+                        }),
+                      )}
+                    </ol>
+                    <p className="text-xs text-muted-foreground">
+                      {t("settings.agent.nodeNote", {
+                        defaultValue: "Requires Node 18 or newer.",
+                      })}
+                    </p>
+                  </>,
+                )}
                 {privacyLine(
                   t("settings.agent.localPrivacyLine", {
                     defaultValue:
@@ -798,6 +853,16 @@ const ConnectToAgentPanel = ({
                             defaultValue: "Set up Claude Code for me",
                           })}
                         </Button>
+                        {/* The button runs the claude command line, which
+                            installs for Claude Code only. The Claude app keeps
+                            its own plugin list, so say so before anyone looks
+                            for it there. */}
+                        <p className="text-xs text-muted-foreground">
+                          {t("settings.agent.codeSetupWhere", {
+                            defaultValue:
+                              "This adds Vaulted Money to Claude Code in a terminal. It does not appear under Plugins in the Claude app. For that, follow the steps below.",
+                          })}
+                        </p>
                       </>
                     ) : (
                       <>
@@ -830,9 +895,9 @@ const ConnectToAgentPanel = ({
                       running: t("settings.agent.codeSetupRunning", {
                         defaultValue: "Setting up. This can take a minute.",
                       }),
-                      ready: t("settings.agent.codeSetupReady", {
+                      ready: t("settings.agent.codeSetupReadyWhere", {
                         defaultValue:
-                          "Done. Open Claude Code and ask about your money.",
+                          "Done. Type claude in a terminal and ask about your money. To add it under Plugins in the Claude app, follow the steps below.",
                       }),
                       failed: t("settings.agent.codeSetupFailed", {
                         defaultValue:
@@ -845,89 +910,100 @@ const ConnectToAgentPanel = ({
                     })}
                   </div>
                 )}
-                <div className="space-y-2">
-                  <RouteHeading className="text-sm font-medium">
-                    {t("settings.agent.routeApp", {
-                      defaultValue: "In the Claude app",
-                    })}
-                  </RouteHeading>
-                  <p className="text-xs text-muted-foreground">
-                    {t("settings.agent.routeAppNote", {
-                      defaultValue: "No commands needed.",
-                    })}
-                  </p>
-                  <ol className="space-y-3">
-                    {step(
-                      1,
-                      t("settings.agent.appRoute1", {
-                        defaultValue:
-                          "Open Settings, then Customize, then Plugins.",
+                {instructions(
+                  detected?.code
+                    ? t("settings.agent.doItYourself", {
+                        defaultValue: "Or do it yourself",
+                      })
+                    : t("settings.agent.followSteps", {
+                        defaultValue: "Follow these steps",
                       }),
-                    )}
-                    {step(
-                      2,
-                      t("settings.agent.appRoute2", {
-                        defaultValue:
-                          "Click Add, then Add marketplace, then Add from a repository.",
-                      }),
-                    )}
-                    {step(
-                      3,
-                      <>
-                        <span>
-                          {t("settings.agent.appRoute3", {
-                            defaultValue: "Paste this, then click Sync:",
-                          })}
-                        </span>
-                        <code className="break-all rounded bg-muted px-2 py-1 text-xs">
-                          {CLAUDE_CODE_REPOSITORY}
-                        </code>
-                        {copyButton(
-                          "repo",
-                          CLAUDE_CODE_REPOSITORY,
-                          t("settings.agent.copyRepository", {
-                            defaultValue: "Copy repository name",
+                  <>
+                    <div className="space-y-2">
+                      <RouteHeading className="text-sm font-medium">
+                        {t("settings.agent.routeApp", {
+                          defaultValue: "In the Claude app",
+                        })}
+                      </RouteHeading>
+                      <p className="text-xs text-muted-foreground">
+                        {t("settings.agent.routeAppNote", {
+                          defaultValue: "No commands needed.",
+                        })}
+                      </p>
+                      <ol className="space-y-3">
+                        {step(
+                          1,
+                          t("settings.agent.appRoute1", {
+                            defaultValue:
+                              "Open Settings, then Customize, then Plugins.",
                           }),
                         )}
-                      </>,
-                    )}
-                    {step(
-                      4,
-                      t("settings.agent.appRoute4", {
-                        defaultValue:
-                          "Open Discover, find Vaulted Money and click the + button.",
-                      }),
-                    )}
-                  </ol>
-                </div>
-                <div className="space-y-2">
-                  <RouteHeading className="text-sm font-medium">
-                    {t("settings.agent.routeTerminal", {
-                      defaultValue: "In a terminal",
-                    })}
-                  </RouteHeading>
-                  <p className="text-xs text-muted-foreground">
-                    {t("settings.agent.codeNode", {
-                      defaultValue: "Needs Node 18 or newer.",
-                    })}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("settings.agent.terminalNote", {
-                      defaultValue:
-                        "Paste this into a normal terminal, not into Claude Code.",
-                    })}
-                  </p>
-                  <pre className="whitespace-pre-wrap break-all rounded bg-muted px-2 py-1 text-xs">
-                    {CLAUDE_CODE_COMMANDS}
-                  </pre>
-                  {copyButton(
-                    "commands",
-                    CLAUDE_CODE_COMMANDS,
-                    t("settings.agent.copyCommands", {
-                      defaultValue: "Copy commands",
-                    }),
-                  )}
-                </div>
+                        {step(
+                          2,
+                          t("settings.agent.appRoute2", {
+                            defaultValue:
+                              "Click Add, then Add marketplace, then Add from a repository.",
+                          }),
+                        )}
+                        {step(
+                          3,
+                          <>
+                            <span>
+                              {t("settings.agent.appRoute3", {
+                                defaultValue: "Paste this, then click Sync:",
+                              })}
+                            </span>
+                            <code className="break-all rounded bg-muted px-2 py-1 text-xs">
+                              {CLAUDE_CODE_REPOSITORY}
+                            </code>
+                            {copyButton(
+                              "repo",
+                              CLAUDE_CODE_REPOSITORY,
+                              t("settings.agent.copyRepository", {
+                                defaultValue: "Copy repository name",
+                              }),
+                            )}
+                          </>,
+                        )}
+                        {step(
+                          4,
+                          t("settings.agent.appRoute4", {
+                            defaultValue:
+                              "Open Discover, find Vaulted Money and click the + button.",
+                          }),
+                        )}
+                      </ol>
+                    </div>
+                    <div className="space-y-2">
+                      <RouteHeading className="text-sm font-medium">
+                        {t("settings.agent.routeTerminal", {
+                          defaultValue: "In a terminal",
+                        })}
+                      </RouteHeading>
+                      <p className="text-xs text-muted-foreground">
+                        {t("settings.agent.codeNode", {
+                          defaultValue: "Needs Node 18 or newer.",
+                        })}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("settings.agent.terminalNote", {
+                          defaultValue:
+                            "Paste this into a normal terminal, not into Claude Code.",
+                        })}
+                      </p>
+                      <pre className="whitespace-pre-wrap break-all rounded bg-muted px-2 py-1 text-xs">
+                        {CLAUDE_CODE_COMMANDS}
+                      </pre>
+                      {copyButton(
+                        "commands",
+                        CLAUDE_CODE_COMMANDS,
+                        t("settings.agent.copyCommands", {
+                          defaultValue: "Copy commands",
+                        }),
+                      )}
+                    </div>
+                  </>,
+                )}
                 {privacyLine(
                   t("settings.agent.codePrivacy", {
                     defaultValue: "What Claude reads is sent to Anthropic.",
@@ -1030,28 +1106,39 @@ const ConnectToAgentPanel = ({
                     })}
                   </div>
                 )}
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    {t("settings.agent.codexConfigNote", {
-                      defaultValue: "Or add this to ~/.codex/config.toml",
-                    })}
-                  </p>
-                  <pre className="whitespace-pre-wrap break-all rounded bg-muted px-2 py-1 text-xs">
-                    {codexConfig}
-                  </pre>
-                  {copyButton(
-                    "codexConfig",
-                    codexConfig,
-                    t("settings.agent.copyConfig", {
-                      defaultValue: "Copy config",
-                    }),
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {t("settings.agent.nodeNote", {
-                      defaultValue: "Requires Node 18 or newer.",
-                    })}
-                  </p>
-                </div>
+                {instructions(
+                  codexFound
+                    ? t("settings.agent.doItYourself", {
+                        defaultValue: "Or do it yourself",
+                      })
+                    : t("settings.agent.followSteps", {
+                        defaultValue: "Follow these steps",
+                      }),
+                  <>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        {t("settings.agent.codexConfigNote", {
+                          defaultValue: "Or add this to ~/.codex/config.toml",
+                        })}
+                      </p>
+                      <pre className="whitespace-pre-wrap break-all rounded bg-muted px-2 py-1 text-xs">
+                        {codexConfig}
+                      </pre>
+                      {copyButton(
+                        "codexConfig",
+                        codexConfig,
+                        t("settings.agent.copyConfig", {
+                          defaultValue: "Copy config",
+                        }),
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {t("settings.agent.nodeNote", {
+                          defaultValue: "Requires Node 18 or newer.",
+                        })}
+                      </p>
+                    </div>
+                  </>,
+                )}
                 {privacyLine(
                   t("settings.agent.codexPrivacy", {
                     defaultValue: "What Codex reads is sent to OpenAI.",

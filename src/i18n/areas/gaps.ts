@@ -301,8 +301,7 @@ export const gaps: AreaTranslations = {
         },
         bulkCategorization: {
           title: "மொத்த வகைப்படுத்தல்",
-          description:
-            "{{count}} பரிவர்த்தனைகள் வெற்றிகரமாக வகைப்படுத்தப்பட்டன.",
+          description: "{{count}} பரிவர்த்தனைகள் வெற்றிகரமாக வகைப்படுத்தப்பட்டன.",
         },
         noChanges: {
           title: "மாற்றங்கள் இல்லை",
@@ -311,8 +310,7 @@ export const gaps: AreaTranslations = {
         },
         categorizationFailed: {
           title: "வகைப்படுத்தல் தோல்வியடைந்தது",
-          apiKeyHint:
-            "உங்கள் API விசை அல்லது எண்ட்பாயிண்ட் உள்ளமைவைச் சரிபார்க்கவும்.",
+          apiKeyHint: "உங்கள் API விசை அல்லது எண்ட்பாயிண்ட் உள்ளமைவைச் சரிபார்க்கவும்.",
           genericHint: "வகைப்படுத்தும்போது எதிர்பாராத பிழை ஏற்பட்டது.",
         },
         unlinked: {

@@ -24,8 +24,7 @@ export const searchSuggestions: AreaTranslations = {
         clear: "Clear",
         done: "Done",
         suggest: {
-          combineHint:
-            "Results must match every filter you pick. Several of the same kind (two payees) match either.",
+          allMustMatch: "all filters must match",
           heading: "Understood as",
           amountExact: "Amount: {{amount}}",
           applyAll: "Apply all {{count}}",
@@ -69,8 +68,7 @@ export const searchSuggestions: AreaTranslations = {
         clear: "Borrar",
         done: "Listo",
         suggest: {
-          combineHint:
-            "Los resultados deben cumplir todos los filtros que elijas. Varios del mismo tipo (dos beneficiarios) cumplen cualquiera.",
+          allMustMatch: "deben cumplirse todos los filtros",
           heading: "Entendido como",
           amountExact: "Importe: {{amount}}",
           applyAll: "Aplicar los {{count}}",
@@ -114,8 +112,7 @@ export const searchSuggestions: AreaTranslations = {
         clear: "清除",
         done: "完成",
         suggest: {
-          combineHint:
-            "结果必须符合你选择的每个筛选条件。同一类型的多个条件（例如两个收款方）满足其一即可。",
+          allMustMatch: "须满足所有筛选条件",
           heading: "理解为",
           amountExact: "金额：{{amount}}",
           applyAll: "全部应用（{{count}}）",
@@ -159,8 +156,7 @@ export const searchSuggestions: AreaTranslations = {
         clear: "Wissen",
         done: "Klaar",
         suggest: {
-          combineHint:
-            "Resultaten moeten aan elk gekozen filter voldoen. Meerdere van dezelfde soort (twee begunstigden) voldoen aan een van beide.",
+          allMustMatch: "alle filters moeten kloppen",
           heading: "Opgevat als",
           amountExact: "Bedrag: {{amount}}",
           applyAll: "Alle {{count}} toepassen",
@@ -204,8 +200,7 @@ export const searchSuggestions: AreaTranslations = {
         clear: "அழி",
         done: "முடிந்தது",
         suggest: {
-          combineHint:
-            "நீங்கள் தேர்ந்தெடுக்கும் ஒவ்வொரு வடிகட்டியுடனும் முடிவுகள் பொருந்த வேண்டும். ஒரே வகையில் பல (இரு பெறுநர்கள்) இருந்தால் ஏதேனும் ஒன்று போதும்.",
+          allMustMatch: "எல்லா வடிப்பான்களும் பொருந்த வேண்டும்",
           heading: "புரிந்துகொண்டது",
           amountExact: "தொகை: {{amount}}",
           applyAll: "அனைத்தும் பயன்படுத்து ({{count}})",

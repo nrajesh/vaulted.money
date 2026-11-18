@@ -1,0 +1,301 @@
+/* One store image. The page script sets --w/--h (the output size in px) and
+   --u (one "design unit": 1/220 of a portrait image's width, the scale the
+   approved mockup was drawn at). Every size below is a multiple of --u. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+}
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter,
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.slide {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+}
+
+/* Pages: the app's own dark brand and light theme */
+.slide.dark {
+  background: radial-gradient(
+    120% 70% at 50% 100%,
+    #0f4c5c 0%,
+    #0b2140 55%,
+    #070f1f 100%
+  );
+  color: #fff;
+}
+.slide.light {
+  background: radial-gradient(
+    120% 70% at 50% 100%,
+    hsl(32 83% 88%) 0%,
+    hsl(210 40% 96.1%) 55%,
+    #fff 100%
+  );
+  color: hsl(222.2 84% 4.9%);
+}
+.dark em {
+  background-image: linear-gradient(90deg, hsl(183 51% 74%), hsl(187 55% 61%));
+}
+.light em {
+  background-image: linear-gradient(90deg, hsl(27 72% 58%), hsl(20 73% 52%));
+}
+em {
+  font-style: normal;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Caption */
+.cap {
+  position: absolute;
+  left: calc(var(--u) * 18);
+  right: calc(var(--u) * 18);
+  top: calc(var(--u) * 24);
+  z-index: 3;
+}
+.cap h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.cap .sub {
+  margin-top: calc(var(--u) * 8);
+  font-size: calc(var(--u) * 12);
+  font-weight: 700;
+  text-wrap: balance;
+}
+.dark .cap .sub {
+  color: hsl(183 51% 74%);
+}
+.light .cap .sub {
+  color: hsl(20 73% 50%);
+}
+.cap p {
+  margin-top: calc(var(--u) * 6);
+  font-size: calc(var(--u) * 10.5);
+  line-height: 1.35;
+  text-wrap: balance;
+}
+.dark .cap p {
+  color: #a9c4d6;
+}
+.light .cap p {
+  color: hsl(215.4 16.3% 40%);
+}
+
+.callouts {
+  list-style: none;
+  margin-top: calc(var(--u) * 9);
+  display: grid;
+  gap: calc(var(--u) * 6);
+}
+.callouts li {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 7);
+  width: fit-content;
+  max-width: 100%;
+  font-size: calc(var(--u) * 8.5);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  padding: calc(var(--u) * 5) calc(var(--u) * 8);
+  border-radius: calc(var(--u) * 9);
+  background: rgba(255, 255, 255, 0.78);
+  border: calc(var(--u) * 0.6) solid hsl(32 70% 80%);
+  color: hsl(222.2 47% 18%);
+  box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 12) rgba(15, 23, 42, 0.06);
+}
+.dark .callouts li {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(127, 227, 216, 0.4);
+  color: #e6f4f6;
+}
+.callouts .ic {
+  flex: none;
+  width: calc(var(--u) * 15);
+  height: calc(var(--u) * 15);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, hsl(27 72% 58%), hsl(20 73% 52%));
+}
+.callouts svg {
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+}
+
+/* Devices */
+.device {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  border-radius: calc(var(--u) * 26);
+  padding: calc(var(--u) * 6);
+}
+.device.dark {
+  background: #05080f;
+  box-shadow:
+    0 0 0 calc(var(--u) * 1) #2a3b52,
+    0 calc(var(--u) * 20) calc(var(--u) * 50) rgba(79, 179, 217, 0.35);
+}
+.device.light {
+  background: #e9eef3;
+  box-shadow:
+    0 0 0 calc(var(--u) * 1) #c9d4de,
+    0 calc(var(--u) * 20) calc(var(--u) * 50) rgba(127, 227, 216, 0.3);
+}
+.light-page .device.dark {
+  box-shadow:
+    0 0 0 calc(var(--u) * 1) hsl(214.3 31.8% 85%),
+    0 calc(var(--u) * 24) calc(var(--u) * 50) rgba(15, 23, 42, 0.3);
+}
+.device .screen {
+  border-radius: calc(var(--u) * 20);
+  overflow: hidden;
+}
+.device.tablet {
+  border-radius: calc(var(--u) * 22);
+  padding: calc(var(--u) * 8);
+}
+.device.tablet .screen {
+  border-radius: calc(var(--u) * 14);
+}
+.device.window {
+  border-radius: calc(var(--u) * 10);
+  padding: 0;
+  overflow: hidden;
+}
+.device.window .screen {
+  border-radius: 0;
+}
+.titlebar {
+  height: calc(var(--u) * 14);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 4);
+  padding-left: calc(var(--u) * 8);
+}
+.device.dark .titlebar {
+  background: #1b2433;
+}
+.device.light .titlebar {
+  background: #eceff3;
+}
+.titlebar i {
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 5);
+  border-radius: 50%;
+  display: block;
+}
+.titlebar i:nth-child(1) {
+  background: #ff5f57;
+}
+.titlebar i:nth-child(2) {
+  background: #febc2e;
+}
+.titlebar i:nth-child(3) {
+  background: #28c840;
+}
+.device img {
+  display: block;
+  width: 100%;
+}
+
+/* Status bar: 9:41, 5G and a small battery */
+.sb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--u) * 14);
+  font-weight: 600;
+}
+.sb.dark {
+  background: #0f172a;
+  color: #fff;
+}
+.sb.light {
+  background: #fff;
+  color: #0f172a;
+}
+.sb .right {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 4);
+}
+.sb b {
+  font-weight: 700;
+}
+.bat {
+  position: relative;
+  width: calc(var(--u) * 11);
+  height: calc(var(--u) * 5.5);
+  border: calc(var(--u) * 0.9) solid currentColor;
+  border-radius: calc(var(--u) * 1.6);
+  padding: calc(var(--u) * 0.6);
+}
+.bat span {
+  display: block;
+  width: 80%;
+  height: 100%;
+  background: currentColor;
+  border-radius: calc(var(--u) * 0.8);
+}
+.bat::after {
+  content: "";
+  position: absolute;
+  right: calc(var(--u) * -2.4);
+  top: 28%;
+  width: calc(var(--u) * 1.2);
+  height: 44%;
+  background: currentColor;
+  border-radius: 0 calc(var(--u) * 1) calc(var(--u) * 1) 0;
+}
+
+/* Shot 1 face-off: both phones turned toward the centre */
+.slide.pair {
+  perspective: calc(var(--u) * 700);
+}
+.device.faceLeft {
+  transform-origin: right center;
+}
+.device.faceRight {
+  transform-origin: left center;
+}
+.slide.pair::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: calc(var(--u) * 2);
+  height: calc(var(--u) * 120);
+  transform: translateX(-50%);
+  background: linear-gradient(
+    transparent,
+    rgba(127, 227, 216, 0.7),
+    transparent
+  );
+  filter: blur(calc(var(--u) * 1));
+}
+
+/* Feature graphic */
+.feature .icon {
+  position: absolute;
+  border-radius: 22%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}

@@ -546,7 +546,7 @@ const Layout = () => {
           isHomepageMobilePreview && "h-screen overflow-hidden",
         )}
       >
-        <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-[16px] pt-[env(safe-area-inset-top)] sm:px-6 md:sticky md:top-0">
+        <header className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background pl-[calc(16px+var(--safe-area-left))] pr-[calc(16px+var(--safe-area-right))] pt-[env(safe-area-inset-top)] sm:pl-[calc(1.5rem+var(--safe-area-left))] sm:pr-[calc(1.5rem+var(--safe-area-right))] md:sticky md:top-0 md:px-6">
           {/* On phones the round icon buttons keep a fixed 40px size (48px
               tap area) instead of growing with the text-size setting, so the
               name beside them has room at Large and Larger text. */}
@@ -702,7 +702,7 @@ const Layout = () => {
             <Button
               onClick={() => setIsAddDialogOpen(true)}
               className={cn(
-                "fixed right-4 z-50 h-12 w-12 rounded-full px-0 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white sm:right-6 sm:h-14 sm:w-14 md:bottom-6",
+                "fixed right-[calc(1rem+var(--safe-area-right))] z-50 h-12 w-12 rounded-full px-0 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white sm:right-[calc(1.5rem+var(--safe-area-right))] sm:h-14 sm:w-14 md:bottom-6",
                 // Clear the tab bar on phones; the homepage preview has none.
                 isHomepageMobilePreview
                   ? "bottom-[calc(1rem+env(safe-area-inset-bottom))]"

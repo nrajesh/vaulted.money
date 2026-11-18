@@ -567,7 +567,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "mortgage",
     account: CHECK,
-    vendor: "Sparkasse Mortgage",
+    vendor: "Stadtbank Mortgage",
     category: "Housing",
     subCategory: "Mortgage",
     amount: () => -1380,
@@ -590,8 +590,10 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
               Math.floor((d.getTime() - start.getTime()) / (365 * DAY_MS))),
       ),
     frequency: "Monthly",
-    from: addMonthsClamped(start, 0, 25),
-    dayOfMonth: 25,
+    // Paid early in the month, so the month in view has income to set
+    // against its spending whatever day the demo is opened.
+    from: addMonthsClamped(start, 0, 1),
+    dayOfMonth: 1,
     remarks: "Salary – net (+ meal vouchers)",
   });
   sim.recurring({
@@ -608,8 +610,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
               Math.floor((d.getTime() - start.getTime()) / (365 * DAY_MS))),
       ),
     frequency: "Monthly",
-    from: addMonthsClamped(start, 0, 28),
-    dayOfMonth: 28,
+    from: addMonthsClamped(start, 0, 3),
+    dayOfMonth: 3,
     remarks: "Partner salary – net",
   });
   sim.recurring({
@@ -661,31 +663,31 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "netflix",
     account: CARD,
-    vendor: "Netflix",
+    vendor: "Streamly",
     category: "Entertainment",
     subCategory: "Streaming",
     amount: (d) => -(d < addMonthsClamped(now, -24) ? 11.99 : 13.99),
     frequency: "Monthly",
     from: addMonthsClamped(start, 2, 12),
     dayOfMonth: 12,
-    remarks: "Netflix – premium plan",
+    remarks: "Streamly – premium plan",
   });
   sim.recurring({
     key: "spotify",
     account: CARD,
-    vendor: "Spotify",
+    vendor: "Tunely",
     category: "Entertainment",
     subCategory: "Streaming",
     amount: () => -16.99,
     frequency: "Monthly",
     from: addMonthsClamped(start, 6, 3),
     dayOfMonth: 3,
-    remarks: "Spotify Family 🎧",
+    remarks: "Tunely Family 🎧",
   });
   sim.recurring({
     key: "gym",
     account: CARD,
-    vendor: "FitnessFirst",
+    vendor: "FitLab Gym",
     category: "Health",
     subCategory: "Gym",
     amount: () => -29.9,
@@ -698,7 +700,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "internet",
     account: CHECK,
-    vendor: "Telekom",
+    vendor: "TeleNord",
     category: "Utilities",
     subCategory: "Internet",
     amount: (d) => -round2(34.95 * (d < addMonthsClamped(now, -30) ? 1 : 1.2)),
@@ -710,7 +712,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "phone",
     account: CHECK,
-    vendor: "Vodafone",
+    vendor: "Volta Mobile",
     category: "Utilities",
     subCategory: "Phone",
     amount: () => -24.99,
@@ -722,7 +724,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "electricity",
     account: CHECK,
-    vendor: "Vattenfall",
+    vendor: "Nordlicht Energy",
     category: "Utilities",
     subCategory: "Electricity",
     amount: (d) => -round2(72 * winter(d.getMonth()) * sim.inflation(d)),
@@ -769,7 +771,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "car-insurance",
     account: CHECK,
-    vendor: "HUK-Coburg",
+    vendor: "Hanse Car Insurance",
     category: "Transport",
     subCategory: "Car Insurance",
     amount: (d) => -round2(612 * sim.inflation(d)),
@@ -780,7 +782,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "home-insurance",
     account: CHECK,
-    vendor: "Allianz",
+    vendor: "Allegra Insurance",
     category: "Housing",
     subCategory: "Insurance",
     amount: () => -184,
@@ -821,11 +823,11 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 115,
       pay: payMix.card,
       vendors: [
-        ["Lidl", 6],
-        ["Aldi", 4],
-        ["ALDI", 0.3],
-        ["REWE", 5],
-        ["Edeka", 3],
+        ["Lindenhof Market", 6],
+        ["Albrecht Foods", 4],
+        ["ALBRECHT FOODS", 0.3],
+        ["Rhein Grocer", 5],
+        ["Eichen Markt", 3],
       ],
       remarks: [
         "Weekly shop",
@@ -861,7 +863,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 25,
       max: 70,
       pay: payMix.card,
-      vendors: [["Bio Company", 1]],
+      vendors: [["Green Basket Organic", 1]],
       remarks: ["Organic veg & fruit 🥦🍎"],
       remarkRate: 0.5,
     },
@@ -900,8 +902,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       vendors: [
         ["Café Roma", 5],
         ["Cafe Roma", 0.4],
-        ["Starbucks", 3],
-        ["Blue Bottle Coffee", 2],
+        ["Corner Roast Coffee", 3],
+        ["Blue Kettle Coffee", 2],
       ],
       remarks: ["Flat white ☕", "Oat latte + croissant"],
       remarkRate: 0.15,
@@ -915,11 +917,11 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 38,
       pay: payMix.card,
       vendors: [
-        ["Wolt", 4],
-        ["Deliveroo", 3],
-        ["McDonald's", 2],
-        ["McDonalds", 0.3],
-        ["Pizza Express", 2],
+        ["Swiftbite", 4],
+        ["DashDine", 3],
+        ["Mac's Burgers", 2],
+        ["Macs Burgers", 0.3],
+        ["Pizza Corner", 2],
       ],
       remarks: ["Friday movie night 🍕", "Late-night burger 🍔"],
       remarkRate: 0.25,
@@ -948,9 +950,9 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 82,
       pay: payMix.cardHeavy,
       vendors: [
-        ["Shell", 4],
-        ["Aral", 3],
-        ["TotalEnergies", 2],
+        ["Northstar Fuel", 4],
+        ["Autobahn Fuel", 3],
+        ["Horizon Fuel", 2],
       ],
       remarks: [
         "Full tank ⛽ 42.3 L @ 1.79 €/L",
@@ -967,7 +969,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       pay: payMix.cashy,
       vendors: [
         ["City Transit", 4],
-        ["Deutsche Bahn", 2],
+        ["RailNord", 2],
       ],
       remarks: ["Day ticket", "Train to Hamburg 🚆"],
       remarkRate: 0.2,
@@ -980,7 +982,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 18,
       pay: payMix.cashy,
       vendors: [
-        ["ParkNow", 3],
+        ["ParkEasy", 3],
         ["City Garage", 1],
       ],
       remarks: ["Airport P3 – 2 days"],
@@ -994,8 +996,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 48,
       pay: payMix.card,
       vendors: [
-        ["Uber", 3],
-        ["FreeNow", 2],
+        ["RideNow", 3],
+        ["CityCab", 2],
       ],
       remarks: ["Late taxi home 🌙"],
       remarkRate: 0.4,
@@ -1009,7 +1011,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       pay: payMix.card,
       vendors: [
         ["AutoFix Garage", 3],
-        ["TÜV Nord", 1],
+        ["Vehicle Inspection Nord", 1],
       ],
       remarks: ["Annual inspection + new tyres", "Brake pads (front) & fluid"],
       remarkRate: 0.8,
@@ -1023,7 +1025,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       pay: payMix.card,
       vendors: [
         ["Apotheke am Markt", 3],
-        ["Rossmann", 1],
+        ["DrogeriePlus", 1],
       ],
       remarks: ["Rx #A-2041 – amoxicillin 500 mg", "Cold & flu pack 🤧"],
       remarkRate: 0.35,
@@ -1048,8 +1050,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 32,
       pay: payMix.card,
       vendors: [
-        ["Cinemaxx", 3],
-        ["Kino Babylon", 1],
+        ["Starlight Cinema", 3],
+        ["Kino Lumière", 1],
       ],
       remarks: ["Dune: Part Two – IMAX 🎬"],
       remarkRate: 0.25,
@@ -1063,9 +1065,9 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 70,
       pay: payMix.card,
       vendors: [
-        ["Steam", 3],
-        ["PlayStation Store", 2],
-        ["Nintendo eShop", 1],
+        ["GameShelf", 3],
+        ["GameVault Store", 2],
+        ["PixelPlay Store", 1],
       ],
       remarks: ["Summer sale 🎮 (-60%)"],
       remarkRate: 0.3,
@@ -1079,8 +1081,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 190,
       pay: payMix.card,
       vendors: [
-        ["Ticketmaster", 2],
-        ["Eventim", 2],
+        ["TicketBay", 2],
+        ["TixHall", 2],
       ],
       remarks: ["Front row 🎸 – 2 tickets (+ €6.50 fee)"],
       remarkRate: 0.7,
@@ -1093,8 +1095,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 28,
       pay: payMix.card,
       vendors: [
-        ["Thalia", 3],
-        ["Amazon Kindle", 3],
+        ["Seitenblick Books", 3],
+        ["Amberline Books", 3],
       ],
       remarks: ["Book club pick 📚"],
       remarkRate: 0.2,
@@ -1107,10 +1109,10 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 140,
       pay: payMix.cardHeavy,
       vendors: [
-        ["Zara", 3],
-        ["H&M", 3],
-        ["Uniqlo", 2],
-        ["Decathlon", 2],
+        ["Zelia", 3],
+        ["Hanne & Moss", 3],
+        ["Basics & Co.", 2],
+        ["SportHaus", 2],
       ],
       remarks: ["-30% sale 👟", "Winter jacket – size M"],
       remarkRate: 0.3,
@@ -1124,9 +1126,9 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 160,
       pay: payMix.card,
       vendors: [
-        ["IKEA", 4],
-        ["OBI", 2],
-        ["Hornbach", 2],
+        ["Nordhem Home", 4],
+        ["Bauhof DIY", 2],
+        ["Werkhof DIY", 2],
       ],
       remarks: ["Shelf & brackets – “KALLAX”", "Paint 5 L + brushes"],
       remarkRate: 0.4,
@@ -1139,10 +1141,10 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 85,
       pay: payMix.cardHeavy,
       vendors: [
-        ["Amazon", 6],
-        ["AMAZON", 0.4],
-        ["Zalando", 3],
-        ["eBay", 1],
+        ["Amberline", 6],
+        ["AMBERLINE", 0.4],
+        ["Modehaus Online", 3],
+        ["BidBazaar", 1],
       ],
       remarks: [
         "@home office desk accessories",
@@ -1159,8 +1161,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 90,
       pay: payMix.card,
       vendors: [
-        ["Etsy", 2],
-        ["Hallmark Cards", 1],
+        ["Craftly", 2],
+        ["Paper & Ribbon Cards", 1],
       ],
       remarks: ["Gift for Mum 🎁", "Wedding present – registry"],
       remarkRate: 0.6,
@@ -1173,7 +1175,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 14,
       max: 55,
       pay: payMix.card,
-      vendors: [["Fressnapf", 1]],
+      vendors: [["PetPantry", 1]],
       remarks: ["Biscuit's grain-free food 🐶"],
       remarkRate: 0.3,
     },
@@ -1210,8 +1212,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 60,
       pay: payMix.card,
       vendors: [
-        ["Douglas", 2],
-        ["Rossmann", 3],
+        ["Parfumerie Belle", 2],
+        ["DrogeriePlus", 3],
       ],
       remarks: ["Sunscreen SPF 50+"],
       remarkRate: 0.2,
@@ -1238,7 +1240,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 10,
       max: 95,
       pay: payMix.card,
-      vendors: [["Garden Centre Dehner", 1]],
+      vendors: [["Garden Centre Greenleaf", 1]],
       remarks: ["Tomato plants 🍅 & compost"],
       remarkRate: 0.4,
       seasonal: (m) => (m >= 3 && m <= 8 ? 2.2 : 0.1),
@@ -1251,8 +1253,8 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 180,
       pay: payMix.card,
       vendors: [
-        ["Udemy", 3],
-        ["Coursera", 2],
+        ["SkillPath", 3],
+        ["LearnLoop", 2],
         ["Volkshochschule", 1],
       ],
       remarks: ["Spanish A2 – evening class 🇪🇸", "Python for data analysis"],
@@ -1266,9 +1268,9 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 60,
       pay: payMix.card,
       vendors: [
-        ["Red Cross", 2],
-        ["WWF", 2],
-        ["Doctors Without Borders", 1],
+        ["Relief Fund", 2],
+        ["Wildlife Trust", 2],
+        ["Health Aid Fund", 1],
       ],
       remarks: ["Monthly donation ❤️", "Emergency appeal"],
       remarkRate: 0.6,
@@ -1281,7 +1283,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 1.5,
       max: 9,
       pay: payMix.checking,
-      vendors: [["Sparkasse", 1]],
+      vendors: [["Stadtbank", 1]],
       remarks: ["Account fee – quarterly", "Overdraft interest"],
       remarkRate: 0.5,
     },
@@ -1293,7 +1295,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       sim.add(
         d,
         SAVE,
-        "Sparkasse",
+        "Stadtbank",
         "Income",
         "Interest",
         sim.between(4, 16),
@@ -1427,7 +1429,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       "Transport",
       "Public Transport",
       -sim.between(12, 28),
-      "Oyster top-up",
+      "Transit card top-up",
     );
   }
   // One big-ticket purchase and its (cross-account) refund that is NOT a transfer.
@@ -1435,17 +1437,17 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.add(
     laptopDay,
     CARD,
-    "Apple Store",
+    "Electronics Store",
     "Shopping",
     "Electronics",
     -1649,
-    "MacBook Air 13″ M3 💻 (warranty #AC+)",
+    "Laptop Air 13″ 💻 (extended warranty)",
   );
   const jacket = addMonthsClamped(now, -3, 18);
   sim.add(
     jacket,
     CARD,
-    "Zalando",
+    "Modehaus Online",
     "Shopping",
     "Clothing",
     -59.99,
@@ -1454,7 +1456,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.add(
     addDays(jacket, 1),
     CHECK,
-    "Zalando",
+    "Modehaus Online",
     "Income",
     "Refund",
     59.99,
@@ -1463,7 +1465,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.add(
     addMonthsClamped(now, -2, 6),
     CARD,
-    "Amazon",
+    "Amberline",
     "Shopping",
     "Online",
     24.5,
@@ -1476,7 +1478,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
     sim.add(
       day,
       CARD,
-      "Lidl",
+      "Lindenhof Market",
       "Uncategorized",
       null,
       -sim.between(14, 60),
@@ -1488,11 +1490,11 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.add(
     addMonthsClamped(now, -4, 12),
     CARD,
-    "Netflix",
+    "Streamly",
     "Entertainment",
     "Streaming",
     -13.99,
-    "Netflix – premium plan",
+    "Streamly – premium plan",
     { is_scheduled_origin: true, scheduleKey: "netflix" },
   );
 
@@ -1619,9 +1621,9 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       is_active: true,
     },
     {
-      category_name: "Amazon",
+      category_name: "Amberline",
       budget_scope: "vendor",
-      budget_scope_name: "Amazon",
+      budget_scope_name: "Amberline",
       target_amount: 120,
       currency: "EUR",
       start_date: monthStart,
@@ -1770,14 +1772,14 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "music",
     account: ALLOW,
-    vendor: "Spotify",
+    vendor: "Tunely",
     category: "Entertainment",
     subCategory: "Streaming",
     amount: () => -5.99,
     frequency: "Monthly",
     from: addMonthsClamped(start, 4, 9),
     dayOfMonth: 9,
-    remarks: "Spotify Student/Kids plan",
+    remarks: "Tunely Student/Kids plan",
   });
   sim.recurring({
     key: "piggy",
@@ -1819,9 +1821,9 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 20,
       pay: [[ALLOW, 1]],
       vendors: [
-        ["Steam", 2],
-        ["Nintendo eShop", 2],
-        ["Roblox", 2],
+        ["GameShelf", 2],
+        ["PixelPlay Store", 2],
+        ["BlockWorld", 2],
       ],
       remarks: ["Robux 💎 (ask first!)", "Minecraft skin pack"],
       remarkRate: 0.5,
@@ -1833,7 +1835,7 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 6,
       max: 14,
       pay: [[ALLOW, 1]],
-      vendors: [["Cinemaxx", 1]],
+      vendors: [["Starlight Cinema", 1]],
       remarks: ["Birthday party – Spider-Man 🕷️"],
       remarkRate: 0.4,
       weekday: weekend,
@@ -1849,7 +1851,7 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
         [POCKET, 1],
       ],
       vendors: [
-        ["Thalia", 2],
+        ["Seitenblick Books", 2],
         ["School Book Fair", 1],
       ],
       remarks: ["Comic: Asterix & Obelix 📖"],
@@ -1875,7 +1877,7 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       max: 38,
       pay: [[ALLOW, 1]],
       vendors: [
-        ["Decathlon", 2],
+        ["SportHaus", 2],
         ["Football Club FC Nord", 1],
       ],
       remarks: ["Football boots ⚽ – size 36", "Club fee (+ jersey)"],
@@ -1888,7 +1890,7 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 5,
       max: 25,
       pay: [[ALLOW, 1]],
-      vendors: [["Flying Tiger", 1]],
+      vendors: [["Blue Tiger Gifts", 1]],
       remarks: ["Present for Mia's birthday 🎁"],
       remarkRate: 0.8,
     },
@@ -1980,9 +1982,9 @@ const buildChild = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
         is_active: true,
       },
       {
-        category_name: "Steam",
+        category_name: "GameShelf",
         budget_scope: "vendor",
-        budget_scope_name: "Steam",
+        budget_scope_name: "GameShelf",
         target_amount: 15,
         currency: "EUR",
         start_date: monthStart,
@@ -2170,7 +2172,7 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "fd-interest",
     account: OSAVE,
-    vendor: "HDFC Bank",
+    vendor: "Konkan Bank",
     category: "Income",
     subCategory: "Interest",
     amount: (d) =>
@@ -2190,7 +2192,7 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       pay: [[FLAT, 1]],
       vendors: [
         ["Local Contractor – Mr. Shah", 2],
-        ["Urban Company", 1],
+        ["HomeHelp Services", 1],
       ],
       remarks: ["Leaking tap 🚰 + new washer", "Repaint after tenant left 🎨"],
       remarkRate: 0.9,
@@ -2202,7 +2204,7 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 900,
       max: 3100,
       pay: [[FLAT, 1]],
-      vendors: [["Adani Electricity", 1]],
+      vendors: [["Coastal Power Co.", 1]],
       remarks: ["Common area – summer AC load"],
       remarkRate: 0.2,
       seasonal: (m) => (m >= 3 && m <= 5 ? 1.8 : 1),
@@ -2214,7 +2216,7 @@ const buildOffshore = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       min: 25,
       max: 240,
       pay: [[FLAT, 1]],
-      vendors: [["HDFC Bank", 1]],
+      vendors: [["Konkan Bank", 1]],
       remarks: ["NEFT charges + GST 18%"],
       remarkRate: 0.5,
     },
@@ -2453,7 +2455,7 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "cowork",
     account: CARD,
-    vendor: "WeWork Hot Desk",
+    vendor: "CoDesk Hot Desk",
     category: "Office",
     subCategory: "Coworking",
     amount: () => -290,
@@ -2463,10 +2465,10 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
     remarks: "Hot desk – 1 seat",
   });
   for (const [key, vendor, price] of [
-    ["figma", "Figma", 15],
-    ["adobe", "Adobe Creative Cloud", 59.99],
-    ["github", "GitHub", 4],
-    ["notion", "Notion", 10],
+    ["figma", "Framewise", 15],
+    ["adobe", "Pixelforge Studio Suite", 59.99],
+    ["github", "CodeHarbor", 4],
+    ["notion", "Notebox", 10],
   ] as const) {
     sim.recurring({
       key,
@@ -2512,7 +2514,7 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "liability",
     account: BANK,
-    vendor: "Hiscox",
+    vendor: "Harbour Business Insurance",
     category: "Insurance",
     subCategory: "Liability",
     amount: () => -612,
@@ -2523,7 +2525,7 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.recurring({
     key: "old-tool",
     account: CARD,
-    vendor: "Sketch",
+    vendor: "Vectorly",
     category: "Software",
     subCategory: "Subscriptions",
     amount: () => -12,
@@ -2531,7 +2533,7 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
     from: addMonthsClamped(start, 0, 9),
     endDate: addMonthsClamped(now, -15),
     dayOfMonth: 9,
-    remarks: "Sketch (replaced by Figma)",
+    remarks: "Vectorly (replaced by Framewise)",
   });
 
   // Irregular client invoices: net-30, sometimes late, numbered per year.
@@ -2561,7 +2563,7 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       sim.add(
         d,
         CARD,
-        sim.pick(["Starbucks", "Panera Bread", "Joe & The Juice"]),
+        sim.pick(["Corner Roast Coffee", "Panera Bread", "Joe & The Juice"]),
         "Meals",
         "Working Lunch",
         -sim.between(9, 24),
@@ -2606,11 +2608,11 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.add(
     addMonthsClamped(now, -19, 11),
     CARD,
-    "Apple Store",
+    "Electronics Store",
     "Equipment",
     "Computers",
     -2899,
-    "MacBook Pro 14″ (Section 179 deduction 🧾)",
+    "Laptop Pro 14″ (Section 179 deduction 🧾)",
   );
   sim.add(
     addMonthsClamped(now, -9, 17),
@@ -2624,7 +2626,7 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   sim.add(
     addMonthsClamped(now, -5, 4),
     CARD,
-    "Adobe Creative Cloud",
+    "Pixelforge Studio Suite",
     "Software",
     "Subscriptions",
     59.99,
@@ -2728,9 +2730,9 @@ const buildStudio = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
         is_active: true,
       },
       {
-        category_name: "WeWork Hot Desk",
+        category_name: "CoDesk Hot Desk",
         budget_scope: "vendor",
-        budget_scope_name: "WeWork Hot Desk",
+        budget_scope_name: "CoDesk Hot Desk",
         target_amount: 300,
         currency: "USD",
         start_date: monthStart,

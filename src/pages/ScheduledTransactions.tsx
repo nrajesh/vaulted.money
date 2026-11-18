@@ -1,3 +1,4 @@
+import { isScheduleActive } from "@/utils/runway";
 import * as React from "react";
 import { PageActionBar } from "@/components/layout/PageActionBar";
 import { FeatureHint } from "@/components/help/FeatureHint";
@@ -127,9 +128,15 @@ const ScheduledTransactionsPage = () => {
     });
 
     // Sorting
-    result.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-    );
+    // What is still coming first, soonest at the top; schedules that have
+    // ended go to the bottom instead of leading the list with old dates.
+    const today = new Date();
+    result.sort((a, b) => {
+      const ended =
+        Number(!isScheduleActive(a.end_date, today)) -
+        Number(!isScheduleActive(b.end_date, today));
+      return ended || new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
 
     return result;
   }, [
@@ -310,7 +317,7 @@ const ScheduledTransactionsPage = () => {
               </h1>
               <FeatureHint id="scheduled" />
             </div>
-            <p className="app-page-subtitle">
+            <p className="app-page-about">
               {t("pages.scheduled.subtitle", {
                 defaultValue: "Bills, paydays, and transfers that repeat.",
               })}

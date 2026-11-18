@@ -2,8 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!--
+	Required-reason APIs used by plugins that ship no manifest of their own:
+	- @capacitor/filesystem reads file dates (ctime/mtime) of backups in the
+	  app container: C617.1.
+	- @capawesome/capacitor-file-picker reads the modified date of a file the
+	  user picked: 3B52.1.
+	Capacitor core ships its own manifest, so its APIs are not repeated here.
+	-->
 	<key>NSPrivacyAccessedAPITypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+				<string>3B52.1</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
 	<key>NSPrivacyTracking</key>

@@ -375,7 +375,7 @@ const ScheduledBackups = () => {
             <p className="mt-1 text-sm">
               {t("backup.unsupported.body", {
                 defaultValue:
-                  "Scheduled backups require the File System Access API (Chrome/Edge/Opera), the Desktop App, or a Native Mobile App.",
+                  "Scheduled backups need the desktop or mobile app, or Chrome, Edge or Opera.",
               })}
             </p>
           </div>
@@ -397,12 +397,7 @@ const ScheduledBackups = () => {
             })}
           </CardTitle>
           <CardDescription>
-            {t("backup.create.description", {
-              defaultValue:
-                "Automatically back up your data to a local folder.",
-            })}
-            <br />
-            <span className="text-muted-foreground font-medium flex items-center gap-1 mt-1">
+            <span className="text-muted-foreground font-medium flex items-center gap-1">
               <ShieldCheck className="h-4 w-4 text-green-700 dark:text-green-400" />
               {t("backup.create.runsInBackground", {
                 defaultValue:

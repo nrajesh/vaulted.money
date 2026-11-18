@@ -391,7 +391,7 @@ export const CurrencyConversionDialog: React.FC<
                         </span>
                         <Input
                           type="number"
-                          className="w-20 text-right h-8 text-sm"
+                          className="w-20 text-right h-8 text-base md:text-sm"
                           value={rateRelativeToSelected.toFixed(4)}
                           step="0.0001"
                           onChange={(e) => {

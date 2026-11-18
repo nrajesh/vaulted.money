@@ -8,6 +8,10 @@ import type { AreaTranslations } from "./types";
  */
 export const plainLanguage: AreaTranslations = {
   en: {
+    dashboard: {
+      overview: { net: "Net" },
+      runway: { perMonth: "+{{amount}} / month" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "e.g., Joint Checking, Savings, Visa Card",
@@ -95,7 +99,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Ask other AI apps about your money",
-        body: "In the Mac app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
+        body: "In the desktop app you can let Claude, ChatGPT and similar apps read and update your data. It stays off until you switch it on, and what they read goes to that app's maker.",
       },
     },
     help: {
@@ -136,13 +140,17 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "Models running on your own computer or home network, such as LM Studio or Ollama, work in the Mac app only.",
+          "Models running on your own computer or home network, such as LM Studio or Ollama, work in the desktop app only.",
         noLocalNetworkHere:
-          "A model on your own computer or home network works in the Mac app only.",
+          "A model on your own computer or home network works in the desktop app only.",
       },
     },
   },
   es: {
+    dashboard: {
+      overview: { net: "Neto" },
+      runway: { perMonth: "+{{amount}} / mes" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount:
@@ -231,7 +239,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Pregunta a otras apps de IA por tu dinero",
-        body: "En la app para Mac puedes dejar que Claude, ChatGPT y apps similares lean y actualicen tus datos. Está apagado hasta que lo actives, y lo que leen se envía a quien creó esa app.",
+        body: "En la app de escritorio puedes dejar que Claude, ChatGPT y apps similares lean y actualicen tus datos. Está apagado hasta que lo actives, y lo que leen se envía a quien creó esa app.",
       },
     },
     help: {
@@ -272,13 +280,17 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "Los modelos que se ejecutan en tu ordenador o en tu red doméstica, como LM Studio u Ollama, solo funcionan en la app para Mac.",
+          "Los modelos que se ejecutan en tu ordenador o en tu red doméstica, como LM Studio u Ollama, solo funcionan en la app de escritorio.",
         noLocalNetworkHere:
-          "Un modelo en tu ordenador o red doméstica solo funciona en la app para Mac.",
+          "Un modelo en tu ordenador o red doméstica solo funciona en la app de escritorio.",
       },
     },
   },
   zh: {
+    dashboard: {
+      overview: { net: "净额" },
+      runway: { perMonth: "+{{amount}} / 月" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "例如：联名支票账户、储蓄、Visa 卡",
@@ -365,7 +377,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "向其他 AI 应用询问你的财务",
-        body: "在 Mac 应用中，你可以让 Claude、ChatGPT 等应用读取和更新你的数据。开启前一直关闭，它们读取的内容会发送给该应用的开发方。",
+        body: "在桌面应用中，你可以让 Claude、ChatGPT 等应用读取和更新你的数据。开启前一直关闭，它们读取的内容会发送给该应用的开发方。",
       },
     },
     help: {
@@ -406,12 +418,16 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "在你自己的电脑或家庭网络上运行的模型（如 LM Studio 或 Ollama）仅在 Mac 应用中可用。",
-        noLocalNetworkHere: "你电脑或家庭网络上的模型仅在 Mac 应用中可用。",
+          "在你自己的电脑或家庭网络上运行的模型（如 LM Studio 或 Ollama）仅在桌面应用中可用。",
+        noLocalNetworkHere: "你电脑或家庭网络上的模型仅在桌面应用中可用。",
       },
     },
   },
   nl: {
+    dashboard: {
+      overview: { net: "Netto" },
+      runway: { perMonth: "+{{amount}} / maand" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount:
@@ -500,7 +516,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "Vraag andere AI-apps naar je geld",
-        body: "In de Mac-app kun je Claude, ChatGPT en vergelijkbare apps je gegevens laten lezen en bijwerken. Het staat uit tot je het aanzet, en wat ze lezen gaat naar de maker van die app.",
+        body: "In de desktop-app kun je Claude, ChatGPT en vergelijkbare apps je gegevens laten lezen en bijwerken. Het staat uit tot je het aanzet, en wat ze lezen gaat naar de maker van die app.",
       },
     },
     help: {
@@ -542,13 +558,17 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "Modellen op je eigen computer of thuisnetwerk, zoals LM Studio of Ollama, werken alleen in de Mac-app.",
+          "Modellen op je eigen computer of thuisnetwerk, zoals LM Studio of Ollama, werken alleen in de desktop-app.",
         noLocalNetworkHere:
-          "Een model op je eigen computer of thuisnetwerk werkt alleen in de Mac-app.",
+          "Een model op je eigen computer of thuisnetwerk werkt alleen in de desktop-app.",
       },
     },
   },
   ta: {
+    dashboard: {
+      overview: { net: "நிகரம்" },
+      runway: { perMonth: "+{{amount}} / மாதம்" },
+    },
     dialogs: {
       payee: {
         namePlaceholderAccount: "எ.கா., கூட்டுக் கணக்கு, சேமிப்பு, Visa அட்டை",
@@ -603,8 +623,7 @@ export const plainLanguage: AreaTranslations = {
       descriptions: {
         detectTransfers: "உங்கள் கணக்குகளுக்கு இடையிலான பணத்தை இணைக்கவும்",
         cleanupDuplicates: "இருமுறை பதிந்தவற்றைக் கண்டு நீக்கவும்",
-        categorizeMissing:
-          "AI வகைகளைப் பரிந்துரைக்கும் (பெறுநர் பெயர்கள் மட்டும்)",
+        categorizeMissing: "AI வகைகளைப் பரிந்துரைக்கும் (பெறுநர் பெயர்கள் மட்டும்)",
         importBankCsv: "உங்கள் வங்கியிலிருந்து எடுத்த கோப்பைச் சேர்க்கவும்",
         exportView: "காண்பதை CSV கோப்பாகச் சேமிக்கவும்",
         reconcile: "பயன்பாட்டு இருப்பை வங்கியுடன் பொருத்தவும்",
@@ -636,7 +655,7 @@ export const plainLanguage: AreaTranslations = {
       },
       connectApps: {
         title: "பிற AI பயன்பாடுகளிடம் உங்கள் பணம் பற்றிக் கேளுங்கள்",
-        body: "Mac பயன்பாட்டில் Claude, ChatGPT போன்றவை உங்கள் தரவைப் படிக்கவும் புதுப்பிக்கவும் அனுமதிக்கலாம். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்; அவை படிப்பது அந்தப் பயன்பாட்டை உருவாக்கியவருக்குச் செல்லும்.",
+        body: "கணினி பயன்பாட்டில் Claude, ChatGPT போன்றவை உங்கள் தரவைப் படிக்கவும் புதுப்பிக்கவும் அனுமதிக்கலாம். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்; அவை படிப்பது அந்தப் பயன்பாட்டை உருவாக்கியவருக்குச் செல்லும்.",
       },
     },
     help: {
@@ -668,8 +687,7 @@ export const plainLanguage: AreaTranslations = {
     aiConsent: {
       title: "பெறுநர் பெயர்களை {{provider}}-க்கு அனுப்பவா?",
       what: 'வகைகளைப் பரிந்துரைக்க, நீங்கள் வகைப்படுத்தும் பெறுநர் பெயர்களையும் (எ.கா. "Starbucks") உங்கள் வகைப் பெயர்களையும் Vaulted Money {{provider}}-க்கு அனுப்பும்.',
-      notSent:
-        "தொகைகள், தேதிகள், கணக்குகள், குறிப்புகள் ஒருபோதும் அனுப்பப்படாது.",
+      notSent: "தொகைகள், தேதிகள், கணக்குகள், குறிப்புகள் ஒருபோதும் அனுப்பப்படாது.",
       policy:
         "{{provider}} அவற்றைத் தன் சொந்தத் தனியுரிமைக் கொள்கையின்படி கையாளும். இந்த வழங்குநருக்கு ஒருமுறை மட்டுமே கேட்கப்படும்.",
       decline: "இப்போது வேண்டாம்",
@@ -678,9 +696,9 @@ export const plainLanguage: AreaTranslations = {
     aiHub: {
       dialog: {
         localMacOnly:
-          "உங்கள் கணினியிலோ வீட்டு நெட்வொர்க்கிலோ இயங்கும் LM Studio, Ollama போன்ற மாதிரிகள் Mac பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
+          "உங்கள் கணினியிலோ வீட்டு நெட்வொர்க்கிலோ இயங்கும் LM Studio, Ollama போன்ற மாதிரிகள் கணினி பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
         noLocalNetworkHere:
-          "உங்கள் கணினி அல்லது வீட்டு நெட்வொர்க்கில் உள்ள மாதிரி Mac பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
+          "உங்கள் கணினி அல்லது வீட்டு நெட்வொர்க்கில் உள்ள மாதிரி கணினி பயன்பாட்டில் மட்டுமே வேலை செய்யும்.",
       },
     },
   },

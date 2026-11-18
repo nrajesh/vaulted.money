@@ -49,6 +49,7 @@ export const budgetDialogs: AreaTranslations = {
         targetDateHint: "Defaults to end of month if empty",
         endDate: "End Date",
         repeatEvery: "Repeat Every",
+        frequencyUnit: "Unit",
         days: "Days",
         weeks: "Weeks",
         months: "Months",
@@ -83,7 +84,7 @@ export const budgetDialogs: AreaTranslations = {
       smart: {
         title: "Smart Budget Creation",
         description:
-          "We analyzed your past transactions and found these top spending categories. Adjust the proposed monthly amounts and select the budgets you want to create.",
+          "Suggested from your past spending. Adjust the amounts and pick the budgets to create.",
         analyzing: "Analyzing your spending habits...",
         selectAll: "Select all suggestions",
         selectOne: "Select suggestion {{number}}",
@@ -155,6 +156,7 @@ export const budgetDialogs: AreaTranslations = {
         targetDateHint: "Si se deja vacío, será fin de mes",
         endDate: "Fecha de fin",
         repeatEvery: "Repetir cada",
+        frequencyUnit: "Unidad",
         days: "Días",
         weeks: "Semanas",
         months: "Meses",
@@ -189,7 +191,7 @@ export const budgetDialogs: AreaTranslations = {
       smart: {
         title: "Creación inteligente de presupuestos",
         description:
-          "Hemos analizado tus transacciones pasadas y encontrado estas categorías de mayor gasto. Ajusta los importes mensuales propuestos y elige los presupuestos que quieras crear.",
+          "Sugeridos a partir de tus gastos anteriores. Ajusta los importes y elige los presupuestos que quieras crear.",
         analyzing: "Analizando tus hábitos de gasto...",
         selectAll: "Seleccionar todas las sugerencias",
         selectOne: "Seleccionar sugerencia {{number}}",
@@ -259,6 +261,7 @@ export const budgetDialogs: AreaTranslations = {
         targetDateHint: "留空则默认为月底",
         endDate: "结束日期",
         repeatEvery: "重复间隔",
+        frequencyUnit: "单位",
         days: "天",
         weeks: "周",
         months: "个月",
@@ -291,8 +294,7 @@ export const budgetDialogs: AreaTranslations = {
       },
       smart: {
         title: "智能创建预算",
-        description:
-          "我们分析了您过去的交易，找出了这些支出最多的分类。请调整建议的月度金额，并选择要创建的预算。",
+        description: "根据您过去的支出建议。调整金额，然后选择要创建的预算。",
         analyzing: "正在分析您的消费习惯...",
         selectAll: "选择所有建议",
         selectOne: "选择建议 {{number}}",
@@ -363,6 +365,7 @@ export const budgetDialogs: AreaTranslations = {
         targetDateHint: "Standaard einde van de maand als leeg",
         endDate: "Einddatum",
         repeatEvery: "Herhaal elke",
+        frequencyUnit: "Eenheid",
         days: "Dagen",
         weeks: "Weken",
         months: "Maanden",
@@ -397,7 +400,7 @@ export const budgetDialogs: AreaTranslations = {
       smart: {
         title: "Slim budgetten maken",
         description:
-          "We hebben je eerdere transacties geanalyseerd en deze categorieën met de hoogste uitgaven gevonden. Pas de voorgestelde maandbedragen aan en kies de budgetten die je wilt maken.",
+          "Voorgesteld op basis van je eerdere uitgaven. Pas de bedragen aan en kies welke budgetten je wilt maken.",
         analyzing: "Je bestedingsgedrag wordt geanalyseerd...",
         selectAll: "Alle suggesties selecteren",
         selectOne: "Suggestie {{number}} selecteren",
@@ -444,8 +447,7 @@ export const budgetDialogs: AreaTranslations = {
         descriptionBudget:
           "ஒரு வகை, கணக்கு அல்லது பெறுநருக்கு செலவு வரம்பை அமைக்கவும்.",
         savingsGoal: "சேமிப்பு இலக்கு",
-        savingsGoalHint:
-          "செலவு வரம்புக்குப் பதிலாக சேமிப்பு இலக்காகக் கண்காணிக்கவும்.",
+        savingsGoalHint: "செலவு வரம்புக்குப் பதிலாக சேமிப்பு இலக்காகக் கண்காணிக்கவும்.",
         trackTowards: "பரிவர்த்தனைகளைக் கண்காணிக்க வேண்டியது",
         scope: {
           category: "வகை",
@@ -470,6 +472,7 @@ export const budgetDialogs: AreaTranslations = {
         targetDateHint: "காலியாக இருந்தால் மாத இறுதி",
         endDate: "முடிவு தேதி",
         repeatEvery: "ஒவ்வொரு",
+        frequencyUnit: "அலகு",
         days: "நாட்கள்",
         weeks: "வாரங்கள்",
         months: "மாதங்கள்",
@@ -504,7 +507,7 @@ export const budgetDialogs: AreaTranslations = {
       smart: {
         title: "ஸ்மார்ட் பட்ஜெட் உருவாக்கம்",
         description:
-          "உங்கள் கடந்த பரிவர்த்தனைகளை ஆராய்ந்து அதிகம் செலவாகும் இந்த வகைகளைக் கண்டறிந்தோம். பரிந்துரைக்கப்பட்ட மாதாந்திரத் தொகைகளைச் சரிசெய்து, உருவாக்க விரும்பும் பட்ஜெட்டுகளைத் தேர்ந்தெடுக்கவும்.",
+          "உங்கள் முந்தைய செலவுகளிலிருந்து பரிந்துரைக்கப்பட்டவை. தொகைகளைச் சரிசெய்து உருவாக்க வேண்டிய பட்ஜெட்டுகளைத் தேர்ந்தெடுக்கவும்.",
         analyzing: "உங்கள் செலவுப் பழக்கங்களை ஆராய்கிறது...",
         selectAll: "அனைத்துப் பரிந்துரைகளையும் தேர்ந்தெடு",
         selectOne: "பரிந்துரை {{number}} ஐத் தேர்ந்தெடு",

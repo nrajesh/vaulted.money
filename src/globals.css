@@ -166,9 +166,45 @@
     border-color: hsl(var(--table-rule));
   }
 
+  /* Left/right safe areas. Zero on most screens, but iPhones turned
+     sideways have the camera on one side, and iPhone Duo keeps its status
+     bar on the right edge in most poses (84pt). Fixed-position pieces (the
+     phone header, tab bar, add button, sidebar, side sheets) add these
+     themselves; the #root padding covers everything in the normal flow.
+     (Not on body: open dialogs overwrite body padding to hide the
+     scrollbar.) */
+  :root {
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+  }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+
+  #root {
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+  }
+
+  /* Native feel on phones: no grey flash when tapping, and no web link
+     preview when long-pressing a link or image. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a,
+  img {
+    -webkit-touch-callout: none;
+  }
+
+  /* In the installed apps (set in main.tsx) the page itself should not
+     bounce past its top or bottom like a web page. The website keeps the
+     browser's pull-to-refresh. */
+  html[data-shell="app"],
+  html[data-shell="app"] body {
+    overscroll-behavior-y: none;
   }
 
   /* A placeholder or value too long for a narrow box ends in "…" rather
@@ -297,8 +333,16 @@ html[data-reduce-motion="true"] *::after {
     @apply mt-2 max-w-5xl text-sm sm:text-base leading-relaxed text-slate-600 dark:text-slate-400;
   }
 
+  /*
+   * A page's one-line description. Kept for screen readers and shown in the
+   * help drawer ("On this screen"); the title and the content say the rest.
+   */
+  .app-page-about {
+    @apply sr-only;
+  }
+
   .app-page-header {
-    @apply mb-8 animate-in fade-in duration-700 slide-in-from-bottom-4;
+    @apply mb-4 sm:mb-6 animate-in fade-in duration-700 slide-in-from-bottom-4;
   }
 
   /* Title on the left, PageActionBar on the right; stacked on phones. */
@@ -334,8 +378,11 @@ html[data-reduce-motion="true"] *::after {
     @apply border-border/70 bg-card/90 dark:bg-slate-950/70;
   }
 
+  /* No colour transition: Safari (iOS) did not repaint the selected card's
+     border until the next tap, so the two-panel list's highlight lagged one
+     row behind the details panel. */
   .app-mobile-row {
-    @apply rounded-xl border bg-card p-4 text-card-foreground shadow-sm transition-colors;
+    @apply rounded-xl border bg-card p-4 text-card-foreground shadow-sm;
   }
 
   .app-row-selected {

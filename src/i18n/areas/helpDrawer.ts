@@ -10,7 +10,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "Help",
       title: "Help",
-      description: "Tips for this screen, display settings and asking AI.",
+      description: "Tips for this screen and display settings.",
       tabHelp: "Help & display",
       tabAsk: "Ask AI",
       onThisScreen: "On this screen",
@@ -43,7 +43,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "Other AI apps",
         connected: "Can connect",
         notConnected: "Not switched on",
-        macOnly: "Mac app only",
+        macOnly: "Desktop app only",
         samples: "Questions to try",
         copy: "Copy",
         copyQuestion: "Copy question: {{question}}",
@@ -97,7 +97,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "Connecting other apps",
           summary:
-            "The Mac app can let AI apps and your own scripts reach your data through a connection that only works on your own computer. It is off until you switch it on.",
+            "The desktop app can let AI apps and your own scripts reach your data through a connection that only works on your own computer. It is off until you switch it on.",
         },
         privacy: {
           title: "Your privacy",
@@ -148,7 +148,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "Simple or Detailed",
-          body: "Simple reports answer everyday questions; Detailed ones break things down further. Both export to PDF, Excel or CSV.",
+          body: "Simple reports answer everyday questions; Detailed ones break things down further. Both export to PDF or CSV.",
         },
         insights: {
           title: "Plan versus reality",
@@ -172,7 +172,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Use Claude or ChatGPT",
-          body: "In the Mac app, connect an AI app and ask questions about your money in that app.",
+          body: "In the desktop app, connect an AI app and ask questions about your money in that app.",
         },
         demo: {
           title: "Try it with demo data",
@@ -201,8 +201,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "Ayuda",
       title: "Ayuda",
-      description:
-        "Consejos para esta pantalla, ajustes de pantalla y preguntar a la IA.",
+      description: "Consejos para esta pantalla y los ajustes de pantalla.",
       tabHelp: "Ayuda y pantalla",
       tabAsk: "Preguntar a la IA",
       onThisScreen: "En esta pantalla",
@@ -235,7 +234,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "Otras apps de IA",
         connected: "Pueden conectarse",
         notConnected: "Sin activar",
-        macOnly: "Solo en la app para Mac",
+        macOnly: "Solo en la app de escritorio",
         samples: "Preguntas para probar",
         copy: "Copiar",
         copyQuestion: "Copiar pregunta: {{question}}",
@@ -289,7 +288,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "Conectar otras apps",
           summary:
-            "La app para Mac puede dejar que apps de IA y tus scripts accedan a tus datos mediante una conexión que solo funciona en tu ordenador. Está apagada hasta que la actives.",
+            "La app de escritorio puede dejar que apps de IA y tus scripts accedan a tus datos mediante una conexión que solo funciona en tu ordenador. Está apagada hasta que la actives.",
         },
         privacy: {
           title: "Tu privacidad",
@@ -340,7 +339,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "Sencillos o detallados",
-          body: "Los sencillos responden lo cotidiano; los detallados desglosan más. Ambos se exportan a PDF, Excel o CSV.",
+          body: "Los sencillos responden lo cotidiano; los detallados desglosan más. Ambos se exportan a PDF o CSV.",
         },
         insights: {
           title: "Plan frente a realidad",
@@ -364,7 +363,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Usa Claude o ChatGPT",
-          body: "En la app para Mac, conecta una app de IA y pregúntale por tu dinero allí.",
+          body: "En la app de escritorio, conecta una app de IA y pregúntale por tu dinero allí.",
         },
         demo: {
           title: "Pruébalo con datos de ejemplo",
@@ -393,7 +392,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "帮助",
       title: "帮助",
-      description: "本页面的提示、显示设置以及向 AI 提问。",
+      description: "本页面的提示和显示设置。",
       tabHelp: "帮助与显示",
       tabAsk: "询问 AI",
       onThisScreen: "本页面",
@@ -425,7 +424,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "其他 AI 应用",
         connected: "可以连接",
         notConnected: "未开启",
-        macOnly: "仅限 Mac 应用",
+        macOnly: "仅限桌面应用",
         samples: "可以试试的问题",
         copy: "复制",
         copyQuestion: "复制问题：{{question}}",
@@ -479,7 +478,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "连接其他应用",
           summary:
-            "Mac 应用可以通过仅在你自己电脑上可用的连接，让 AI 应用和你的脚本访问你的数据。开启前一直关闭。",
+            "桌面应用可以通过仅在你自己电脑上可用的连接，让 AI 应用和你的脚本访问你的数据。开启前一直关闭。",
         },
         privacy: {
           title: "你的隐私",
@@ -530,7 +529,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "简单或详细",
-          body: "简单报告回答日常问题，详细报告提供更细的拆分。两者都可导出为 PDF、Excel 或 CSV。",
+          body: "简单报告回答日常问题，详细报告提供更细的拆分。两者都可导出为 PDF 或 CSV。",
         },
         insights: {
           title: "计划与实际",
@@ -554,7 +553,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "使用 Claude 或 ChatGPT",
-          body: "在 Mac 应用中连接 AI 应用，然后在该应用中询问你的财务问题。",
+          body: "在桌面应用中连接 AI 应用，然后在该应用中询问你的财务问题。",
         },
         demo: {
           title: "用示例数据试用",
@@ -583,7 +582,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "Help",
       title: "Help",
-      description: "Tips voor dit scherm, weergave-instellingen en AI vragen.",
+      description: "Tips voor dit scherm en weergave-instellingen.",
       tabHelp: "Help en weergave",
       tabAsk: "AI vragen",
       onThisScreen: "Op dit scherm",
@@ -616,7 +615,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "Andere AI-apps",
         connected: "Kunnen verbinden",
         notConnected: "Niet aangezet",
-        macOnly: "Alleen in de Mac-app",
+        macOnly: "Alleen in de desktop-app",
         samples: "Vragen om te proberen",
         copy: "Kopiëren",
         copyQuestion: "Vraag kopiëren: {{question}}",
@@ -670,7 +669,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "Andere apps koppelen",
           summary:
-            "De Mac-app kan AI-apps en je eigen scripts bij je gegevens laten via een verbinding die alleen op je eigen computer werkt. Hij staat uit tot je hem aanzet.",
+            "De desktop-app kan AI-apps en je eigen scripts bij je gegevens laten via een verbinding die alleen op je eigen computer werkt. Hij staat uit tot je hem aanzet.",
         },
         privacy: {
           title: "Je privacy",
@@ -721,7 +720,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "Eenvoudig of gedetailleerd",
-          body: "Eenvoudige rapporten beantwoorden dagelijkse vragen; gedetailleerde gaan dieper. Beide exporteren naar PDF, Excel of CSV.",
+          body: "Eenvoudige rapporten beantwoorden dagelijkse vragen; gedetailleerde gaan dieper. Beide exporteren naar PDF of CSV.",
         },
         insights: {
           title: "Plan tegenover werkelijkheid",
@@ -745,7 +744,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Gebruik Claude of ChatGPT",
-          body: "Koppel in de Mac-app een AI-app en stel daar vragen over je geld.",
+          body: "Koppel in de desktop-app een AI-app en stel daar vragen over je geld.",
         },
         demo: {
           title: "Probeer het met demogegevens",
@@ -774,8 +773,7 @@ export const helpDrawer: AreaTranslations = {
     helpDrawer: {
       open: "உதவி",
       title: "உதவி",
-      description:
-        "இந்தத் திரைக்கான குறிப்புகள், காட்சி அமைப்புகள், AI-யிடம் கேட்பது.",
+      description: "இந்தத் திரைக்கான குறிப்புகளும் காட்சி அமைப்புகளும்.",
       tabHelp: "உதவியும் காட்சியும்",
       tabAsk: "AI-யிடம் கேளுங்கள்",
       onThisScreen: "இந்தத் திரையில்",
@@ -808,7 +806,7 @@ export const helpDrawer: AreaTranslations = {
         otherApps: "பிற AI பயன்பாடுகள்",
         connected: "இணைக்கலாம்",
         notConnected: "இயக்கப்படவில்லை",
-        macOnly: "Mac பயன்பாட்டில் மட்டும்",
+        macOnly: "கணினி பயன்பாட்டில் மட்டும்",
         samples: "முயல வேண்டிய கேள்விகள்",
         copy: "நகலெடு",
         copyQuestion: "கேள்வியை நகலெடு: {{question}}",
@@ -862,7 +860,7 @@ export const helpDrawer: AreaTranslations = {
         localApi: {
           title: "பிற பயன்பாடுகளை இணைத்தல்",
           summary:
-            "Mac பயன்பாடு, உங்கள் கணினியில் மட்டுமே இயங்கும் இணைப்பின் மூலம் AI பயன்பாடுகளும் உங்கள் ஸ்கிரிப்டுகளும் தரவை அணுக அனுமதிக்கும். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்.",
+            "கணினி பயன்பாடு, உங்கள் கணினியில் மட்டுமே இயங்கும் இணைப்பின் மூலம் AI பயன்பாடுகளும் உங்கள் ஸ்கிரிப்டுகளும் தரவை அணுக அனுமதிக்கும். நீங்கள் இயக்கும் வரை அணைந்திருக்கும்.",
         },
         privacy: {
           title: "உங்கள் தனியுரிமை",
@@ -913,7 +911,7 @@ export const helpDrawer: AreaTranslations = {
         },
         reports: {
           title: "எளிமையானவை அல்லது விரிவானவை",
-          body: "எளிய அறிக்கைகள் அன்றாடக் கேள்விகளுக்குப் பதில் தரும்; விரிவானவை மேலும் பிரிக்கும். இரண்டையும் PDF, Excel, CSV ஆக ஏற்றுமதி செய்யலாம்.",
+          body: "எளிய அறிக்கைகள் அன்றாடக் கேள்விகளுக்குப் பதில் தரும்; விரிவானவை மேலும் பிரிக்கும். இரண்டையும் PDF, CSV ஆக ஏற்றுமதி செய்யலாம்.",
         },
         insights: {
           title: "திட்டமும் உண்மையும்",
@@ -937,7 +935,7 @@ export const helpDrawer: AreaTranslations = {
         },
         connectApps: {
           title: "Claude அல்லது ChatGPT பயன்படுத்துங்கள்",
-          body: "Mac பயன்பாட்டில் ஒரு AI பயன்பாட்டை இணைத்து, அதில் உங்கள் பணம் பற்றிக் கேளுங்கள்.",
+          body: "கணினி பயன்பாட்டில் ஒரு AI பயன்பாட்டை இணைத்து, அதில் உங்கள் பணம் பற்றிக் கேளுங்கள்.",
         },
         demo: {
           title: "மாதிரித் தரவுடன் முயலுங்கள்",

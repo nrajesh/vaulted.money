@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "page": "dark",
+    "appTheme": "light",
+    "pair": true,
+    "route": "/analytics",
+    "actions": [
+      {
+        "do": "scroll",
+        "y": 280
+      },
+      {
+        "do": "click",
+        "role": "button",
+        "name": "Pie chart"
+      },
+      {
+        "do": "wait",
+        "ms": 1500
+      }
+    ],
+    "highlight": {
+      "text": "Spent",
+      "minHeight": 260
+    }
+  },
+  {
+    "id": 2,
+    "page": "light",
+    "appTheme": "dark",
+    "route": "/transactions",
+    "actions": [
+      {
+        "do": "click",
+        "role": "combobox",
+        "name": ""
+      },
+      {
+        "do": "type",
+        "text": "groceries over 20 last month "
+      },
+      {
+        "do": "wait",
+        "ms": 1200
+      }
+    ],
+    "highlight": {
+      "text": "Understood as",
+      "minHeight": 220
+    }
+  },
+  {
+    "id": 3,
+    "page": "dark",
+    "appTheme": "light",
+    "route": "/accounts",
+    "actions": [],
+    "highlight": {
+      "text": "Joint Checking",
+      "minHeight": 120
+    }
+  },
+  {
+    "id": 4,
+    "page": "light",
+    "appTheme": "dark",
+    "route": "/ai-providers",
+    "actions": [
+      {
+        "do": "click",
+        "role": "button",
+        "name": "Turn on AI",
+        "ifPresent": true
+      },
+      {
+        "do": "wait",
+        "ms": 1500
+      }
+    ],
+    "visibleFraction": 0.7,
+    "cropBelow": "Chat with your money using an external AI agent",
+    "highlight": {
+      "text": "AI features",
+      "minHeight": 40
+    }
+  },
+  {
+    "id": 5,
+    "page": "dark",
+    "appTheme": "light",
+    "route": "/insights",
+    "actions": [],
+    "highlight": {
+      "text": "You have exceeded",
+      "minHeight": 180
+    }
+  },
+  {
+    "id": 6,
+    "page": "light",
+    "appTheme": "dark",
+    "route": "/transactions",
+    "actions": [
+      {
+        "do": "click",
+        "role": "button",
+        "name": "List and details",
+        "ifPresent": true
+      },
+      {
+        "do": "wait",
+        "ms": 1200
+      }
+    ],
+    "landscape": ["duoInner", "androidTablet"],
+    "highlight": {
+      "text": "Earlier with",
+      "minHeight": 300
+    }
+  }
+]

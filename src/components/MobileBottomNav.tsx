@@ -36,7 +36,7 @@ export const MobileBottomNav = () => {
   return (
     <nav
       aria-label={t("layout.nav.primary", { defaultValue: "Primary" })}
-      className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-background/95 pb-[env(safe-area-inset-bottom)] pl-[var(--safe-area-left)] pr-[var(--safe-area-right)] backdrop-blur md:hidden"
     >
       {bottomBarItems.map(({ id, to, icon: Icon, labelKey, defaultLabel }) => (
         <NavLink

@@ -55,7 +55,7 @@ export const ledgerEntry: AreaTranslations = {
       demoDialog: {
         title: "Generate new demo data?",
         description:
-          "This will clear ALL existing data (ledgers, transactions, budgets) and generate new diverse demo data. This action cannot be undone.",
+          "Replaces all your data (ledgers, transactions, budgets) with demo data. This can't be undone.",
         confirm: "Generate Data",
       },
       toasts: {
@@ -143,7 +143,7 @@ export const ledgerEntry: AreaTranslations = {
       demoDialog: {
         title: "¿Generar nuevos datos de demostración?",
         description:
-          "Esto borrará TODOS los datos existentes (libros, transacciones, presupuestos) y generará nuevos datos de demostración variados. Esta acción no se puede deshacer.",
+          "Sustituye todos tus datos (libros, transacciones, presupuestos) por datos de demostración. No se puede deshacer.",
         confirm: "Generar datos",
       },
       toasts: {
@@ -226,7 +226,7 @@ export const ledgerEntry: AreaTranslations = {
       demoDialog: {
         title: "生成新的演示数据？",
         description:
-          "这将清除所有现有数据（账本、交易、预算）并生成新的多样化演示数据。此操作无法撤销。",
+          "用演示数据替换您的全部数据（账本、交易、预算）。此操作无法撤销。",
         confirm: "生成数据",
       },
       toasts: {
@@ -312,7 +312,7 @@ export const ledgerEntry: AreaTranslations = {
       demoDialog: {
         title: "Nieuwe demogegevens genereren?",
         description:
-          "Hiermee worden ALLE bestaande gegevens (grootboeken, transacties, budgetten) gewist en nieuwe, gevarieerde demogegevens gegenereerd. Dit kan niet ongedaan worden gemaakt.",
+          "Vervangt al je gegevens (grootboeken, transacties, budgetten) door demogegevens. Dit kan niet ongedaan worden gemaakt.",
         confirm: "Gegevens genereren",
       },
       toasts: {
@@ -377,13 +377,10 @@ export const ledgerEntry: AreaTranslations = {
         importBackupHint:
           "JSON அல்லது குறியாக்கம் செய்யப்பட்ட ஏற்றுமதியை மீட்டெடுக்கவும்.",
         importCsv: "பரிவர்த்தனைகள் CSV ஐ இறக்குமதி செய்",
-        importCsvHint:
-          "மொபைலுக்கு ஏற்ற இறக்குமதி வழியில் நெடுவரிசைகளை இணைக்கவும்.",
+        importCsvHint: "மொபைலுக்கு ஏற்ற இறக்குமதி வழியில் நெடுவரிசைகளை இணைக்கவும்.",
         demo: "டெமோ தரவை உருவாக்கு",
-        demoHintEmpty:
-          "மாதிரி லெட்ஜர்கள் வேண்டுமெனில் பயன்பாட்டை உடனே நிரப்பவும்.",
-        demoHintReplace:
-          "ஏற்கனவே உள்ள அனைத்துத் தரவையும் மாதிரி லெட்ஜர்களால் மாற்றும்.",
+        demoHintEmpty: "மாதிரி லெட்ஜர்கள் வேண்டுமெனில் பயன்பாட்டை உடனே நிரப்பவும்.",
+        demoHintReplace: "ஏற்கனவே உள்ள அனைத்துத் தரவையும் மாதிரி லெட்ஜர்களால் மாற்றும்.",
       },
       next: "அடுத்து",
       decrypt: {
@@ -402,7 +399,7 @@ export const ledgerEntry: AreaTranslations = {
       demoDialog: {
         title: "புதிய டெமோ தரவை உருவாக்கவா?",
         description:
-          "இது ஏற்கனவே உள்ள அனைத்துத் தரவையும் (லெட்ஜர்கள், பரிவர்த்தனைகள், பட்ஜெட்டுகள்) அழித்து புதிய, பலவகையான டெமோ தரவை உருவாக்கும். இந்தச் செயலைச் செயல்தவிர்க்க முடியாது.",
+          "உங்கள் எல்லாத் தரவையும் (லெட்ஜர்கள், பரிவர்த்தனைகள், பட்ஜெட்டுகள்) டெமோ தரவால் மாற்றுகிறது. இதைச் செயல்தவிர்க்க முடியாது.",
         confirm: "தரவை உருவாக்கு",
       },
       toasts: {

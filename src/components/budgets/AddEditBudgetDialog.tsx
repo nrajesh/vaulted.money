@@ -950,64 +950,79 @@ export const AddEditBudgetDialog: React.FC<AddEditBudgetDialogProps> = ({
 
             {/* ── Frequency (budgets only) ── */}
             {!isGoal && (
-              <div className="flex items-end gap-3">
-                <FormField
-                  control={form.control}
-                  name="frequency_value"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                        {t("budgets.dialog.repeatEvery", {
-                          defaultValue: "Repeat Every",
-                        })}
-                      </FormLabel>
+              <FormField
+                control={form.control}
+                name="frequency_value"
+                render={({ field }) => (
+                  <FormItem className="min-w-0">
+                    <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+                      {t("budgets.dialog.repeatEvery", {
+                        defaultValue: "Repeat Every",
+                      })}
+                    </FormLabel>
+                    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_7rem] items-start gap-2">
                       <FormControl>
-                        <Input type="number" min="1" {...field} />
+                        <Input
+                          type="number"
+                          min="1"
+                          className="h-10"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="frequency_unit"
-                  render={({ field }) => (
-                    <FormItem className="w-28">
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="d">
-                            {t("budgets.dialog.days", { defaultValue: "Days" })}
-                          </SelectItem>
-                          <SelectItem value="w">
-                            {t("budgets.dialog.weeks", {
-                              defaultValue: "Weeks",
-                            })}
-                          </SelectItem>
-                          <SelectItem value="m">
-                            {t("budgets.dialog.months", {
-                              defaultValue: "Months",
-                            })}
-                          </SelectItem>
-                          <SelectItem value="y">
-                            {t("budgets.dialog.years", {
-                              defaultValue: "Years",
-                            })}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <FormField
+                        control={form.control}
+                        name="frequency_unit"
+                        render={({ field: unitField }) => (
+                          <FormItem className="min-w-0 space-y-0">
+                            <Select
+                              onValueChange={unitField.onChange}
+                              value={unitField.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger
+                                  aria-label={t(
+                                    "budgets.dialog.frequencyUnit",
+                                    {
+                                      defaultValue: "Unit",
+                                    },
+                                  )}
+                                  className="h-10 w-full"
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="d">
+                                  {t("budgets.dialog.days", {
+                                    defaultValue: "Days",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="w">
+                                  {t("budgets.dialog.weeks", {
+                                    defaultValue: "Weeks",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="m">
+                                  {t("budgets.dialog.months", {
+                                    defaultValue: "Months",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="y">
+                                  {t("budgets.dialog.years", {
+                                    defaultValue: "Years",
+                                  })}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             {/* ── Monthly contribution callout (Category Scope) ── */}

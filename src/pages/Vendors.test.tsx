@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { db } from "@/lib/dexieDB";
 import { LocalDataProvider } from "@/providers/LocalDataProvider";
 import type { Payee } from "@/components/dialogs/AddEditPayeeDialog";
-import type { ColumnDefinition } from "@/components/management/EntityTable";
+import type { ColumnDefinition } from "@/components/management/EntityCardGrid";
 import { showError, showSuccess } from "@/utils/toast";
 import VendorsPage from "./Vendors";
 

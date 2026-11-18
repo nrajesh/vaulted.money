@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vaulted Money — Showreel</title>
+    <meta name="viewport" content="width=1920" />
+    <!-- Written by render.mjs; the preview falls back to Google Fonts. -->
+    <link rel="stylesheet" href="out/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!--
+      A 1920×1080 stage. Layers are stacked back to front; each scene module
+      mounts its own DOM into one of them and poses it from the timeline.
+    -->
+    <main id="stage">
+      <canvas id="backdrop" width="1920" height="1080"></canvas>
+      <div id="camera">
+        <div id="world"></div>
+      </div>
+      <div id="screen-layer"></div>
+      <canvas id="fx" width="1920" height="1080"></canvas>
+      <div id="type-layer"></div>
+      <canvas id="vault" width="1920" height="1080"></canvas>
+      <div id="lockup-layer"></div>
+      <div id="hud"></div>
+      <div id="vignette"></div>
+      <div id="flash"></div>
+    </main>
+
+    <div id="player" hidden>
+      <button id="play" type="button">Play</button>
+      <input id="scrub" type="range" min="0" max="15" step="0.001" value="0" />
+      <output id="clock">0.00s</output>
+    </div>
+
+    <script type="module" src="showreel.mjs"></script>
+  </body>
+</html>

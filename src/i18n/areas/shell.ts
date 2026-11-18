@@ -45,7 +45,7 @@ export const shell: AreaTranslations = {
         tokenRegenerated:
           "New token generated. Update any client using the old one.",
         description:
-          "Let scripts and tools on this computer manage your data over HTTP. The API only listens on 127.0.0.1, so only apps on this computer can reach it. If you connect an AI agent, what it reads is sent to that agent's provider.",
+          "Lets scripts and AI agents on this computer use your data. Only apps on this computer can reach it. What an agent reads goes to its AI provider.",
         enable: "Enable local API",
         started: "API enabled",
         stopped: "API disabled",
@@ -108,7 +108,7 @@ export const shell: AreaTranslations = {
         tokenRegenerated:
           "Se generó un token nuevo. Actualiza cualquier cliente que use el anterior.",
         description:
-          "Permite que scripts y herramientas de este equipo gestionen tus datos por HTTP. La API solo escucha en 127.0.0.1, así que solo las apps de este equipo pueden acceder a ella. Si conectas un agente de IA, lo que lea se envía al proveedor de ese agente.",
+          "Permite que scripts y agentes de IA de este ordenador usen tus datos. Solo las apps de este ordenador pueden acceder. Lo que lee un agente se envía a su proveedor de IA.",
         enable: "Activar API local",
         started: "API activada",
         stopped: "API desactivada",
@@ -170,7 +170,7 @@ export const shell: AreaTranslations = {
           "本地 API 仅在桌面应用中可用。网页版和移动版应用无法托管本地服务器。",
         tokenRegenerated: "已生成新令牌。请更新所有使用旧令牌的客户端。",
         description:
-          "允许此电脑上的脚本和工具通过 HTTP 管理您的数据。该 API 仅监听 127.0.0.1，因此只有此电脑上的应用可以访问它。如果您连接 AI 智能体，它读取的内容会发送给该智能体的提供商。",
+          "让这台电脑上的脚本和 AI 智能体使用您的数据。只有这台电脑上的应用可以访问。智能体读取的内容会发送给其 AI 提供商。",
         enable: "启用本地 API",
         started: "API 已启用",
         stopped: "API 已停用",
@@ -233,7 +233,7 @@ export const shell: AreaTranslations = {
         tokenRegenerated:
           "Nieuw token gegenereerd. Werk elke client bij die het oude gebruikt.",
         description:
-          "Laat scripts en tools op deze computer je gegevens beheren via HTTP. De API luistert alleen op 127.0.0.1, dus alleen apps op deze computer kunnen hem bereiken. Als je een AI-agent koppelt, wordt wat die leest naar de aanbieder van die agent gestuurd.",
+          "Laat scripts en AI-agents op deze computer je gegevens gebruiken. Alleen apps op deze computer kunnen erbij. Wat een agent leest, gaat naar zijn AI-provider.",
         enable: "Lokale API inschakelen",
         started: "API ingeschakeld",
         stopped: "API uitgeschakeld",
@@ -296,7 +296,7 @@ export const shell: AreaTranslations = {
         tokenRegenerated:
           "புதிய டோக்கன் உருவாக்கப்பட்டது. பழையதைப் பயன்படுத்தும் கிளையன்ட்களைப் புதுப்பிக்கவும்.",
         description:
-          "இந்தக் கணினியில் உள்ள ஸ்கிரிப்ட்களும் கருவிகளும் HTTP வழியாக உங்கள் தரவை நிர்வகிக்க அனுமதிக்கவும். API 127.0.0.1 இல் மட்டுமே கேட்கும், எனவே இந்தக் கணினியில் உள்ள பயன்பாடுகள் மட்டுமே அதை அணுக முடியும். நீங்கள் ஒரு AI முகவரை இணைத்தால், அது படிப்பவை அந்த முகவரின் வழங்குநருக்கு அனுப்பப்படும்.",
+          "இந்தக் கணினியில் உள்ள ஸ்கிரிப்டுகளும் AI முகவர்களும் உங்கள் தரவைப் பயன்படுத்த அனுமதிக்கிறது. இந்தக் கணினியில் உள்ள ஆப்ஸ் மட்டுமே இதை அணுக முடியும். முகவர் படிப்பவை அதன் AI வழங்குநருக்கு அனுப்பப்படும்.",
         enable: "உள்ளூர் API ஐ இயக்கு",
         started: "API இயக்கப்பட்டது",
         stopped: "API முடக்கப்பட்டது",

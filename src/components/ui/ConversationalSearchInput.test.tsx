@@ -135,14 +135,33 @@ describe("ConversationalSearchInput suggestion", () => {
     expect(screen.queryByText("Understood as")).not.toBeInTheDocument();
   });
 
-  it("says how the filters combine, and offers Clear and Done", async () => {
+  it("says how the filters combine on the heading line, and offers Clear and Done", async () => {
     await openAndType("groceries over 20");
-    expect(
-      await screen.findByText(/must match every filter/),
-    ).toBeInTheDocument();
+    const heading = (await screen.findByText("Understood as")).closest(
+      "[cmdk-group-heading]",
+    );
+    expect(heading).toHaveTextContent("Understood as · all filters must match");
     await userEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.queryByText("Understood as")).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText(/type to filter/i)).toHaveValue("");
+  });
+
+  it("adds nothing more when two of the same kind are picked", async () => {
+    render(
+      <ConversationalSearchInput
+        onUpdate={vi.fn()}
+        {...props}
+        vendors={[
+          { name: "Starbucks", slug: "starbucks" },
+          { name: "Corner Roast", slug: "corner-roast" },
+        ]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("combobox"));
+    const input = await screen.findByPlaceholderText(/type to filter/i);
+    await userEvent.type(input, "starbucks corner roast");
+    await screen.findByText("Understood as");
+    expect(screen.queryByText(/either/)).not.toBeInTheDocument();
   });
 
   it("has the suggestion selected first, so Enter accepts it", async () => {

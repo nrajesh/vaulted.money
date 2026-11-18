@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import type { TFunction } from "i18next";
 import {
   startOfWeek,
   endOfWeek,
@@ -149,7 +150,7 @@ function computePreviousRange(
 function formatPeriodLabel(
   period: PeriodType,
   currentRange: PeriodRange,
-  t: (key: string, options?: Record<string, unknown>) => string,
+  t: TFunction,
 ): string {
   const now = new Date();
   const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });

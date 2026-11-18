@@ -197,18 +197,20 @@ describe("AddEditAIProviderDialog", () => {
     renderDialog(localProvider);
     fireEvent.click(screen.getByRole("button", { name: "Load models" }));
     expect(showError).toHaveBeenCalledWith(
-      "A model on your own computer or home network works in the Mac app only.",
+      "A model on your own computer or home network works in the desktop app only.",
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("refuses a home-network address on phones and says it is Mac-only", () => {
+  it("refuses a home-network address on phones and says it is desktop-only", () => {
     device.local = false;
     renderDialog({ ...localProvider, baseUrl: "http://192.168.1.20:1234/v1" });
-    expect(screen.getByText(/work in the Mac app only/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/work in the desktop app only/),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Load models" }));
     expect(showError).toHaveBeenCalledWith(
-      "A model on your own computer or home network works in the Mac app only.",
+      "A model on your own computer or home network works in the desktop app only.",
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });

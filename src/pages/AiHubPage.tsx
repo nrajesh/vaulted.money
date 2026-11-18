@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import * as React from "react";
 import {
   ArrowLeftRight,
@@ -57,7 +58,18 @@ const scrollToSection = (id: string) => {
  * providers used inside the app, and the steps to connect an AI agent. Both
  * halves read the same state, so they can never disagree about what is set up.
  */
-const AiHubPage = ({ focus }: { focus?: "agents" }) => {
+const AiHubPage = ({
+  focus,
+  only,
+}: {
+  focus?: "agents";
+  /**
+   * Show one half only. The menu has an item for each half, so each route
+   * opens its own: "inApp" for AI assistant, "agents" for Connect other AI
+   * apps. Without it both halves show.
+   */
+  only?: "inApp" | "agents";
+}) => {
   const { t } = useTranslation();
   const { enabled, ready, setEnabled } = useAiFeatures();
   const api = useLocalApi();
@@ -147,9 +159,18 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
   const agentsOn = !!api.status?.enabled && !!api.status?.running;
   let agentStatus: string;
   if (!api.supported) {
-    agentStatus = t("aiHub.summary.agentsMacOnly", {
-      defaultValue: "Available ONLY in the Mac app.",
-    });
+    // Agents connect to the Local API, which only the desktop app runs. Android
+    // users may not know the desktop app, so tell them what "on a computer" means.
+    agentStatus =
+      Capacitor.getPlatform() === "android"
+        ? t("aiHub.summary.agentsNeedsComputer", {
+            defaultValue:
+              "Needs Vaulted Money on a computer (Mac, Windows or Linux). Your AI agent connects to it there.",
+          })
+        : t("aiHub.summary.agentsNeedsMac", {
+            defaultValue:
+              "Needs the desktop app. Your AI agent connects to Vaulted Money on your computer.",
+          });
   } else if (agentsOn) {
     agentStatus = t("aiHub.summary.agentsOn", {
       defaultValue: "On. Agents on this computer can connect.",
@@ -352,11 +373,15 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
         <div>
           <div className="flex items-center gap-1">
             <h1 className="app-gradient-title app-page-title">
-              {t("nav.items.aiAssistant", { defaultValue: "AI assistant" })}
+              {only === "agents"
+                ? t("nav.items.connectApps", {
+                    defaultValue: "Connect other AI apps",
+                  })
+                : t("nav.items.aiAssistant", { defaultValue: "AI assistant" })}
             </h1>
             <FeatureHint id="connectApps" />
           </div>
-          <p className="app-page-subtitle">
+          <p className="app-page-about">
             {t("pages.ai.subtitle", {
               defaultValue: "Optional, and off until you turn it on.",
             })}
@@ -372,11 +397,6 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
           <label htmlFor="ai-features" className="text-sm font-medium">
             {t("settings.agent.hubSwitch", { defaultValue: "AI features" })}
           </label>
-          <span className="text-xs text-muted-foreground">
-            {t("settings.agent.hubSwitchHint", {
-              defaultValue: "Off hides AI and blocks agent access.",
-            })}
-          </span>
         </div>
       </div>
 
@@ -402,88 +422,90 @@ const AiHubPage = ({ focus }: { focus?: "agents" }) => {
 
       {showContent && (
         <div className="space-y-3 bg-background px-3 py-4 sm:px-6">
-          {bar(
-            IN_APP_SECTION,
-            <Brain className="h-4 w-4" aria-hidden />,
-            t("aiHub.providers.title", { defaultValue: "AI inside the app" }),
-            inAppStatus,
-            inAppReady,
-            [
+          {only !== "agents" &&
+            bar(
+              IN_APP_SECTION,
+              <Brain className="h-4 w-4" aria-hidden />,
+              t("aiHub.providers.title", { defaultValue: "AI inside the app" }),
+              inAppStatus,
+              inAppReady,
               [
-                <Sparkles className={FACT_ICON} aria-hidden />,
-                t("aiHub.facts.autoCategorize", {
-                  defaultValue: "Powers Auto-categorize",
-                }),
+                [
+                  <Sparkles className={FACT_ICON} aria-hidden />,
+                  t("aiHub.facts.autoCategorize", {
+                    defaultValue: "Powers Auto-categorize",
+                  }),
+                ],
+                [
+                  <Store className={FACT_ICON} aria-hidden />,
+                  t("aiHub.facts.vendorNamesOnly", {
+                    defaultValue: "Sends payee names only, never amounts",
+                  }),
+                ],
+                [
+                  <Unlink className={FACT_ICON} aria-hidden />,
+                  t("aiHub.facts.independent", {
+                    defaultValue: "Works without agent access",
+                  }),
+                ],
               ],
+              // The list brings its own full-height page frame; here it is one
+              // part of a longer page.
+              <div className="[&_.page-container]:min-h-0">
+                <AIProviderManagement
+                  onProvidersChange={setProviders}
+                  hideHeading
+                />
+              </div>,
+            )}
+          {only !== "inApp" &&
+            bar(
+              AGENTS_SECTION,
+              <Bot className="h-4 w-4" aria-hidden />,
+              t("aiHub.agents.title", {
+                defaultValue: "Chat with your money using an external AI agent",
+              }),
+              agentStatus,
+              agentsOn,
               [
-                <Store className={FACT_ICON} aria-hidden />,
-                t("aiHub.facts.vendorNamesOnly", {
-                  defaultValue: "Sends payee names only, never amounts",
-                }),
+                [
+                  <ArrowLeftRight className={FACT_ICON} aria-hidden />,
+                  t("aiHub.facts.readsUpdates", {
+                    defaultValue: "Reads and updates your data",
+                  }),
+                ],
+                [
+                  <Cloud className={FACT_ICON} aria-hidden />,
+                  t("aiHub.facts.sentToProvider", {
+                    defaultValue: "What it reads is sent to its AI provider",
+                  }),
+                ],
+                [
+                  <ShieldCheck className={FACT_ICON} aria-hidden />,
+                  t("aiHub.facts.localPrivate", {
+                    defaultValue: "A local LLM keeps your data private",
+                  }),
+                ],
+                [
+                  <Plug className={FACT_ICON} aria-hidden />,
+                  t("aiHub.facts.switchesApi", {
+                    defaultValue:
+                      "Its switch also runs the Local API for scripts",
+                  }),
+                ],
               ],
-              [
-                <Unlink className={FACT_ICON} aria-hidden />,
-                t("aiHub.facts.independent", {
-                  defaultValue: "Works without agent access",
-                }),
-              ],
-            ],
-            // The list brings its own full-height page frame; here it is one
-            // part of a longer page.
-            <div className="[&_.page-container]:min-h-0">
-              <AIProviderManagement
-                onProvidersChange={setProviders}
-                hideHeading
-              />
-            </div>,
-          )}
-          {bar(
-            AGENTS_SECTION,
-            <Bot className="h-4 w-4" aria-hidden />,
-            t("aiHub.agents.title", {
-              defaultValue: "Chat with your data from an AI agent",
-            }),
-            agentStatus,
-            agentsOn,
-            [
-              [
-                <ArrowLeftRight className={FACT_ICON} aria-hidden />,
-                t("aiHub.facts.readsUpdates", {
-                  defaultValue: "Reads and updates your data",
-                }),
-              ],
-              [
-                <Cloud className={FACT_ICON} aria-hidden />,
-                t("aiHub.facts.sentToProvider", {
-                  defaultValue: "What it reads is sent to its AI provider",
-                }),
-              ],
-              [
-                <ShieldCheck className={FACT_ICON} aria-hidden />,
-                t("aiHub.facts.localPrivate", {
-                  defaultValue: "A local LLM keeps your data private",
-                }),
-              ],
-              [
-                <Plug className={FACT_ICON} aria-hidden />,
-                t("aiHub.facts.switchesApi", {
-                  defaultValue:
-                    "Its switch also runs the Local API for scripts",
-                }),
-              ],
-            ],
-            <div className="page-container !min-h-0">
-              <div>{agentBody}</div>
-              {/* With the agent steps showing, the Local API sits inside them,
+              <div className="page-container !min-h-0">
+                <div>{agentBody}</div>
+                {/* With the agent steps showing, the Local API sits inside them,
                   under its switch. Otherwise it gets its own card. */}
-              {api.supported && !api.loadFailed && !showPanel && (
-                <div className="grid">
-                  <ApiAccessCard api={api} />
-                </div>
-              )}
-            </div>,
-            !api.hasBridge,
-          )}
+                {api.supported && !api.loadFailed && !showPanel && (
+                  <div className="grid">
+                    <ApiAccessCard api={api} />
+                  </div>
+                )}
+              </div>,
+              !api.hasBridge,
+            )}
         </div>
       )}
     </>
