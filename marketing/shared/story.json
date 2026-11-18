@@ -65,7 +65,7 @@
     "id": 4,
     "page": "light",
     "appTheme": "dark",
-    "route": "/ai-providers",
+    "route": "/connect-agent",
     "actions": [
       {
         "do": "click",
