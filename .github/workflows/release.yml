@@ -197,6 +197,30 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$RELEASE_TAG" release-assets/vaulted-money-ios-simulator-app.zip --clobber
 
+  claude-desktop-extension:
+    name: Claude Desktop extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build Claude Desktop extension
+        run: node scripts/build-mcpb.mjs
+
+      - name: Verify extension bundle
+        run: test -s release/extension/vaulted-money.mcpb
+
+      - name: Upload extension to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" release/extension/vaulted-money.mcpb --clobber
+
   store-screenshots:
     name: Store screenshots
     # macOS: the app uses the system font, which Linux runners lack.

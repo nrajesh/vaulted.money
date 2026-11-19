@@ -22,6 +22,10 @@ describe("release versions stay in step", () => {
   it("matches the Android and iOS versions", () => {
     const gradle = readFileSync("android/app/build.gradle", "utf8");
     expect(gradle).toContain(`versionName "${appVersion}"`);
+    const [major, minor, patch] = appVersion.split(".").map(Number);
+    expect(gradle).toContain(
+      `versionCode ${major * 10000 + minor * 100 + patch}`,
+    );
     const xcode = readFileSync("ios/App/App.xcodeproj/project.pbxproj", "utf8");
     const marketing = [...xcode.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map(
       (m) => m[1],
