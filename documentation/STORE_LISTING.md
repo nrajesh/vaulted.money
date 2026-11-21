@@ -59,7 +59,7 @@ AI ONLY WHEN YOU ASK
 AI features are off by default. Switch them on to sort uncategorised payees with your own key from a provider you choose, or with a model running on your own Mac. Before anything is sent, Vaulted Money tells you exactly what goes and asks first: only payee and category names, never amounts, dates, accounts or notes.
 
 MADE FOR EVERYONE
-• English, Spanish, Chinese, Dutch and Tamil
+• English, Spanish, Chinese, Dutch and Tamil. Possibility to port your own language
 • Larger text, high contrast and reduced motion
 • Full VoiceOver support
 • Light and dark mode
@@ -70,13 +70,13 @@ Vaulted Money is open source. You can read every line of code that handles your 
 
 ### iPhone Duo launch wording (optional)
 
-Promotional text can change at any time without a new version, so use it to call out Duo support while the device is new, and switch back later:
+In use since launch (160 of 170 characters). Promotional text can change at any time without a new version, so switch back to the text above once Duo is no longer new:
 
 ```
-Track spending and budgets privately: no sign-up, no cloud, no ads. Built for iPhone Duo too: open it up for your list and details side by side.
+Track spending and budgets privately: no sign-up, no cloud, no ads, AI is optional. Built for iPhone Duo too: open it up for your list and details side by side.
 ```
 
-**Featuring → Nominations** in App Store Connect lets you ask Apple's editors to consider the app. Nominate "App launch" for 2.0.0 and mention:
+**Featuring → Nominations** in App Store Connect lets you ask Apple's editors to consider the app. Nominate "App Launch" for 2.0.0, either in the form or by importing Apple's CSV template (filled-in copy kept outside the repo; replace `APP_APPLE_ID` with the number under App Information → Apple ID). Name: "Vaulted Money 2.0 launch". Platforms: iPhone and iPad. Short pitch:
 
 ```
 Vaulted Money 2.0 is a private, offline money manager built for iPhone Duo: when opened, transactions and their details sit side by side, and the layout adapts when you open or close it. No account, no tracking; everything stays on the device. Plain-English search and optional AI with the user's own key.
@@ -137,18 +137,19 @@ Apple does not show this field for a first release. Use the Google Play release 
 
 Where each file goes on the version page, tab **App Previews and Screenshots**. Paths are under `marketing/`. Each device slot takes up to 3 previews and 10 screenshots; upload screenshots in number order, because the first three show in search results.
 
-| Slot in App Store Connect                | Files                                                                                     | How to make them                                  |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| iPhone with Dynamic Island: App Previews | `app-preview/out/vaulted-money-app-preview.mp4`                                           | `pnpm marketing:preview`                          |
-| iPhone with Dynamic Island: Screenshots  | `store-screenshots/out/iphone63/en/` 01–06                                                | `pnpm marketing:screenshots`, then resize (below) |
-| iPhone Duo                               | `store-screenshots/out/duoInner/en/` 01–07; `duoOuter/en/` 01–06 if a second slot appears | `pnpm marketing:screenshots`                      |
-| iPad 13" display                         | `store-screenshots/out/ipad13/en/` 01–07                                                  | `pnpm marketing:screenshots`                      |
-| Apple Watch                              | Leave empty (no Watch app)                                                                |                                                   |
-| Header and Search Results tab: Header    | Leave empty for now (optional 5244×2950 banner)                                           |                                                   |
+| Slot in App Store Connect                | Files                                                                               | How to make them                                  |
+| ---------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------- |
+| iPhone with Dynamic Island: App Previews | `app-preview/out/vaulted-money-app-preview.mp4`                                     | `pnpm marketing:preview`                          |
+| iPhone with Dynamic Island: Screenshots  | `store-screenshots/out/iphone63/en/` 01–06                                          | `pnpm marketing:screenshots`, then resize (below) |
+| iPhone Duo                               | `store-screenshots/out/duoInner/en/` 01–07, then `duoOuter/en/` 01–03 (10 in total) | `pnpm marketing:screenshots`                      |
+| iPad 13" display                         | `store-screenshots/out/ipad13/en/` 01–07                                            | `pnpm marketing:screenshots`                      |
+| Apple Watch                              | Leave empty (no Watch app)                                                          |                                                   |
+| Header and Search Results tab: Universal | `store-screenshots/out/appStoreHeader/universal.png` (5244×2950)                    | `node marketing/store-screenshots/header.mjs`     |
 
 - **What each image shows:** 01 Overview, 02 plain-English search, 03 Accounts, 04 AI assistant, 05 Budgets, then on iPad and the open Duo 06 list and details side by side, and last the Calendar (06 on iPhone, 07 on iPad and Duo).
 - **Preview video (under 30 s):** brand opening → Overview → search "groceries in checking last month over 25" applied to the list → Budgets, tapping the first budget with spending through to its transactions → Calendar → AI switched on and the Add AI Provider form → brand close. A short chapter card covers each cut.
-- **iPhone Duo:** optional. Without it, Apple shows the iPhone images on Duo. Upload the open (`duoInner`) set; add the closed (`duoOuter`) set only if App Store Connect shows a separate slot for it. No Duo preview video or half-open (tabletop) images are needed.
+- **iPhone Duo:** optional. Without it, Apple shows the iPhone images on Duo. Inner and outer images share one slot of 10: upload the open (`duoInner`) set 01–07 first, then the closed (`duoOuter`) 01–03. No Duo preview video or half-open (tabletop) images are needed.
+- **Header and search results:** one universal image covers both: the app icon, name and subtitle in Apple's safe area, with app screens either side that may be cropped. Run `pnpm marketing:screenshots` first (it makes the captures), then `CHROME=… node marketing/store-screenshots/header.mjs`. Apple reviews these images separately; they show on iOS 27 and later.
 - **Poster frame:** in Edit Poster Frame, pick a frame in the first two seconds, where the app icon, name and "Private Vault, Open Code" show. It cannot be changed after Apple approves the preview.
 - **6.3" iPhone images:** App Store Connect asks for 1206×2622, while the tool makes 1320×2868 (`iphone69`). Resize with `for f in marketing/store-screenshots/out/iphone69/en/*.png; do sips -s format png -z 2622 1206 "$f" --out marketing/store-screenshots/out/iphone63/en/$(basename "$f"); done`.
 - Apple uses the iPhone set for every smaller iPhone size.
@@ -199,7 +200,7 @@ AI ONLY WHEN YOU ASK
 AI features are off by default. Switch them on to sort uncategorised payees with your own key from a provider you choose. Before anything is sent, Vaulted Money tells you exactly what goes and asks first: only payee and category names, never amounts, dates, accounts or notes.
 
 MADE FOR EVERYONE
-• English, Spanish, Chinese, Dutch and Tamil
+• English, Spanish, Chinese, Dutch and Tamil. Possibility to port your own language
 • Larger text, high contrast and reduced motion
 • Full TalkBack support
 • Light and dark mode
@@ -216,7 +217,7 @@ First release on Google Play.
 • Search in plain English, right on your phone
 • Encrypted sync through your own cloud folder; you choose which copy to keep if two devices changed
 • Optional AI sorts payees with your own key, and asks before sending anything
-• English, Spanish, Chinese, Dutch and Tamil
+• English, Spanish, Chinese, Dutch and Tamil. Possibility to port your own language
 ```
 
 ### Store settings

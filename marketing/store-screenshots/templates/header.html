@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>App Store header</title>
+    <style>
+      /*
+       * App Store "universal" header: 5244×2950, used for both the product
+       * page header (cropped to 21:9) and search results (cropped to 3:2).
+       * Only the safe area (1402×962 at x 1921, y 660) is always visible,
+       * so the icon, name and tagline live there; the phones are background
+       * art that may be cropped.
+       */
+      html,
+      body {
+        margin: 0;
+        width: 5244px;
+        height: 2950px;
+        overflow: hidden;
+      }
+      body {
+        position: relative;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue",
+          sans-serif;
+        background: radial-gradient(
+          ellipse at 50% 38%,
+          #0f4c5c 0%,
+          #0b2140 48%,
+          #070f1f 100%
+        );
+      }
+      .safe {
+        position: absolute;
+        left: 1921px;
+        top: 660px;
+        width: 1402px;
+        height: 962px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        z-index: 2;
+      }
+      .safe img {
+        width: 440px;
+        height: 440px;
+      }
+      .name {
+        margin-top: 56px;
+        font-size: 150px;
+        font-weight: 800;
+        letter-spacing: -3px;
+        color: #fff;
+        line-height: 1;
+      }
+      .tag {
+        margin-top: 40px;
+        font-size: 78px;
+        font-weight: 600;
+        line-height: 1;
+        background-image: linear-gradient(
+          90deg,
+          hsl(183 51% 74%),
+          hsl(187 55% 61%)
+        );
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .tag b {
+        background-image: linear-gradient(
+          90deg,
+          hsl(27 72% 58%),
+          hsl(20 73% 52%)
+        );
+        -webkit-background-clip: text;
+        color: transparent;
+        font-weight: 700;
+      }
+      /* Simple iPhone-like body: thin black bezel, rounded corners, island. */
+      .phone {
+        position: absolute;
+        width: 980px;
+        padding: 26px;
+        border-radius: 170px;
+        background: #05080f;
+        box-shadow:
+          0 0 0 6px #2a3242,
+          0 80px 200px rgba(0, 0, 0, 0.6);
+        z-index: 1;
+      }
+      /* The captures start below the status bar, so give the screen a
+         status-bar strip in the app's own background for the island. */
+      .phone img {
+        display: block;
+        width: 100%;
+        padding-top: 150px;
+        background: #21252b;
+        border-radius: 146px;
+      }
+      .phone::after {
+        content: "";
+        position: absolute;
+        top: 62px;
+        left: 50%;
+        width: 290px;
+        height: 84px;
+        margin-left: -145px;
+        border-radius: 42px;
+        background: #000;
+      }
+      /* Back phones: darker and behind, never see-through. */
+      .far {
+        z-index: 0;
+        filter: brightness(0.5) blur(2px);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      class="phone far"
+      style="left: -60px; top: 700px; transform: rotate(-8deg)"
+    >
+      <img src="/captures/iphone-dark-5.png" />
+    </div>
+    <div
+      class="phone"
+      style="left: 820px; top: 1180px; transform: rotate(-4deg)"
+    >
+      <img src="/captures/iphone-dark-1.png" />
+    </div>
+    <div
+      class="phone"
+      style="left: 3444px; top: 1180px; transform: rotate(4deg)"
+    >
+      <img src="/captures/iphone-dark-2.png" />
+    </div>
+    <div
+      class="phone far"
+      style="left: 4324px; top: 700px; transform: rotate(8deg)"
+    >
+      <img src="/captures/iphone-dark-7.png" />
+    </div>
+    <div class="safe">
+      <img src="/captures/icon.png" />
+      <div class="name">Vaulted Money</div>
+      <div class="tag">Private Vault, <b>Open Code</b></div>
+    </div>
+  </body>
+</html>

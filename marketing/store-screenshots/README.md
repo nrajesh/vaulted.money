@@ -13,6 +13,10 @@ CHROME="/path/to/Chrome" pnpm marketing:screenshots   # use an installed Chromiu
 ```
 
 Output: `marketing/store-screenshots/out/<set>/<lang>/01.png…` (git-ignored).
+
+The App Store "Header and Search Results" image (one universal 5244×2950
+PNG) reuses those captures: run `node marketing/store-screenshots/header.mjs`
+afterwards. It writes `out/appStoreHeader/universal.png`.
 Each GitHub release also attaches a zip of every set.
 
 Run it on a Mac: the app uses the system font, and other systems draw a
