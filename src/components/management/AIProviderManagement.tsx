@@ -1,5 +1,13 @@
 import * as React from "react";
-import { AlertTriangle, Check, Pencil, PlusCircle, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  Cloud,
+  HardDrive,
+  Pencil,
+  PlusCircle,
+  Trash2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AIProvider } from "@/types/dataProvider";
 import AddEditAIProviderDialog from "./AddEditAIProviderDialog";
@@ -14,7 +22,7 @@ import {
 } from "@/constants/aiApiKeyStorage";
 import { looksLikeEmbeddingModel, providerNeedsApiKey } from "@/utils/aiModels";
 import { cn } from "@/lib/utils";
-import { canUseLocalModels } from "@/utils/localModels";
+import { canUseLocalModels, providerLocation } from "@/utils/localModels";
 
 const TYPE_LABELS: Record<AIProvider["type"], string> = {
   OPENAI: "OpenAI",
@@ -164,6 +172,7 @@ const AIProviderManagement = ({
                             defaultValue: "Custom (OpenAI Compatible)",
                           })}
                       </p>
+                      <ProviderLocationBadge baseUrl={item.baseUrl} />
                     </div>
                     {item.isDefault ? (
                       <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-green-600/15 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
@@ -312,3 +321,34 @@ const AIProviderManagement = ({
 };
 
 export default AIProviderManagement;
+
+/**
+ * Says where payee names go with this provider. Cloud services get a warning
+ * colour; models on this computer or the home network keep data in the house.
+ */
+const ProviderLocationBadge = ({ baseUrl }: { baseUrl: string }) => {
+  const { t } = useTranslation();
+  const location = providerLocation(baseUrl);
+  if (location === "cloud") {
+    return (
+      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
+        <Cloud className="h-3 w-3 shrink-0" aria-hidden />
+        {t("aiHub.providers.location.cloud", {
+          defaultValue: "Cloud: payee names leave this device",
+        })}
+      </p>
+    );
+  }
+  return (
+    <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-green-600/15 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+      <HardDrive className="h-3 w-3 shrink-0" aria-hidden />
+      {location === "this-computer"
+        ? t("aiHub.providers.location.thisComputer", {
+            defaultValue: "Local: runs on this computer",
+          })
+        : t("aiHub.providers.location.homeNetwork", {
+            defaultValue: "Local: runs on your home network",
+          })}
+    </p>
+  );
+};

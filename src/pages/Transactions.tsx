@@ -532,13 +532,19 @@ const Transactions = () => {
 
       if (unknownVendors.length > 0) {
         // Ask before the progress dialog opens, so the question isn't hidden.
-        if (!(await requestAiConsent(config.provider))) return;
+        if (!(await requestAiConsent(config.provider, unknownVendors.length)))
+          return;
         setIsBulkCategorizing(true);
+        // Say exactly what leaves the device on every run, not only the
+        // first time: how many payee names, and to whom.
         setOperationProgress({
           title: "Auto-Categorizing",
-          description: `Categorizing ${allUniqueVendors.length} unique vendors (${
-            Object.keys(localMappings).length ? "Some locally matched" : ""
-          })...`,
+          description: t("aiConsent.sendingSummary", {
+            count: unknownVendors.length,
+            provider: config.provider.name,
+            defaultValue:
+              "Sending {{count}} payee names to {{provider}}. Amounts, dates and notes stay on this device.",
+          }),
           stage: "Calling AI",
           progress: 50,
           totalStages: 100,

@@ -5,6 +5,7 @@ import { isElectron } from "@/utils/electron";
 import { Capacitor } from "@capacitor/core";
 import { set, get, del } from "idb-keyval"; // IDB is required for Web FileSystemDirectoryHandle to persist
 import { toast } from "sonner";
+import { continuitySync } from "@/utils/continuitySync";
 
 const SYNC_STORAGE_KEY = "vaultedmoney_sync_config";
 const LEGACY_SYNC_STORAGE_KEY = "budget_it_sync_config";
@@ -104,6 +105,8 @@ export const useSyncConfig = () => {
     try {
       const handle = await selectSyncDirectory();
       if (handle) {
+        // A different folder holds a different file: compare afresh.
+        continuitySync.forget();
         changedHere.current = true;
         setConfig((prev) => ({
           ...prev,

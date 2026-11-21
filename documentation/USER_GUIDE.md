@@ -91,6 +91,8 @@ Supported provider types include Gemini, OpenAI, Anthropic, Mistral, Perplexity,
 
 API keys stay local and are not exported in backups. You must re-enter keys on a new device.
 
+Each provider card says where payee names go: **Local** (this computer or your home network) or **Cloud** (a company's servers). The first time you use a cloud provider the app asks for permission, and every bulk run says how many payee names it is sending and to whom. Amounts, dates, accounts and notes are never sent.
+
 AI has two pages in the menu: **AI assistant** (the master switch and AI inside the app) and **Connect other AI apps** (agents and the Local API). Together they hold: a master **AI features** switch and two bars you can open and close, each green when ready: **AI inside the app** (providers, their API keys and models, used by Auto-categorize) and **Chat with your data from an AI agent** (Claude, Codex or a local model, plus the Local API port and token). The two are independent: **Allow agents to connect** switches agent access and the Local API on and off, and does not affect AI inside the app. Connecting an agent needs the desktop app, so on the web that section says so. The local-model option is offered in the desktop app only. A phone or tablet has no model server of its own, and browsers do not let a website call a server on your own computer, so the website and the iOS and Android apps do not show it; they offer "Another OpenAI-compatible service" for hosted services instead. A model running on your own computer needs no API key: choose **Custom (OpenAI Compatible)**, enter its address, click **Load models** and select your model.
 
 **Settings** shows the open ledger's own settings first, then the ones that apply to every ledger on the device. Settings, AI assistant, Languages, Currencies and Backup also open with no ledger open: use the **Settings** button on the ledger screen.
@@ -108,6 +110,18 @@ Use backup exports before:
 - Importing a large CSV
 
 Encrypted backups are recommended when the file may live in cloud storage or on a shared computer.
+
+## Syncing Between Devices
+
+**Settings → Cross-Device Continuity** keeps devices in step through a folder that your own cloud service (iCloud Drive, Google Drive, Dropbox, Nextcloud) already syncs. There is no Vaulted Money server involved.
+
+1. On each device, switch it on and choose the same folder. On the web this needs Chrome or Edge.
+2. Set the same **sync passphrase** on each device. The file (`ledger.json`) is encrypted on the device before your cloud service ever sees it. The passphrase stays on the device and is never put in a backup.
+3. Work as usual. Changes are written to the folder as you go and picked up when you open or return to the app on another device.
+
+If both devices changed since they last synced, the app asks which copy to keep. The other copy is saved in the same folder as `ledger-conflict-<date-time>.json`, so nothing is lost; you can import it from **Backup** if you need it.
+
+If a device says the file is encrypted or the passphrase is wrong, enter the passphrase you set on the other device. If the passphrase is lost everywhere, choose an empty folder to start again.
 
 ## Local API (Desktop App)
 
