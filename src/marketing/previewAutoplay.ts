@@ -40,7 +40,7 @@ export interface PreviewApi {
 export const PREVIEW_STORY: PreviewStep[] = [
   { do: "scene" },
   { do: "goto", path: "/dashboard" },
-  { do: "wait", ms: 3800 },
+  { do: "wait", ms: 3200 },
   { do: "scene" },
   { do: "goto", path: "/transactions" },
   // Each chapter card stays up ~1.6 s at the start of its scene.
@@ -63,21 +63,26 @@ export const PREVIEW_STORY: PreviewStep[] = [
   // on the budget's transactions.
   { do: "click", role: "button", name: "Reset" },
   { do: "goto", path: "/budgets" },
-  { do: "wait", ms: 3000 },
+  { do: "wait", ms: 2600 },
   // The first budget with spending: the order depends on the demo data,
   // and an unused budget would open an empty list.
   { do: "click", role: "budget", name: "" },
-  { do: "wait", ms: 1800 },
+  { do: "wait", ms: 1500 },
   { do: "scene" },
   { do: "goto", path: "/calendar" },
-  { do: "wait", ms: 3300 },
+  { do: "wait", ms: 2000 },
+  // A day with income, spending and a scheduled bill, then its list.
+  { do: "click", role: "calendarDay", name: "" },
+  { do: "wait", ms: 500 },
+  { do: "scroll", y: 420 },
+  { do: "wait", ms: 1700 },
   { do: "scene" },
   { do: "goto", path: "/ai-providers" },
   { do: "wait", ms: 2000 },
   { do: "click", role: "button", name: "Turn on AI" },
   { do: "wait", ms: 800 },
   { do: "click", role: "button", name: "Add AI Provider" },
-  { do: "wait", ms: 1900 },
+  { do: "wait", ms: 1500 },
 ];
 
 /**
@@ -163,7 +168,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
  * ending in "…" matches by its start ("Apply all…" finds "Apply all 4").
  * Roles: "combobox", "option" (a search suggestion), "title" (a tappable
  * card title), "budget" (a budget's title, only on a budget with spending),
- * otherwise a button.
+ * "calendarDay" (see findRichDay), otherwise a button.
  */
 const SELECTORS: Record<string, string> = {
   combobox: '[role="combobox"], input[cmdk-input]',
@@ -177,7 +182,26 @@ const hasSpending = (title: HTMLElement) => {
   return !!spent && Number(spent[1].replace(/[^\d]/g, "")) > 0;
 };
 
+/**
+ * The calendar day that shows the most: one with a scheduled bill (the blue
+ * dot), money coming in (green) and several transactions, so its list has
+ * income, spending and a scheduled payment.
+ */
+const findRichDay = (): HTMLElement | null => {
+  const days = Array.from(
+    document.querySelectorAll<HTMLElement>('[title="Scheduled Transaction"]'),
+  )
+    .map((dot) => dot.parentElement)
+    .filter((day): day is HTMLElement => !!day && day.offsetParent !== null);
+  const count = (day: HTMLElement) =>
+    Number(day.querySelector("span")?.textContent ?? 0);
+  const income = days.filter((day) => day.className.includes("bg-green"));
+  const pool = income.length ? income : days;
+  return pool.sort((a, b) => count(b) - count(a))[0] ?? null;
+};
+
 const find = (role: string, name: string): HTMLElement | null => {
+  if (role === "calendarDay") return findRichDay();
   const selector = SELECTORS[role === "budget" ? "title" : role] ?? "button";
   const candidates = Array.from(
     document.querySelectorAll<HTMLElement>(selector),
@@ -202,15 +226,22 @@ const find = (role: string, name: string): HTMLElement | null => {
  * element, like a finger press, so viewers see what was pressed.
  */
 async function showTouch(el: HTMLElement): Promise<void> {
+  // Centre the target, so a sticky top bar can never hide the press.
+  el.scrollIntoView({ block: "center", inline: "nearest" });
+  await sleep(60);
   const box = el.getBoundingClientRect();
   if (!box.width) return;
-  el.scrollIntoView({ block: "nearest" });
+  // With the iOS keyboard open the visual viewport is shifted inside the
+  // layout viewport that `position: fixed` uses; add the shift so the ring
+  // lands on the element.
+  const shiftX = window.visualViewport?.offsetLeft ?? 0;
+  const shiftY = window.visualViewport?.offsetTop ?? 0;
   const ring = document.createElement("div");
   const size = 64;
   Object.assign(ring.style, {
     position: "fixed",
-    left: `${box.left + box.width / 2 - size / 2}px`,
-    top: `${box.top + box.height / 2 - size / 2}px`,
+    left: `${box.left + shiftX + box.width / 2 - size / 2}px`,
+    top: `${box.top + shiftY + box.height / 2 - size / 2}px`,
     width: `${size}px`,
     height: `${size}px`,
     borderRadius: "50%",

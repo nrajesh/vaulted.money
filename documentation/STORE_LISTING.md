@@ -93,7 +93,7 @@ budget,expense tracker,personal finance,spending,ledger,bills,savings,cash flow,
 | Secondary category | Productivity                                                                                 |
 | Price              | €9.99 base price (Netherlands); paid apps need the Paid Apps agreement, bank and tax details |
 | Availability       | All countries except China mainland (needs an ICP filing first)                              |
-| Version            | 2.0.0, build 4                                                                               |
+| Version            | 2.0.0, build 5                                                                               |
 
 ### App Privacy
 
@@ -132,6 +132,7 @@ Where each file goes on the version page, tab **App Previews and Screenshots**. 
 
 - **What each image shows:** 01 Overview, 02 plain-English search, 03 Accounts, 04 AI assistant, 05 Budgets, then on iPad and the open Duo 06 list and details side by side, and last the Calendar (06 on iPhone, 07 on iPad and Duo).
 - **Preview video (under 30 s):** brand opening → Overview → search "groceries in checking last month over 25" applied to the list → Budgets, tapping the first budget with spending through to its transactions → Calendar → AI switched on and the Add AI Provider form → brand close. A short chapter card covers each cut.
+- **iPhone Duo:** optional. Without it, Apple shows the iPhone images on Duo. Upload the open (`duoInner`) set; add the closed (`duoOuter`) set only if App Store Connect shows a separate slot for it. No Duo preview video or half-open (tabletop) images are needed.
 - **Poster frame:** in Edit Poster Frame, pick a frame in the first two seconds, where the app icon, name and "Private Vault, Open Code" show. It cannot be changed after Apple approves the preview.
 - **6.3" iPhone images:** App Store Connect asks for 1206×2622, while the tool makes 1320×2868 (`iphone69`). Resize with `for f in marketing/store-screenshots/out/iphone69/en/*.png; do sips -s format png -z 2622 1206 "$f" --out marketing/store-screenshots/out/iphone63/en/$(basename "$f"); done`.
 - Apple uses the iPhone set for every smaller iPhone size.

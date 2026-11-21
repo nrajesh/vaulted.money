@@ -92,9 +92,12 @@
       }
 
       const kind =
-        { ipad: "tablet", androidTablet: "tablet", mac: "window" }[
-          data.device
-        ] ?? "phone";
+        {
+          ipad: "tablet",
+          androidTablet: "tablet",
+          duoInner: "tablet",
+          mac: "window",
+        }[data.device] ?? "phone";
 
       const statusBar = (theme, widthPx) => {
         const bar = document.createElement("div");
@@ -103,9 +106,11 @@
         // phone's proportions (iPhone: 62 pt bar, 17 pt text on 402 pt), so
         // narrower paired phones do not get an oversized clock.
         const d = widthPx / 100;
+        // Tablets: an iPad's 24 pt bar and 15 pt text on a 1032 pt width,
+        // slightly larger so the time stays legible in a store image.
         Object.assign(bar.style, {
-          height: `${kind === "phone" ? 14.5 * d : 11 * u}px`,
-          fontSize: `${kind === "phone" ? 4.3 * d : 7 * u}px`,
+          height: `${kind === "phone" ? 14.5 * d : 3.6 * d}px`,
+          fontSize: `${kind === "phone" ? 4.3 * d : 1.75 * d}px`,
         });
         bar.innerHTML = `<span>${data.statusBar.time}</span><span class="right"><b>${data.statusBar.network}</b><span class="bat"><span></span></span></span>`;
         return bar;
