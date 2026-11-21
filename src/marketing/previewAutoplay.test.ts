@@ -75,6 +75,15 @@ describe("runPreviewStory", () => {
     expect(PREVIEW_STORY[0]).toEqual({ do: "scene" });
   });
 
+  it("shows the calendar day's income after tapping the day", async () => {
+    const steps = PREVIEW_STORY.map((s) => s.do);
+    const day = PREVIEW_STORY.findIndex(
+      (s) => s.do === "click" && s.role === "calendarDay",
+    );
+    expect(day).toBeGreaterThan(-1);
+    expect(steps.indexOf("revealIncome")).toBeGreaterThan(day);
+  });
+
   it("marks the page when the story is done, for the recorder", async () => {
     document.title = "Vaulted Money";
     await runPreviewStory(PREVIEW_STORY, fakeApi());

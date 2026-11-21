@@ -20,7 +20,9 @@ export type PreviewStep =
   | { do: "scroll"; y: number }
   | { do: "wait"; ms: number }
   | { do: "tapRow"; index: number }
-  | { do: "scene" };
+  | { do: "scene" }
+  /** Scrolls the first money-in row of the calendar's day list to centre. */
+  | { do: "revealIncome" };
 
 export interface PreviewApi {
   navigate(path: string): void;
@@ -30,6 +32,8 @@ export interface PreviewApi {
   wait(ms: number): Promise<void>;
   /** Taps the `index`th transaction card (the two-panel list). */
   tapRow(index: number): Promise<void>;
+  /** Scrolls the day list's first income row to the middle of the screen. */
+  revealIncome?(): Promise<void>;
 }
 
 /**
@@ -74,7 +78,9 @@ export const PREVIEW_STORY: PreviewStep[] = [
   // A day with income, spending and a scheduled bill, then its list.
   { do: "click", role: "calendarDay", name: "" },
   { do: "wait", ms: 500 },
-  { do: "scroll", y: 420 },
+  // Bring the day's salary into the middle, so money in, money out and the
+  // scheduled bill all show whatever order the demo data gives them.
+  { do: "revealIncome" },
   { do: "wait", ms: 1700 },
   { do: "scene" },
   { do: "goto", path: "/ai-providers" },
@@ -145,6 +151,7 @@ export async function runPreviewStory(
     else if (step.do === "scroll") await api.scroll(step.y);
     else if (step.do === "tapRow") await api.tapRow(step.index);
     else if (step.do === "scene") mark("scene");
+    else if (step.do === "revealIncome") await api.revealIncome?.();
     else await api.wait(step.ms);
   }
   document.title = "preview:done";
@@ -307,6 +314,14 @@ export const domApi: PreviewApi = {
     const rows = document.querySelectorAll<HTMLElement>(".app-mobile-row");
     rows[index]?.click();
     await sleep(100);
+  },
+  async revealIncome() {
+    // Income amounts in the day list are green (see DailyTransactions).
+    const income = Array.from(
+      document.querySelectorAll<HTMLElement>("[class*='text-green-700']"),
+    ).find((el) => el.offsetParent !== null && /\d/.test(el.textContent ?? ""));
+    income?.scrollIntoView({ block: "center", behavior: "smooth" });
+    await sleep(500);
   },
   wait: sleep,
 };

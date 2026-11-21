@@ -63,10 +63,26 @@ MADE FOR EVERYONE
 • Larger text, high contrast and reduced motion
 • Full VoiceOver support
 • Light and dark mode
-• Room to breathe on iPad, with list and details side by side
+• Made for iPad and iPhone Duo: open it up for list and details side by side
 
 Vaulted Money is open source. You can read every line of code that handles your money.
 ```
+
+### iPhone Duo launch wording (optional)
+
+Promotional text can change at any time without a new version, so use it to call out Duo support while the device is new, and switch back later:
+
+```
+Track spending and budgets privately: no sign-up, no cloud, no ads. Built for iPhone Duo too: open it up for your list and details side by side.
+```
+
+**Featuring → Nominations** in App Store Connect lets you ask Apple's editors to consider the app. Nominate "App launch" for 2.0.0 and mention:
+
+```
+Vaulted Money 2.0 is a private, offline money manager built for iPhone Duo: when opened, transactions and their details sit side by side, and the layout adapts when you open or close it. No account, no tracking; everything stays on the device. Plain-English search and optional AI with the user's own key.
+```
+
+Avoid "Ready for Duo" badges or Apple logos in images, and keep "iPhone Duo" out of the keywords: Apple's names may be mentioned in text, but not used as a badge or as search keywords.
 
 ### Keywords [100]
 
