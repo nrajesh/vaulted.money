@@ -134,18 +134,21 @@ Declare only what works for every common task:
 | Differentiate Without Color Alone | No      | The calendar marks money in and out by colour only                                                      |
 | Captions, Audio Descriptions      | No      | No video or audio content in the app                                                                    |
 
+Apple lets you publish these only after a version is live: open App Accessibility and press **Publish** on launch day (the iPhone and iPad drafts are saved).
+
 ### Other App Store Connect answers
 
-| Item                          | Answer                                                                                                                       |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Copyright                     | 2026 Rajesh Narayanan                                                                                                        |
-| Content Rights                | No third-party content                                                                                                       |
-| Export compliance             | Uses non-exempt encryption: No (standard OS encryption only); already answered by the build                                  |
-| Version release               | Manual                                                                                                                       |
-| Review contact                | The owner's own name, phone and email (filled in App Store Connect, not kept here)                                           |
-| Apple Silicon Mac, Vision Pro | Off: the desktop app is sold on Polar, and the iPhone app is not tested on either                                            |
-| Apple School Manager discount | On (Apple's default; schools buying in volume pay half)                                                                      |
-| App Compliance (China)        | Security Assessment and AI-Generated Content say "Missing info" for China mainland; ignore them while China is not available |
+| Item                          | Answer                                                                                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Copyright                     | 2026 Rajesh Narayanan                                                                                                                                             |
+| Content Rights                | No third-party content                                                                                                                                            |
+| Export compliance             | Uses non-exempt encryption: No (standard OS encryption only); already answered by the build                                                                       |
+| Version release               | Manual                                                                                                                                                            |
+| Review contact                | The owner's own name, phone and email (filled in App Store Connect, not kept here)                                                                                |
+| Apple Silicon Mac, Vision Pro | Off: the desktop app is sold on Polar, and the iPhone app is not tested on either                                                                                 |
+| Apple School Manager discount | On (Apple's default; schools buying in volume pay half)                                                                                                           |
+| DSA trader status             | Verified (November 2026) with the owner's private address. The KvK extract shows the Zeist postbox; switch to it after launch, since a change goes back to review |
+| App Compliance (China)        | Security Assessment and AI-Generated Content say "Missing info" for China mainland; ignore them while China is not available                                      |
 
 ### App Review Information
 
@@ -154,7 +157,7 @@ Declare only what works for every common task:
 - **Notes:**
 
 ```
-Vaulted Money has no account or sign-in. To explore every feature, open the app, choose "Generate demo data" on the first screen, then open any ledger. All data stays on the device. AI features are optional, off by default, and use the reviewer's own API key if they choose to try them. Before any data is sent to an AI provider the app asks for permission and lists exactly what is sent (payee and category names only). Connecting other AI apps is available in the Mac app only.
+Vaulted Money has no account or sign-in. To explore every feature, open the app, choose "Generate demo data" on the first screen, then open any ledger. All data stays on the device. AI features are optional, off by default, and use the reviewer's own API key if they choose to try them. Before any data is sent to an AI provider the app asks for permission and lists exactly what is sent (payee and category names only). Connecting other AI apps to Vaulted Money is a feature of the separate desktop app only; this iOS app has no such connection.
 ```
 
 ### What's New
