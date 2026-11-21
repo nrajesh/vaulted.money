@@ -117,7 +117,35 @@ Choose **"No, we do not collect data from this app."** Everything stays on the d
 
 ### Age rating
 
-Answer **None / No** to every question. The app has no user-generated content shared with others, no web browsing, no gambling and no mature content. The result should be **4+**.
+Answer **None / No** to every question, including the extra questions in Apple's newer questionnaire (in-app controls, capabilities, medical or wellness topics). The app has no user-generated content shared with others, no web browsing, no gambling and no mature content. The result is **4+**.
+
+### App Accessibility
+
+Declare only what works for every common task:
+
+| Feature                           | Declare | Why                                                                                                     |
+| --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
+| VoiceOver                         | Yes     | Labelled controls throughout                                                                            |
+| Dark Interface                    | Yes     | Full dark theme                                                                                         |
+| Sufficient Contrast               | Yes     | Text measured at 4.5:1 and outlines at 3:1 in both themes                                               |
+| Reduced Motion                    | Yes     | Follows the system setting, with an in-app switch                                                       |
+| Larger Text                       | No      | Apple asks for 200%; the app ignores the iPhone text size and its own setting stops at 125%. Fix in 2.1 |
+| Voice Control                     | No      | Not tested yet                                                                                          |
+| Differentiate Without Color Alone | No      | The calendar marks money in and out by colour only                                                      |
+| Captions, Audio Descriptions      | No      | No video or audio content in the app                                                                    |
+
+### Other App Store Connect answers
+
+| Item                          | Answer                                                                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Copyright                     | 2026 Rajesh Narayanan                                                                                                        |
+| Content Rights                | No third-party content                                                                                                       |
+| Export compliance             | Uses non-exempt encryption: No (standard OS encryption only); already answered by the build                                  |
+| Version release               | Manual                                                                                                                       |
+| Review contact                | The owner's own name, phone and email (filled in App Store Connect, not kept here)                                           |
+| Apple Silicon Mac, Vision Pro | Off: the desktop app is sold on Polar, and the iPhone app is not tested on either                                            |
+| Apple School Manager discount | On (Apple's default; schools buying in volume pay half)                                                                      |
+| App Compliance (China)        | Security Assessment and AI-Generated Content say "Missing info" for China mainland; ignore them while China is not available |
 
 ### App Review Information
 
