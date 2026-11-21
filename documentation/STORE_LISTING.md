@@ -137,14 +137,14 @@ Apple does not show this field for a first release. Use the Google Play release 
 
 Where each file goes on the version page, tab **App Previews and Screenshots**. Paths are under `marketing/`. Each device slot takes up to 3 previews and 10 screenshots; upload screenshots in number order, because the first three show in search results.
 
-| Slot in App Store Connect                | Files                                                                               | How to make them                                  |
-| ---------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------- |
-| iPhone with Dynamic Island: App Previews | `app-preview/out/vaulted-money-app-preview.mp4`                                     | `pnpm marketing:preview`                          |
-| iPhone with Dynamic Island: Screenshots  | `store-screenshots/out/iphone63/en/` 01–06                                          | `pnpm marketing:screenshots`, then resize (below) |
-| iPhone Duo                               | `store-screenshots/out/duoInner/en/` 01–07, then `duoOuter/en/` 01–03 (10 in total) | `pnpm marketing:screenshots`                      |
-| iPad 13" display                         | `store-screenshots/out/ipad13/en/` 01–07                                            | `pnpm marketing:screenshots`                      |
-| Apple Watch                              | Leave empty (no Watch app)                                                          |                                                   |
-| Header and Search Results tab: Universal | `store-screenshots/out/appStoreHeader/universal.png` (5244×2950)                    | `node marketing/store-screenshots/header.mjs`     |
+| Slot in App Store Connect                | Files                                                                                    | How to make them                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| iPhone with Dynamic Island: App Previews | `app-preview/out/vaulted-money-app-preview.mp4`                                          | `pnpm marketing:preview`                          |
+| iPhone with Dynamic Island: Screenshots  | `store-screenshots/out/iphone63/en/` 01–06                                               | `pnpm marketing:screenshots`, then resize (below) |
+| iPhone Duo                               | `store-screenshots/out/duoInner/en/` 01–07, then `duoOuter/en/` 01–03 (10 in total)      | `pnpm marketing:screenshots`                      |
+| iPad 13" display                         | `store-screenshots/out/ipad13/en/` 01–07                                                 | `pnpm marketing:screenshots`                      |
+| Apple Watch                              | Leave empty (no Watch app)                                                               |                                                   |
+| Header and Search Results tab: Universal | `store-screenshots/out/appStoreHeader/universal.png` or `universal-swap.png` (5244×2950) | `node marketing/store-screenshots/header.mjs`     |
 
 - **What each image shows:** 01 Overview, 02 plain-English search, 03 Accounts, 04 AI assistant, 05 Budgets, then on iPad and the open Duo 06 list and details side by side, and last the Calendar (06 on iPhone, 07 on iPad and Duo).
 - **Preview video (under 30 s):** brand opening → Overview → search "groceries in checking last month over 25" applied to the list → Budgets, tapping the first budget with spending through to its transactions → Calendar → AI switched on and the Add AI Provider form → brand close. A short chapter card covers each cut.

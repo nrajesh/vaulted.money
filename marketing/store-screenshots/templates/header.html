@@ -119,6 +119,9 @@
         z-index: 0;
         filter: brightness(0.5) blur(2px);
       }
+      .far.light {
+        filter: brightness(0.7) blur(2px);
+      }
     </style>
   </head>
   <body>
@@ -151,5 +154,18 @@
       <div class="name">Vaulted Money</div>
       <div class="tag">Private Vault, <b>Open Code</b></div>
     </div>
+    <script>
+      // `?swap`: the alternative look, with dark front phones and light back ones.
+      if (new URLSearchParams(location.search).has("swap")) {
+        for (const phone of document.querySelectorAll(".phone")) {
+          const img = phone.querySelector("img");
+          const isLight = phone.classList.toggle("light");
+          img.src = img.src.replace(
+            isLight ? "-dark-" : "-light-",
+            isLight ? "-light-" : "-dark-",
+          );
+        }
+      }
+    </script>
   </body>
 </html>

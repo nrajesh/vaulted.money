@@ -6,7 +6,8 @@
  *
  *   CHROME="/path/to/Chrome" node marketing/store-screenshots/header.mjs
  *
- * Output: marketing/store-screenshots/out/appStoreHeader/universal.png
+ * Output: marketing/store-screenshots/out/appStoreHeader/universal.png (light
+ * front phones) and universal-swap.png (dark front phones, light back ones).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
@@ -35,30 +36,40 @@ const browser = await chromium.launch(
 );
 const assets = await startAssetServer(CAPTURES);
 mkdirSync(OUT_DIR, { recursive: true });
-const raw = path.join(OUT_DIR, "raw.png");
-const file = path.join(OUT_DIR, "universal.png");
+const VARIANTS = [
+  { name: "universal.png", query: "" },
+  { name: "universal-swap.png", query: "?swap" },
+];
+const raws = [];
 try {
-  const page = await browser.newPage({
-    viewport: { width: WIDTH, height: HEIGHT },
-  });
-  await page.goto(`${assets.url}/templates/header.html`);
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForLoadState("networkidle");
-  await page.screenshot({ path: raw });
+  for (const variant of VARIANTS) {
+    const page = await browser.newPage({
+      viewport: { width: WIDTH, height: HEIGHT },
+    });
+    await page.goto(`${assets.url}/templates/header.html${variant.query}`);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForLoadState("networkidle");
+    const raw = path.join(OUT_DIR, `raw-${variant.name}`);
+    await page.screenshot({ path: raw });
+    await page.close();
+    raws.push({ raw, file: path.join(OUT_DIR, variant.name) });
+  }
 } finally {
   await browser.close();
   assets.close();
 }
 // Apple rejects images with an alpha channel: re-encode as plain RGB.
-execFileSync("ffmpeg", [
-  "-y",
-  "-loglevel",
-  "error",
-  "-i",
-  raw,
-  "-pix_fmt",
-  "rgb24",
-  file,
-]);
-rmSync(raw);
-console.log(`✓ ${path.relative(REPO, file)} (${WIDTH}×${HEIGHT})`);
+for (const { raw, file } of raws) {
+  execFileSync("ffmpeg", [
+    "-y",
+    "-loglevel",
+    "error",
+    "-i",
+    raw,
+    "-pix_fmt",
+    "rgb24",
+    file,
+  ]);
+  rmSync(raw);
+  console.log(`✓ ${path.relative(REPO, file)} (${WIDTH}×${HEIGHT})`);
+}
