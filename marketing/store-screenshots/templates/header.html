@@ -110,6 +110,10 @@
         border-radius: 42px;
         background: #000;
       }
+      /* Front phones use the light theme for contrast with the dark back pair. */
+      .light img {
+        background: #ffffff;
+      }
       /* Back phones: darker and behind, never see-through. */
       .far {
         z-index: 0;
@@ -125,16 +129,16 @@
       <img src="/captures/iphone-dark-5.png" />
     </div>
     <div
-      class="phone"
+      class="phone light"
       style="left: 820px; top: 1180px; transform: rotate(-4deg)"
     >
-      <img src="/captures/iphone-dark-1.png" />
+      <img src="/captures/iphone-light-1.png" />
     </div>
     <div
-      class="phone"
+      class="phone light"
       style="left: 3444px; top: 1180px; transform: rotate(4deg)"
     >
-      <img src="/captures/iphone-dark-2.png" />
+      <img src="/captures/iphone-light-2.png" />
     </div>
     <div
       class="phone far"
