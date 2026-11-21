@@ -51,14 +51,14 @@ describe("buildSlide", () => {
     expect(slide("ipad13", 6, en).height).toBe(2752);
   });
 
-  it("gives shot 4 its callouts and crops its screen above the agent card", () => {
+  it("gives shot 4 its callouts and the whole AI assistant screen", () => {
     const four = slide("iphone69", 4, en);
     expect(four.callouts).toEqual([
       "Agents may need a second device",
       "Local AI keeps data off the cloud",
     ]);
-    expect(four.devices[0].visibleFraction).toBe(0.7);
-    // The capture measures where the agent card's title ends on each device.
+    expect(four.devices[0].visibleFraction).toBe(1);
+    // A capture can still pass a measured crop for a shot.
     const measured = slide("iphone69", 4, en, { "iphone-dark-4.png": 0.62 });
     expect(measured.devices[0].visibleFraction).toBe(0.62);
     expect(slide("iphone69", 3, en).devices[0].visibleFraction).toBe(1);

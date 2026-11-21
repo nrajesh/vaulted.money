@@ -29,11 +29,12 @@ describe("store screenshot sets", () => {
   });
 
   it("shows the big-screen shot only where there is a big screen", () => {
-    expect(sets.iphone69.shots).toEqual([1, 2, 3, 4, 5]);
-    expect(sets.duoOuter.shots).toEqual([1, 2, 3, 4, 5]);
-    expect(sets.playPhone.shots).toEqual([1, 2, 3, 4, 5]);
-    expect(sets.ipad13.shots).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(sets.duoInner.shots).toEqual([1, 2, 3, 4, 5, 6]);
+    // Shot 7 (Calendar) follows on every phone and tablet.
+    expect(sets.iphone69.shots).toEqual([1, 2, 3, 4, 5, 7]);
+    expect(sets.duoOuter.shots).toEqual([1, 2, 3, 4, 5, 7]);
+    expect(sets.playPhone.shots).toEqual([1, 2, 3, 4, 5, 7]);
+    expect(sets.ipad13.shots).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(sets.duoInner.shots).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(sets.mac.shots).toEqual([1, 2, 6]);
   });
 

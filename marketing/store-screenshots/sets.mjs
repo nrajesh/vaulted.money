@@ -10,7 +10,7 @@ export const SETS = {
     width: 1320,
     height: 2868,
     device: "iphone",
-    shots: [1, 2, 3, 4, 5],
+    shots: [1, 2, 3, 4, 5, 7],
     store: "apple",
   },
   ipad13: {
@@ -18,7 +18,7 @@ export const SETS = {
     width: 2064,
     height: 2752,
     device: "ipad",
-    shots: [1, 2, 3, 4, 5, 6],
+    shots: [1, 2, 3, 4, 5, 6, 7],
     store: "apple",
   },
   duoInner: {
@@ -26,7 +26,7 @@ export const SETS = {
     width: 2007,
     height: 2853,
     device: "duoInner",
-    shots: [1, 2, 3, 4, 5, 6],
+    shots: [1, 2, 3, 4, 5, 6, 7],
     store: "apple",
   },
   duoOuter: {
@@ -34,7 +34,7 @@ export const SETS = {
     width: 1398,
     height: 2034,
     device: "duoOuter",
-    shots: [1, 2, 3, 4, 5],
+    shots: [1, 2, 3, 4, 5, 7],
     store: "apple",
   },
   playPhone: {
@@ -42,7 +42,7 @@ export const SETS = {
     width: 1080,
     height: 1920,
     device: "android",
-    shots: [1, 2, 3, 4, 5],
+    shots: [1, 2, 3, 4, 5, 7],
     store: "play",
   },
   playTablet7: {
@@ -50,7 +50,7 @@ export const SETS = {
     width: 1200,
     height: 1920,
     device: "androidTablet",
-    shots: [1, 2, 3, 4, 5, 6],
+    shots: [1, 2, 3, 4, 5, 6, 7],
     store: "play",
   },
   playTablet10: {
@@ -58,7 +58,7 @@ export const SETS = {
     width: 1600,
     height: 2560,
     device: "androidTablet",
-    shots: [1, 2, 3, 4, 5, 6],
+    shots: [1, 2, 3, 4, 5, 6, 7],
     store: "play",
   },
   playFeature: {

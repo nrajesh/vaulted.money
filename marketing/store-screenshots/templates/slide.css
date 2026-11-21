@@ -299,3 +299,81 @@ em {
   border-radius: 22%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
+
+/* Phone frames are measured in --d, 1% of the phone's own width, so a
+   phone keeps real proportions at any size. */
+
+/* iPhone look: thin even bezel, round corners, Dynamic Island, side keys */
+.device.ios {
+  border-radius: calc(var(--d) * 16.5);
+  padding: calc(var(--d) * 2.2);
+}
+.device.ios .screen {
+  position: relative;
+  border-radius: calc(var(--d) * 14.5);
+}
+.device.ios::before,
+.device.ios::after {
+  content: "";
+  position: absolute;
+  width: calc(var(--d) * 0.9);
+  border-radius: calc(var(--d) * 0.6);
+  background: inherit;
+  filter: brightness(0.8);
+}
+.device.ios::before {
+  right: calc(var(--d) * -0.7);
+  top: 22%;
+  height: 11%;
+}
+.device.ios::after {
+  left: calc(var(--d) * -0.7);
+  top: 17%;
+  height: 16%;
+}
+.island {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--d) * 2.8);
+  transform: translateX(-50%);
+  width: 31%;
+  height: calc(var(--d) * 9.2);
+  border-radius: calc(var(--d) * 4.6);
+  background: #000;
+}
+.device.ios .sb,
+.device.android .sb {
+  padding: 0 calc(var(--d) * 8.5);
+}
+.device.ios .bat,
+.device.android .bat {
+  width: calc(var(--d) * 6.4);
+  height: calc(var(--d) * 3.1);
+  border-width: calc(var(--d) * 0.45);
+  border-radius: calc(var(--d) * 0.9);
+  padding: calc(var(--d) * 0.35);
+}
+.device.ios .sb .right,
+.device.android .sb .right {
+  gap: calc(var(--d) * 1.6);
+}
+
+/* Android look: squarer corners and a punch-hole camera */
+.device.android {
+  border-radius: calc(var(--d) * 11);
+  padding: calc(var(--d) * 2.6);
+}
+.device.android .screen {
+  position: relative;
+  border-radius: calc(var(--d) * 8.5);
+}
+.punch {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--d) * 3.6);
+  transform: translateX(-50%);
+  width: calc(var(--d) * 3.6);
+  height: calc(var(--d) * 3.6);
+  border-radius: 50%;
+  background: #000;
+}

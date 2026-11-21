@@ -21,8 +21,8 @@
     ]
   },
   "5": {
-    "headline": "See where it *really* goes.",
-    "body": "Get warned before you overspend."
+    "headline": "Every budget *at a glance.*",
+    "body": "Tap one to see what's behind it."
   },
   "6": {
     "headline": "Room to breathe on *big screens.*",
@@ -31,5 +31,9 @@
   "feature": {
     "headline": "Your money *never leaves* your device.",
     "body": "Private, offline budgeting. Optional AI."
+  },
+  "7": {
+    "headline": "Bills on *the calendar.*",
+    "body": "See which days money comes and goes."
   }
 }

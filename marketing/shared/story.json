@@ -4,24 +4,15 @@
     "page": "dark",
     "appTheme": "light",
     "pair": true,
-    "route": "/analytics",
+    "route": "/dashboard",
     "actions": [
-      {
-        "do": "scroll",
-        "y": 280
-      },
-      {
-        "do": "click",
-        "role": "button",
-        "name": "Pie chart"
-      },
       {
         "do": "wait",
         "ms": 1500
       }
     ],
     "highlight": {
-      "text": "Spent",
+      "text": "Financial Runway",
       "minHeight": 260
     }
   },
@@ -65,7 +56,7 @@
     "id": 4,
     "page": "light",
     "appTheme": "dark",
-    "route": "/connect-agent",
+    "route": "/ai-providers",
     "actions": [
       {
         "do": "click",
@@ -78,8 +69,6 @@
         "ms": 1500
       }
     ],
-    "visibleFraction": 0.7,
-    "cropBelow": "Chat with your money using an external AI agent",
     "highlight": {
       "text": "AI features",
       "minHeight": 40
@@ -89,12 +78,13 @@
     "id": 5,
     "page": "dark",
     "appTheme": "light",
-    "route": "/insights",
-    "actions": [],
-    "highlight": {
-      "text": "You have exceeded",
-      "minHeight": 180
-    }
+    "route": "/budgets",
+    "actions": [
+      {
+        "do": "wait",
+        "ms": 1500
+      }
+    ]
   },
   {
     "id": 6,
@@ -118,5 +108,17 @@
       "text": "Earlier with",
       "minHeight": 300
     }
+  },
+  {
+    "id": 7,
+    "page": "light",
+    "appTheme": "dark",
+    "route": "/calendar",
+    "actions": [
+      {
+        "do": "wait",
+        "ms": 1500
+      }
+    ]
   }
 ]

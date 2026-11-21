@@ -1,53 +1,44 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error plain ES module without type declarations
-import { SEGMENTS, captionTimeline } from "./captions.mjs";
-import en from "../shared/strings/en.json";
+import { CARD_SECONDS, CHAPTERS, chapterTimeline } from "./captions.mjs";
 
-type Caption = { start: number; end: number; headline: string; sub?: string };
-const timeline = captionTimeline as (
-  strings: object,
-  segments: typeof SEGMENTS,
-  storySeconds: number,
-) => Caption[];
+type Card = { start: number; end: number; headline: string; sub?: string };
+const timeline = chapterTimeline as (scenes: number[], story: number) => Card[];
+const scenes = [0, 4.7, 13.4, 18.6, 21.9];
 
-describe("captionTimeline", () => {
-  const captions = timeline(en, SEGMENTS, 23.7);
+describe("chapterTimeline", () => {
+  const cards = timeline(scenes, 25);
 
-  it("has one caption per screen of the story, in order, without overlaps", () => {
-    expect(captions).toHaveLength(5);
-    for (let i = 1; i < captions.length; i++)
-      expect(captions[i].start).toBeGreaterThanOrEqual(captions[i - 1].end);
+  it("puts one card on each cut, but none on the opening scene", () => {
+    expect(cards).toHaveLength(CHAPTERS.filter(Boolean).length);
+    expect(cards[0].start).toBe(4.7);
+    expect(cards.map((c) => c.headline)).not.toContain(undefined);
   });
 
-  it("fits inside the story and Apple's 30 seconds", () => {
-    expect(captions[0].start).toBeGreaterThanOrEqual(0);
-    expect(captions.at(-1)!.end).toBeLessThanOrEqual(23.7);
-    expect(captions.at(-1)!.end).toBeLessThanOrEqual(30);
+  it("keeps each card short and inside the story", () => {
+    for (const c of cards) {
+      expect(c.end - c.start).toBeLessThanOrEqual(CARD_SECONDS + 0.001);
+      expect(c.end).toBeLessThanOrEqual(25);
+    }
   });
 
-  it("shows plain headline text (no accent markers)", () => {
-    expect(captions[1].headline).toBe("Ask it like you'd say it.");
-  });
-
-  it("stretches to the measured length of the story", () => {
-    const longer = timeline(en, SEGMENTS, 28);
-    expect(longer.at(-1)!.end).toBeGreaterThan(captions.at(-1)!.end);
+  it("skips chapters the recording never reached", () => {
+    expect(timeline([0, 4.7], 10)).toHaveLength(1);
   });
 });
 
 describe("calmScoreCues", () => {
-  it("lifts the music at the search and taps on each touch", async () => {
+  it("lifts the music at the search and taps on each chapter", async () => {
     // @ts-expect-error plain ES module without type declarations
     const { calmScoreCues } = await import("./cues.mjs");
-    const cues = calmScoreCues(SEGMENTS, 23.7) as { t: number; kind: string }[];
-    const search = timeline(en, SEGMENTS, 23.7)[1].start;
+    const cues = calmScoreCues(scenes, 25) as { t: number; kind: string }[];
     expect(cues.filter((c) => c.kind === "lift").map((c) => c.t)).toEqual([
-      search,
+      4.7,
     ]);
-    expect(cues.filter((c) => c.kind === "tick")).toHaveLength(3);
+    expect(cues.filter((c) => c.kind === "tick")).toHaveLength(4);
     for (const c of cues) {
       expect(c.t).toBeGreaterThanOrEqual(0);
-      expect(c.t).toBeLessThanOrEqual(23.7);
+      expect(c.t).toBeLessThanOrEqual(25);
     }
   });
 });
