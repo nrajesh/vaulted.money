@@ -76,7 +76,7 @@ In use since launch (160 of 170 characters). Promotional text can change at any 
 Track spending and budgets privately: no sign-up, no cloud, no ads, AI is optional. Built for iPhone Duo too: open it up for your list and details side by side.
 ```
 
-**Featuring → Nominations** in App Store Connect lets you ask Apple's editors to consider the app. Nominate "App Launch" for 2.0.0, either in the form or by importing Apple's CSV template (filled-in copy kept outside the repo; replace `APP_APPLE_ID` with the number under App Information → Apple ID). Name: "Vaulted Money 2.0 launch". Platforms: iPhone and iPad. Short pitch:
+**Featuring → Nominations** in App Store Connect lets you ask Apple's editors to consider the app. Nominate "App Launch" for 2.0.0, either in the form or by importing Apple's CSV template (filled-in copy kept outside the repo; the app's Apple ID is 6837669703). Name: "Vaulted Money 2.0 launch". Platforms: iPhone and iPad. Short pitch:
 
 ```
 Vaulted Money 2.0 is a private, offline money manager built for iPhone Duo: when opened, transactions and their details sit side by side, and the layout adapts when you open or close it. No account, no tracking; everything stays on the device. Plain-English search and optional AI with the user's own key.
