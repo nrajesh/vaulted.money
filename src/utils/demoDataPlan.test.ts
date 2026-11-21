@@ -461,6 +461,10 @@ describe("demo data names", () => {
     "MacBook",
     "Adani",
     "Oyster",
+    "Visa",
+    "Mastercard",
+    "American Express",
+    "Amex",
   ];
   const mentions = (text: string | null | undefined) =>
     REAL_BRANDS.filter((brand) =>
@@ -470,9 +474,14 @@ describe("demo data names", () => {
       ).test(text ?? ""),
     );
 
-  it("uses no real company or product names in payees or notes", () => {
+  it("uses no real company or product names in accounts, payees or notes", () => {
     const found = new Set<string>();
     for (const plan of plans as DemoLedgerPlan[]) {
+      for (const a of plan.accounts) {
+        mentions(a.name).forEach((b) =>
+          found.add(`${b} (account "${a.name}")`),
+        );
+      }
       for (const t of plan.transactions) {
         mentions(t.vendor).forEach((b) =>
           found.add(`${b} (payee "${t.vendor}")`),
