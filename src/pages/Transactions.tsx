@@ -29,6 +29,10 @@ import { useTransactionFilters } from "@/hooks/transactions/useTransactionFilter
 import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
 
 import { slugify } from "@/lib/utils";
+import {
+  applyBudgetNavigation,
+  type BudgetNavigationState,
+} from "@/utils/budgetNavigation";
 import { AddEditScheduledTransactionDialog } from "@/components/scheduled-transactions/AddEditScheduledTransactionDialog";
 import { projectScheduledTransactions } from "@/utils/forecasting";
 import { addMonths } from "date-fns";
@@ -92,65 +96,43 @@ const Transactions = () => {
     setSelectedAccounts,
     setSelectedVendors,
     setDateRange,
+    setSearchTerm,
+    setRawSearchQuery,
+    setMinAmount,
+    setMaxAmount,
+    setLimit,
+    setTransactionType,
   } = useTransactionFilters();
 
   const location = useLocation();
 
   React.useEffect(() => {
     if (location.state) {
-      const state = location.state as {
-        filterCategory?: string;
-        filterSubCategory?: string;
-        filterVendor?: string;
-        filterAccount?: string;
-        dateRange?: { from: string | Date; to: string | Date };
-      };
-
-      if (
-        state.filterCategory ||
-        state.filterSubCategory ||
-        state.filterVendor ||
-        state.filterAccount
-      ) {
-        if (state.filterCategory) {
-          setSelectedCategories([slugify(state.filterCategory)]);
-          setSelectedVendors([]);
-          if (!state.filterSubCategory) {
-            setSelectedSubCategories([]);
-          }
-          setSelectedAccounts([]);
-        }
-
-        if (state.filterSubCategory) {
-          setSelectedSubCategories([slugify(state.filterSubCategory)]);
-        }
-
-        if (state.filterVendor) {
-          setSelectedVendors([slugify(state.filterVendor)]);
-          setSelectedCategories([]);
-          setSelectedSubCategories([]);
-          setSelectedAccounts([]);
-        }
-
-        if (state.filterAccount) {
-          setSelectedAccounts([slugify(state.filterAccount)]);
-          setSelectedCategories([]);
-          setSelectedSubCategories([]);
-          setSelectedVendors([]);
-        }
-      }
-
-      if (state.dateRange) {
-        setDateRange({
-          from: new Date(state.dateRange.from),
-          to: new Date(state.dateRange.to),
-        });
-      }
+      // A tapped budget opens its transactions (see budgetNavigation.ts).
+      applyBudgetNavigation(location.state as BudgetNavigationState, {
+        setSearchTerm,
+        setRawSearchQuery,
+        setMinAmount,
+        setMaxAmount,
+        setLimit,
+        setTransactionType,
+        setSelectedCategories,
+        setSelectedSubCategories,
+        setSelectedVendors,
+        setSelectedAccounts,
+        setDateRange,
+      });
 
       window.history.replaceState({}, document.title);
     }
   }, [
     location.state,
+    setSearchTerm,
+    setRawSearchQuery,
+    setMinAmount,
+    setMaxAmount,
+    setLimit,
+    setTransactionType,
     setSelectedAccounts,
     setSelectedCategories,
     setSelectedSubCategories,

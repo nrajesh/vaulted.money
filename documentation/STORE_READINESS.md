@@ -2,7 +2,7 @@
 
 The pre-submission audit for the Apple App Store (iOS and macOS) and Google Play (Android), written after the November 2026 UX polish. Use the checklist in section 3 on a real device before each submission.
 
-Version checked: 2.0.0 (iOS `MARKETING_VERSION` 2.0.0, build 3; Android `versionCode` 20000, `targetSdkVersion` 36).
+Version checked: 2.0.0 (iOS `MARKETING_VERSION` 2.0.0, build 4; Android `versionCode` 20000, `targetSdkVersion` 36).
 
 ## 1. The five biggest friction points, and what changed
 
