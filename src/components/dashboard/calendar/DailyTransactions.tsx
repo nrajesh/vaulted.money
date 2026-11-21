@@ -62,14 +62,14 @@ export const DailyTransactions: React.FC<DailyTransactionsProps> = ({
   }
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden">
+    <Card className="flex flex-col overflow-hidden lg:h-full">
       <CardHeader className="shrink-0 border-b border-border/60 pb-4">
         <CardTitle className="text-lg leading-tight sm:text-xl">
           Transactions for {format(date, "MMMM d, yyyy")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 min-h-0 p-0">
-        <ScrollArea className="h-full">
+        <ScrollArea className="lg:h-full">
           <div className="space-y-3 p-4 sm:space-y-4">
             {dailyTransactions.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">

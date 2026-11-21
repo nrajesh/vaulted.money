@@ -92,17 +92,25 @@
       }
 
       const kind =
-        { ipad: "tablet", androidTablet: "tablet", mac: "window" }[
-          data.device
-        ] ?? "phone";
+        {
+          ipad: "tablet",
+          androidTablet: "tablet",
+          duoInner: "tablet",
+          mac: "window",
+        }[data.device] ?? "phone";
 
-      const statusBar = (theme) => {
+      const statusBar = (theme, widthPx) => {
         const bar = document.createElement("div");
         bar.className = `sb ${theme}`;
-        const height = (kind === "tablet" ? 11 : 13) * u;
+        // Phones size their status bar from their own width, in a real
+        // phone's proportions (iPhone: 62 pt bar, 17 pt text on 402 pt), so
+        // narrower paired phones do not get an oversized clock.
+        const d = widthPx / 100;
+        // Tablets: an iPad's 24 pt bar and 15 pt text on a 1032 pt width,
+        // slightly larger so the time stays legible in a store image.
         Object.assign(bar.style, {
-          height: `${height}px`,
-          fontSize: `${7 * u}px`,
+          height: `${kind === "phone" ? 14.5 * d : 3.6 * d}px`,
+          fontSize: `${kind === "phone" ? 4.3 * d : 1.75 * d}px`,
         });
         bar.innerHTML = `<span>${data.statusBar.time}</span><span class="right"><b>${data.statusBar.network}</b><span class="bat"><span></span></span></span>`;
         return bar;
@@ -113,6 +121,7 @@
         const el = document.createElement("div");
         el.className = `device ${device.theme} ${device.transform} ${kind === "phone" ? "" : kind}`;
         el.style.width = `${widthPx}px`;
+        el.style.setProperty("--d", `${widthPx / 100}px`);
         const screen = document.createElement("div");
         screen.className = "screen";
         if (kind === "window") {
@@ -121,7 +130,20 @@
             '<div class="titlebar"><i></i><i></i><i></i></div>',
           );
         } else {
-          screen.append(statusBar(device.theme));
+          screen.append(statusBar(device.theme, widthPx));
+        }
+        // Phones get their maker's look: an iPhone-style frame with the
+        // Dynamic Island for App Store sets, a punch-hole camera for Play.
+        if (kind === "phone") {
+          const cutout = document.createElement("div");
+          if (["iphone", "duoOuter"].includes(data.device)) {
+            el.classList.add("ios");
+            cutout.className = "island";
+          } else if (data.device === "android") {
+            el.classList.add("android");
+            cutout.className = "punch";
+          }
+          if (cutout.className) screen.append(cutout);
         }
         const img = new Image();
         img.src = device.image;
@@ -137,7 +159,9 @@
         const w = W * 0.455;
         const [left, right] = devices.map((d) => frame(d, w));
         await Promise.all(loads);
-        const top = capBottom + 40 * u;
+        // Centre the pair in the space under the caption.
+        const spare = H - capBottom - left.offsetHeight;
+        const top = capBottom + Math.max(40 * u, spare / 2);
         left.style.top = right.style.top = `${top}px`;
         left.style.transform = "translateX(-104%) rotateY(30deg)";
         right.style.transform = "translateX(4%) rotateY(-30deg)";

@@ -36,7 +36,11 @@ export function buildSlide(setId, shotId, strings, crops = {}) {
 
   const image = (theme) => `${set.device}-${theme}-${shotId}.png`;
   const crop = (theme) => crops[image(theme)] ?? shot.visibleFraction ?? 1;
-  const devices = shot.pair
+  // Tablets (and the open Duo) are too wide to sit two abreast at a
+  // readable size: they show one large device instead of the pair.
+  const pair =
+    shot.pair && !["ipad", "androidTablet", "duoInner"].includes(set.device);
+  const devices = pair
     ? [
         {
           image: image("dark"),

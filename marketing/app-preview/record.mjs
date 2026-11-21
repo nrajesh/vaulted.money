@@ -75,13 +75,14 @@ export async function recordSimulator({
   mkdirSync(OUT, { recursive: true });
   const video = path.join(OUT, `${name}.mp4`);
   const derived = path.join(OUT, "DerivedData");
-  // The story POSTs /start and /done here (the simulator shares the Mac's
+  // The story POSTs /start, /scene and /done here (the simulator shares the Mac's
   // network); the times become the trim points.
-  const marks = {};
+  const marks = { scenes: [] };
   let started = Date.now();
   const markServer = http.createServer((req, res) => {
     const at = (Date.now() - started) / 1000;
     if (req.url === "/start" && marks.start === undefined) marks.start = at;
+    if (req.url === "/scene") marks.scenes.push(at);
     if (req.url === "/done" && marks.end === undefined) marks.end = at;
     res.writeHead(204, { "Access-Control-Allow-Origin": "*" }).end();
   });

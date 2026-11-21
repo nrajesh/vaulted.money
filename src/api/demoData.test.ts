@@ -113,7 +113,7 @@ describe("demo data in the real app", () => {
     expect(
       result.pairs.some(
         (p) =>
-          p.accounts.includes("Visa Credit Card") &&
+          p.accounts.includes("Rewards Credit Card") &&
           p.accounts.includes("Joint Checking"),
       ),
     ).toBe(true);

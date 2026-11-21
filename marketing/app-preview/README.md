@@ -28,8 +28,10 @@ Needs Xcode (simulator) and ffmpeg.
    the score (`../showreel/calmScore.mjs`, cues in `cues.mjs`), normalised to
    −14 LUFS.
 
-If you change the story's screens, update `SEGMENTS` in `captions.mjs` to
-match.
+Each `scene` step in the story marks a chapter; `CHAPTERS` in `captions.mjs`
+holds one chapter card per scene (none on the first, which sits under the
+opening brand card). Keep the two lists in step, and the whole video under
+Apple's 30 seconds (compose warns if it is over).
 
 ## iPad and iPhone Duo footage (keynote showreel)
 

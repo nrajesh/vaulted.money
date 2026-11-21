@@ -30,17 +30,19 @@ const fakeApi = (): PreviewApi & { calls: string[] } => {
 };
 
 describe("runPreviewStory", () => {
-  it("opens the Charts screen first", async () => {
+  it("opens the Overview dashboard first", async () => {
     const api = fakeApi();
     await runPreviewStory(PREVIEW_STORY, api);
-    expect(api.calls[0]).toBe("goto /analytics");
+    expect(api.calls[0]).toBe("goto /dashboard");
   });
 
-  it("types the search sentence exactly once, spelled correctly", async () => {
+  it("types the search sentence, spelled correctly", async () => {
     const api = fakeApi();
     await runPreviewStory(PREVIEW_STORY, api);
-    expect(api.type).toHaveBeenCalledTimes(1);
-    expect(api.type).toHaveBeenCalledWith("groceries over 20 last month ");
+    const typed = (api.type as ReturnType<typeof vi.fn>).mock.calls
+      .map((call) => call[0])
+      .join("");
+    expect(typed).toBe("groceries in checking last month over 25");
   });
 
   it("visits the story's screens in order", async () => {
@@ -48,12 +50,38 @@ describe("runPreviewStory", () => {
     await runPreviewStory(PREVIEW_STORY, api);
     const visits = api.calls.filter((c) => c.startsWith("goto"));
     expect(visits).toEqual([
-      "goto /analytics",
+      "goto /dashboard",
       "goto /transactions",
-      "goto /accounts",
+      "goto /budgets",
+      "goto /calendar",
       "goto /ai-providers",
-      "goto /insights",
     ]);
+  });
+
+  it("applies the search and closes it so the list shows the result", async () => {
+    const api = fakeApi();
+    await runPreviewStory(PREVIEW_STORY, api);
+    const typed = api.calls.map((c) => c.startsWith("type ")).lastIndexOf(true);
+    const apply = api.calls.indexOf("click option Apply all…");
+    const done = api.calls.indexOf("click button Done");
+    expect(apply).toBeGreaterThan(typed);
+    expect(done).toBeGreaterThan(apply);
+  });
+
+  it("starts one scene per screen, for the chapter cards", () => {
+    const scenes = PREVIEW_STORY.filter((s) => s.do === "scene");
+    const visits = PREVIEW_STORY.filter((s) => s.do === "goto");
+    expect(scenes).toHaveLength(visits.length);
+    expect(PREVIEW_STORY[0]).toEqual({ do: "scene" });
+  });
+
+  it("shows the calendar day's income after tapping the day", async () => {
+    const steps = PREVIEW_STORY.map((s) => s.do);
+    const day = PREVIEW_STORY.findIndex(
+      (s) => s.do === "click" && s.role === "calendarDay",
+    );
+    expect(day).toBeGreaterThan(-1);
+    expect(steps.indexOf("revealIncome")).toBeGreaterThan(day);
   });
 
   it("marks the page when the story is done, for the recorder", async () => {

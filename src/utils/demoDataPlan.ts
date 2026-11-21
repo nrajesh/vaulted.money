@@ -480,7 +480,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
   const start = monthsAgo(now, 4, 8 + Math.floor(rng() * 5));
   const CHECK = "Joint Checking";
   const SAVE = "Savings";
-  const CARD = "Visa Credit Card";
+  const CARD = "Rewards Credit Card";
   const CASH = "Cash Wallet";
   const BROKER = "Brokerage (USD)";
   const UK = "UK Account (GBP)";
@@ -1395,7 +1395,7 @@ const buildHome = (now: Date, rng: Rng, clock: Date): DemoLedgerPlan => {
       sim.add(
         day,
         CARD,
-        "Visa FX fee",
+        "Card FX fee",
         "Fees",
         "FX Fees",
         -sim.between(1.2, 5.5),

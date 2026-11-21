@@ -167,7 +167,9 @@ export default function CalendarView() {
             dayData={dayData}
           />
         </div>
-        <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        {/* Phones and tablets: the day's list grows with the page. Only the
+            two-column desktop layout gives it a fixed height to scroll in. */}
+        <div className="flex flex-col lg:h-full lg:min-h-0 lg:overflow-hidden">
           <DailyTransactions
             date={selectedDate}
             transactions={combinedDailyTransactions}
