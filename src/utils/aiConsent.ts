@@ -52,6 +52,8 @@ export const clearAiConsent = () => writeGranted([]);
 
 export interface PendingAiConsent {
   providerName: string;
+  /** How many payee names this run would send, when known. */
+  payeeCount?: number;
   answer: (allowed: boolean) => void;
 }
 
@@ -73,6 +75,7 @@ export const getPendingAiConsent = () => pending;
  */
 export const requestAiConsent = (
   provider: ConsentProvider,
+  payeeCount?: number,
 ): Promise<boolean> => {
   if (hasAiConsent(provider)) return Promise.resolve(true);
   // A second request while one is open shares the same answer.
@@ -90,6 +93,7 @@ export const requestAiConsent = (
     let answered = false;
     pending = {
       providerName: provider.name,
+      payeeCount,
       answer: (allowed) => {
         // The dialog's button and its close event can both answer.
         if (answered) return;

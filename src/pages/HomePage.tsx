@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PlatformMatrix } from "@/components/homepage/PlatformMatrix";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/components/theme-provider";
 import { useTranslation } from "react-i18next";
@@ -743,6 +744,7 @@ const HomePage = () => {
               </li>
             ))}
           </ul>
+          <PlatformMatrix />
         </div>
       </section>
 

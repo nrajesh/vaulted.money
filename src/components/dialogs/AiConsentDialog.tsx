@@ -50,6 +50,14 @@ export const AiConsentDialog = () => {
                     'To suggest categories, Vaulted Money sends {{provider}} the payee names you are categorising, such as "Starbucks", and the names of your categories.',
                 })}
               </p>
+              {pending?.payeeCount ? (
+                <p className="font-medium text-foreground">
+                  {t("aiConsent.thisTime", {
+                    count: pending.payeeCount,
+                    defaultValue: "This time: {{count}} payee names.",
+                  })}
+                </p>
+              ) : null}
               <p>
                 {t("aiConsent.notSent", {
                   defaultValue:

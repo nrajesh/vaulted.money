@@ -36,14 +36,14 @@
 
 ## How It Differs
 
-| | Most finance apps | Vaulted Money |
-| --- | --- | --- |
-| 🔒 **Where your data lives** | On the company's servers | On your device. It leaves only when you export it. |
-| 👤 **Signing up** | Email, password, often a bank login | Nothing. Open it and start. |
-| 🔎 **Finding things** | Filters and dropdowns | Type "groceries over 50 last month". No AI or cloud involved. |
-| 🤖 **AI** | Increasingly built in by default | Off until you switch it on, with your own key or your own agent. |
-| 🧰 **Automation** | Rarely scriptable | A desktop Local API with OpenAPI and a Postman collection. |
-| 📖 **Trust** | Take their word for it | Read the code. MIT licensed. |
+|                              | Most finance apps                   | Vaulted Money                                                    |
+| ---------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
+| 🔒 **Where your data lives** | On the company's servers            | On your device. It leaves only when you export it.               |
+| 👤 **Signing up**            | Email, password, often a bank login | Nothing. Open it and start.                                      |
+| 🔎 **Finding things**        | Filters and dropdowns               | Type "groceries over 50 last month". No AI or cloud involved.    |
+| 🤖 **AI**                    | Increasingly built in by default    | Off until you switch it on, with your own key or your own agent. |
+| 🧰 **Automation**            | Rarely scriptable                   | A desktop Local API with OpenAPI and a Postman collection.       |
+| 📖 **Trust**                 | Take their word for it              | Read the code. MIT licensed.                                     |
 
 ## How It Works, In One Picture
 
@@ -93,18 +93,35 @@ The important bit: your data stays local by default. There is no hosted Vaulted 
 
 ## What Can It Do?
 
-| Area         | Plain-English Meaning                                                |
-| ------------ | -------------------------------------------------------------------- |
-| Ledgers      | Keep separate money books, such as Personal, Business, or Joint.     |
-| Transactions | Record money coming in or going out.                                 |
-| Accounts     | Track where money lives, such as checking, savings, cash, or credit. |
-| Categories   | Understand what the money was for.                                   |
-| Budgets      | Set limits or goals and see progress.                                |
-| Imports      | Bring in bank CSV exports.                                           |
-| Search       | Type a sentence such as "groceries over 50 last month" and pick what it understood. |
-| Reports      | See income, spending, net worth, trends, and summaries.              |
-| Backups      | Export your data as JSON, with encrypted backup options.             |
-| Optional AI  | Bring your own API key to help categorize transactions.              |
+| Area         | Plain-English Meaning                                                                         |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| Ledgers      | Keep separate money books, such as Personal, Business, or Joint.                              |
+| Transactions | Record money coming in or going out.                                                          |
+| Accounts     | Track where money lives, such as checking, savings, cash, or credit.                          |
+| Categories   | Understand what the money was for.                                                            |
+| Budgets      | Set limits or goals and see progress.                                                         |
+| Imports      | Bring in bank CSV exports.                                                                    |
+| Search       | Type a sentence such as "groceries over 50 last month" and pick what it understood.           |
+| Reports      | See income, spending, net worth, trends, and summaries.                                       |
+| Backups      | Export your data as JSON, with encrypted backup options.                                      |
+| Sync         | Keep devices in step through your own cloud folder, encrypted with your passphrase.           |
+| Optional AI  | Bring your own API key, or run a model on your own computer, to help categorize transactions. |
+
+## What Works Where
+
+Your books work the same on every device. Automation needs the desktop app, because phones and browsers do not let an app run a server or talk to other programs on your computer.
+
+| Feature                                      |       Web       | iPhone, iPad, Android | Desktop app |
+| -------------------------------------------- | :-------------: | :-------------------: | :---------: |
+| Accounts, transactions, budgets and reports  |       ✅        |          ✅           |     ✅      |
+| Plain-English search, offline                |       ✅        |          ✅           |     ✅      |
+| Encrypted sync through your own cloud folder | ✅ Chrome, Edge |          ✅           |     ✅      |
+| AI categories with your own cloud AI key     |       ✅        |          ✅           |     ✅      |
+| AI on your own computer (LM Studio, Ollama)  |        —        |           —           |     ✅      |
+| Connect an AI agent (MCP)                    |        —        |           —           |     ✅      |
+| Local API for scripts                        |        —        |           —           |     ✅      |
+
+Cloud AI is labelled as cloud everywhere it appears. Before each run the app says how many payee names it is about to send and to whom; amounts, dates and notes are never sent.
 
 ## Quick Setup
 
@@ -205,12 +222,12 @@ You can let an AI agent such as Claude read your money manager and help with it,
 
 Vaulted Money is free and open-source under the MIT license. If you find it useful and want to support development, you have several options:
 
-| Channel                                                          | Status      |
-| ---------------------------------------------------------------- | ----------- |
-| Buy on Apple App Store (€9.99 one-time)                          | Coming soon |
-| Buy on Google Play Store (€9.99 one-time)                        | Coming soon |
-| Buy the desktop app on Polar (€9.99 one-time)                    | Coming soon |
-| [GitHub Sponsors](https://github.com/sponsors/nrajesh)           | Active      |
+| Channel                                                | Status      |
+| ------------------------------------------------------ | ----------- |
+| Buy on Apple App Store (€9.99 one-time)                | Coming soon |
+| Buy on Google Play Store (€9.99 one-time)              | Coming soon |
+| Buy the desktop app on Polar (€9.99 one-time)          | Coming soon |
+| [GitHub Sponsors](https://github.com/sponsors/nrajesh) | Active      |
 
 The same app is free to build from source, regardless of which channel you choose. Store purchases exist to make installation simpler for non-technical users and to support continued development.
 

@@ -47,3 +47,17 @@ export const isLoopbackUrl = (url: string): boolean => {
     return false;
   }
 };
+
+/**
+ * Where payee names go when this provider is used: this computer, a machine
+ * on the home network, or a company's servers over the internet. Shown on
+ * every provider so cloud services are never mistaken for local ones.
+ */
+export type ProviderLocation = "this-computer" | "home-network" | "cloud";
+
+export const providerLocation = (baseUrl: string): ProviderLocation =>
+  isLoopbackUrl(baseUrl)
+    ? "this-computer"
+    : isPrivateNetworkUrl(baseUrl)
+      ? "home-network"
+      : "cloud";

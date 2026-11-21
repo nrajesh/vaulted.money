@@ -20,9 +20,9 @@ import { showSuccess } from "@/utils/toast";
 import { ManageLedgerDialog } from "@/components/dialogs/ManageLedgerDialog";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useSyncConfig } from "@/hooks/useSyncConfig";
+import { SyncSecurityPanel } from "@/components/settings/SyncSecurityPanel";
 import { useAIConfig } from "@/hooks/useAIConfig";
 import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Info,
   FolderOpen,
@@ -304,21 +304,6 @@ const SettingsPage = () => {
             <ThemedCardContent>
               {syncConfig.config.autoSyncEnabled && (
                 <div className="space-y-4">
-                  <Alert className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300">
-                    <Info className="h-4 w-4" />
-                    <AlertTitle>
-                      {t("settings.sync.recommendationTitle", {
-                        defaultValue: "Recommendation",
-                      })}
-                    </AlertTitle>
-                    <AlertDescription>
-                      {t("settings.sync.recommendation", {
-                        defaultValue:
-                          "Pick a folder that iCloud, Google Drive or Dropbox syncs to have your backups on your other devices too.",
-                      })}
-                    </AlertDescription>
-                  </Alert>
-
                   <div className="space-y-2 max-w-xl">
                     <Label>
                       {t("settings.sync.location", {
@@ -382,6 +367,7 @@ const SettingsPage = () => {
                       )}
                     </div>
                   </div>
+                  <SyncSecurityPanel />
                 </div>
               )}
             </ThemedCardContent>

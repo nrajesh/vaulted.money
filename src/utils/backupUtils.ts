@@ -84,6 +84,13 @@ export const saveFile = async (
 };
 
 /**
+ * Version of the backup and sync file layout. Bump it only when an older app
+ * would lose data by reading a newer file; continuity sync refuses files with
+ * a higher number instead of overwriting them.
+ */
+export const SYNC_SCHEMA_VERSION = 8;
+
+/**
  * Generate a full backup object (all ledgers)
  * Wrapped in a SyncPayloadEnvelope for cross-device compatibility version checking.
  */
@@ -91,7 +98,7 @@ export const generateBackupData = async (dataProvider: DataProvider) => {
   const rawData = await dataProvider.exportData();
   return {
     appVersion: __APP_VERSION__,
-    schemaVersion: 8, // Manually synced to Dexie schema version in dexieDB.ts
+    schemaVersion: SYNC_SCHEMA_VERSION,
     exportTimestamp: new Date().toISOString(),
     data: rawData,
   };
@@ -136,7 +143,7 @@ export const processImport = async (
         const currentVersion = __APP_VERSION__;
         if (
           parsed.appVersion !== currentVersion ||
-          parsed.schemaVersion !== 8 // Dexie schema version
+          parsed.schemaVersion !== SYNC_SCHEMA_VERSION
         ) {
           return {
             type: "warning",

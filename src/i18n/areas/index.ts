@@ -29,6 +29,7 @@ import {
 } from "./aiHub";
 import { searchSuggestions } from "./searchSuggestions";
 import { homeLanding } from "./homeLanding";
+import { syncAndPlatforms } from "./syncAndPlatforms";
 import { mergeMissing } from "./merge";
 import type { AreaLanguage, AreaTranslations } from "./types";
 
@@ -43,6 +44,7 @@ export const areaTranslations: AreaTranslations[] = [
   budgets,
   scheduledScreens,
   settingsScreen,
+  syncAndPlatforms,
   dataManagementScreen,
   backupScreen,
   csvImportScreen,
