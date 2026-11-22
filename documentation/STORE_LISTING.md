@@ -233,7 +233,7 @@ The app is a money manager and account tracker, not only a budget app, so the na
 ### Short description [80]
 
 ```
-Private, offline budgeting. No sign-up, no cloud. Optional AI, off by default.
+Private money manager: accounts, budgets and bills. Offline, no sign-up.
 ```
 
 ### Full description [4000]
@@ -287,29 +287,41 @@ First release on Google Play.
 
 ### Store settings
 
-| Field          | Value                                                                            |
-| -------------- | -------------------------------------------------------------------------------- |
-| Category       | Finance                                                                          |
-| Tags           | Budgeting, Expense tracker, Personal finance                                     |
-| Email          | admin@imaginest.nl                                                               |
-| Website        | https://vaulted.money                                                            |
-| Privacy policy | https://vaulted.money/privacy                                                    |
-| Price          | €9.99, set as Paid when creating the app (a free Play app can never become paid) |
-| Countries      | All except China (Google Play is not offered there)                              |
+| Field          | Value                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| Category       | Finance                                                                                         |
+| Tags           | Personal finance, Finance (Play has no budgeting, expense, money or accounting tags)            |
+| Email          | apps@imaginest.nl                                                                               |
+| Phone          | None                                                                                            |
+| Website        | https://vaulted.money                                                                           |
+| Privacy policy | https://vaulted.money/privacy                                                                   |
+| Paid           | Chosen when creating the app; once published, a free Play app can never become paid             |
+| Countries      | All Play offers (China has no Google Play); the "Select countries" task unlocks after a release |
+
+### Prices
+
+Play prices match the App Store price of each country, taxes included: €9.99 in the euro countries, £8.99 in the UK, $8.99 in the US, CHF 8.00, ¥1,500, R$39.90 and so on. The source is the App Store Connect price export (three CSVs: current prices that may adjust automatically, manually adjusted prices, and prices ending on Dec 3, 2026).
+
+- Do not set one euro base price and let Play convert it. Play treats it as the price before tax, so €9.99 became €11.99 in every country with VAT. Edit each country instead.
+- Where Play bills in another currency than Apple (Apple's USD countries such as Algeria, Argentina, Kenya and Ukraine, and Bosnia and Serbia, where Apple uses euros), Play's converted price is kept.
+- Countries Play sells in that the App Store export lacks (Aruba, Bangladesh, Monaco, Liechtenstein, San Marino and others) keep Play's price. Montenegro (€7.99 on the App Store) is not in Play's price table.
 
 ### App content answers
 
-| Page               | Answer                                                                                                                                                                     |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy policy     | https://vaulted.money/privacy                                                                                                                                              |
-| Ads                | No                                                                                                                                                                         |
-| App access         | All functionality is available without special access. Paste the review note from the Apple section.                                                                       |
-| Content rating     | Category "Utility, productivity, communication or other"; answer No to everything. Expect Everyone / PEGI 3.                                                               |
-| Target audience    | 18 and over                                                                                                                                                                |
-| Data safety        | Collects no data and shares no data. Data is encrypted in transit: Yes (AI calls and sync go over HTTPS). Users can request deletion: deleting the app removes everything. |
-| Financial features | Choose **Personal finance: budgeting or expense tracking** and nothing else.                                                                                               |
-| Government app     | No                                                                                                                                                                         |
-| Health             | None                                                                                                                                                                       |
+| Page               | Answer                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy policy     | https://vaulted.money/privacy                                                                                                                     |
+| Ads                | No                                                                                                                                                |
+| App access         | "No part of your app is restricted". This option has no instructions field, so the Apple review note is not used.                                 |
+| Content rating     | Category "All Other App Types"; No to everything; email apps@imaginest.nl. Result: PEGI 3, ESRB Everyone, USK 0.                                  |
+| Target audience    | 18 and over                                                                                                                                       |
+| Data safety        | No data collected, no data shared (the security questions only appear after a Yes). See the note below.                                           |
+| Financial features | "My app doesn't provide any financial features". Play lists no budgeting option; its categories are banking, loans, payments, trading and advice. |
+| Trader status      | Yes (the account is a trader); Terms of Service URL left empty.                                                                                   |
+| Government app     | No                                                                                                                                                |
+| Health             | "My app does not have any health features"                                                                                                        |
+
+**Data safety risk.** Google counts data "transmitted off device from your app" as collected, "irrespective of whether data is transmitted to you or a third-party server"; only on-device and end-to-end encrypted data are exempt. The optional AI feature sends payee and category names to the provider the user picks, so a reviewer may call that collection. The owner chose "none" and will correct it if Play flags it. The answer would then be: Yes; Financial info → Other financial info; collected, not shared (the user starts the transfer after an in-app consent); optional; not ephemeral; for App functionality; encrypted in transit; deletion requests No.
 
 ### Graphics
 
