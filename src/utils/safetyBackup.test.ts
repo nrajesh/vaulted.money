@@ -177,6 +177,52 @@ describe("safetyBackup", () => {
     }
   });
 
+  it("keeps the device's backup settings when putting them back fails", async () => {
+    const device: BackupConfig = {
+      id: "device",
+      frequency: 86_400_000,
+      isActive: true,
+      nextBackup: "2026-02-01T00:00:00.000Z",
+      directoryHandle: { kind: "directory", name: "Backups" },
+      encrypted: true,
+      passwordHash: "hash",
+    };
+    await addTransaction(dp, "Original");
+    const copy = await makeSafetyBackup(dp, { reason: "sync" });
+    await dp.addBackupConfig(device);
+    await addTransaction(dp, "Later");
+
+    // Make every write of the device's settings fail (as when storage is
+    // full). Writes of other settings still go through.
+    const failure = new Error("quota exceeded");
+    const table = db.backup_configs;
+    const bulkAdd = table.bulkAdd.bind(table);
+    vi.spyOn(table, "add").mockRejectedValue(failure);
+    vi.spyOn(table, "bulkAdd").mockImplementation(((
+      rows: BackupConfig[],
+      ...rest: unknown[]
+    ) =>
+      rows.some((row) => row.id === "device")
+        ? Promise.reject(failure)
+        : (bulkAdd as (...args: unknown[]) => unknown)(
+            rows,
+            ...rest,
+          )) as unknown as typeof table.bulkAdd);
+
+    await expect(restoreSafetyBackup(dp, copy!.id)).rejects.toThrow(
+      "quota exceeded",
+    );
+    expect(await dp.getBackupConfigs()).toEqual([device]);
+    // The failed restore changed nothing else either.
+    const exported = (await dp.exportData()) as {
+      transactions: { vendor: string }[];
+    };
+    expect(exported.transactions.map((t) => t.vendor).sort()).toEqual([
+      "Later",
+      "Original",
+    ]);
+  });
+
   it("makes an undo copy before restoring and keeps the restored copy", async () => {
     await addTransaction(dp, "Original");
     const copy = await makeSafetyBackup(dp, { reason: "sync" });

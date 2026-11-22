@@ -104,15 +104,22 @@ export async function restoreSafetyBackup(
    * is an upsert, so it also re-adds providers the copy did not have while
    * keeping their ids (the keys in localStorage are stored per id).
    *
-   * Backup settings are kept the same way, for the same reason. The import
-   * replaces the backup settings with the copy's, and a copy never holds the
-   * folder handle a web browser needs to write to the chosen folder. Without
-   * this step a scheduled folder backup would silently stop after a restore,
+   * Backup settings are kept too, for the same reason. The import replaces
+   * the backup settings with the copy's, and a copy never holds the folder
+   * handle a web browser needs to write to the chosen folder. Without this
+   * step a scheduled folder backup would silently stop after a restore,
    * schedules made after the copy would vanish, and a changed backup
    * password would revert. The schedules are settings of this device, not
-   * part of the money data, so after the import we put back exactly the
-   * device's set (handles, paths, password settings and all) and drop the
-   * copy's version.
+   * part of the money data, so we keep exactly the device's set (handles,
+   * paths, password settings and all) and drop the copy's version.
+   *
+   * Unlike the providers they are not put back in a later step: they go
+   * into the import itself, in place of the copy's. The import writes
+   * everything in one database transaction, so if any write fails the whole
+   * restore rolls back and the device's settings are untouched. A separate
+   * put-back could fail after the import had already replaced them, and
+   * neither a copy nor the undo copy can bring them back (copies never hold
+   * folder handles or password hashes).
    */
   const deviceProviders = await dp.getAIProviders();
   const deviceBackupConfigs = await dp.getBackupConfigs();
@@ -126,15 +133,12 @@ export async function restoreSafetyBackup(
       protectId: id,
     },
     async () => {
-      await dp.importData(data);
+      await dp.importData({
+        ...(data as Record<string, unknown>),
+        backup_configs: deviceBackupConfigs,
+      });
       for (const provider of deviceProviders) {
         await dp.updateAIProvider(provider);
-      }
-      for (const config of await dp.getBackupConfigs()) {
-        await dp.deleteBackupConfig(config.id);
-      }
-      for (const config of deviceBackupConfigs) {
-        await dp.addBackupConfig(config);
       }
     },
   );
