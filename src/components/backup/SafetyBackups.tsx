@@ -305,6 +305,11 @@ const SafetyBackups = () => {
                         size="sm"
                         className="h-auto min-h-9 whitespace-normal"
                         onClick={() => setRestoreId(copy.id)}
+                        aria-label={t("safetyBackups.restoreOne", {
+                          name,
+                          details,
+                          defaultValue: "Restore {{name}}, {{details}}",
+                        })}
                       >
                         <RotateCcw
                           className="mr-2 h-4 w-4"
@@ -319,6 +324,11 @@ const SafetyBackups = () => {
                         size="sm"
                         className="h-auto min-h-9 whitespace-normal"
                         onClick={() => void saveAsFile(copy)}
+                        aria-label={t("safetyBackups.saveAsFileOne", {
+                          name,
+                          details,
+                          defaultValue: "Save as file: {{name}}, {{details}}",
+                        })}
                       >
                         <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                         {t("safetyBackups.saveAsFile", {

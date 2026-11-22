@@ -122,6 +122,44 @@ describe("SafetyBackups", () => {
     ).toBeInTheDocument();
   });
 
+  it("names each row's buttons after its copy for screen readers", async () => {
+    renderSection();
+
+    const items = await screen.findAllByRole("listitem");
+    const restoreButtons = items.map((item) =>
+      within(item).getByRole("button", { name: /^Restore / }),
+    );
+    const saveButtons = items.map((item) =>
+      within(item).getByRole("button", { name: /^Save as file: / }),
+    );
+
+    // Each name starts with the visible text (so speech control still works)
+    // and adds the copy's reason and details (date, ledgers).
+    expect(restoreButtons[0]).toHaveAccessibleName(
+      expect.stringMatching(
+        /^Restore Before CSV import: transactions, .*3 ledgers$/,
+      ),
+    );
+    expect(restoreButtons[1]).toHaveAccessibleName(
+      expect.stringMatching(/^Restore Before sync, .*1 ledger$/),
+    );
+    expect(restoreButtons[0].getAttribute("aria-label")).not.toBe(
+      restoreButtons[1].getAttribute("aria-label"),
+    );
+    expect(saveButtons[0]).toHaveAccessibleName(
+      expect.stringMatching(
+        /^Save as file: Before CSV import: transactions, .*3 ledgers$/,
+      ),
+    );
+    expect(saveButtons[1]).toHaveAccessibleName(
+      expect.stringMatching(/^Save as file: Before sync, .*1 ledger$/),
+    );
+
+    // The visible text stays short.
+    expect(restoreButtons[0]).toHaveTextContent(/^Restore$/);
+    expect(saveButtons[0]).toHaveTextContent(/^Save as file$/);
+  });
+
   it("says 0 ledgers for a copy of an empty database", async () => {
     // Generate demo data on a fresh install copies an empty database.
     mockListSafetyBackups.mockResolvedValue([
@@ -156,7 +194,11 @@ describe("SafetyBackups", () => {
     renderSection();
 
     const items = await screen.findAllByRole("listitem");
-    await user.click(within(items[0]).getByRole("button", { name: "Restore" }));
+    await user.click(
+      within(items[0]).getByRole("button", {
+        name: /^Restore Before CSV import: transactions,/,
+      }),
+    );
 
     const dialog = await screen.findByRole("alertdialog");
     expect(
@@ -181,7 +223,9 @@ describe("SafetyBackups", () => {
 
     const items = await screen.findAllByRole("listitem");
     await user.click(
-      within(items[0]).getByRole("button", { name: "Save as file" }),
+      within(items[0]).getByRole("button", {
+        name: /^Save as file: Before CSV import: transactions,/,
+      }),
     );
 
     await waitFor(() => expect(mockSaveFile).toHaveBeenCalled());
@@ -250,7 +294,11 @@ describe("SafetyBackups", () => {
     renderSection();
 
     const items = await screen.findAllByRole("listitem");
-    await user.click(within(items[0]).getByRole("button", { name: "Restore" }));
+    await user.click(
+      within(items[0]).getByRole("button", {
+        name: /^Restore Before CSV import: transactions,/,
+      }),
+    );
     const confirm = await screen.findByRole("alertdialog");
     await user.click(within(confirm).getByRole("button", { name: "Restore" }));
 
