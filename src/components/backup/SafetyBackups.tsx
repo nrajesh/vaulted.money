@@ -178,7 +178,9 @@ const SafetyBackups = () => {
     <Card className="mt-6">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
+          {/* basis-48: without a basis the buttons never wrap, and on a narrow
+              phone with Larger text they squeeze the title to one letter per line. */}
+          <div className="min-w-0 flex-1 basis-48">
             <CardTitle className="break-words">
               {t("safetyBackups.title", {
                 defaultValue: "Automatic safety copies",

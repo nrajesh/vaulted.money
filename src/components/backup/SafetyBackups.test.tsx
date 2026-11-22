@@ -122,6 +122,35 @@ describe("SafetyBackups", () => {
     ).toBeInTheDocument();
   });
 
+  it("says 0 ledgers for a copy of an empty database", async () => {
+    // Generate demo data on a fresh install copies an empty database.
+    mockListSafetyBackups.mockResolvedValue([
+      { ...older, reason: "demo_data", ledger_count: 0 },
+    ]);
+    renderSection();
+
+    const [item] = await screen.findAllByRole("listitem");
+    expect(
+      within(item).getByText("Before generating demo data"),
+    ).toBeInTheDocument();
+    expect(within(item).getByText(/0 ledgers$/)).toBeInTheDocument();
+  });
+
+  it("keeps the title wide enough that the header buttons wrap below it", async () => {
+    // At 360px with Larger text, Delete and Cancel used to squeeze the
+    // title to one letter per line: flex-1 with min-w-0 and no basis never
+    // wraps. A basis makes the buttons move to their own line instead.
+    const user = userEvent.setup();
+    renderSection();
+    await screen.findAllByRole("listitem");
+    await user.click(screen.getByRole("button", { name: "Select" }));
+
+    const titleBlock = screen.getByRole("heading", {
+      name: "Automatic safety copies",
+    }).parentElement!;
+    expect(titleBlock.className).toMatch(/\bbasis-/);
+  });
+
   it("restores after confirming", async () => {
     const user = userEvent.setup();
     renderSection();
