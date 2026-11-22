@@ -352,3 +352,46 @@ Made by `pnpm marketing:screenshots`, in `marketing/store-screenshots/out/`:
 **AI asset declaration** (Store listing → Review): "Label assets as created or edited using AI", with every asset labelled (icon, feature graphic and all screenshots), since Claude made them all. Foldable screenshots are left empty.
 
 Upload screenshots in headline order: 1 "Your money never leaves your device", 2 "Ask it like you'd say it", 3 "Your money. Your labels. Your rules.", 4 "AI when you want it", 5 "Every budget at a glance", 6 "Room to breathe on big screens" (tablets only), 7 "Bills on the calendar". The phone set skips 6.
+
+---
+
+## Desktop app on Polar
+
+The desktop app (macOS, Windows, Linux) is sold only through Polar, not the Mac App Store. The Mac App Store is planned for 2.1. Polar is the merchant of record and handles EU VAT. Seller: Imaginest (eenmanszaak, Netherlands), support apps@imaginest.nl.
+
+### Product
+
+| Field | Value |
+|---|---|
+| Name | Vaulted Money Desktop |
+| Type | One-time purchase, no subscription |
+| Price | €9.99, **tax included** (set on the price itself, not left to the organisation default) |
+| Delivery | Polar file downloads: Mac (Apple Silicon and Intel), Windows, Linux |
+| Licence keys | None. The app is MIT-licensed and free to build, and it never contacts a server, so there is no in-app licence check |
+| Updates | Buyers download new versions from their Polar customer portal. There is no automatic in-app updater, because it would have to phone home |
+
+Description: One-time purchase of the Vaulted Money desktop app for macOS, Windows and Linux. Private and offline: your data stays on your computer.
+
+### Price check (sandbox, checked 22 Nov 2026)
+
+A Dutch buyer saw subtotal €9.99, taxes (included) €1.73, total €9.99. This matches the App Store and Google Play. Google Play first added Dutch VAT on top (€11.99), so check the total again in the live checkout before announcing it.
+
+### Live setup
+
+| Item | Value |
+|---|---|
+| Live checkout link | https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB |
+| Buyer portal (downloads) | https://polar.sh/imaginest/portal |
+
+### Status
+
+| Step | Status |
+|---|---|
+| Sandbox product, file downloads and test purchase | Done (22 Nov 2026) |
+| Installers from `main` (2.0.0, App Store build 5) | Done: Mac signed and notarised, Windows and Linux built on GitHub's machines (Windows unsigned, SmartScreen warns on first launch) |
+| Live product and checkout link | Created, price €9.99 tax included |
+| Live file downloads (8 installers) | Uploaded |
+| Polar organisation review | Approved (22 Nov 2026) |
+| README link, "which file" guide and website buy button | In the PR to `pre-prod`; live after it reaches `main` |
+| Live checkout total for a Dutch buyer | Check it is €9.99 before announcing |
+| In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1 |

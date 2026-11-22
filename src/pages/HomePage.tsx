@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
-import { GITHUB_REPO_URL } from "@/utils/feedbackLinks";
+import { DESKTOP_CHECKOUT_URL, GITHUB_REPO_URL } from "@/utils/feedbackLinks";
 import { showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import SiteFooter from "@/components/SiteFooter";
@@ -837,6 +837,14 @@ const HomePage = () => {
                 <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
                   <GitFork className="h-4 w-4" />
                   {t("home.actions.github", { defaultValue: "View source" })}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button asChild variant="outline" className="rounded-md">
+                <a href={DESKTOP_CHECKOUT_URL} target="_blank" rel="noreferrer">
+                  {t("home.actions.buyDesktop", {
+                    defaultValue: "Buy the desktop app (€9.99)",
+                  })}
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
