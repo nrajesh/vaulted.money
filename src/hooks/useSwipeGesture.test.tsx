@@ -42,6 +42,15 @@ describe("useSwipeGesture", () => {
     expect(screen.getByTestId("dragging").textContent).toBe("false");
   });
 
+  it("leaves vertical scrolling and pinch zoom to the browser", () => {
+    render(<Harness />);
+    // Only sideways drags belong to the card; pinch zoom must keep working
+    // (index.html allows zoom).
+    expect(screen.getByTestId("card").getAttribute("style")).toContain(
+      "touch-action: pan-y pinch-zoom",
+    );
+  });
+
   it("a short drag below the snap point closes again", () => {
     render(<Harness />);
     const card = screen.getByTestId("card");

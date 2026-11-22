@@ -280,7 +280,7 @@ export function useSwipeGesture({
       onPointerCancel: finish,
       onClickCapture,
       onContextMenu,
-      style: { touchAction: "pan-y" },
+      style: { touchAction: "pan-y pinch-zoom" },
     }),
     [onPointerDown, onPointerMove, finish, onClickCapture, onContextMenu],
   );
