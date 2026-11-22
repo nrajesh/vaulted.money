@@ -159,7 +159,7 @@ Apple lets you publish these only after a version is live: open App Accessibilit
 
 ```
 1. SCREEN RECORDING
-Attached: recorded on a physical iPhone running the latest iOS with build 2.0.0 (5), starting from launching the app. The app has no account registration, login or account deletion, no user-generated content shared with others, and no in-app purchases: it is a one-time paid download, so every feature is available from the first launch.
+Attached: recorded on a physical iPhone running the latest iOS with build 2.0.0 (5), with spoken commentary, starting from launching the app. It shows generating demo data, the dashboard, plain-English search, adding a transaction, budgets, the calendar, exporting a CSV file to the Files app, and the optional AI setup. The app has no account registration, login or account deletion, no user-generated content shared with others, and no in-app purchases: it is a one-time paid download, so every feature is available from the first launch.
 
 2. PURPOSE AND AUDIENCE
 Vaulted Money is a private personal money manager for adults who want to track their spending, accounts and budgets without handing their financial data to a company. Most budgeting apps need an account and store bank data on a server; Vaulted Money keeps everything on the device. It covers transactions, accounts, budgets, recurring payments, a cash-flow calendar, reports and plain-English search (for example "groceries in checking last month over 25").
