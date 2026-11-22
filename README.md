@@ -222,12 +222,18 @@ You can let an AI agent such as Claude read your money manager and help with it,
 
 Vaulted Money is free and open-source under the MIT license. If you find it useful and want to support development, you have several options:
 
-| Channel                                                | Status      |
-| ------------------------------------------------------ | ----------- |
-| Buy on Apple App Store (€9.99 one-time)                | Coming soon |
-| Buy on Google Play Store (€9.99 one-time)              | Coming soon |
-| Buy the desktop app on Polar (€9.99 one-time)          | Coming soon |
-| [GitHub Sponsors](https://github.com/sponsors/nrajesh) | Active      |
+| Channel                                                                                                                    | Status      |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Buy on Apple App Store (€9.99 one-time)                                                                                    | Coming soon |
+| Buy on Google Play Store (€9.99 one-time)                                                                                  | Coming soon |
+| [Buy the desktop app on Polar](https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB) (€9.99 one-time) | Active      |
+| [GitHub Sponsors](https://github.com/sponsors/nrajesh)                                                                     | Active      |
+
+**Which desktop file do I download?** One purchase includes macOS, Windows and Linux, and you get every file. Download new versions from your Polar customer portal (https://polar.sh/imaginest/portal) with the email you bought with. There is no automatic update check, because the app never contacts a server.
+
+- **Mac with an Apple chip (M1 or newer):** `mac-arm64.dmg`. **Mac with an Intel chip:** `mac-x64.dmg`.
+- **Windows:** `win-x64.exe` for most PCs, `win-arm64.exe` for Windows on Arm. Windows may warn on first launch: choose More info, then Run anyway.
+- **Linux:** `.deb` for Debian and Ubuntu, `.AppImage` for other systems (`amd64` or `x86_64` for most PCs, `arm64` for Arm).
 
 The same app is free to build from source, regardless of which channel you choose. Store purchases exist to make installation simpler for non-technical users and to support continued development.
 

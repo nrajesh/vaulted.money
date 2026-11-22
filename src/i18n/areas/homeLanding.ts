@@ -4,6 +4,9 @@ import type { AreaTranslations } from "./types";
 export const homeLanding: AreaTranslations = {
   en: {
     home: {
+      actions: {
+        buyDesktop: "Buy the desktop app (€9.99)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -91,12 +94,21 @@ export const homeLanding: AreaTranslations = {
           summary:
             "One AI switch. Connect Claude Code, Claude Desktop, or Codex through MCP on desktop.",
         },
+        desktopOnPolar: {
+          window: "November 2026",
+          title: "Desktop app on Polar",
+          summary:
+            "One purchase covers Mac, Windows and Linux. Private and offline, with no licence check and no update check.",
+        },
         localApiDetails: "Desktop Local API. OpenAPI and Postman collection.",
       },
     },
   },
   es: {
     home: {
+      actions: {
+        buyDesktop: "Compra la app de escritorio (9,99 €)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -185,6 +197,12 @@ export const homeLanding: AreaTranslations = {
           summary:
             "Un interruptor controla las funciones de IA. Conecta Claude Code, Claude Desktop o Codex mediante MCP en escritorio.",
         },
+        desktopOnPolar: {
+          window: "Noviembre de 2026",
+          title: "App de escritorio en Polar",
+          summary:
+            "Una sola compra cubre Mac, Windows y Linux. Privada y sin conexión, sin comprobación de licencia ni de actualizaciones.",
+        },
         localApiDetails:
           "API local de escritorio. Especificación OpenAPI y colección de Postman.",
       },
@@ -192,6 +210,9 @@ export const homeLanding: AreaTranslations = {
   },
   zh: {
     home: {
+      actions: {
+        buyDesktop: "购买桌面版应用（€9.99）",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -274,12 +295,21 @@ export const homeLanding: AreaTranslations = {
           summary:
             "一个开关控制 AI 功能。可在桌面应用中通过 MCP 连接 Claude Code、Claude Desktop 或 Codex。",
         },
+        desktopOnPolar: {
+          window: "2026 年 11 月",
+          title: "桌面版应用登陆 Polar",
+          summary:
+            "一次购买即可用于 Mac、Windows 和 Linux。私密、离线，无需许可证检查，也不检查更新。",
+        },
         localApiDetails: "桌面本地 API。提供 OpenAPI 描述和 Postman 集合。",
       },
     },
   },
   nl: {
     home: {
+      actions: {
+        buyDesktop: "Koop de desktop-app (€9,99)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -368,6 +398,12 @@ export const homeLanding: AreaTranslations = {
           summary:
             "Eén schakelaar bestuurt AI-functies. Verbind Claude Code, Claude Desktop of Codex via MCP op desktop.",
         },
+        desktopOnPolar: {
+          window: "November 2026",
+          title: "Desktop-app op Polar",
+          summary:
+            "Eén aankoop geldt voor Mac, Windows en Linux. Privé en offline, zonder licentiecontrole en zonder updatecontrole.",
+        },
         localApiDetails:
           "Local API voor desktop. OpenAPI-beschrijving en Postman-collectie.",
       },
@@ -375,6 +411,9 @@ export const homeLanding: AreaTranslations = {
   },
   ta: {
     home: {
+      actions: {
+        buyDesktop: "டெஸ்க்டாப் செயலியை வாங்குங்கள் (€9.99)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -460,6 +499,12 @@ export const homeLanding: AreaTranslations = {
           title: "AI மையமும் MCP முகவர் இணைப்புகளும்",
           summary:
             "ஒரு சுவிட்ச் AI அம்சங்களைக் கட்டுப்படுத்தும். டெஸ்க்டாப்பில் MCP மூலம் Claude Code, Claude Desktop அல்லது Codex ஐ இணைக்கலாம்.",
+        },
+        desktopOnPolar: {
+          window: "நவம்பர் 2026",
+          title: "Polar-இல் டெஸ்க்டாப் செயலி",
+          summary:
+            "ஒரே கொள்முதல் Mac, Windows, Linux மூன்றுக்கும் பொருந்தும். தனிப்பட்டது, ஆஃப்லைன்; உரிம சோதனையோ புதுப்பிப்பு சோதனையோ இல்லை.",
         },
         localApiDetails:
           "டெஸ்க்டாப் Local API. OpenAPI விளக்கமும் Postman தொகுப்பும்.",
