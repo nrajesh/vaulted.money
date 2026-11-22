@@ -220,11 +220,15 @@ Where each file goes on the version page, tab **App Previews and Screenshots**. 
 
 ## Google Play
 
+App created in November 2026 under the developer account "Imaginest" (a **personal** account), app ID 4973580024893380928, package `com.vaultedmoney.app`. Personal accounts must run a closed test with at least 12 opted-in testers for 14 days in a row before Production can be requested.
+
 ### App name [30]
 
 ```
-Vaulted Money: Private Budget
+Vaulted Money
 ```
+
+The app is a money manager and account tracker, not only a budget app, so the name carries no tagline; the short description and tags cover budgeting.
 
 ### Short description [80]
 
@@ -287,7 +291,7 @@ First release on Google Play.
 | -------------- | -------------------------------------------------------------------------------- |
 | Category       | Finance                                                                          |
 | Tags           | Budgeting, Expense tracker, Personal finance                                     |
-| Email          | your support email                                                               |
+| Email          | admin@imaginest.nl                                                               |
 | Website        | https://vaulted.money                                                            |
 | Privacy policy | https://vaulted.money/privacy                                                    |
 | Price          | €9.99, set as Paid when creating the app (a free Play app can never become paid) |
