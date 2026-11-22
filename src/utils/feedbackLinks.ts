@@ -104,3 +104,10 @@ export const buildFeedbackDiagnostics = ({
     `User Agent: ${agent}`,
   ].join("\n");
 };
+
+/**
+ * Polar checkout for the paid desktop app (EUR 9.99, VAT included). Shown on
+ * the website only: the app builds compile the homepage out.
+ */
+export const DESKTOP_CHECKOUT_URL =
+  "https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB";

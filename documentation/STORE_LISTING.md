@@ -220,16 +220,20 @@ Where each file goes on the version page, tab **App Previews and Screenshots**. 
 
 ## Google Play
 
+App created in November 2026 under the developer account "Imaginest" (a **personal** account), app ID 4973580024893380928, package `com.vaultedmoney.app`. Personal accounts must run a closed test with at least 12 opted-in testers for 14 days in a row before Production can be requested.
+
 ### App name [30]
 
 ```
-Vaulted Money: Private Budget
+Vaulted Money
 ```
+
+The app is a money manager and account tracker, not only a budget app, so the name carries no tagline; the short description and tags cover budgeting.
 
 ### Short description [80]
 
 ```
-Private, offline budgeting. No sign-up, no cloud. Optional AI, off by default.
+Private money manager: accounts, budgets and bills. Offline, no sign-up.
 ```
 
 ### Full description [4000]
@@ -283,29 +287,55 @@ First release on Google Play.
 
 ### Store settings
 
-| Field          | Value                                                                            |
-| -------------- | -------------------------------------------------------------------------------- |
-| Category       | Finance                                                                          |
-| Tags           | Budgeting, Expense tracker, Personal finance                                     |
-| Email          | your support email                                                               |
-| Website        | https://vaulted.money                                                            |
-| Privacy policy | https://vaulted.money/privacy                                                    |
-| Price          | €9.99, set as Paid when creating the app (a free Play app can never become paid) |
-| Countries      | All except China (Google Play is not offered there)                              |
+| Field          | Value                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| Category       | Finance                                                                                         |
+| Tags           | Personal finance, Finance (Play has no budgeting, expense, money or accounting tags)            |
+| Email          | apps@imaginest.nl                                                                               |
+| Phone          | None                                                                                            |
+| Website        | https://vaulted.money                                                                           |
+| Privacy policy | https://vaulted.money/privacy                                                                   |
+| Paid           | Chosen when creating the app; once published, a free Play app can never become paid             |
+| Countries      | All Play offers (China has no Google Play); the "Select countries" task unlocks after a release |
+
+### Prices
+
+Play prices match the App Store price of each country, taxes included: €9.99 in the euro countries, £8.99 in the UK, $8.99 in the US, CHF 8.00, ¥1,500, R$39.90 and so on. The source is the App Store Connect price export (three CSVs: current prices that may adjust automatically, manually adjusted prices, and prices ending on Dec 3, 2026).
+
+- Do not set one euro base price and let Play convert it. Play treats it as the price before tax, so €9.99 became €11.99 in every country with VAT. Edit each country instead.
+- Where Play bills in another currency than Apple (Apple's USD countries such as Algeria, Argentina, Kenya and Ukraine, and Bosnia and Serbia, where Apple uses euros), Play's converted price is kept.
+- Countries Play sells in that the App Store export lacks follow the nearest App Store price: Monaco, San Marino and Vatican City €9.99, Liechtenstein CHF 8.00, Gibraltar £8.49, and $8.99 in Aruba, Comoros, Djibouti, Eritrea, Guinea, Haiti, Samoa and Somalia. Montenegro (€7.99 on the App Store) is not in Play's price table.
+
+### Testing a paid app
+
+Testers in closed and open tests must buy a paid app; only internal testers install it free. A country's price cannot be €0. To let the 12 closed testers in for free, use promo codes (Monetize with Play → Promo codes; up to 500 a quarter). The page is open before launch, but whether codes work while the app is still a draft is unconfirmed. Fallback: set the lowest allowed price in the testers' countries during the test, then restore the prices above before applying for Production.
+
+Status (22 November 2026): version 2.0.0 (version code 20000) is live on **internal testing** (list "Vaulted Money internal"); it installs and runs from Play on a Pixel emulator. Production needs the closed test first.
+
+The store listing, App content declarations and category (9 changes) were sent to Google for review on 22 November 2026, with managed publishing off. This publishes nothing publicly; approval replaces "Unrated" with PEGI 3 and the temporary name with Vaulted Money for testers.
+
+- **Testers must be adults.** An unsupervised under-18 account on a certified Pixel 10a saw "This item isn't available", while an adult account on the same phone got the Install button. Until Google reviews the app it shows as "Unrated", and it is paid; Google limits both for minors.
+- **Chrome and the Play Store must use the same Google account** when opening the test link; mixing accounts gives "Item not found" or a blank sheet. A tester who leaves and rejoins may see "Something went wrong on our end" for a while.
+- Promo codes: batch "Vaulted Money Promo 1", 25 codes, valid until 31 December 2026 (codes kept outside the repository). Internal testers don't need one.
+
+Console links: the Play account is the second signed-in Google account in the browser, so links use `/u/1/` (for example https://play.google.com/console/u/1/developers/9063481855871569660/app/4973580024893380928/tracks/internal-testing).
 
 ### App content answers
 
-| Page               | Answer                                                                                                                                                                     |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy policy     | https://vaulted.money/privacy                                                                                                                                              |
-| Ads                | No                                                                                                                                                                         |
-| App access         | All functionality is available without special access. Paste the review note from the Apple section.                                                                       |
-| Content rating     | Category "Utility, productivity, communication or other"; answer No to everything. Expect Everyone / PEGI 3.                                                               |
-| Target audience    | 18 and over                                                                                                                                                                |
-| Data safety        | Collects no data and shares no data. Data is encrypted in transit: Yes (AI calls and sync go over HTTPS). Users can request deletion: deleting the app removes everything. |
-| Financial features | Choose **Personal finance: budgeting or expense tracking** and nothing else.                                                                                               |
-| Government app     | No                                                                                                                                                                         |
-| Health             | None                                                                                                                                                                       |
+| Page               | Answer                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy policy     | https://vaulted.money/privacy                                                                                                                     |
+| Ads                | No                                                                                                                                                |
+| App access         | "No part of your app is restricted". This option has no instructions field, so the Apple review note is not used.                                 |
+| Content rating     | Category "All Other App Types"; No to everything; email apps@imaginest.nl. Result: PEGI 3, ESRB Everyone, USK 0.                                  |
+| Target audience    | 18 and over                                                                                                                                       |
+| Data safety        | No data collected, no data shared (the security questions only appear after a Yes). See the note below.                                           |
+| Financial features | "My app doesn't provide any financial features". Play lists no budgeting option; its categories are banking, loans, payments, trading and advice. |
+| Trader status      | Yes (the account is a trader); Terms of Service URL left empty.                                                                                   |
+| Government app     | No                                                                                                                                                |
+| Health             | "My app does not have any health features"                                                                                                        |
+
+**Data safety risk.** Google counts data "transmitted off device from your app" as collected, "irrespective of whether data is transmitted to you or a third-party server"; only on-device and end-to-end encrypted data are exempt. The optional AI feature sends payee and category names to the provider the user picks, so a reviewer may call that collection. The owner chose "none" and will correct it if Play flags it. The answer would then be: Yes; Financial info → Other financial info; collected, not shared (the user starts the transfer after an in-app consent); optional; not ephemeral; for App functionality; encrypted in transit; deletion requests No.
 
 ### Graphics
 
@@ -318,3 +348,50 @@ Made by `pnpm marketing:screenshots`, in `marketing/store-screenshots/out/`:
 | Phone screenshots          | `playPhone/en/`       |
 | 7-inch tablet screenshots  | `playTablet7/en/`     |
 | 10-inch tablet screenshots | `playTablet10/en/`    |
+
+**AI asset declaration** (Store listing → Review): "Label assets as created or edited using AI", with every asset labelled (icon, feature graphic and all screenshots), since Claude made them all. Foldable screenshots are left empty.
+
+Upload screenshots in headline order: 1 "Your money never leaves your device", 2 "Ask it like you'd say it", 3 "Your money. Your labels. Your rules.", 4 "AI when you want it", 5 "Every budget at a glance", 6 "Room to breathe on big screens" (tablets only), 7 "Bills on the calendar". The phone set skips 6.
+
+---
+
+## Desktop app on Polar
+
+The desktop app (macOS, Windows, Linux) is sold only through Polar, not the Mac App Store. The Mac App Store is planned for 2.1. Polar is the merchant of record and handles EU VAT. Seller: Imaginest (eenmanszaak, Netherlands), support apps@imaginest.nl.
+
+### Product
+
+| Field | Value |
+|---|---|
+| Name | Vaulted Money Desktop |
+| Type | One-time purchase, no subscription |
+| Price | €9.99, **tax included** (set on the price itself, not left to the organisation default) |
+| Delivery | Polar file downloads: Mac (Apple Silicon and Intel), Windows, Linux |
+| Licence keys | None. The app is MIT-licensed and free to build, and it never contacts a server, so there is no in-app licence check |
+| Updates | Buyers download new versions from their Polar customer portal. There is no automatic in-app updater, because it would have to phone home |
+
+Description: One-time purchase of the Vaulted Money desktop app for macOS, Windows and Linux. Private and offline: your data stays on your computer.
+
+### Price check (sandbox, checked 22 Nov 2026)
+
+A Dutch buyer saw subtotal €9.99, taxes (included) €1.73, total €9.99. This matches the App Store and Google Play. Google Play first added Dutch VAT on top (€11.99), so check the total again in the live checkout before announcing it.
+
+### Live setup
+
+| Item | Value |
+|---|---|
+| Live checkout link | https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB |
+| Buyer portal (downloads) | https://polar.sh/imaginest/portal |
+
+### Status
+
+| Step | Status |
+|---|---|
+| Sandbox product, file downloads and test purchase | Done (22 Nov 2026) |
+| Installers from `main` (2.0.0, App Store build 5) | Done: Mac signed and notarised, Windows and Linux built on GitHub's machines (Windows unsigned, SmartScreen warns on first launch) |
+| Live product and checkout link | Created, price €9.99 tax included |
+| Live file downloads (8 installers) | Uploaded |
+| Polar organisation review | Approved (22 Nov 2026) |
+| README link, "which file" guide and website buy button | In the PR to `pre-prod`; live after it reaches `main` |
+| Live checkout total for a Dutch buyer | Check it is €9.99 before announcing |
+| In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1 |

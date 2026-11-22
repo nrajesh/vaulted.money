@@ -4,6 +4,9 @@ import type { AreaTranslations } from "./types";
 export const homeLanding: AreaTranslations = {
   en: {
     home: {
+      actions: {
+        buyDesktop: "Buy the desktop app (€9.99)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -97,6 +100,9 @@ export const homeLanding: AreaTranslations = {
   },
   es: {
     home: {
+      actions: {
+        buyDesktop: "Compra la app de escritorio (9,99 €)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -192,6 +198,9 @@ export const homeLanding: AreaTranslations = {
   },
   zh: {
     home: {
+      actions: {
+        buyDesktop: "购买桌面版应用（€9.99）",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -280,6 +289,9 @@ export const homeLanding: AreaTranslations = {
   },
   nl: {
     home: {
+      actions: {
+        buyDesktop: "Koop de desktop-app (€9,99)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
@@ -375,6 +387,9 @@ export const homeLanding: AreaTranslations = {
   },
   ta: {
     home: {
+      actions: {
+        buyDesktop: "டெஸ்க்டாப் செயலியை வாங்குங்கள் (€9.99)",
+      },
       hero: {
         headline: "Private Vault, Open Code",
         positioning:
