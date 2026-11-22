@@ -115,7 +115,7 @@ Encrypted backups are recommended when the file may live in cloud storage or on 
 
 Some actions change a lot of your data at once. Just before one of them, the app quietly saves a full copy of your data, so you can go back if the result isn't what you wanted. A copy is made before:
 
-- importing a CSV file (transactions, accounts, payees, categories, sub-categories, budgets or scheduled transactions), including imports made through the Local API
+- importing a CSV file of transactions, accounts, payees or categories (with sub-categories), including imports made through the Local API
 - an AI change, such as **Categorize Missing**
 - a sync that brings in changes from another device (a sync that changes nothing makes no copy)
 - **Generate Demo Data**
