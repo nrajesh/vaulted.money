@@ -155,10 +155,12 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     stores: {
       heading: "Get Vaulted Money",
-      descBefore: "Coming soon to your favorite store. The same app is free on",
+      descBefore:
+        "The desktop app is on sale now. The phone apps are coming soon. The same app is free on",
       descAfter: ". Buying through a store supports continued development.",
       openStore: "Open store →",
       comingSoon: "Coming Soon",
+      desktopPrice: "€9.99 one-time",
     },
   },
 
@@ -325,10 +327,11 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     stores: {
       heading: "Obtén Vaulted Money",
       descBefore:
-        "Próximamente en tu tienda favorita. La misma app es gratuita en",
+        "La app de escritorio ya está a la venta. Las apps para móvil llegan pronto. La misma app es gratuita en",
       descAfter: ". Comprar en una tienda apoya el desarrollo continuo.",
       openStore: "Abrir tienda →",
       comingSoon: "Próximamente",
+      desktopPrice: "9,99 € pago único",
     },
   },
 
@@ -485,10 +488,11 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     stores: {
       heading: "获取 Vaulted Money",
-      descBefore: "即将登陆你喜欢的应用商店。同款应用在",
+      descBefore: "桌面版现已发售，手机版即将推出。同款应用在",
       descAfter: "上免费提供。通过商店购买支持持续开发。",
       openStore: "打开商店 →",
       comingSoon: "即将推出",
+      desktopPrice: "€9.99 一次性购买",
     },
   },
 
@@ -654,10 +658,11 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     stores: {
       heading: "Verkrijg Vaulted Money",
       descBefore:
-        "Binnenkort in je favoriete winkel. Dezelfde app is gratis op",
+        "De desktop-app is nu te koop. De telefoon-apps komen binnenkort. Dezelfde app is gratis op",
       descAfter: ". Kopen via een winkel ondersteunt verdere ontwikkeling.",
       openStore: "Winkel openen →",
       comingSoon: "Binnenkort",
+      desktopPrice: "€9,99 eenmalig",
     },
   },
 
@@ -820,11 +825,13 @@ export const homeTranslations: Record<string, Record<string, unknown>> = {
     },
     stores: {
       heading: "Vaulted Money பெறுங்கள்",
-      descBefore: "உங்கள் விருப்பமான கடையில் விரைவில் கிடைக்கும். அதே பயன்பாடு",
+      descBefore:
+        "டெஸ்க்டாப் செயலி இப்போது விற்பனையில் உள்ளது. தொலைபேசி செயலிகள் விரைவில் வரும். அதே பயன்பாடு",
       descAfter:
         " இல் இலவசமாக கிடைக்கிறது. கடையில் வாங்குவது தொடர்ந்த மேம்பாட்டை ஆதரிக்கிறது.",
       openStore: "கடையைத் திற →",
       comingSoon: "விரைவில்",
+      desktopPrice: "€9.99 ஒருமுறை",
     },
   },
 };
