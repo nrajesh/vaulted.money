@@ -23,6 +23,7 @@
 - **Budgets**: category, sub-category, vendor, account and account-type scopes; Monthly, Quarterly, Yearly and One-time (one finished, one running); over budget, near the limit and untouched; an inactive budget; savings goals with and without a target date.
 - **Schedules**: Weekly, Monthly, `2w`, `3m`, Yearly, One-time (upcoming), an ended schedule, a skipped occurrence, income and transfers.
 - **Clean-up tools**: uncategorised imports (**Categorize Missing**), a double-posted scheduled charge (**Cleanup Duplicates**), vendors that differ only by case or punctuation (**De-duplicate**), an unused category and vendors (**Cleanup Unused**).
+- **Safety copies**: generating the demo saves a "Before generating demo data" copy first and keeps it through the wipe, so **Backup → Automatic safety copies** is never empty (asserted in `src/api/demoData.test.ts`).
 - **Text handling**: emoji, accented names (Café, Bäckerei, TÜV), `&`, quotes, `<angle brackets>`, `%`, currency symbols, and remarks that start with `=`, `+`, `-` or `@` (the CSV export must neutralise those).
 
 ## Keeping it meaningful

@@ -103,7 +103,7 @@ The important bit: your data stays local by default. There is no hosted Vaulted 
 | Imports      | Bring in bank CSV exports.                                                                    |
 | Search       | Type a sentence such as "groceries over 50 last month" and pick what it understood.           |
 | Reports      | See income, spending, net worth, trends, and summaries.                                       |
-| Backups      | Export your data as JSON, with encrypted backup options.                                      |
+| Backups      | Export JSON or encrypted backups. Safety copies are made before imports, AI changes and sync. |
 | Sync         | Keep devices in step through your own cloud folder, encrypted with your passphrase.           |
 | Optional AI  | Bring your own API key, or run a model on your own computer, to help categorize transactions. |
 

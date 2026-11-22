@@ -228,6 +228,18 @@ describe("demo data in the real app", () => {
     expect(csv).toContain("'=split with flatmate");
   });
 
+  // Store screenshots open the Backup screen after generating the demo, so it
+  // must show a safety copy rather than an empty list.
+  it("leaves a demo_data safety copy for the Backup screen", async () => {
+    const copies = (
+      await json<{ items: { reason: string; ledger_count: number }[] }>(
+        call("GET", "/backups/safety"),
+      )
+    ).items;
+    expect(copies).toHaveLength(1);
+    expect(copies[0].reason).toBe("demo_data");
+  });
+
   it("keeps the demo going: running it again replaces, not duplicates", async () => {
     await generateDiverseDemoData(dataProvider, () => undefined, {
       now: NOW,
@@ -237,5 +249,18 @@ describe("demo data in the real app", () => {
       await json<{ data: { name: string }[] }>(call("GET", "/ledgers"))
     ).data;
     expect(again).toHaveLength(4);
+
+    // The second run copied the first demo (all four ledgers) and kept the
+    // earlier copy through the wipe: newest first.
+    const copies = (
+      await json<{ items: { reason: string; ledger_count: number }[] }>(
+        call("GET", "/backups/safety"),
+      )
+    ).items;
+    expect(copies.map((copy) => copy.reason)).toEqual([
+      "demo_data",
+      "demo_data",
+    ]);
+    expect(copies[0].ledger_count).toBe(4);
   }, 240_000);
 });

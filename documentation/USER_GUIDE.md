@@ -111,6 +111,29 @@ Use backup exports before:
 
 Encrypted backups are recommended when the file may live in cloud storage or on a shared computer.
 
+### Safety copies
+
+Some actions change a lot of your data at once. Just before one of them, the app quietly saves a full copy of your data, so you can go back if the result isn't what you wanted. A copy is made before:
+
+- importing a CSV file (transactions, accounts, payees, categories, sub-categories, budgets or scheduled transactions), including imports made through the Local API
+- an AI change, such as **Categorize Missing**
+- a sync that brings in changes from another device (a sync that changes nothing makes no copy)
+- **Generate Demo Data**
+- restoring a backup file or a safety copy
+
+The copies are listed under **Automatic safety copies** on the **Backup** screen, newest first, with why and when each was made and how many ledgers it holds. The app keeps the last 5 and deletes older ones by itself.
+
+- **Restore** replaces all your current data with the copy. Before it does, the app saves a copy of your current data, so you can undo the restore. The app then reloads.
+- **Save as file** keeps a copy as a backup file you can store wherever you like.
+- **Delete** (in the **⋯** menu) removes one copy. To remove several, tap **Select**, tick the ones you want and delete them together.
+
+Things to know:
+
+- Copies stay on this device. They are never sent anywhere, and they are deleted along with the app. To keep something safe for longer, use **Save as file** or export a backup.
+- **Reset All Data** deletes the safety copies too. **Generate Demo Data** keeps them, so you can return to your own data afterwards.
+- Copies never include your AI API keys. Restoring a copy keeps the AI providers and keys already set up on this device.
+- If a copy can't be made (for example, because the device is full), an import, AI change or sync still goes ahead and the app warns you. A restore or **Generate Demo Data** replaces everything, so the app asks before going on without a copy.
+
 ## Syncing Between Devices
 
 **Settings → Cross-Device Continuity** keeps devices in step through a folder that your own cloud service (iCloud Drive, Google Drive, Dropbox, Nextcloud) already syncs. There is no Vaulted Money server involved.

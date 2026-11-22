@@ -4,10 +4,6 @@ Work agreed for later releases. Move an item into a spec under `specs/` when it 
 
 ## 2.1
 
-### Back up before risky operations
-
-Make a backup automatically before an AI operation starts, before a CSV import (any entity) and before syncing with another device (cross-device continuity). Deferred from 2.0 so the first store release was not delayed.
-
 ### Larger Text that meets Apple's bar
 
 The app ignores the iPhone's text-size setting, and its own "Larger" setting stops at 125%. Apple's Larger Text accessibility label needs text to grow to 200%. Follow the system text size (Dynamic Type) and allow up to 200%, check every screen on a 360px phone, then declare Larger Text in App Store Connect → App Accessibility.
