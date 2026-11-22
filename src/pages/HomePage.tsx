@@ -31,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StoreButtons } from "@/components/homepage/StoreButtons";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
 import { DESKTOP_CHECKOUT_URL, GITHUB_REPO_URL } from "@/utils/feedbackLinks";
 import { showSuccess } from "@/utils/toast";
@@ -592,6 +593,8 @@ const HomePage = () => {
                 </a>
               </Button>
             </div>
+
+            <StoreButtons />
           </div>
 
           <div className="min-w-0">
@@ -855,14 +858,6 @@ const HomePage = () => {
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
-              <Button asChild variant="outline" className="rounded-md">
-                <a href={DESKTOP_CHECKOUT_URL} target="_blank" rel="noreferrer">
-                  {t("home.actions.buyDesktop", {
-                    defaultValue: "Buy the desktop app (€9.99)",
-                  })}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
             </div>
           </div>
 
@@ -1062,6 +1057,20 @@ const HomePage = () => {
                     <code>{item.command}</code>
                   </pre>
                 </article>
+                {item.id === "desktop" && (
+                  <Button asChild className="mt-4 rounded-md">
+                    <a
+                      href={DESKTOP_CHECKOUT_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {t("home.actions.buyDesktop", {
+                        defaultValue: "Buy the desktop app (€9.99)",
+                      })}
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
               </TabsContent>
             ))}
           </Tabs>
