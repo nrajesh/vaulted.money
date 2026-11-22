@@ -84,6 +84,14 @@ describe("SwipeableCard", () => {
     expect(cardBody().closest("[data-swipe-card]")).not.toBeNull();
   });
 
+  it("lets the caller give the sliding layer the card's own surface", () => {
+    renderCard({ contentClassName: "bg-card" });
+    const layer = cardBody().closest("[data-swipe-content]") as HTMLElement;
+    expect(layer.className).toMatch(/\bbg-card\b/);
+    // The default page colour gives way, so the two never fight.
+    expect(layer.className).not.toMatch(/\bbg-background\b/);
+  });
+
   it("swiping left reveals a Delete button that runs only when tapped", async () => {
     const { remove } = renderCard();
     // Hidden from screen readers and the keyboard while closed.

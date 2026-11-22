@@ -36,6 +36,13 @@ export interface SwipeableCardProps {
   menuButtonLabel?: string; // when set, renders the "…" button with this aria-label
   disabled?: boolean; // select mode etc.: no swipe, no long press
   className?: string;
+  /**
+   * Classes for the sliding layer. It is opaque (the page background by
+   * default) so the action behind never shows through a translucent card;
+   * pass the colour the card actually sits on (e.g. `bg-card` inside a Card)
+   * so the card looks the same as before.
+   */
+  contentClassName?: string;
 }
 
 /**
@@ -52,6 +59,7 @@ export function SwipeableCard({
   menuButtonLabel,
   disabled = false,
   className,
+  contentClassName,
 }: SwipeableCardProps) {
   const cardId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -210,6 +218,7 @@ export function SwipeableCard({
           !dragging &&
             !motionReduced &&
             "transition-transform duration-200 ease-out",
+          contentClassName,
         )}
       >
         {content}
