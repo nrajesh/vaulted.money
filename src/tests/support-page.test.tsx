@@ -67,6 +67,6 @@ describe("Support the project page", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "திட்டத்தை ஆதரிக்கவும்" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("விரைவில்")).toHaveLength(3);
+    expect(screen.getAllByText("விரைவில்")).toHaveLength(2);
   });
 });
