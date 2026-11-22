@@ -3,6 +3,7 @@ import { db } from "@/lib/dexieDB";
 import { LocalDataProvider } from "@/providers/LocalDataProvider";
 import { handleApiRequest } from "./handleRequest";
 import type { ApiResponse, HttpMethod } from "./http";
+import { makeSafetyBackup } from "@/utils/safetyBackup";
 
 (globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ = "test";
 
@@ -1204,6 +1205,332 @@ describe("backups", () => {
   });
 });
 
+describe("backups: safety copies", () => {
+  beforeEach(clearAll);
+
+  interface SafetyCopy {
+    id: string;
+    reason: string;
+    entity?: string;
+    created_at: string;
+    ledger_count: number;
+  }
+  const listCopies = async () =>
+    (await ok<{ items: SafetyCopy[] }>(call("GET", "/backups/safety"))).items;
+  const clearCopies = async () =>
+    dataProvider.deleteSafetyBackups((await listCopies()).map((c) => c.id));
+  /** Makes the next safety copy fail, as when storage is full. */
+  const failNextCopy = () =>
+    vi
+      .spyOn(dataProvider, "saveSafetyBackup")
+      .mockRejectedValueOnce(new Error("storage full"));
+  const ledgerCount = async () =>
+    (await ok<{ data: Entity[] }>(call("GET", "/ledgers"))).data.length;
+  /** A ledger with one uncategorized transaction and a keyless local AI model. */
+  const setUpAiCategorize = async () => {
+    const ledger = await createLedger();
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/transactions`, {
+        date: "2020-04-06",
+        amount: -7,
+        account: "Bank",
+        vendor: "Mystery Shop",
+        category: "Uncategorized",
+      }),
+      201,
+    );
+    await ok(
+      call("POST", "/ai-providers", {
+        name: "Local",
+        type: "CUSTOM",
+        baseUrl: "http://localhost:1234/v1",
+        isDefault: true,
+      }),
+      201,
+    );
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    "Mystery Shop": { categoryName: "Shopping" },
+                  }),
+                },
+              },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    return {
+      url: `/ledgers/${ledger.id}/transactions/categorize-missing`,
+      fetchSpy,
+    };
+  };
+
+  it("lists copies without their content", async () => {
+    await createLedger();
+    await makeSafetyBackup(dataProvider, { reason: "sync" });
+    const res = await call("GET", "/backups/safety");
+    expect(res.status).toBe(200);
+    const items = (res.body as { items: SafetyCopy[] }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ reason: "sync", ledger_count: 1 });
+    expect(items[0].id).toBeTruthy();
+    expect(items[0].created_at).toBeTruthy();
+    expect(items[0]).not.toHaveProperty("payload");
+    expect(JSON.stringify(res.body)).not.toContain("payload");
+  });
+
+  it("restores a copy, with confirmation, keeping an undo copy", async () => {
+    const before = await createLedger();
+    const copy = await makeSafetyBackup(dataProvider, { reason: "sync" });
+    const later = await createLedger();
+    const url = `/backups/safety/${copy!.id}/restore`;
+
+    expect((await call("POST", url, {})).status).toBe(400);
+    expect(
+      (
+        await call("POST", "/backups/safety/nope/restore", {
+          confirm_restore: true,
+        })
+      ).status,
+    ).toBe(404);
+
+    const res = await call("POST", url, { confirm_restore: true });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ restored: copy!.id });
+    expect(res.reloadUi).toBe(true);
+    expect((await call("GET", `/ledgers/${before.id}`)).status).toBe(200);
+    expect((await call("GET", `/ledgers/${later.id}`)).status).toBe(404);
+
+    const items = await listCopies();
+    expect(items).toHaveLength(2);
+    // Both copies can share a millisecond, so find the undo copy by reason.
+    expect(
+      items.find((item) => item.reason === "restore_safety_copy"),
+    ).toMatchObject({ ledger_count: 2 });
+  });
+
+  it("keeps this device's backup schedules when restoring a copy", async () => {
+    await createLedger();
+    const copy = await makeSafetyBackup(dataProvider, { reason: "sync" });
+    await dataProvider.addBackupConfig({
+      id: "made-after-the-copy",
+      frequency: 3_600_000,
+      isActive: true,
+      nextBackup: "2026-02-02T00:00:00.000Z",
+      path: "/backups",
+    });
+
+    await ok(
+      call("POST", `/backups/safety/${copy!.id}/restore`, {
+        confirm_restore: true,
+      }),
+    );
+
+    const schedules = await ok<{ data: Entity[] }>(
+      call("GET", "/backups/schedules"),
+    );
+    expect(schedules.data.map((schedule) => schedule.id)).toEqual([
+      "made-after-the-copy",
+    ]);
+  });
+
+  it("refuses to restore without an undo copy unless told to continue", async () => {
+    await createLedger();
+    const copy = await makeSafetyBackup(dataProvider, { reason: "sync" });
+    await createLedger();
+    const url = `/backups/safety/${copy!.id}/restore`;
+
+    failNextCopy();
+    const refused = await call("POST", url, { confirm_restore: true });
+    expect(refused.status).toBe(409);
+    expect(refused.body).toMatchObject({
+      error: { code: "safety_copy_failed" },
+    });
+    expect(JSON.stringify(refused.body)).toContain(
+      "continue_without_safety_copy",
+    );
+    expect(await ledgerCount()).toBe(2);
+
+    failNextCopy();
+    await ok(
+      call("POST", url, {
+        confirm_restore: true,
+        continue_without_safety_copy: true,
+      }),
+    );
+    expect(await ledgerCount()).toBe(1);
+  });
+
+  it("deletes a copy, with confirmation", async () => {
+    const copy = await makeSafetyBackup(dataProvider, { reason: "sync" });
+    const url = `/backups/safety/${copy!.id}`;
+    expect((await call("DELETE", url, {})).status).toBe(400);
+    expect(
+      (await call("DELETE", "/backups/safety/nope", { confirm_delete: true }))
+        .status,
+    ).toBe(404);
+    expect(await ok(call("DELETE", url, { confirm_delete: true }))).toEqual({
+      deleted: 1,
+    });
+    expect(await listCopies()).toEqual([]);
+    expect((await call("DELETE", url, { confirm_delete: true })).status).toBe(
+      404,
+    );
+  });
+
+  it("makes a required copy before every kind of backup restore", async () => {
+    const ledger = await createLedger();
+    const full = (await call("GET", "/backups/export")).file!.content;
+    const ledgerOnly = (
+      await call("GET", "/backups/export", undefined, { ledger_id: ledger.id })
+    ).file!.content;
+    const otherVersion = JSON.stringify({
+      ...JSON.parse(full),
+      appVersion: "0.0.1",
+    });
+
+    const restores: Record<string, unknown>[] = [
+      { content: ledgerOnly, ledger_id: ledger.id },
+      { content: full },
+      { content: otherVersion, force: true },
+    ];
+    for (const body of restores) {
+      const label = Object.keys(body).join("+");
+      await clearCopies();
+      await ok(
+        call("POST", "/backups/import", { ...body, confirm_replace: true }),
+      );
+      const items = await listCopies();
+      expect(items, label).toHaveLength(1);
+      expect(items[0].reason, label).toBe("restore_file");
+
+      failNextCopy();
+      const refused = await call("POST", "/backups/import", {
+        ...body,
+        confirm_replace: true,
+      });
+      expect(refused.status, label).toBe(409);
+      expect(refused.body).toMatchObject({
+        error: { code: "safety_copy_failed" },
+      });
+
+      failNextCopy();
+      await ok(
+        call("POST", "/backups/import", {
+          ...body,
+          confirm_replace: true,
+          continue_without_safety_copy: true,
+        }),
+      );
+    }
+  });
+
+  it("makes a copy before each CSV import, but not for a dry run", async () => {
+    const ledger = await createLedger();
+    const imports = [
+      {
+        kind: "transactions",
+        entity: "transactions",
+        csv: [
+          "Date;Account;Vendor;Category;Sub Category;Amount;Remarks;Currency;Frequency;End Date",
+          "01/02/2021;Bank;Cafe;Food;;-3;;USD;None;",
+        ].join("\n"),
+      },
+      {
+        kind: "accounts",
+        entity: "accounts",
+        csv: "Account Name,Currency,Starting Balance,Remarks\nSavings,USD,10,",
+      },
+      { kind: "vendors", entity: "payees", csv: "Vendor Name\nBakery" },
+      {
+        kind: "categories",
+        entity: "categories",
+        csv: "Category Name,Sub Category Name\nHome,Rent",
+      },
+    ];
+    for (const { kind, entity, csv } of imports) {
+      await clearCopies();
+      const url = `/ledgers/${ledger.id}/${kind}/import`;
+      await ok(call("POST", url, { csv, dry_run: true }));
+      expect(await listCopies(), `${kind} dry run`).toEqual([]);
+
+      await ok(call("POST", url, { csv }), 201);
+      const items = await listCopies();
+      expect(items, kind).toHaveLength(1);
+      expect(items[0]).toMatchObject({ reason: "csv_import", entity });
+    }
+
+    // A malformed file changes nothing, so it makes no copy.
+    await clearCopies();
+    expect(
+      (
+        await call("POST", `/ledgers/${ledger.id}/transactions/import`, {
+          csv: "Date;Amount\n01/01/2020;5",
+        })
+      ).status,
+    ).toBe(400);
+    expect(await listCopies()).toEqual([]);
+  });
+
+  it("still imports when the copy cannot be made", async () => {
+    const ledger = await createLedger();
+    failNextCopy();
+    await ok(
+      call("POST", `/ledgers/${ledger.id}/vendors/import`, {
+        csv: "Vendor Name\nBakery",
+      }),
+      201,
+    );
+    const vendors = await ok<{ data: Entity[] }>(
+      call("GET", `/ledgers/${ledger.id}/vendors`),
+    );
+    expect(vendors.data.map((v) => v.name)).toContain("Bakery");
+    expect(await listCopies()).toEqual([]);
+  });
+
+  it("makes a copy before Categorize Missing writes AI results", async () => {
+    const { url, fetchSpy } = await setUpAiCategorize();
+    try {
+      // History only (no AI): no copy.
+      await ok(call("POST", url, {}));
+      expect(await listCopies()).toEqual([]);
+      // A dry run writes nothing: no copy.
+      await ok(call("POST", url, { use_ai: true, dry_run: true }));
+      expect(await listCopies()).toEqual([]);
+
+      const result = await ok<{ categorized: number }>(
+        call("POST", url, { use_ai: true }),
+      );
+      expect(result.categorized).toBe(1);
+      const items = await listCopies();
+      expect(items).toHaveLength(1);
+      expect(items[0].reason).toBe("ai_categorize");
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
+  it("still categorizes with AI when the copy cannot be made", async () => {
+    const { url, fetchSpy } = await setUpAiCategorize();
+    try {
+      failNextCopy();
+      const result = await ok<{ categorized: number }>(
+        call("POST", url, { use_ai: true }),
+      );
+      expect(result.categorized).toBe(1);
+      expect(await listCopies()).toEqual([]);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+});
+
 describe("analytics, insights and reports", () => {
   beforeEach(clearAll);
 
@@ -2020,6 +2347,20 @@ describe("OpenAPI document", () => {
     expect(
       spec.paths["/ledgers/{ledgerId}/accounts/reconcile"].post.requestBody,
     ).toBeDefined();
+    expect(spec.paths["/backups/safety"].get).toBeDefined();
+    expect(
+      JSON.stringify(
+        spec.paths["/backups/safety/{safetyId}/restore"].post.requestBody,
+      ),
+    ).toContain("continue_without_safety_copy");
+    expect(
+      JSON.stringify(
+        spec.paths["/backups/safety/{safetyId}"].delete.requestBody,
+      ),
+    ).toContain("confirm_delete");
+    expect(
+      JSON.stringify(spec.paths["/backups/import"].post.requestBody),
+    ).toContain("continue_without_safety_copy");
     expect(Object.keys(spec.paths).length).toBeGreaterThan(50);
   });
 });

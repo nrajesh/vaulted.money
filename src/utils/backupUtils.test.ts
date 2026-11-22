@@ -17,6 +17,7 @@ const makeProvider = () =>
   ({
     exportData: vi.fn().mockResolvedValue(bareData),
     importData: vi.fn().mockResolvedValue(undefined),
+    saveSafetyBackup: vi.fn().mockResolvedValue({ id: "copy-1" }),
   }) as unknown as DataProvider;
 
 describe("unwrapBackupEnvelope", () => {

@@ -8,6 +8,7 @@ import {
   Account,
   SubCategory,
   BackupConfig,
+  SafetyBackup,
   AIProvider,
 } from "@/types/dataProvider";
 
@@ -38,6 +39,7 @@ export class FinanceDatabase extends Dexie {
   ledgers!: Table<Ledger>;
   backup_configs!: Table<BackupConfig>;
   ai_providers!: Table<AIProvider>;
+  safety_backups!: Table<SafetyBackup>;
 
   constructor() {
     super("FinanceTrackerDB");
@@ -56,6 +58,11 @@ export class FinanceDatabase extends Dexie {
       ledgers: "id, name, last_accessed",
       backup_configs: "id, isActive, nextBackup",
       ai_providers: "id, name, type",
+    });
+
+    // Automatic safety copies taken before bulk changes
+    this.version(11).stores({
+      safety_backups: "id, created_at",
     });
   }
 }

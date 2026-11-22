@@ -5,6 +5,7 @@ import type {
   Transaction,
 } from "@/types/dataProvider";
 import { buildDemoPlan, type DemoLedgerPlan } from "./demoDataPlan";
+import { withSafetyBackup } from "./safetyBackup";
 
 export interface ProgressCallback {
   (progress: { stage: string; progress: number; totalStages: number }): void;
@@ -15,6 +16,8 @@ export interface DemoDataOptions {
   now?: Date;
   /** Fixes the random variation; defaults to a fresh one on every run. */
   seed?: number;
+  /** The person agreed to go on although no safety copy could be made. */
+  continueWithoutCopy?: boolean;
 }
 
 /** Batches DB writes so IndexedDB work is visible in the UI progress bar. */
@@ -59,17 +62,33 @@ export const generateDiverseDemoData = async (
     });
   };
 
-  onProgress({
-    stage: "Clearing existing data...",
-    progress: 0,
-    totalStages: 100,
-  });
-  await dataProvider.clearAllData();
-  step("Existing data cleared");
+  /*
+   * Demo data replaces everything, so a safety copy of the current data is
+   * required first: without one the run stops with SafetyBackupFailedError
+   * unless the person chose to continue. The wipe keeps the safety copies
+   * (including the one just made); "Reset everything" still deletes them.
+   */
+  await withSafetyBackup(
+    dataProvider,
+    {
+      reason: "demo_data",
+      required: true,
+      continueWithoutCopy: options.continueWithoutCopy,
+    },
+    async () => {
+      onProgress({
+        stage: "Clearing existing data...",
+        progress: 0,
+        totalStages: 100,
+      });
+      await dataProvider.clearAllData({ keepSafetyBackups: true });
+      step("Existing data cleared");
 
-  for (const plan of plans) {
-    await saveLedger(dataProvider, plan, step);
-  }
+      for (const plan of plans) {
+        await saveLedger(dataProvider, plan, step);
+      }
+    },
+  );
 
   onProgress({
     stage: "Demo data ready — reloading…",

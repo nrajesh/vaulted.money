@@ -122,6 +122,29 @@ export interface BackupConfig {
   passwordHash?: string;
 }
 
+/** How many automatic safety copies are kept; older ones are pruned. */
+export const SAFETY_BACKUP_LIMIT = 5;
+
+export type SafetyBackupReason =
+  | "ai_categorize"
+  | "csv_import"
+  | "sync"
+  | "demo_data"
+  | "restore_file"
+  | "restore_safety_copy";
+
+export interface SafetyBackupSummary {
+  id: string;
+  reason: SafetyBackupReason;
+  entity?: string; // CSV imports: "transactions" | "payees" | "accounts" | "categories" | ...
+  created_at: string; // ISO
+  ledger_count: number;
+}
+
+export interface SafetyBackup extends SafetyBackupSummary {
+  payload: string; // JSON.stringify(generateBackupData(...))
+}
+
 export interface AIProvider {
   id: string;
   name: string;
@@ -307,7 +330,17 @@ export interface DataProvider {
     transferId?: string,
   ): Promise<void>;
   unlinkTransactions(transferId: string): Promise<void>;
-  clearAllData(): Promise<void>;
+  clearAllData(options?: { keepSafetyBackups?: boolean }): Promise<void>;
+  /** Stores a copy and prunes to SAFETY_BACKUP_LIMIT, never deleting `protectId`. */
+  saveSafetyBackup(
+    input: Omit<SafetyBackup, "id" | "created_at">,
+    options?: { protectId?: string },
+  ): Promise<SafetyBackupSummary>;
+  /** Newest first, without payloads. */
+  listSafetyBackups(): Promise<SafetyBackupSummary[]>;
+  getSafetyBackup(id: string): Promise<SafetyBackup | undefined>;
+  /** Returns how many copies were deleted. */
+  deleteSafetyBackups(ids: string[]): Promise<number>;
   exportData(ledgerId?: string): Promise<unknown>;
   importData(data: unknown, ledgerId?: string): Promise<void>;
 

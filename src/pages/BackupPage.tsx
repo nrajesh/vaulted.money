@@ -1,4 +1,5 @@
 import ScheduledBackups from "@/components/backup/ScheduledBackups";
+import SafetyBackups from "@/components/backup/SafetyBackups";
 import { useTranslation } from "react-i18next";
 
 const BackupPage = () => {
@@ -19,6 +20,7 @@ const BackupPage = () => {
       </div>
       <div>
         <ScheduledBackups />
+        <SafetyBackups />
       </div>
     </div>
   );

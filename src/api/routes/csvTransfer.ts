@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 import { z } from "zod";
-import type { Category, SubCategory } from "@/types/dataProvider";
+import type { Category, Ledger, SubCategory } from "@/types/dataProvider";
 import { formatDateToDDMMYYYY } from "@/lib/utils";
 import {
   parseCSVRow,
@@ -10,6 +10,7 @@ import {
   validateCSVHeaders,
   type CSVRow,
 } from "@/utils/csvUtils";
+import { withSafetyBackup } from "@/utils/safetyBackup";
 import { findTransferPairs } from "@/utils/transactionMaintenance";
 import { toCsv } from "../csv";
 import { badRequest, fileResponse, json, parse } from "../http";
@@ -35,6 +36,26 @@ const transactionImportSchema = importSchema.extend({
   /** Link matching transfer legs afterwards, as the UI does. */
   detect_transfers: z.boolean().default(true),
 });
+
+/**
+ * Runs the writes of a CSV import. A real import first keeps a safety copy of
+ * everything (reason "csv_import"), as Import CSV in the app does; a dry run
+ * changes nothing, so it makes none. A failed copy never stops the import.
+ */
+async function importWithSafetyCopy<T>(
+  ctx: RouteContext,
+  dryRun: boolean,
+  entity: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  if (dryRun) return run();
+  const { result } = await withSafetyBackup(
+    ctx.services.dataProvider,
+    { reason: "csv_import", entity },
+    run,
+  );
+  return result;
+}
 
 const fileName = (ledgerName: string, what: string) =>
   `${ledgerName.replace(/[^A-Za-z0-9]+/g, "_")}_${what}_export.csv`;
@@ -99,7 +120,6 @@ async function exportTransactions(ctx: RouteContext) {
 async function importTransactions(ctx: RouteContext) {
   const ledger = await requireLedger(ctx.services, ctx.params.ledgerId);
   const input = parse(transactionImportSchema, ctx.body);
-  const dp = ctx.services.dataProvider;
 
   const { rows, headers } = parseCsv<CSVRow>(input.csv, input.delimiter);
   const { isValid, missing } = validateCSVHeaders(headers);
@@ -123,6 +143,19 @@ async function importTransactions(ctx: RouteContext) {
     });
   }
 
+  return importWithSafetyCopy(ctx, false, "transactions", () =>
+    writeTransactionImport(ctx, ledger, input, rows),
+  );
+}
+
+/** The writes of a (non dry run) transaction import, after validation. */
+async function writeTransactionImport(
+  ctx: RouteContext,
+  ledger: Ledger,
+  input: z.output<typeof transactionImportSchema>,
+  rows: CSVRow[],
+) {
+  const dp = ctx.services.dataProvider;
   // Same order as the UI: accounts, vendors, categories, then transactions.
   await Promise.all(
     rows
@@ -296,31 +329,34 @@ export const csvRoutes: RouteDef[] = [
       let created = 0;
       let already = 0;
       let invalid = 0;
-      for (const row of rows) {
-        const name = row["Account Name"]?.trim();
-        if (!name) {
-          invalid++;
-          continue;
+      await importWithSafetyCopy(ctx, input.dry_run, "accounts", async () => {
+        for (const row of rows) {
+          const name = row["Account Name"]?.trim();
+          if (!name) {
+            invalid++;
+            continue;
+          }
+          if (existing.has(name)) {
+            already++;
+            continue;
+          }
+          existing.add(name);
+          created++;
+          if (!input.dry_run) {
+            await ctx.services.dataProvider.ensurePayeeExists(
+              name,
+              true,
+              ledger.id,
+              {
+                currency: row["Currency"]?.trim() || ledger.currency,
+                startingBalance:
+                  parseFloat(row["Starting Balance"] || "0") || 0,
+                remarks: row["Remarks"],
+              },
+            );
+          }
         }
-        if (existing.has(name)) {
-          already++;
-          continue;
-        }
-        existing.add(name);
-        created++;
-        if (!input.dry_run) {
-          await ctx.services.dataProvider.ensurePayeeExists(
-            name,
-            true,
-            ledger.id,
-            {
-              currency: row["Currency"]?.trim() || ledger.currency,
-              startingBalance: parseFloat(row["Starting Balance"] || "0") || 0,
-              remarks: row["Remarks"],
-            },
-          );
-        }
-      }
+      });
       return summariseImport(
         input.dry_run,
         rows.length,
@@ -370,26 +406,29 @@ export const csvRoutes: RouteDef[] = [
       let created = 0;
       let already = 0;
       let invalid = 0;
-      for (const row of rows) {
-        const name = row["Vendor Name"]?.trim();
-        if (!name) {
-          invalid++;
-          continue;
+      // The app files vendor imports under "payees".
+      await importWithSafetyCopy(ctx, input.dry_run, "payees", async () => {
+        for (const row of rows) {
+          const name = row["Vendor Name"]?.trim();
+          if (!name) {
+            invalid++;
+            continue;
+          }
+          if (existing.has(name)) {
+            already++;
+            continue;
+          }
+          existing.add(name);
+          created++;
+          if (!input.dry_run) {
+            await ctx.services.dataProvider.ensurePayeeExists(
+              name,
+              false,
+              ledger.id,
+            );
+          }
         }
-        if (existing.has(name)) {
-          already++;
-          continue;
-        }
-        existing.add(name);
-        created++;
-        if (!input.dry_run) {
-          await ctx.services.dataProvider.ensurePayeeExists(
-            name,
-            false,
-            ledger.id,
-          );
-        }
-      }
+      });
       return summariseImport(
         input.dry_run,
         rows.length,
@@ -447,41 +486,44 @@ export const csvRoutes: RouteDef[] = [
       let created = 0;
       let already = 0;
       let invalid = 0;
-      for (const row of rows) {
-        const categoryName = row["Category Name"]?.trim();
-        const subName = row["Sub Category Name"]?.trim();
-        if (!categoryName) {
-          invalid++;
-          continue;
-        }
-        let categoryId = knownCategories.get(categoryName);
-        if (categoryId === undefined) {
-          created++;
-          if (!input.dry_run) {
-            categoryId =
-              (await dp.ensureCategoryExists(categoryName, ledger.id)) ?? "";
+      // Covers sub-categories too, as the app's category import does.
+      await importWithSafetyCopy(ctx, input.dry_run, "categories", async () => {
+        for (const row of rows) {
+          const categoryName = row["Category Name"]?.trim();
+          const subName = row["Sub Category Name"]?.trim();
+          if (!categoryName) {
+            invalid++;
+            continue;
           }
-          knownCategories.set(categoryName, categoryId ?? "");
-        } else if (!subName) {
-          already++;
-        }
-        if (subName) {
-          const key = `${knownCategories.get(categoryName)}|${subName}`;
-          if (knownSubs.has(key)) {
-            already++;
-          } else {
-            knownSubs.add(key);
+          let categoryId = knownCategories.get(categoryName);
+          if (categoryId === undefined) {
             created++;
             if (!input.dry_run) {
-              await dp.ensureSubCategoryExists(
-                subName,
-                knownCategories.get(categoryName) ?? "",
-                ledger.id,
-              );
+              categoryId =
+                (await dp.ensureCategoryExists(categoryName, ledger.id)) ?? "";
+            }
+            knownCategories.set(categoryName, categoryId ?? "");
+          } else if (!subName) {
+            already++;
+          }
+          if (subName) {
+            const key = `${knownCategories.get(categoryName)}|${subName}`;
+            if (knownSubs.has(key)) {
+              already++;
+            } else {
+              knownSubs.add(key);
+              created++;
+              if (!input.dry_run) {
+                await dp.ensureSubCategoryExists(
+                  subName,
+                  knownCategories.get(categoryName) ?? "",
+                  ledger.id,
+                );
+              }
             }
           }
         }
-      }
+      });
       return summariseImport(
         input.dry_run,
         rows.length,

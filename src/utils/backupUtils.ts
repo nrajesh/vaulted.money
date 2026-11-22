@@ -3,6 +3,7 @@ import { decryptData } from "./crypto";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { showSuccess } from "./toast";
+import { SafetyBackupFailedError, withSafetyBackup } from "./safetyBackup";
 
 /**
  * Save content to a file, using File System Access API if available,
@@ -127,9 +128,38 @@ export type ImportResult =
   | { type: "warning"; message: string; dataToImport: unknown } // Added warning type for version mismatch
   | { type: "error"; message: string };
 
+/** Options for restoring a backup file. */
+export interface RestoreFileOptions {
+  /** The person agreed to restore even though no safety copy could be made. */
+  continueWithoutCopy?: boolean;
+}
+
+/**
+ * Restoring a file replaces everything, so a safety copy of the current data
+ * is required first. When it cannot be made this throws
+ * `SafetyBackupFailedError` (it is not turned into an error result) so the
+ * screen can ask the person whether to go on without one.
+ */
+export const restoreWithSafetyCopy = async (
+  dataProvider: DataProvider,
+  data: unknown,
+  options: RestoreFileOptions,
+) => {
+  await withSafetyBackup(
+    dataProvider,
+    {
+      reason: "restore_file",
+      required: true,
+      continueWithoutCopy: options.continueWithoutCopy,
+    },
+    () => dataProvider.importData(data),
+  );
+};
+
 export const processImport = async (
   content: string,
   dataProvider: DataProvider,
+  options: RestoreFileOptions = {},
 ): Promise<ImportResult> => {
   try {
     const parsed = JSON.parse(content);
@@ -153,10 +183,11 @@ export const processImport = async (
         }
       }
 
-      await dataProvider.importData(dataToImport);
+      await restoreWithSafetyCopy(dataProvider, dataToImport, options);
       return { type: "success" };
     }
   } catch (e: unknown) {
+    if (e instanceof SafetyBackupFailedError) throw e;
     const message = e instanceof Error ? e.message : "Invalid file format";
     return { type: "error", message };
   }
@@ -169,13 +200,15 @@ export const processEncryptedImport = async (
   content: string,
   password: string,
   dataProvider: DataProvider,
+  options: RestoreFileOptions = {},
 ): Promise<ImportResult> => {
   try {
     const decryptedParams = await decryptData(content, password);
     const data = unwrapBackupEnvelope(JSON.parse(decryptedParams));
-    await dataProvider.importData(data);
+    await restoreWithSafetyCopy(dataProvider, data, options);
     return { type: "success" };
   } catch (e: unknown) {
+    if (e instanceof SafetyBackupFailedError) throw e;
     const message = e instanceof Error ? e.message : "Decryption failed";
     return { type: "error", message };
   }

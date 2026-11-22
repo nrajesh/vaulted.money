@@ -4,10 +4,6 @@ Work agreed for later releases. Move an item into a spec under `specs/` when it 
 
 ## 2.1
 
-### Back up before risky operations
-
-Make a backup automatically before an AI operation starts, before a CSV import (any entity) and before syncing with another device (cross-device continuity). Deferred from 2.0 so the first store release was not delayed.
-
 ### Larger Text that meets Apple's bar
 
 The app ignores the iPhone's text-size setting, and its own "Larger" setting stops at 125%. Apple's Larger Text accessibility label needs text to grow to 200%. Follow the system text size (Dynamic Type) and allow up to 200%, check every screen on a 360px phone, then declare Larger Text in App Store Connect → App Accessibility.
@@ -30,6 +26,9 @@ On phones today, deleting or duplicating needs the "…" button on each card. Ad
 - Keep the "…" button: it is the accessible route for VoiceOver, Voice Control and keyboard users, and gestures must not be the only way to reach an action.
 - Make sure the swipe doesn't fight vertical scrolling, the iOS back swipe or text selection in notes.
 - One shared component for all cards, built from the existing "…" menu actions, so the gestures and the menu can never offer different things.
+- **Swipe right** for the card's most useful harmless action, as iPhone Mail and Reminders do: **Duplicate** on transactions (repeat a purchase) and scheduled transactions, **Edit** on ledgers, budgets, accounts, payees and categories. Never delete or anything that can't be undone on a right swipe.
+- One finger only. Not planned: multi-finger swipes (iOS doesn't use them on list rows, and they would clash with system gestures). Worth considering later: the iOS two-finger drag down a list to select several rows at once, as in Mail and Files.
+- The automatic safety copies on the Backup screen get the same swipe to delete.
 
 ### Android: shrink and optimise the release build (R8)
 

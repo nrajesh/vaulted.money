@@ -36,7 +36,17 @@ import { ManageLedgerDialog } from "@/components/dialogs/ManageLedgerDialog";
 import CSVMappingDialog from "@/components/transactions/CSVMappingDialog";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { decryptData } from "@/utils/crypto";
-import { unwrapBackupEnvelope } from "@/utils/backupUtils";
+import {
+  restoreWithSafetyCopy,
+  unwrapBackupEnvelope,
+  type RestoreFileOptions,
+} from "@/utils/backupUtils";
+import {
+  SafetyBackupFailedError,
+  withSafetyBackup,
+} from "@/utils/safetyBackup";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
+import { useContinueWithoutCopy } from "@/hooks/useContinueWithoutCopy";
 import { showSuccess, showError } from "@/utils/toast";
 import PasswordDialog from "@/components/dialogs/PasswordDialog";
 import { Button } from "@/components/ui/button";
@@ -82,6 +92,9 @@ const LedgerEntryPage = () => {
   const { generateDiverseDemoData, setOperationProgress } = useTransactions();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isGenerateConfirmOpen, setIsGenerateConfirmOpen] = useState(false);
+  const warnSafetyCopy = useSafetyBackupWarning();
+  // Restores and demo data need a safety copy; ask before going on without one.
+  const { runRequired, continueWithoutCopyDialog } = useContinueWithoutCopy();
 
   // Filter & Select State
   const [searchTerm, setSearchTerm] = useState("");
@@ -184,24 +197,137 @@ const LedgerEntryPage = () => {
         totalStages: 100,
       });
 
-      // 1. Create New Ledger
-      const newLedger = await dataProvider.addLedger({
-        name: newLedgerDetails.name,
-        currency: newLedgerDetails.currency,
-        icon: newLedgerDetails.icon || "wallet",
-        short_name: newLedgerDetails.short_name,
-      });
+      // The ledger-details and mapping dialogs are done: make the safety copy
+      // just before the first write, so cancelling them makes no copy.
+      const { result: importedCount, backedUp } = await withSafetyBackup(
+        dataProvider,
+        { reason: "csv_import", entity: "transactions" },
+        async () => {
+          // 1. Create New Ledger
+          const newLedger = await dataProvider.addLedger({
+            name: newLedgerDetails.name,
+            currency: newLedgerDetails.currency,
+            icon: newLedgerDetails.icon || "wallet",
+            short_name: newLedgerDetails.short_name,
+          });
 
-      const ledgerId = newLedger.id;
+          const ledgerId = newLedger.id;
 
-      // 2. Parse and Import Transactions
-      const transactions = parseImportedData(
-        mappedData,
-        config,
-        newLedgerDetails.currency,
+          // 2. Parse and Import Transactions
+          const transactions = parseImportedData(
+            mappedData,
+            config,
+            newLedgerDetails.currency,
+          );
+
+          if (transactions.length === 0) return null;
+
+          // Step A: Payees/Accounts
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.settingUpAccounts", {
+              defaultValue: "Setting up accounts...",
+            }),
+            stage: t("ledgerEntry.progress.settingUpAccounts", {
+              defaultValue: "Setting up accounts...",
+            }),
+            progress: 15,
+            totalStages: 100,
+          });
+
+          const uniqueAccounts = [
+            ...new Set(transactions.map((t) => t.account).filter(Boolean)),
+          ];
+          for (const accName of uniqueAccounts) {
+            const t = transactions.find((tx) => tx.account === accName);
+            const accCurrency = t?.currency || newLedgerDetails.currency;
+            await dataProvider.ensurePayeeExists(accName, true, ledgerId, {
+              currency: accCurrency,
+            });
+          }
+
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.settingUpVendors", {
+              defaultValue: "Setting up payees...",
+            }),
+            stage: t("ledgerEntry.progress.settingUpVendors", {
+              defaultValue: "Setting up payees...",
+            }),
+            progress: 40,
+            totalStages: 100,
+          });
+
+          const uniqueVendors = [
+            ...new Set(transactions.map((t) => t.vendor).filter(Boolean)),
+          ];
+          for (const vendName of uniqueVendors) {
+            await dataProvider.ensurePayeeExists(vendName, false, ledgerId);
+          }
+
+          // Step B: Categories
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.settingUpCategories", {
+              defaultValue: "Setting up categories...",
+            }),
+            stage: t("ledgerEntry.progress.settingUpCategories", {
+              defaultValue: "Setting up categories...",
+            }),
+            progress: 60,
+            totalStages: 100,
+          });
+
+          const uniqueCategories = [
+            ...new Set(transactions.map((t) => t.category).filter(Boolean)),
+          ];
+          for (const catName of uniqueCategories) {
+            await dataProvider.ensureCategoryExists(catName, ledgerId);
+          }
+
+          // Step C: Insert Transactions
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.insertingTransactions", {
+              defaultValue: "Inserting transactions...",
+            }),
+            stage: t("ledgerEntry.progress.insertingTransactions", {
+              defaultValue: "Inserting transactions...",
+            }),
+            progress: 80,
+            totalStages: 100,
+          });
+
+          const transactionsToInsert = transactions.map((t) => ({
+            user_id: ledgerId,
+            date: t.date,
+            account: t.account,
+            vendor: t.vendor,
+            category: t.category,
+            amount: t.amount,
+            remarks: t.remarks,
+            currency: t.currency,
+            transfer_id: t.transfer_id,
+            is_scheduled_origin: t.is_scheduled_origin,
+            recurrence_frequency: t.recurrence_frequency,
+            recurrence_end_date: t.recurrence_end_date,
+          }));
+
+          await dataProvider.addMultipleTransactions(transactionsToInsert);
+          return transactionsToInsert.length;
+        },
       );
+      warnSafetyCopy(backedUp);
 
-      if (transactions.length === 0) {
+      if (importedCount === null) {
         showError(
           t("ledgerEntry.toasts.noValidTransactions", {
             defaultValue: "No valid transactions found after parsing.",
@@ -210,107 +336,6 @@ const LedgerEntryPage = () => {
         setOperationProgress(null);
         return;
       }
-
-      // Step A: Payees/Accounts
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.settingUpAccounts", {
-          defaultValue: "Setting up accounts...",
-        }),
-        stage: t("ledgerEntry.progress.settingUpAccounts", {
-          defaultValue: "Setting up accounts...",
-        }),
-        progress: 15,
-        totalStages: 100,
-      });
-
-      const uniqueAccounts = [
-        ...new Set(transactions.map((t) => t.account).filter(Boolean)),
-      ];
-      for (const accName of uniqueAccounts) {
-        const t = transactions.find((tx) => tx.account === accName);
-        const accCurrency = t?.currency || newLedgerDetails.currency;
-        await dataProvider.ensurePayeeExists(accName, true, ledgerId, {
-          currency: accCurrency,
-        });
-      }
-
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.settingUpVendors", {
-          defaultValue: "Setting up payees...",
-        }),
-        stage: t("ledgerEntry.progress.settingUpVendors", {
-          defaultValue: "Setting up payees...",
-        }),
-        progress: 40,
-        totalStages: 100,
-      });
-
-      const uniqueVendors = [
-        ...new Set(transactions.map((t) => t.vendor).filter(Boolean)),
-      ];
-      for (const vendName of uniqueVendors) {
-        await dataProvider.ensurePayeeExists(vendName, false, ledgerId);
-      }
-
-      // Step B: Categories
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.settingUpCategories", {
-          defaultValue: "Setting up categories...",
-        }),
-        stage: t("ledgerEntry.progress.settingUpCategories", {
-          defaultValue: "Setting up categories...",
-        }),
-        progress: 60,
-        totalStages: 100,
-      });
-
-      const uniqueCategories = [
-        ...new Set(transactions.map((t) => t.category).filter(Boolean)),
-      ];
-      for (const catName of uniqueCategories) {
-        await dataProvider.ensureCategoryExists(catName, ledgerId);
-      }
-
-      // Step C: Insert Transactions
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.insertingTransactions", {
-          defaultValue: "Inserting transactions...",
-        }),
-        stage: t("ledgerEntry.progress.insertingTransactions", {
-          defaultValue: "Inserting transactions...",
-        }),
-        progress: 80,
-        totalStages: 100,
-      });
-
-      const transactionsToInsert = transactions.map((t) => ({
-        user_id: ledgerId,
-        date: t.date,
-        account: t.account,
-        vendor: t.vendor,
-        category: t.category,
-        amount: t.amount,
-        remarks: t.remarks,
-        currency: t.currency,
-        transfer_id: t.transfer_id,
-        is_scheduled_origin: t.is_scheduled_origin,
-        recurrence_frequency: t.recurrence_frequency,
-        recurrence_end_date: t.recurrence_end_date,
-      }));
-
-      await dataProvider.addMultipleTransactions(transactionsToInsert);
 
       setOperationProgress({
         title: t("ledgerEntry.progress.importingCsv", {
@@ -326,7 +351,7 @@ const LedgerEntryPage = () => {
 
       showSuccess(
         t("ledgerEntry.toasts.csvImported", {
-          count: transactionsToInsert.length,
+          count: importedCount,
           name: newLedgerDetails.name,
           defaultValue:
             'Imported {{count}} transactions into new ledger "{{name}}".',
@@ -348,6 +373,66 @@ const LedgerEntryPage = () => {
     }
   };
 
+  /**
+   * Restores a plain backup file. A safety copy is required first; when it
+   * cannot be made this rethrows SafetyBackupFailedError (nothing changed) so
+   * `runRequired` can ask whether to continue without one.
+   */
+  const restorePlainBackup = async (
+    parsed: unknown,
+    options: RestoreFileOptions,
+  ) => {
+    try {
+      setOperationProgress({
+        title: t("ledgerEntry.progress.importingData", {
+          defaultValue: "Importing Data",
+        }),
+        description: t("ledgerEntry.progress.importingBackup", {
+          defaultValue: "Importing backup data...",
+        }),
+        stage: "Importing...",
+        progress: 50,
+        totalStages: 100,
+      });
+
+      await restoreWithSafetyCopy(
+        dataProvider,
+        unwrapBackupEnvelope(parsed),
+        options,
+      );
+
+      setOperationProgress({
+        title: t("ledgerEntry.progress.importingData", {
+          defaultValue: "Importing Data",
+        }),
+        description: t("ledgerEntry.progress.importComplete", {
+          defaultValue: "Import complete!",
+        }),
+        stage: "Complete",
+        progress: 100,
+        totalStages: 100,
+      });
+
+      showSuccess(
+        t("ledgerEntry.toasts.dataImported", {
+          defaultValue: "Data imported successfully!",
+        }),
+      );
+
+      // Instant refresh instead of reload
+      await refreshLedgers();
+      setTimeout(() => setOperationProgress(null), 500);
+    } catch (error) {
+      setOperationProgress(null);
+      if (error instanceof SafetyBackupFailedError) throw error;
+      showError(
+        t("ledgerEntry.toasts.invalidFile", {
+          defaultValue: "Invalid file format.",
+        }),
+      );
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -357,59 +442,26 @@ const LedgerEntryPage = () => {
       const content = event.target?.result as string;
       if (!content) return;
 
+      let parsed: { ciphertext?: unknown; iv?: unknown; salt?: unknown };
       try {
         // Optimize: Parse once
-        const parsed = JSON.parse(content);
-
-        if (parsed.ciphertext && parsed.iv && parsed.salt) {
-          // It's encrypted
-          setTempImportFile(content);
-          setIsImportPasswordOpen(true);
-        } else {
-          // Assume plain text
-          setOperationProgress({
-            title: t("ledgerEntry.progress.importingData", {
-              defaultValue: "Importing Data",
-            }),
-            description: t("ledgerEntry.progress.importingBackup", {
-              defaultValue: "Importing backup data...",
-            }),
-            stage: "Importing...",
-            progress: 50,
-            totalStages: 100,
-          });
-
-          await dataProvider.importData(unwrapBackupEnvelope(parsed));
-
-          setOperationProgress({
-            title: t("ledgerEntry.progress.importingData", {
-              defaultValue: "Importing Data",
-            }),
-            description: t("ledgerEntry.progress.importComplete", {
-              defaultValue: "Import complete!",
-            }),
-            stage: "Complete",
-            progress: 100,
-            totalStages: 100,
-          });
-
-          showSuccess(
-            t("ledgerEntry.toasts.dataImported", {
-              defaultValue: "Data imported successfully!",
-            }),
-          );
-
-          // Instant refresh instead of reload
-          await refreshLedgers();
-          setTimeout(() => setOperationProgress(null), 500);
-        }
+        parsed = JSON.parse(content);
       } catch {
-        setOperationProgress(null);
         showError(
           t("ledgerEntry.toasts.invalidFile", {
             defaultValue: "Invalid file format.",
           }),
         );
+        return;
+      }
+
+      if (parsed.ciphertext && parsed.iv && parsed.salt) {
+        // It's encrypted
+        setTempImportFile(content);
+        setIsImportPasswordOpen(true);
+      } else {
+        // Assume plain text
+        await runRequired((options) => restorePlainBackup(parsed, options));
       }
     };
     reader.readAsText(file);
@@ -417,7 +469,13 @@ const LedgerEntryPage = () => {
     e.target.value = "";
   };
 
-  const handleImportEncryptedParams = async (password: string) => {
+  const handleImportEncryptedParams = (password: string) =>
+    runRequired((options) => importEncryptedBackup(password, options));
+
+  const importEncryptedBackup = async (
+    password: string,
+    options: RestoreFileOptions,
+  ) => {
     if (!tempImportFile) return;
     try {
       setOperationProgress({
@@ -447,7 +505,7 @@ const LedgerEntryPage = () => {
         totalStages: 100,
       });
 
-      await dataProvider.importData(data);
+      await restoreWithSafetyCopy(dataProvider, data, options);
 
       setOperationProgress({
         title: t("ledgerEntry.progress.importingEncrypted", {
@@ -473,6 +531,7 @@ const LedgerEntryPage = () => {
       setTimeout(() => setOperationProgress(null), 500);
     } catch (e) {
       setOperationProgress(null);
+      if (e instanceof SafetyBackupFailedError) throw e;
       const message =
         e instanceof Error
           ? e.message
@@ -557,7 +616,7 @@ const LedgerEntryPage = () => {
 
   const handleGenerateDemoData = async () => {
     try {
-      await generateDiverseDemoData();
+      await runRequired((options) => generateDiverseDemoData(options));
     } catch {
       // Ignore error
     } finally {
@@ -1233,6 +1292,7 @@ const LedgerEntryPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {continueWithoutCopyDialog}
       <EraseAllDataDialog
         ledgerCount={ledgers.length}
         isOpen={isGenerateConfirmOpen}
