@@ -194,6 +194,28 @@ describe("Ledger card gestures", () => {
     expect(mockSwitchLedger).not.toHaveBeenCalled();
   });
 
+  it('on phones the chevron is not in the name row, so the "…" button leaves the name room', () => {
+    renderPage();
+    const menuButton = screen.getByRole("button", {
+      name: "More actions for Home budget",
+    });
+    // The row that holds the name and the "…" button.
+    const nameRow = ledgerName("Home budget").closest(
+      ".justify-between",
+    ) as HTMLElement;
+    expect(nameRow).toContainElement(menuButton);
+    const hints = [
+      ...ledgerCard("Home budget").querySelectorAll("[data-open-hint]"),
+    ];
+    expect(hints).toHaveLength(2);
+    const inNameRow = hints.filter((hint) => nameRow.contains(hint));
+    expect(inNameRow).toHaveLength(1);
+    // Hidden below the sm breakpoint; the other one shows on phones only.
+    expect(inNameRow[0].className).toMatch(/(^|\s)hidden(\s|$)/);
+    const phoneHint = hints.find((hint) => !nameRow.contains(hint))!;
+    expect(phoneHint.className).toContain("sm:hidden");
+  });
+
   it("tapping a ledger card still opens it", async () => {
     const user = userEvent.setup();
     renderPage();

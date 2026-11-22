@@ -81,6 +81,10 @@ import { SwipeableCard } from "@/components/cards/SwipeableCard";
 import type { CardAction } from "@/components/cards/cardActions";
 import type { Ledger } from "@/types/dataProvider";
 
+/** The round chevron that says "tap to open" on a ledger card. */
+const ledgerOpenHintClass =
+  "h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white/80 text-emerald-700 dark:border-emerald-800 dark:bg-slate-950/70 dark:text-emerald-300";
+
 const LedgerEntryPage = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1114,7 +1118,16 @@ const LedgerEntryPage = () => {
                                   >
                                     {menuButton}
                                   </div>
-                                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white/80 text-emerald-700 dark:border-emerald-800 dark:bg-slate-950/70 dark:text-emerald-300">
+                                  {/* On phones the chevron sits in the
+                                  "Last opened" row instead, so the name keeps
+                                  room beside the "…" button at Larger text. */}
+                                  <div
+                                    data-open-hint=""
+                                    className={cn(
+                                      "hidden sm:flex",
+                                      ledgerOpenHintClass,
+                                    )}
+                                  >
                                     <ChevronRight className="h-4 w-4" />
                                   </div>
                                 </div>
@@ -1132,6 +1145,17 @@ const LedgerEntryPage = () => {
                                   {formatLastAccessed(ledger.last_accessed)}
                                 </p>
                               </div>
+                              {!isSelectionMode && (
+                                <div
+                                  data-open-hint=""
+                                  className={cn(
+                                    "flex sm:hidden",
+                                    ledgerOpenHintClass,
+                                  )}
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </div>
+                              )}
                               {isSelectionMode && (
                                 <span className="text-sm font-medium text-muted-foreground">
                                   {isSelected
