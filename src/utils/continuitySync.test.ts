@@ -154,7 +154,9 @@ describe("sync file format", { timeout: 30_000 }, () => {
 
   it("round-trips an encrypted file and hides its contents", async () => {
     const text = await encodeSyncFile(envelope, "correct horse");
-    expect(text).not.toContain("t1");
+    // Look for the quoted id: random base64 ciphertext contains a bare "t1"
+    // now and then, but never a double quote.
+    expect(text).not.toContain('"t1"');
     const decoded = await decodeSyncFile(text, ["correct horse"]);
     expect(decoded).toEqual({
       kind: "ok",
@@ -311,7 +313,8 @@ describe("continuity sync between two devices", { timeout: 30_000 }, () => {
     const folder = makeFolder();
     const phone = makeDevice({ transactions: [coffee] });
     await startSync(phone, folder, "correct horse").engine.syncNow();
-    expect(folder.files.get(SYNC_FILE_NAME)).not.toContain("t1");
+    // Quoted, because random base64 ciphertext can contain a bare "t1".
+    expect(folder.files.get(SYNC_FILE_NAME)).not.toContain('"t1"');
 
     const desktop = makeDevice({ transactions: [salary] });
     const locked = startSync(desktop, folder);
