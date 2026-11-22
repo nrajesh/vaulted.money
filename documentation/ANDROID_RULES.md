@@ -83,6 +83,7 @@ These rules are **normative**. The AI agent that designs and implements the Andr
 - The AI MUST NOT:
   - Request broad permissions when a narrower permission or OS feature suffices.
   - Bypass or discourage users from denying permissions.
+- Current permissions: `@capacitor/haptics` adds `android.permission.VIBRATE` (a normal, install-time permission; no prompt is shown).
 
 ### 3.2 Data Storage & Cryptography
 
