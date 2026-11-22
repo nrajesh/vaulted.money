@@ -21,6 +21,16 @@ The app ignores the iPhone's text-size setting, and its own "Larger" setting sto
 
 `saveFile` (`src/utils/backupUtils.ts`) writes exports to the app's own Documents folder and says "Saved to Documents", which people read as iCloud Drive › Documents. On iPhone the file is in Files › On My iPhone › Vaulted Money. Open the share sheet after saving (Capacitor Share) so people can choose iCloud, Mail and so on, and translate the message (it is hard-coded English).
 
+### Phone gestures: swipe to delete and long-press menus
+
+On phones today, deleting or duplicating needs the "…" button on each card. Add the gestures people expect on iPhone and Android:
+
+- **Swipe left to delete** on every card: ledgers on the ledger screen, and transactions, scheduled transactions, budgets, accounts, payees, categories and currencies inside a ledger. Show a red Delete action; deleting still asks for confirmation where the "…" menu does today (ledgers always).
+- **Long press** on any card opens the same menu as its "…" button (edit, duplicate, delete and so on), with a light haptic tap.
+- Keep the "…" button: it is the accessible route for VoiceOver, Voice Control and keyboard users, and gestures must not be the only way to reach an action.
+- Make sure the swipe doesn't fight vertical scrolling, the iOS back swipe or text selection in notes.
+- One shared component for all cards, built from the existing "…" menu actions, so the gestures and the menu can never offer different things.
+
 ### Mac App Store
 
 Try selling the desktop app on the Mac App Store, alongside or instead of Polar.
