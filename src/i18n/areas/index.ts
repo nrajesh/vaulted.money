@@ -32,6 +32,7 @@ import { homeLanding } from "./homeLanding";
 import { syncAndPlatforms } from "./syncAndPlatforms";
 import { mergeMissing } from "./merge";
 import { safetyBackups } from "./safetyBackups";
+import { cardGestures } from "./cardGestures";
 import type { AreaLanguage, AreaTranslations } from "./types";
 
 /** Every translation module that is merged into the bundled languages. */
@@ -67,6 +68,7 @@ export const areaTranslations: AreaTranslations[] = [
   searchSuggestions,
   homeLanding,
   safetyBackups,
+  cardGestures,
 ];
 
 /**
