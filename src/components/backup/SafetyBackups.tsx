@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
 import { useDataProvider } from "@/context/DataProviderContext";
-import { useLedger } from "@/contexts/LedgerContext";
 import { useContinueWithoutCopy } from "@/hooks/useContinueWithoutCopy";
 import type { SafetyBackupSummary } from "@/types/dataProvider";
 import { saveFile } from "@/utils/backupUtils";
@@ -73,7 +72,6 @@ const SafetyBackups = () => {
   const { t, i18n } = useTranslation();
   const dataProvider = useDataProvider();
   const queryClient = useQueryClient();
-  const { refreshLedgers } = useLedger();
   const { runRequired, continueWithoutCopyDialog } = useContinueWithoutCopy();
 
   const [isSelecting, setIsSelecting] = React.useState(false);
@@ -120,13 +118,13 @@ const SafetyBackups = () => {
         );
         return;
       }
-      // Everything was replaced: reload ledgers and every cached query
-      // (including this list, which now holds the undo copy).
-      await refreshLedgers();
-      await queryClient.invalidateQueries();
       showSuccess(
         t("safetyBackups.restored", { defaultValue: "Safety copy restored." }),
       );
+      // Everything was replaced, so ledger ids may differ: reload the app so
+      // the active ledger and every context are rebuilt, as the file restore
+      // on the Data Management screen does.
+      window.location.reload();
     });
 
   const saveAsFile = async (copy: SafetyBackupSummary) => {

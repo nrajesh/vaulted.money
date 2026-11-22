@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import SafetyBackups from "./SafetyBackups";
 const mockListSafetyBackups = vi.fn();
 const mockGetSafetyBackup = vi.fn();
 const mockDeleteSafetyBackups = vi.fn();
-const mockRefreshLedgers = vi.fn().mockResolvedValue([]);
+const mockReload = vi.fn();
 const mockRestoreSafetyBackup = vi.fn();
 const mockSaveFile = vi.fn().mockResolvedValue(true);
 
@@ -18,10 +18,6 @@ vi.mock("@/context/DataProviderContext", () => ({
     getSafetyBackup: mockGetSafetyBackup,
     deleteSafetyBackups: mockDeleteSafetyBackups,
   }),
-}));
-
-vi.mock("@/contexts/LedgerContext", () => ({
-  useLedger: () => ({ refreshLedgers: mockRefreshLedgers }),
 }));
 
 vi.mock("@/utils/safetyBackup", async (importOriginal) => {
@@ -37,8 +33,9 @@ vi.mock("@/utils/backupUtils", () => ({
   saveFile: (...args: unknown[]) => mockSaveFile(...args),
 }));
 
+const mockShowSuccess = vi.fn();
 vi.mock("@/utils/toast", () => ({
-  showSuccess: vi.fn(),
+  showSuccess: (...args: unknown[]) => mockShowSuccess(...args),
   showError: vi.fn(),
 }));
 
@@ -67,6 +64,8 @@ const renderSection = () => {
   );
 };
 
+const originalLocation = window.location;
+
 describe("SafetyBackups", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,6 +73,18 @@ describe("SafetyBackups", () => {
     mockListSafetyBackups.mockResolvedValue([newer, older]);
     mockDeleteSafetyBackups.mockResolvedValue(2);
     mockRestoreSafetyBackup.mockResolvedValue(undefined);
+    // jsdom's location.reload is not configurable on its own, so replace location.
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...originalLocation, reload: mockReload },
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
   });
 
   it("shows the empty state when there are no copies", async () => {
@@ -129,6 +140,9 @@ describe("SafetyBackups", () => {
     await waitFor(() => expect(mockRestoreSafetyBackup).toHaveBeenCalled());
     expect(mockRestoreSafetyBackup.mock.calls[0][1]).toBe("copy-new");
     expect(mockRestoreSafetyBackup.mock.calls[0][2]).toEqual({});
+    // Everything was replaced: the app reloads so the active ledger is rebuilt.
+    await waitFor(() => expect(mockReload).toHaveBeenCalledTimes(1));
+    expect(mockShowSuccess).toHaveBeenCalledWith("Safety copy restored.");
   });
 
   it("saves a copy as a file named after its date", async () => {
@@ -223,5 +237,6 @@ describe("SafetyBackups", () => {
     expect(mockRestoreSafetyBackup.mock.calls[1][2]).toEqual({
       continueWithoutCopy: true,
     });
+    await waitFor(() => expect(mockReload).toHaveBeenCalledTimes(1));
   });
 });
