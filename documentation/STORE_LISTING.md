@@ -153,11 +153,41 @@ Apple lets you publish these only after a version is live: open App Accessibilit
 ### App Review Information
 
 - **Sign-in required:** No.
-- **Contact:** your own name, phone and email.
-- **Notes:**
+- **Contact:** the owner's own name, phone and email (kept in App Store Connect).
+- **Attachment:** a screen recording from a physical iPhone, starting at launch (Apple asked for it after the first submission, Guideline 2.1 "Information Needed").
+- **Notes** (answers Apple's six questions; 4000-character limit):
 
 ```
-Vaulted Money has no account or sign-in. To explore every feature, open the app, choose "Generate demo data" on the first screen, then open any ledger. All data stays on the device. AI features are optional, off by default, and use the reviewer's own API key if they choose to try them. Before any data is sent to an AI provider the app asks for permission and lists exactly what is sent (payee and category names only). Connecting other AI apps to Vaulted Money is a feature of the separate desktop app only; this iOS app has no such connection.
+1. SCREEN RECORDING
+Attached: recorded on a physical iPhone running the latest iOS with build 2.0.0 (5), starting from launching the app. The app has no account registration, login or account deletion, no user-generated content shared with others, and no in-app purchases: it is a one-time paid download, so every feature is available from the first launch.
+
+2. PURPOSE AND AUDIENCE
+Vaulted Money is a private personal money manager for adults who want to track their spending, accounts and budgets without handing their financial data to a company. Most budgeting apps need an account and store bank data on a server; Vaulted Money keeps everything on the device. It covers transactions, accounts, budgets, recurring payments, a cash-flow calendar, reports and plain-English search (for example "groceries in checking last month over 25").
+
+3. HOW TO ACCESS THE MAIN FEATURES
+No login or sample files are needed.
+- Open the app and choose "Generate demo data" on the first screen. This creates a sample ledger with a year of transactions; open it.
+- Overview: the dashboard.
+- Transactions: tap the search box, type "groceries in checking last month over 25", tap "Apply all", then "Done".
+- Budgets: tap a budget to see the transactions behind it.
+- Calendar: tap a day to see money in, money out and scheduled payments.
+- Accounts and Reports: from the menu.
+- Backup: Menu > Backup to export or restore a file.
+- AI (optional, off by default): Menu > AI assistant > "Turn on AI" > "Add AI Provider" with your own API key. Before anything is sent, the app asks for permission and lists what is sent (payee and category names only).
+People can also add transactions by hand or import a CSV file exported from their bank.
+
+4. EXTERNAL SERVICES
+None are needed for the core features, which work fully offline. Optional, used only when the person chooses:
+- An AI provider the person picks and pays for with their own API key (OpenAI, Anthropic, Google Gemini, Mistral or Perplexity), to suggest categories for payees. Only payee and category names are sent, after the person agrees.
+- Frankfurter (api.frankfurter.dev), a free public exchange-rate service: the currency list and rates, when the person opens Currencies or refreshes rates. No personal data is sent.
+- The person's own cloud folder (for example iCloud Drive through Files) for optional sync between their own devices. The file is encrypted on the device first.
+There is no developer server, authentication service, analytics, advertising or payment processor.
+
+5. REGIONAL DIFFERENCES
+The app works the same in every region where it is offered. The interface is available in English, Spanish, Chinese, Dutch and Tamil and follows the device language. Plain-English search understands English phrases in all regions. The app is not offered in China mainland.
+
+6. REGULATED INDUSTRY
+Vaulted Money is a personal record-keeping tool. It does not connect to banks, move or hold money, process payments, or give financial or investment advice, so no financial licence applies. It contains no protected third-party material. Developer: Imaginest (sole trader, Netherlands, Chamber of Commerce no. 42086797).
 ```
 
 ### What's New
