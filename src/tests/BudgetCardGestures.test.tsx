@@ -88,13 +88,13 @@ describe.each([
 
     expect(card(name)).not.toBeNull();
     expect(
-      within(card(name)).queryByRole("button", { name: "Delete" }),
+      within(card(name)).queryByRole("button", { name: `Delete ${name}` }),
     ).toBeNull();
     swipeLeft(name);
     // Revealing alone deletes nothing.
     expect(onDelete).not.toHaveBeenCalled();
     await user.click(
-      within(card(name)).getByRole("button", { name: "Delete" }),
+      within(card(name)).getByRole("button", { name: `Delete ${name}` }),
     );
     expect(onDelete).toHaveBeenCalledWith(budget.id);
 
@@ -110,7 +110,9 @@ describe.each([
 
     swipeRight(name);
     expect(onEdit).not.toHaveBeenCalled();
-    await user.click(within(card(name)).getByRole("button", { name: "Edit" }));
+    await user.click(
+      within(card(name)).getByRole("button", { name: `Edit ${name}` }),
+    );
     expect(onEdit).toHaveBeenCalledWith(budget);
     expect(onDelete).not.toHaveBeenCalled();
     expect(

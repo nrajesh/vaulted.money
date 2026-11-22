@@ -299,7 +299,9 @@ describe("SafetyBackups", () => {
       const items = await screen.findAllByRole("listitem");
       // Hidden from screen readers while the row is closed.
       expect(
-        within(items[0]).queryByRole("button", { name: "Delete" }),
+        within(items[0]).queryByRole("button", {
+          name: "Delete Before CSV import: transactions",
+        }),
       ).toBeNull();
 
       swipe(
@@ -308,7 +310,9 @@ describe("SafetyBackups", () => {
         { x: 120, y: 104 },
       );
       await user.click(
-        within(items[0]).getByRole("button", { name: "Delete" }),
+        within(items[0]).getByRole("button", {
+          name: "Delete Before CSV import: transactions",
+        }),
       );
 
       // The swipe and the tap only ask; nothing is deleted yet.
@@ -347,7 +351,9 @@ describe("SafetyBackups", () => {
       );
       expect(swipeLayer(items[0]).style.transform).toBe("translateX(0px)");
       expect(
-        within(items[0]).queryByRole("button", { name: "Delete" }),
+        within(items[0]).queryByRole("button", {
+          name: "Delete Before CSV import: transactions",
+        }),
       ).toBeNull();
     });
 
@@ -365,7 +371,9 @@ describe("SafetyBackups", () => {
       );
       expect(swipeLayer(items[0]).style.transform).toBe("translateX(0px)");
       expect(
-        within(items[0]).queryByRole("button", { name: "Delete" }),
+        within(items[0]).queryByRole("button", {
+          name: "Delete Before CSV import: transactions",
+        }),
       ).toBeNull();
     });
 

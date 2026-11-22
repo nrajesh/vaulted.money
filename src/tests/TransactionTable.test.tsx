@@ -197,14 +197,18 @@ describe("TransactionTable phone card gestures", () => {
     const { onDeleteTransactions } = renderTable();
 
     expect(
-      within(card("Corner Grocer")).queryByRole("button", { name: "Delete" }),
+      within(card("Corner Grocer")).queryByRole("button", {
+        name: "Delete Corner Grocer",
+      }),
     ).toBeNull();
     swipeLeft("Corner Grocer");
     // Revealing alone deletes nothing.
     expect(onDeleteTransactions).not.toHaveBeenCalled();
 
     await user.click(
-      within(card("Corner Grocer")).getByRole("button", { name: "Delete" }),
+      within(card("Corner Grocer")).getByRole("button", {
+        name: "Delete Corner Grocer",
+      }),
     );
     expect(onDeleteTransactions).toHaveBeenCalledWith([{ id: "t-groceries" }]);
   });
@@ -216,7 +220,9 @@ describe("TransactionTable phone card gestures", () => {
     swipeRight("Corner Grocer");
     expect(onAddTransaction).not.toHaveBeenCalled();
     await user.click(
-      within(card("Corner Grocer")).getByRole("button", { name: "Duplicate" }),
+      within(card("Corner Grocer")).getByRole("button", {
+        name: "Duplicate Corner Grocer",
+      }),
     );
     expect(onAddTransaction).toHaveBeenCalledWith(
       duplicateTransactionPayload(groceries),

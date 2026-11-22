@@ -134,12 +134,15 @@ describe("Ledger card gestures", () => {
 
     expect(
       within(ledgerCard("Home budget")).queryByRole("button", {
-        name: "Delete",
+        name: "Delete Home budget",
       }),
     ).toBeNull();
     swipeLeft("Home budget");
     await user.click(
-      within(ledgerCard("Home budget")).getByRole("button", { name: "Delete" }),
+      // The revealed button names the ledger for screen readers.
+      within(ledgerCard("Home budget")).getByRole("button", {
+        name: "Delete Home budget",
+      }),
     );
 
     const dialog = await screen.findByRole("alertdialog");
@@ -164,7 +167,7 @@ describe("Ledger card gestures", () => {
     swipeRight("Side business");
     await user.click(
       within(ledgerCard("Side business")).getByRole("button", {
-        name: "Edit",
+        name: "Edit Side business",
       }),
     );
 
@@ -208,7 +211,7 @@ describe("Ledger card gestures", () => {
     expect(swipeLayer("Home budget").style.transform).toBe("translateX(0px)");
     expect(
       within(ledgerCard("Home budget")).queryByRole("button", {
-        name: "Delete",
+        name: "Delete Home budget",
       }),
     ).toBeNull();
 

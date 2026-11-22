@@ -134,12 +134,20 @@ export const EntityCardGrid = <T extends { id: string; name: string }>({
     const editAction: CardAction = {
       id: "edit",
       label: t("management.actions.edit", { defaultValue: "Edit" }),
+      ariaLabel: t("management.actions.editNamed", {
+        name: item.name,
+        defaultValue: "Edit {{name}}",
+      }),
       icon: Edit,
       onSelect: () => handleEditClick(item),
     };
     const deleteAction: CardAction = {
       id: "delete",
       label: t("management.actions.delete", { defaultValue: "Delete" }),
+      ariaLabel: t("management.actions.deleteNamed", {
+        name: item.name,
+        defaultValue: "Delete {{name}}",
+      }),
       icon: Trash2,
       destructive: true,
       onSelect: () => handleDeleteClick(item),

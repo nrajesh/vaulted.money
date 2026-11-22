@@ -996,6 +996,10 @@ const LedgerEntryPage = () => {
               const editAction: CardAction = {
                 id: "edit",
                 label: t("management.actions.edit", { defaultValue: "Edit" }),
+                ariaLabel: t("management.actions.editNamed", {
+                  name: ledger.name,
+                  defaultValue: "Edit {{name}}",
+                }),
                 icon: Pencil,
                 onSelect: () => requestEditLedger(ledger),
               };
@@ -1003,6 +1007,10 @@ const LedgerEntryPage = () => {
                 id: "delete",
                 label: t("management.actions.delete", {
                   defaultValue: "Delete",
+                }),
+                ariaLabel: t("management.actions.deleteNamed", {
+                  name: ledger.name,
+                  defaultValue: "Delete {{name}}",
                 }),
                 icon: Trash2,
                 destructive: true,

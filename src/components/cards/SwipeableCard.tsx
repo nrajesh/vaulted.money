@@ -149,7 +149,7 @@ export function SwipeableCard({
     return (
       <button
         type="button"
-        aria-label={action.label}
+        aria-label={action.ariaLabel ?? action.label}
         aria-hidden={!revealed}
         tabIndex={revealed ? 0 : -1}
         disabled={action.disabled}

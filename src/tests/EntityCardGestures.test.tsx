@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
@@ -64,6 +64,13 @@ const card = (name: string) =>
   detailsButton(name).closest("[data-swipe-card]") as HTMLElement;
 const swipeLayer = (name: string) =>
   card(name).querySelector("[data-swipe-content]") as HTMLElement;
+// The revealed swipe button sits behind the sliding layer. It carries the
+// same name as the inline button beside it ("Delete Everyday Checking"), so
+// pick the one outside the sliding layer.
+const revealedButton = (name: string, label: string) =>
+  within(card(name))
+    .queryAllByRole("button", { name: label })
+    .find((button) => !button.closest("[data-swipe-content]")) ?? null;
 // Swipes start on the full-card details button, which covers the card.
 const swipeLeft = (name: string) =>
   swipe(detailsButton(name), { x: 250, y: 100 }, { x: 120, y: 104 });
@@ -84,14 +91,17 @@ describe("EntityCardGrid card gestures (accounts, payees, categories)", () => {
 
     swipeLeft("Everyday Checking");
     expect(handleDeleteClick).not.toHaveBeenCalled();
-    // The swipe did not open the details dialog.
+    // A phone sends a click on the details button when the finger lifts;
+    // the swipe must swallow it rather than open the details dialog.
+    fireEvent.click(detailsButton("Everyday Checking"));
     expect(screen.queryByRole("dialog")).toBeNull();
 
-    await user.click(
-      within(card("Everyday Checking")).getByRole("button", {
-        name: "Delete",
-      }),
+    const revealedDelete = revealedButton(
+      "Everyday Checking",
+      "Delete Everyday Checking",
     );
+    expect(revealedDelete).not.toBeNull();
+    await user.click(revealedDelete!);
     expect(handleDeleteClick).toHaveBeenCalledWith(rows[0]);
     expect(handleEditClick).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -103,9 +113,12 @@ describe("EntityCardGrid card gestures (accounts, payees, categories)", () => {
 
     swipeRight("Everyday Checking");
     expect(handleEditClick).not.toHaveBeenCalled();
-    await user.click(
-      within(card("Everyday Checking")).getByRole("button", { name: "Edit" }),
+    const revealedEdit = revealedButton(
+      "Everyday Checking",
+      "Edit Everyday Checking",
     );
+    expect(revealedEdit).not.toBeNull();
+    await user.click(revealedEdit!);
     expect(handleEditClick).toHaveBeenCalledWith(rows[0]);
     expect(handleDeleteClick).not.toHaveBeenCalled();
   });
@@ -114,9 +127,7 @@ describe("EntityCardGrid card gestures (accounts, payees, categories)", () => {
     renderGrid();
     swipeLeft("Transfer");
     expect(swipeLayer("Transfer").style.transform).toBe("translateX(0px)");
-    expect(
-      within(card("Transfer")).queryByRole("button", { name: "Delete" }),
-    ).toBeNull();
+    expect(revealedButton("Transfer", "Delete Transfer")).toBeNull();
     expect(
       screen.getByRole("button", { name: "Edit Transfer" }),
     ).toBeDisabled();
@@ -132,11 +143,13 @@ describe("EntityCardGrid card gestures (accounts, payees, categories)", () => {
       vi.advanceTimersByTime(500);
     });
     firePointer(surface, "pointerUp", { x: 200, y: 100 });
+    // The click a phone sends when the finger lifts must be swallowed, so
+    // the long press does not also open the details dialog.
+    fireEvent.click(surface);
     vi.useRealTimers();
 
     const items = await screen.findAllByRole("menuitem");
     expect(items.map((item) => item.textContent)).toEqual(["Edit", "Delete"]);
-    // The long press did not also open the details dialog.
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 

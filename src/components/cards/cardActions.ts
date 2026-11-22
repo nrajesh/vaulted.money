@@ -8,6 +8,12 @@ import type { LucideIcon } from "lucide-react";
 export interface CardAction {
   id: string;
   label: string; // already translated
+  /**
+   * What a screen reader says for the revealed swipe button, naming the item
+   * (e.g. "Delete Everyday Checking"). Falls back to `label`. The visible
+   * text and the menu item always show `label`.
+   */
+  ariaLabel?: string;
   icon?: LucideIcon;
   onSelect: () => void;
   destructive?: boolean;

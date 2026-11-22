@@ -415,6 +415,10 @@ const TransactionMobileCard = React.memo(
     const duplicateAction: CardAction = {
       id: "duplicate",
       label: t("transactionsTable.duplicate", { defaultValue: "Duplicate" }),
+      ariaLabel: t("management.actions.duplicateNamed", {
+        name: payeeName,
+        defaultValue: "Duplicate {{name}}",
+      }),
       icon: Copy,
       onSelect: () =>
         onAddTransaction(duplicateTransactionPayload(transaction)),
@@ -422,6 +426,10 @@ const TransactionMobileCard = React.memo(
     const deleteAction: CardAction = {
       id: "delete",
       label: t("management.actions.delete", { defaultValue: "Delete" }),
+      ariaLabel: t("management.actions.deleteNamed", {
+        name: payeeName,
+        defaultValue: "Delete {{name}}",
+      }),
       icon: Trash,
       destructive: true,
       onSelect: () => onDeleteTransactions([{ id: transaction.id }]),

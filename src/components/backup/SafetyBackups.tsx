@@ -268,6 +268,10 @@ const SafetyBackups = () => {
               const deleteAction: CardAction = {
                 id: "delete",
                 label: t("safetyBackups.delete", { defaultValue: "Delete" }),
+                ariaLabel: t("management.actions.deleteNamed", {
+                  name: name,
+                  defaultValue: "Delete {{name}}",
+                }),
                 icon: Trash2,
                 destructive: true,
                 onSelect: () => setPendingDeleteIds([copy.id]),

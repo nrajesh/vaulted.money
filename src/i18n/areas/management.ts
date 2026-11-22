@@ -29,6 +29,7 @@ export const management: AreaTranslations = {
       actions: {
         editNamed: "Edit {{name}}",
         deleteNamed: "Delete {{name}}",
+        duplicateNamed: "Duplicate {{name}}",
         detailsNamed: "Details: {{name}}",
         reconcile: "Reconcile Balance",
         cleanup: "Cleanup Unused",
@@ -131,6 +132,7 @@ export const management: AreaTranslations = {
       actions: {
         editNamed: "Editar {{name}}",
         deleteNamed: "Eliminar {{name}}",
+        duplicateNamed: "Duplicar {{name}}",
         detailsNamed: "Detalles: {{name}}",
         reconcile: "Conciliar saldo",
         cleanup: "Limpiar sin uso",
@@ -235,6 +237,7 @@ export const management: AreaTranslations = {
       actions: {
         editNamed: "编辑 {{name}}",
         deleteNamed: "删除 {{name}}",
+        duplicateNamed: "复制 {{name}}",
         detailsNamed: "详情：{{name}}",
         reconcile: "对账",
         cleanup: "清理未使用项",
@@ -337,6 +340,7 @@ export const management: AreaTranslations = {
       actions: {
         editNamed: "{{name}} bewerken",
         deleteNamed: "{{name}} verwijderen",
+        duplicateNamed: "{{name}} dupliceren",
         detailsNamed: "Details: {{name}}",
         reconcile: "Saldo afstemmen",
         cleanup: "Ongebruikte opschonen",
@@ -441,6 +445,7 @@ export const management: AreaTranslations = {
       actions: {
         editNamed: "{{name}} திருத்து",
         deleteNamed: "{{name}} நீக்கு",
+        duplicateNamed: "{{name}} நகலெடு",
         detailsNamed: "விவரங்கள்: {{name}}",
         reconcile: "இருப்பைச் சரிபார்",
         cleanup: "பயன்படுத்தப்படாதவற்றை அகற்று",

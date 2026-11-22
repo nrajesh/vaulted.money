@@ -144,12 +144,16 @@ describe("ScheduledTransactionsTable", () => {
       const { onDelete } = renderWithHandlers();
 
       expect(
-        within(card("Test Vendor")).queryByRole("button", { name: "Delete" }),
+        within(card("Test Vendor")).queryByRole("button", {
+          name: "Delete Test Vendor",
+        }),
       ).toBeNull();
       swipe(payeeIn("Test Vendor"), { x: 250, y: 100 }, { x: 120, y: 104 });
       expect(onDelete).not.toHaveBeenCalled();
       await user.click(
-        within(card("Test Vendor")).getByRole("button", { name: "Delete" }),
+        within(card("Test Vendor")).getByRole("button", {
+          name: "Delete Test Vendor",
+        }),
       );
       expect(onDelete).toHaveBeenCalledWith("1");
     });
@@ -162,7 +166,7 @@ describe("ScheduledTransactionsTable", () => {
       expect(onDuplicate).not.toHaveBeenCalled();
       await user.click(
         within(card("Test Vendor")).getByRole("button", {
-          name: "Duplicate",
+          name: "Duplicate Test Vendor",
         }),
       );
       expect(onDuplicate).toHaveBeenCalledWith(mockTransactions[0]);

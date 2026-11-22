@@ -108,15 +108,27 @@ export function ScheduledTransactionsTable({
   // One action list per phone card for the swipe buttons, the "…" menu and
   // long press, in the menu's order. Only actions with a handler appear.
   const cardActionsFor = (transaction: ScheduledTransaction) => {
+    // The revealed swipe buttons name the payee for screen readers.
+    const payeeName =
+      transaction.vendor ||
+      t("scheduled.table.unknown", { defaultValue: "Unknown" });
     const duplicate: CardAction | undefined = onDuplicate && {
       id: "duplicate",
       label: t("scheduled.table.duplicate", { defaultValue: "Duplicate" }),
+      ariaLabel: t("management.actions.duplicateNamed", {
+        name: payeeName,
+        defaultValue: "Duplicate {{name}}",
+      }),
       icon: Copy,
       onSelect: () => onDuplicate(transaction),
     };
     const remove: CardAction | undefined = onDelete && {
       id: "delete",
       label: t("scheduled.table.delete", { defaultValue: "Delete" }),
+      ariaLabel: t("management.actions.deleteNamed", {
+        name: payeeName,
+        defaultValue: "Delete {{name}}",
+      }),
       icon: Trash,
       destructive: true,
       onSelect: () => onDelete(transaction.id),

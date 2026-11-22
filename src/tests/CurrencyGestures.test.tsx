@@ -71,7 +71,7 @@ describe("CurrencyManagement row gestures", () => {
     swipe(nameIn("GBP"), { x: 250, y: 100 }, { x: 120, y: 104 });
     expect(removeCurrency).not.toHaveBeenCalled();
     await user.click(
-      within(card("GBP")).getByRole("button", { name: "Delete" }),
+      within(card("GBP")).getByRole("button", { name: "Delete GBP" }),
     );
     expect(removeCurrency).toHaveBeenCalledWith("GBP");
 

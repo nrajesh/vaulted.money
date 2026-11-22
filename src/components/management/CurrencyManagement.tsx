@@ -434,6 +434,10 @@ export const CurrencyManagement = () => {
                     label: t("management.actions.delete", {
                       defaultValue: "Delete",
                     }),
+                    ariaLabel: t("management.actions.deleteNamed", {
+                      name: currency.code,
+                      defaultValue: "Delete {{name}}",
+                    }),
                     icon: Trash2,
                     destructive: true,
                     onSelect: () => removeCurrency(currency.code),

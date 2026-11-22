@@ -150,12 +150,20 @@ export function BudgetCard({
   const editAction: CardAction = {
     id: "edit",
     label: t("management.actions.edit", { defaultValue: "Edit" }),
+    ariaLabel: t("management.actions.editNamed", {
+      name: budget.category_name,
+      defaultValue: "Edit {{name}}",
+    }),
     icon: Edit,
     onSelect: () => onEdit(budget),
   };
   const deleteAction: CardAction = {
     id: "delete",
     label: t("management.actions.delete", { defaultValue: "Delete" }),
+    ariaLabel: t("management.actions.deleteNamed", {
+      name: budget.category_name,
+      defaultValue: "Delete {{name}}",
+    }),
     icon: Trash2,
     destructive: true,
     onSelect: () => onDelete(budget.id),
