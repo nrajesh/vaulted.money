@@ -106,6 +106,17 @@ describe("CurrencyManagement row gestures", () => {
     expect(updateExchangeRate).toHaveBeenCalledWith("GBP", 0.75);
   });
 
+  it("the rate field stays selectable although the row blocks text selection", () => {
+    renderCurrencies();
+    const layer = swipeLayer("EUR");
+    expect(layer.className).toMatch(/(^|\s)select-none(\s|$)/);
+    // The rate input and its marked box get selection back from the layer.
+    expect(layer.contains(rateInput("EUR"))).toBe(true);
+    expect(layer.className).toContain("[&_input]:select-text");
+    expect(rateInput("EUR").closest("[data-selectable-text]")).not.toBeNull();
+    expect(layer.className).toContain("[&_[data-selectable-text]]:select-text");
+  });
+
   it("pressing and holding in the rate field never opens the menu", () => {
     vi.useFakeTimers();
     renderCurrencies();

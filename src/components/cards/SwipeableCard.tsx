@@ -215,6 +215,13 @@ export function SwipeableCard({
           // Opaque, so the action behind never shows through a translucent
           // card or the gap beside it.
           "relative rounded-[inherit] bg-background",
+          // A long press must not start text selection or the iOS callout:
+          // WebKit would cancel the touch before the menu timer, or show its
+          // selection bar over the menu. Fields and text marked
+          // data-selectable-text get selection back (older WebKit will not
+          // edit an input inside a user-select:none parent).
+          "select-none [-webkit-touch-callout:none]",
+          "[&_input]:select-text [&_textarea]:select-text [&_[data-selectable-text]]:select-text",
           !dragging &&
             !motionReduced &&
             "transition-transform duration-200 ease-out",

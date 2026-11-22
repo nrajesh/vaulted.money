@@ -348,6 +348,22 @@ describe("SwipeableCard", () => {
     expect(hidden).toHaveAttribute("tabindex", "0");
   });
 
+  it("stops text selection and the iOS callout on the sliding layer, so a long press is not taken over", () => {
+    renderCard();
+    const layer = cardBody().closest("[data-swipe-content]") as HTMLElement;
+    expect(layer.className).toMatch(/(^|\s)select-none(\s|$)/);
+    expect(layer.className).toContain("[-webkit-touch-callout:none]");
+  });
+
+  it("keeps inputs, text areas and marked text selectable inside the card", () => {
+    renderCard();
+    const layer = cardBody().closest("[data-swipe-content]") as HTMLElement;
+    // Older WebKit will not edit an input inside a user-select:none parent.
+    expect(layer.className).toContain("[&_input]:select-text");
+    expect(layer.className).toContain("[&_textarea]:select-text");
+    expect(layer.className).toContain("[&_[data-selectable-text]]:select-text");
+  });
+
   it("gives the sliding layer an opaque background", () => {
     renderCard();
     const slider = cardBody().closest("[data-swipe-content]");
