@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/dexieDB";
 import {
   NameConflictError,
@@ -877,6 +877,92 @@ describe("DataProvider contract", () => {
 
       expect(await provider.getBackupConfig("backup-1")).toBeUndefined();
       expect(await provider.getBackupConfigs()).toEqual([]);
+    });
+  });
+
+  describe("safety backups", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const input = (payload = "{}") => ({
+      reason: "csv_import" as const,
+      entity: "transactions",
+      ledger_count: 2,
+      payload,
+    });
+
+    // Only Date is faked so IndexedDB's timers keep running.
+    const saveAt = async (provider: DataProvider, minute: number) => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date(2026, 0, 1, 12, minute));
+      return provider.saveSafetyBackup(input(`{"n":${minute}}`));
+    };
+
+    it("saves a copy and lists it without its payload", async () => {
+      const provider = createProvider();
+      const saved = await provider.saveSafetyBackup(input('{"a":1}'));
+      const list = await provider.listSafetyBackups();
+      expect(list).toHaveLength(1);
+      expect(list[0].id).toBe(saved.id);
+      expect(list[0].reason).toBe("csv_import");
+      expect(list[0].ledger_count).toBe(2);
+      expect("payload" in list[0]).toBe(false);
+      expect((await provider.getSafetyBackup(saved.id))?.payload).toBe(
+        '{"a":1}',
+      );
+    });
+
+    it("keeps only the newest 5", async () => {
+      const provider = createProvider();
+      const ids: string[] = [];
+      for (let minute = 0; minute < 7; minute++) {
+        ids.push((await saveAt(provider, minute)).id);
+      }
+      const list = await provider.listSafetyBackups();
+      expect(list.map((copy) => copy.id)).toEqual(ids.slice(2).reverse());
+    });
+
+    it("never prunes the protected copy", async () => {
+      const provider = createProvider();
+      const ids: string[] = [];
+      for (let minute = 0; minute < 5; minute++) {
+        ids.push((await saveAt(provider, minute)).id);
+      }
+      vi.setSystemTime(new Date(2026, 0, 1, 12, 30));
+      await provider.saveSafetyBackup(input(), { protectId: ids[0] });
+      const list = await provider.listSafetyBackups();
+      expect(list).toHaveLength(5);
+      expect(list.map((copy) => copy.id)).toContain(ids[0]);
+    });
+
+    it("deletes several at once", async () => {
+      const provider = createProvider();
+      const a = await provider.saveSafetyBackup(input());
+      const b = await provider.saveSafetyBackup(input());
+      await provider.saveSafetyBackup(input());
+      expect(await provider.deleteSafetyBackups([a.id, b.id, "missing"])).toBe(
+        2,
+      );
+      expect(await provider.listSafetyBackups()).toHaveLength(1);
+    });
+
+    it("export, import and sync data leave the copies out", async () => {
+      const provider = createProvider();
+      await provider.saveSafetyBackup(input());
+      const exported = await provider.exportData();
+      expect(exported).not.toHaveProperty("safety_backups");
+      await provider.importData(exported);
+      expect(await provider.listSafetyBackups()).toHaveLength(1);
+    });
+
+    it("clearAllData keeps copies only when asked", async () => {
+      const provider = createProvider();
+      await provider.saveSafetyBackup(input());
+      await provider.clearAllData({ keepSafetyBackups: true });
+      expect(await provider.listSafetyBackups()).toHaveLength(1);
+      await provider.clearAllData();
+      expect(await provider.listSafetyBackups()).toEqual([]);
     });
   });
 });

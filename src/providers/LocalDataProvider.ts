@@ -9,6 +9,9 @@ import {
   SubCategory,
   Ledger,
   BackupConfig,
+  SAFETY_BACKUP_LIMIT,
+  type SafetyBackup,
+  type SafetyBackupSummary,
   AIProvider,
   AccountDetailsChanges,
   NameConflictError,
@@ -1132,13 +1135,20 @@ export class LocalDataProvider implements DataProvider {
       .modify({ transfer_id: null });
   }
 
-  async clearAllData(): Promise<void> {
+  async clearAllData(options?: { keepSafetyBackups?: boolean }): Promise<void> {
     try {
+      // Safety copies live in the same database, so read them before it is deleted.
+      const keptCopies = options?.keepSafetyBackups
+        ? await db.safety_backups.toArray()
+        : [];
       // Full reset can deadlock when large RW transactions contend with live queries.
       // Recreating the IndexedDB database is more reliable than clearing all tables in one transaction.
       db.close();
       await db.delete();
       await db.open();
+      if (keptCopies.length > 0) {
+        await db.safety_backups.bulkPut(keptCopies);
+      }
     } catch (error) {
       console.error("[LocalDataProvider] clearAllData FAILED:", error);
       throw error;
@@ -1484,5 +1494,60 @@ export class LocalDataProvider implements DataProvider {
 
   async deleteBackupConfig(id: string): Promise<void> {
     await db.backup_configs.delete(id);
+  }
+
+  async saveSafetyBackup(
+    input: Omit<SafetyBackup, "id" | "created_at">,
+    options?: { protectId?: string },
+  ): Promise<SafetyBackupSummary> {
+    const row: SafetyBackup = {
+      ...input,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+    await db.transaction("rw", db.safety_backups, async () => {
+      await db.safety_backups.add(row);
+      // Keep the newest copies; the protected one (being restored) is never deleted.
+      const keys = (await db.safety_backups
+        .orderBy("created_at")
+        .reverse()
+        .primaryKeys()) as string[];
+      // The protected copy takes one of the slots, so the total stays at the limit.
+      const protectedId = keys.includes(options?.protectId ?? "")
+        ? options?.protectId
+        : undefined;
+      const others = keys.filter((key) => key !== protectedId);
+      const surplus = others.slice(
+        protectedId ? SAFETY_BACKUP_LIMIT - 1 : SAFETY_BACKUP_LIMIT,
+      );
+      if (surplus.length > 0) await db.safety_backups.bulkDelete(surplus);
+    });
+    const { payload: _payload, ...summary } = row;
+    void _payload;
+    return summary;
+  }
+
+  async listSafetyBackups(): Promise<SafetyBackupSummary[]> {
+    const rows = await db.safety_backups
+      .orderBy("created_at")
+      .reverse()
+      .toArray();
+    return rows.map(({ payload: _payload, ...summary }) => {
+      void _payload;
+      return summary;
+    });
+  }
+
+  async getSafetyBackup(id: string): Promise<SafetyBackup | undefined> {
+    return db.safety_backups.get(id);
+  }
+
+  async deleteSafetyBackups(ids: string[]): Promise<number> {
+    return db.transaction("rw", db.safety_backups, async () => {
+      const existing = await db.safety_backups.bulkGet(ids);
+      const found = existing.filter((row): row is SafetyBackup => !!row);
+      await db.safety_backups.bulkDelete(found.map((row) => row.id));
+      return found.length;
+    });
   }
 }
