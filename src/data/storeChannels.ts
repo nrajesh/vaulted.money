@@ -1,3 +1,5 @@
+import { DESKTOP_CHECKOUT_URL } from "@/utils/feedbackLinks";
+
 /** Where Vaulted Money can be bought once: the two phone stores, and Polar
  *  for the desktop app. */
 export type StoreChannelKey = "appStore" | "playStore" | "polar";
@@ -25,8 +27,8 @@ export const storeChannels: readonly StoreChannel[] = [
   {
     key: "polar",
     label: "Polar",
-    url: null,
-    active: false,
+    url: DESKTOP_CHECKOUT_URL,
+    active: true,
   },
 ] as const;
 

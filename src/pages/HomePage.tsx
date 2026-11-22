@@ -31,7 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StoreButtons } from "@/components/homepage/StoreButtons";
+import HomeStoreLinks from "@/components/homepage/HomeStoreLinks";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
 import { DESKTOP_CHECKOUT_URL, GITHUB_REPO_URL } from "@/utils/feedbackLinks";
 import { showSuccess } from "@/utils/toast";
@@ -593,8 +593,6 @@ const HomePage = () => {
                 </a>
               </Button>
             </div>
-
-            <StoreButtons />
           </div>
 
           <div className="min-w-0">
@@ -643,6 +641,8 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      <HomeStoreLinks />
 
       {/* ── Demo videos, one card per selling point ─────────────────────── */}
       <HomeDemoCards />
@@ -1099,7 +1099,6 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      {/* "Get Vaulted Money" store section hidden until store listings exist (see HomeStoreLinks). */}
       <SiteFooter />
     </main>
   );
