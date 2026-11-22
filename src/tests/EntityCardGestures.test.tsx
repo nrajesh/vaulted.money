@@ -85,6 +85,15 @@ describe("EntityCardGrid card gestures (accounts, payees, categories)", () => {
     expect(item!.querySelector(".app-mobile-row")).not.toBeNull();
   });
 
+  it("each list item may shrink to its grid column (min-w-0)", () => {
+    // Without it the grid column grew to the card's widest content at Larger
+    // text on a 360px phone, and the overflow-hidden shell cut off the
+    // card's right side, Delete button included.
+    renderGrid();
+    const item = card("Everyday Checking").closest("li")!;
+    expect(item.className.split(/\s+/)).toContain("min-w-0");
+  });
+
   it("swipe left reveals Delete and tapping it calls handleDeleteClick (the existing confirmation)", async () => {
     const user = userEvent.setup();
     const { handleDeleteClick, handleEditClick } = renderGrid();

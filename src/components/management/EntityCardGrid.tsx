@@ -153,7 +153,9 @@ export const EntityCardGrid = <T extends { id: string; name: string }>({
       onSelect: () => handleDeleteClick(item),
     };
     return (
-      <li key={item.id} className="h-full">
+      // min-w-0: a grid item otherwise grows to its widest content, and at
+      // Larger text the shell then cut off the card's right side.
+      <li key={item.id} className="h-full min-w-0">
         <SwipeableCard
           // The card's own corners, so the sliding layer never shows square
           // corners behind the rounded card.
