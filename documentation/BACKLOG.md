@@ -21,6 +21,10 @@ The app ignores the iPhone's text-size setting, and its own "Larger" setting sto
 
 Play Console rates the 2.0.0 bundle's DEX optimisation "Low" and obfuscation 1%, because `android/app/build.gradle` has `minifyEnabled false`. `documentation/ANDROID_RULES.md` asks for R8 on release builds. Turn on `minifyEnabled` and `shrinkResources` with `proguard-android-optimize.txt`, add keep rules for the Capacitor bridge and every plugin, upload the R8 mapping file with each bundle, and test every plugin on a real device in the release build before shipping. Left off for 2.0.0 so the first Play build is the one already tested.
 
+### Desktop: a "Check for updates" button
+
+The desktop app is sold on Polar with no automatic updates, because a background check would have to phone home. Add a **Check for updates** button on the desktop app only (Electron). It should do nothing until someone clicks it, then open the Polar customer portal (https://polar.sh/imaginest/portal) in the browser, where buyers download new versions with the email they bought with. No background check, no version lookup and no data sent. Phones need nothing: the app stores update them, and the website is always current. Show the installed version next to the button, and translate the text into all five languages.
+
 ### Mac App Store
 
 Try selling the desktop app on the Mac App Store, alongside or instead of Polar.

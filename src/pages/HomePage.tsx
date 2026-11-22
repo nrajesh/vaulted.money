@@ -305,6 +305,21 @@ const HomePage = () => {
 
   const roadmapMilestones = [
     {
+      window: t("home.milestones.desktopOnPolar.window", {
+        defaultValue: "November 2026",
+      }),
+      title: t("home.milestones.desktopOnPolar.title", {
+        defaultValue: "Desktop app on Polar",
+      }),
+      summary: t("home.milestones.desktopOnPolar.summary", {
+        defaultValue:
+          "One purchase covers Mac, Windows and Linux. Private and offline, with no licence check and no update check.",
+      }),
+      label: t("home.commands.desktop.label", { defaultValue: "Desktop" }),
+      status: t("home.status.released", { defaultValue: "Released" }),
+      accent: "orange",
+    },
+    {
       window: t("home.milestones.recent", { defaultValue: "Recent release" }),
       title: t("home.milestones.search.title", {
         defaultValue: "Natural-language search",
