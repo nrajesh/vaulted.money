@@ -388,7 +388,8 @@ A Dutch buyer saw subtotal €9.99, taxes (included) €1.73, total €9.99. Thi
 | Sandbox product, file downloads and test purchase | Done (22 Nov 2026) |
 | Installers from `main` (2.0.0, App Store build 5) | Done: Mac signed and notarised, Windows and Linux built on GitHub's machines (Windows unsigned, SmartScreen warns on first launch) |
 | Live product and checkout link | Created, price €9.99 tax included |
-| Live file downloads (8 installers) | To upload in the Polar dashboard |
-| Polar organisation review | Not submitted; checkouts stay blocked until it passes |
-| README "Coming soon" replaced with the live link | After the review passes |
+| Live file downloads (8 installers) | Uploaded |
+| Polar organisation review | Approved (22 Nov 2026) |
+| README link, "which file" guide and website buy button | In the PR to `pre-prod`; live after it reaches `main` |
+| Live checkout total for a Dutch buyer | Check it is €9.99 before announcing |
 | In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1 |
