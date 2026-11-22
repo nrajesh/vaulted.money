@@ -24,6 +24,7 @@ import {
   ChevronRight,
   HelpCircle,
   MoreHorizontal,
+  Pencil,
   X,
   Settings,
 } from "lucide-react";
@@ -76,6 +77,13 @@ import { useTranslation } from "react-i18next";
 import { FeedbackLauncher } from "@/components/feedback/FeedbackLauncher";
 import SiteFooter from "@/components/SiteFooter";
 import BrandLockup from "@/components/BrandLockup";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
+import type { Ledger } from "@/types/dataProvider";
+
+/** The round chevron that says "tap to open" on a ledger card. */
+const ledgerOpenHintClass =
+  "h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white/80 text-emerald-700 dark:border-emerald-800 dark:bg-slate-950/70 dark:text-emerald-300";
 
 const LedgerEntryPage = () => {
   const { t } = useTranslation();
@@ -105,6 +113,10 @@ const LedgerEntryPage = () => {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [ledgerToDelete, setLedgerToDelete] = useState<string | null>(null); // For single delete
   const [isMassDelete, setIsMassDelete] = useState(false);
+  // The ledger being edited from its card (swipe right or the "…" menu). Kept
+  // after the dialog closes so its title doesn't flip while it fades out.
+  const [ledgerToEdit, setLedgerToEdit] = useState<Ledger | undefined>();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Import Logic State
   const dataProvider = useDataProvider();
@@ -567,11 +579,24 @@ const LedgerEntryPage = () => {
     setSelectedLedgers(newSelected);
   };
 
-  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Opens the delete confirmation for one ledger. Shared by the desktop
+  // Trash button, the card's swipe and its "…" menu: ledgers always confirm.
+  const requestDeleteLedger = (id: string) => {
     setLedgerToDelete(id);
     setIsMassDelete(false);
     setIsDeleteAlertOpen(true);
+  };
+
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    requestDeleteLedger(id);
+  };
+
+  // The same ledger dialog Settings uses for "Edit Current Ledger", for any
+  // ledger on this screen.
+  const requestEditLedger = (ledger: Ledger) => {
+    setLedgerToEdit(ledger);
+    setIsEditOpen(true);
   };
 
   const handleMassDeleteClick = () => {
@@ -971,109 +996,184 @@ const LedgerEntryPage = () => {
 
             {filteredLedgers.map((ledger) => {
               const isSelected = selectedLedgers.has(ledger.id);
+              // One action list for the swipe, the "…" menu and long press.
+              const editAction: CardAction = {
+                id: "edit",
+                label: t("management.actions.edit", { defaultValue: "Edit" }),
+                ariaLabel: t("management.actions.editNamed", {
+                  name: ledger.name,
+                  defaultValue: "Edit {{name}}",
+                }),
+                icon: Pencil,
+                onSelect: () => requestEditLedger(ledger),
+              };
+              const deleteAction: CardAction = {
+                id: "delete",
+                label: t("management.actions.delete", {
+                  defaultValue: "Delete",
+                }),
+                ariaLabel: t("management.actions.deleteNamed", {
+                  name: ledger.name,
+                  defaultValue: "Delete {{name}}",
+                }),
+                icon: Trash2,
+                destructive: true,
+                onSelect: () => requestDeleteLedger(ledger.id),
+              };
               return (
-                <ThemedCard
+                <SwipeableCard
                   key={ledger.id}
-                  className={cn(
-                    "group/card cursor-pointer rounded-2xl border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-white dark:border-emerald-900/50 dark:from-emerald-950/30 dark:via-slate-950 dark:to-slate-950",
-                    "shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md dark:hover:bg-emerald-900/35",
-                    isSelected &&
-                      "border-emerald-500 bg-emerald-100/80 dark:bg-emerald-900/60",
-                  )}
-                  onClick={() => handleSelectLedger(ledger.id)}
+                  className="rounded-2xl"
+                  // The page colour: the card's gradient is translucent, so
+                  // the sliding layer must be what it sat on before.
+                  contentClassName="bg-gray-50 dark:bg-gray-900"
+                  leftAction={deleteAction}
+                  rightAction={editAction}
+                  menuActions={[editAction, deleteAction]}
+                  menuButtonLabel={t("cardGestures.moreActionsFor", {
+                    name: ledger.name,
+                    defaultValue: "More actions for {{name}}",
+                  })}
+                  disabled={isSelectionMode}
                 >
-                  <ThemedCardContent className="p-4 sm:p-5">
-                    <div className="flex items-start gap-3">
-                      {isSelectionMode && (
-                        <div
-                          className="pt-1"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Checkbox
-                            aria-label={t("ledgerEntry.selectLedger", {
-                              name: ledger.name,
-                              defaultValue: "Select ledger {{name}}",
-                            })}
-                            checked={isSelected}
-                            onCheckedChange={(checked) =>
-                              handleToggleSelect(ledger.id, checked as boolean)
-                            }
-                            className="h-5 w-5 border-primary/50 bg-background data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                          />
-                        </div>
+                  {({ menuButton }) => (
+                    <ThemedCard
+                      className={cn(
+                        "group/card cursor-pointer rounded-2xl border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-white dark:border-emerald-900/50 dark:from-emerald-950/30 dark:via-slate-950 dark:to-slate-950",
+                        "shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md dark:hover:bg-emerald-900/35",
+                        isSelected &&
+                          "border-emerald-500 bg-emerald-100/80 dark:bg-emerald-900/60",
                       )}
+                      onClick={() => handleSelectLedger(ledger.id)}
+                    >
+                      <ThemedCardContent className="p-4 sm:p-5">
+                        <div className="flex items-start gap-3">
+                          {isSelectionMode && (
+                            <div
+                              className="pt-1"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <Checkbox
+                                aria-label={t("ledgerEntry.selectLedger", {
+                                  name: ledger.name,
+                                  defaultValue: "Select ledger {{name}}",
+                                })}
+                                checked={isSelected}
+                                onCheckedChange={(checked) =>
+                                  handleToggleSelect(
+                                    ledger.id,
+                                    checked as boolean,
+                                  )
+                                }
+                                className="h-5 w-5 border-primary/50 bg-background data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                              />
+                            </div>
+                          )}
 
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
-                        {getIcon(ledger.icon)}
-                      </div>
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
+                            {getIcon(ledger.icon)}
+                          </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h2 className="break-words text-lg font-semibold text-emerald-900 dark:text-emerald-200">
-                              {ledger.name}
-                            </h2>
-                            <div className="mt-2 flex flex-wrap items-center gap-2">
-                              {ledger.short_name && (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200">
-                                  {ledger.short_name}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <h2 className="break-words text-lg font-semibold text-emerald-900 dark:text-emerald-200">
+                                  {ledger.name}
+                                </h2>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  {ledger.short_name && (
+                                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200">
+                                      {ledger.short_name}
+                                    </span>
+                                  )}
+                                  <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                                    {ledger.currency}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {!isSelectionMode && (
+                                <div className="relative flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="hidden h-9 w-9 rounded-full text-destructive-text hover:bg-destructive/10 hover:text-destructive-text sm:inline-flex"
+                                    onClick={(event) =>
+                                      handleDeleteClick(ledger.id, event)
+                                    }
+                                    title={t("ledgerEntry.deleteLedger", {
+                                      defaultValue: "Delete Ledger",
+                                    })}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                  {/* The "…" menu, for phones (wider screens keep
+                                  the Trash button). On wider screens it stays
+                                  in place but invisible, so a long press on a
+                                  touch tablet still has an anchor. Clicks are
+                                  stopped so the menu never opens the ledger. */}
+                                  <div
+                                    className="sm:invisible sm:absolute sm:right-0 sm:top-0"
+                                    onClick={(event) => event.stopPropagation()}
+                                  >
+                                    {menuButton}
+                                  </div>
+                                  {/* On phones the chevron sits in the
+                                  "Last opened" row instead, so the name keeps
+                                  room beside the "…" button at Larger text. */}
+                                  <div
+                                    data-open-hint=""
+                                    className={cn(
+                                      "hidden sm:flex",
+                                      ledgerOpenHintClass,
+                                    )}
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="mt-4 flex items-end justify-between gap-3">
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700/80 dark:text-emerald-300/80">
+                                  {t("ledgerEntry.lastOpened", {
+                                    defaultValue: "Last opened",
+                                  })}
+                                </p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                  {formatLastAccessed(ledger.last_accessed)}
+                                </p>
+                              </div>
+                              {!isSelectionMode && (
+                                <div
+                                  data-open-hint=""
+                                  className={cn(
+                                    "flex sm:hidden",
+                                    ledgerOpenHintClass,
+                                  )}
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </div>
+                              )}
+                              {isSelectionMode && (
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {isSelected
+                                    ? t("ledgerEntry.selected", {
+                                        defaultValue: "Selected",
+                                      })
+                                    : t("ledgerEntry.tapToSelect", {
+                                        defaultValue: "Tap to select",
+                                      })}
                                 </span>
                               )}
-                              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                                {ledger.currency}
-                              </span>
                             </div>
                           </div>
-
-                          {!isSelectionMode && (
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="hidden h-9 w-9 rounded-full text-destructive-text hover:bg-destructive/10 hover:text-destructive-text sm:inline-flex"
-                                onClick={(event) =>
-                                  handleDeleteClick(ledger.id, event)
-                                }
-                                title={t("ledgerEntry.deleteLedger", {
-                                  defaultValue: "Delete Ledger",
-                                })}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white/80 text-emerald-700 dark:border-emerald-800 dark:bg-slate-950/70 dark:text-emerald-300">
-                                <ChevronRight className="h-4 w-4" />
-                              </div>
-                            </div>
-                          )}
                         </div>
-
-                        <div className="mt-4 flex items-end justify-between gap-3">
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700/80 dark:text-emerald-300/80">
-                              {t("ledgerEntry.lastOpened", {
-                                defaultValue: "Last opened",
-                              })}
-                            </p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {formatLastAccessed(ledger.last_accessed)}
-                            </p>
-                          </div>
-                          {isSelectionMode && (
-                            <span className="text-sm font-medium text-muted-foreground">
-                              {isSelected
-                                ? t("ledgerEntry.selected", {
-                                    defaultValue: "Selected",
-                                  })
-                                : t("ledgerEntry.tapToSelect", {
-                                    defaultValue: "Tap to select",
-                                  })}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </ThemedCardContent>
-                </ThemedCard>
+                      </ThemedCardContent>
+                    </ThemedCard>
+                  )}
+                </SwipeableCard>
               );
             })}
 
@@ -1213,6 +1313,12 @@ const LedgerEntryPage = () => {
       <ManageLedgerDialog
         isOpen={isCreateOpen}
         onOpenChange={setIsCreateOpen}
+      />
+
+      <ManageLedgerDialog
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        ledgerToEdit={ledgerToEdit}
       />
 
       {/* New Ledger Dialog for CSV Import */}

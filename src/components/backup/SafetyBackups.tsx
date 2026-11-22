@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { format } from "date-fns";
-import { Download, MoreHorizontal, RotateCcw, Trash2 } from "lucide-react";
+import { Download, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -13,12 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
 import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { useContinueWithoutCopy } from "@/hooks/useContinueWithoutCopy";
@@ -65,8 +61,8 @@ const formatTime = (value: string, language: string): string => {
  * five). Each can be restored, saved as a file or deleted; Select deletes
  * several at once.
  *
- * TODO(2.1 gestures): apply the shared swipe component (swipe left to
- * delete) to these rows when it lands, as the spec requires.
+ * On phones a row swipes left to reveal Delete, and a long press opens its
+ * ⋯ menu (see SwipeableCard).
  */
 const SafetyBackups = () => {
   const { t, i18n } = useTranslation();
@@ -268,109 +264,113 @@ const SafetyBackups = () => {
                 }),
               });
               const checkboxId = `safety-copy-${copy.id}`;
+              // One action list for the swipe, the ⋯ menu and long press.
+              const deleteAction: CardAction = {
+                id: "delete",
+                label: t("safetyBackups.delete", { defaultValue: "Delete" }),
+                // With the details, like Restore and Save as file, so two
+                // copies made for the same reason never share a name.
+                ariaLabel: t("safetyBackups.deleteOne", {
+                  name,
+                  details,
+                  defaultValue: "Delete {{name}}, {{details}}",
+                }),
+                icon: Trash2,
+                destructive: true,
+                onSelect: () => setPendingDeleteIds([copy.id]),
+              };
+              const moreActionsLabel = t("safetyBackups.moreActions", {
+                name,
+                details,
+                defaultValue: "More actions for {{name}}, {{details}}",
+              });
               return (
-                <li
-                  key={copy.id}
-                  className="rounded-lg border border-border p-3 sm:p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    {isSelecting && (
-                      <Checkbox
-                        id={checkboxId}
-                        className="mt-1"
-                        checked={selectedIds.has(copy.id)}
-                        onCheckedChange={(checked) =>
-                          toggleSelected(copy.id, checked === true)
-                        }
-                        aria-label={t("safetyBackups.selectOne", {
-                          name,
-                          details,
-                          defaultValue: "Select {{name}}, {{details}}",
-                        })}
-                      />
+                <li key={copy.id}>
+                  {/* Swipe left reveals Delete (the same confirmation as the
+                      ⋯ menu); a long press opens the ⋯ menu. No right swipe:
+                      a copy has no harmless quick action. */}
+                  <SwipeableCard
+                    className="rounded-lg"
+                    contentClassName="bg-card"
+                    leftAction={deleteAction}
+                    menuActions={[deleteAction]}
+                    menuButtonLabel={moreActionsLabel}
+                    disabled={isSelecting}
+                  >
+                    {({ menuButton }) => (
+                      <div className="rounded-lg border border-border p-3 sm:p-4">
+                        <div className="flex items-start gap-3">
+                          {isSelecting && (
+                            <Checkbox
+                              id={checkboxId}
+                              className="mt-1"
+                              checked={selectedIds.has(copy.id)}
+                              onCheckedChange={(checked) =>
+                                toggleSelected(copy.id, checked === true)
+                              }
+                              aria-label={t("safetyBackups.selectOne", {
+                                name,
+                                details,
+                                defaultValue: "Select {{name}}, {{details}}",
+                              })}
+                            />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="break-words font-medium text-foreground">
+                              {name}
+                            </p>
+                            <p className="break-words text-sm text-muted-foreground">
+                              {details}
+                            </p>
+                          </div>
+                        </div>
+                        {!isSelecting && (
+                          <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-auto min-h-9 whitespace-normal"
+                              onClick={() => setRestoreId(copy.id)}
+                              aria-label={t("safetyBackups.restoreOne", {
+                                name,
+                                details,
+                                defaultValue: "Restore {{name}}, {{details}}",
+                              })}
+                            >
+                              <RotateCcw
+                                className="mr-2 h-4 w-4"
+                                aria-hidden="true"
+                              />
+                              {t("safetyBackups.restore", {
+                                defaultValue: "Restore",
+                              })}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-auto min-h-9 whitespace-normal"
+                              onClick={() => void saveAsFile(copy)}
+                              aria-label={t("safetyBackups.saveAsFileOne", {
+                                name,
+                                details,
+                                defaultValue:
+                                  "Save as file: {{name}}, {{details}}",
+                              })}
+                            >
+                              <Download
+                                className="mr-2 h-4 w-4"
+                                aria-hidden="true"
+                              />
+                              {t("safetyBackups.saveAsFile", {
+                                defaultValue: "Save as file",
+                              })}
+                            </Button>
+                            {menuButton}
+                          </div>
+                        )}
+                      </div>
                     )}
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words font-medium text-foreground">
-                        {name}
-                      </p>
-                      <p className="break-words text-sm text-muted-foreground">
-                        {details}
-                      </p>
-                    </div>
-                  </div>
-                  {!isSelecting && (
-                    <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-auto min-h-9 whitespace-normal"
-                        onClick={() => setRestoreId(copy.id)}
-                        aria-label={t("safetyBackups.restoreOne", {
-                          name,
-                          details,
-                          defaultValue: "Restore {{name}}, {{details}}",
-                        })}
-                      >
-                        <RotateCcw
-                          className="mr-2 h-4 w-4"
-                          aria-hidden="true"
-                        />
-                        {t("safetyBackups.restore", {
-                          defaultValue: "Restore",
-                        })}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-auto min-h-9 whitespace-normal"
-                        onClick={() => void saveAsFile(copy)}
-                        aria-label={t("safetyBackups.saveAsFileOne", {
-                          name,
-                          details,
-                          defaultValue: "Save as file: {{name}}, {{details}}",
-                        })}
-                      >
-                        <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-                        {t("safetyBackups.saveAsFile", {
-                          defaultValue: "Save as file",
-                        })}
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9"
-                            aria-label={t("safetyBackups.moreActions", {
-                              name,
-                              details,
-                              defaultValue:
-                                "More actions for {{name}}, {{details}}",
-                            })}
-                          >
-                            <MoreHorizontal
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                            />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="text-red-700 focus:text-red-700 dark:text-red-400 dark:focus:text-red-400"
-                            onSelect={() => setPendingDeleteIds([copy.id])}
-                          >
-                            <Trash2
-                              className="mr-2 h-4 w-4"
-                              aria-hidden="true"
-                            />
-                            {t("safetyBackups.delete", {
-                              defaultValue: "Delete",
-                            })}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  )}
+                  </SwipeableCard>
                 </li>
               );
             })}

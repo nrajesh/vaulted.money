@@ -17,18 +17,9 @@ The app ignores the iPhone's text-size setting, and its own "Larger" setting sto
 
 `saveFile` (`src/utils/backupUtils.ts`) writes exports to the app's own Documents folder and says "Saved to Documents", which people read as iCloud Drive › Documents. On iPhone the file is in Files › On My iPhone › Vaulted Money. Open the share sheet after saving (Capacitor Share) so people can choose iCloud, Mail and so on, and translate the message (it is hard-coded English).
 
-### Phone gestures: swipe to delete and long-press menus
+### Android: shrink and optimise the release build (R8)
 
-On phones today, deleting or duplicating needs the "…" button on each card. Add the gestures people expect on iPhone and Android:
-
-- **Swipe left to delete** on every card: ledgers on the ledger screen, and transactions, scheduled transactions, budgets, accounts, payees, categories and currencies inside a ledger. Show a red Delete action; deleting still asks for confirmation where the "…" menu does today (ledgers always).
-- **Long press** on any card opens the same menu as its "…" button (edit, duplicate, delete and so on), with a light haptic tap.
-- Keep the "…" button: it is the accessible route for VoiceOver, Voice Control and keyboard users, and gestures must not be the only way to reach an action.
-- Make sure the swipe doesn't fight vertical scrolling, the iOS back swipe or text selection in notes.
-- One shared component for all cards, built from the existing "…" menu actions, so the gestures and the menu can never offer different things.
-- **Swipe right** for the card's most useful harmless action, as iPhone Mail and Reminders do: **Duplicate** on transactions (repeat a purchase) and scheduled transactions, **Edit** on ledgers, budgets, accounts, payees and categories. Never delete or anything that can't be undone on a right swipe.
-- One finger only. Not planned: multi-finger swipes (iOS doesn't use them on list rows, and they would clash with system gestures). Worth considering later: the iOS two-finger drag down a list to select several rows at once, as in Mail and Files.
-- The automatic safety copies on the Backup screen get the same swipe to delete.
+Play Console rates the 2.0.0 bundle's DEX optimisation "Low" and obfuscation 1%, because `android/app/build.gradle` has `minifyEnabled false`. `documentation/ANDROID_RULES.md` asks for R8 on release builds. Turn on `minifyEnabled` and `shrinkResources` with `proguard-android-optimize.txt`, add keep rules for the Capacitor bridge and every plugin, upload the R8 mapping file with each bundle, and test every plugin on a real device in the release build before shipping. Left off for 2.0.0 so the first Play build is the one already tested.
 
 ### Android: shrink and optimise the release build (R8)
 
@@ -51,5 +42,7 @@ Why it was not done for 2.0: the sandbox work, Apple's 15–30% fee against Pola
 
 ## Later
 
+- **Two-finger drag to select:** on iPhone, a two-finger drag down a list selects several rows at once, as in Mail and Files. Consider it for the transaction and management lists. (Card swipe and long press shipped in 2.1.)
+- **Gesture follow-ups:** check card swipes, the long-press haptic tap and the iOS back swipe on a real iPhone and Android phone, which the 2.1 checks could only emulate.
 - **Search in other languages:** plain-English search only understands English phrases. Extend `src/utils/searchParser.ts` to the other app languages.
 - **EU trader address:** switch the App Store and Google Play trader address from the home address to the Zeist postbox, using the KvK extract as proof (a change goes back to review, so do it between releases).

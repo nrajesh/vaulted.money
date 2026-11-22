@@ -41,6 +41,7 @@
   "dependencies": {
     "@capacitor/core": "^8.6.2",
     "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/haptics": "^8.0.2",
     "@capawesome/capacitor-file-picker": "^8.1.1",
     "@hookform/resolvers": "^7.0.3",
     "@radix-ui/react-alert-dialog": "^1.1.18",

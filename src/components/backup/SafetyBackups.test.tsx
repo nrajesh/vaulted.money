@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { SafetyBackupSummary } from "@/types/dataProvider";
+import { swipe } from "@/tests/pointerEvents";
 import SafetyBackups from "./SafetyBackups";
 
 const mockListSafetyBackups = vi.fn();
@@ -283,6 +284,112 @@ describe("SafetyBackups", () => {
     await waitFor(() =>
       expect(mockDeleteSafetyBackups).toHaveBeenCalledWith(["copy-old"]),
     );
+  });
+
+  describe("phone gestures", () => {
+    /*
+     * The revealed Delete names the copy with its details (date, time,
+     * ledgers) like Restore and Save as file, so two copies made for the
+     * same reason never share a name.
+     */
+    const DELETE_NEWER =
+      /^Delete Before CSV import: transactions, .*3 ledgers$/;
+
+    /** The swiping layer of a copy's row. */
+    const swipeLayer = (item: HTMLElement) =>
+      item.querySelector("[data-swipe-content]") as HTMLElement;
+
+    it("swiping a copy left reveals Delete; tapping it opens the same delete confirmation as the menu", async () => {
+      const user = userEvent.setup();
+      mockDeleteSafetyBackups.mockResolvedValue(1);
+      renderSection();
+
+      const items = await screen.findAllByRole("listitem");
+      // Hidden from screen readers while the row is closed.
+      expect(
+        within(items[0]).queryByRole("button", {
+          name: DELETE_NEWER,
+        }),
+      ).toBeNull();
+
+      swipe(
+        within(items[0]).getByText("Before CSV import: transactions"),
+        { x: 250, y: 100 },
+        { x: 120, y: 104 },
+      );
+      await user.click(
+        within(items[0]).getByRole("button", {
+          name: DELETE_NEWER,
+        }),
+      );
+
+      // The swipe and the tap only ask; nothing is deleted yet.
+      const dialog = await screen.findByRole("alertdialog");
+      expect(
+        within(dialog).getByText("Delete this safety copy?"),
+      ).toBeInTheDocument();
+      expect(mockDeleteSafetyBackups).not.toHaveBeenCalled();
+
+      await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+      await waitFor(() =>
+        expect(mockDeleteSafetyBackups).toHaveBeenCalledWith(["copy-new"]),
+      );
+    });
+
+    it("the ⋯ menu still offers Delete", async () => {
+      const user = userEvent.setup();
+      renderSection();
+
+      const items = await screen.findAllByRole("listitem");
+      await user.click(
+        within(items[0]).getByRole("button", { name: /More actions/i }),
+      );
+      const menuItems = await screen.findAllByRole("menuitem");
+      expect(menuItems.map((item) => item.textContent)).toEqual(["Delete"]);
+    });
+
+    it("a copy has no right swipe", async () => {
+      renderSection();
+
+      const items = await screen.findAllByRole("listitem");
+      swipe(
+        within(items[0]).getByText("Before CSV import: transactions"),
+        { x: 100, y: 100 },
+        { x: 230, y: 100 },
+      );
+      expect(swipeLayer(items[0]).style.transform).toBe("translateX(0px)");
+      expect(
+        within(items[0]).queryByRole("button", {
+          name: DELETE_NEWER,
+        }),
+      ).toBeNull();
+    });
+
+    it("does not swipe in Select mode", async () => {
+      const user = userEvent.setup();
+      renderSection();
+
+      await screen.findAllByRole("listitem");
+      await user.click(screen.getByRole("button", { name: "Select" }));
+      const items = screen.getAllByRole("listitem");
+      swipe(
+        within(items[0]).getByText("Before CSV import: transactions"),
+        { x: 250, y: 100 },
+        { x: 120, y: 104 },
+      );
+      expect(swipeLayer(items[0]).style.transform).toBe("translateX(0px)");
+      expect(
+        within(items[0]).queryByRole("button", {
+          name: DELETE_NEWER,
+        }),
+      ).toBeNull();
+    });
+
+    it("the sliding layer takes the card's own surface colour", async () => {
+      renderSection();
+      const items = await screen.findAllByRole("listitem");
+      expect(swipeLayer(items[0]).className).toMatch(/\bbg-card\b/);
+    });
   });
 
   it("offers to continue without a copy when the undo copy fails", async () => {

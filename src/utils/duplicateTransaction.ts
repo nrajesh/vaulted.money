@@ -1,4 +1,4 @@
-import type { Transaction } from "@/types/dataProvider";
+import type { ScheduledTransaction, Transaction } from "@/types/dataProvider";
 
 /**
  * The record "Duplicate" adds: the same transaction without its id, its
@@ -19,4 +19,23 @@ export function duplicateTransactionPayload(
     recurrence_frequency: undefined,
     recurrence_end_date: undefined,
   };
+}
+
+/**
+ * The schedule "Duplicate" adds on the Upcoming bills screen: the same payee,
+ * amount, account, category, interval, dates and notes, without its id. The
+ * transfer link is dropped because a link joins exactly two schedules; when
+ * the payee is an account, addScheduledTransaction links the copy to a new
+ * pair of its own.
+ */
+export function duplicateScheduledTransactionPayload(
+  schedule: ScheduledTransaction,
+): Omit<ScheduledTransaction, "id" | "created_at"> {
+  const {
+    id: _id,
+    created_at: _createdAt,
+    transfer_id: _transferId,
+    ...rest
+  } = schedule;
+  return rest;
 }
