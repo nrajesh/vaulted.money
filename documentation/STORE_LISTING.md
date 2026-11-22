@@ -312,6 +312,8 @@ Testers in closed and open tests must buy a paid app; only internal testers inst
 
 Status (22 November 2026): version 2.0.0 (version code 20000) is live on **internal testing** (list "Vaulted Money internal"); it installs and runs from Play on a Pixel emulator. Production needs the closed test first.
 
+The store listing, App content declarations and category (9 changes) were sent to Google for review on 22 November 2026, with managed publishing off. This publishes nothing publicly; approval replaces "Unrated" with PEGI 3 and the temporary name with Vaulted Money for testers.
+
 - **Testers must be adults.** An unsupervised under-18 account on a certified Pixel 10a saw "This item isn't available", while an adult account on the same phone got the Install button. Until Google reviews the app it shows as "Unrated", and it is paid; Google limits both for minors.
 - **Chrome and the Play Store must use the same Google account** when opening the test link; mixing accounts gives "Item not found" or a blank sheet. A tester who leaves and rejoins may see "Something went wrong on our end" for a while.
 - Promo codes: batch "Vaulted Money Promo 1", 25 codes, valid until 31 December 2026 (codes kept outside the repository). Internal testers don't need one.
