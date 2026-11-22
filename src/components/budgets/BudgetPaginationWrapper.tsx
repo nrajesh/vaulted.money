@@ -37,8 +37,14 @@ export function BudgetPaginationWrapper({
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  // Where the finger went down and where it is now. A ref, not state:
+  // tracking a drag must not re-render every card on each touchmove.
+  const touchRef = useRef<{
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+  } | null>(null);
 
   const totalPages = useMemo(
     () => Math.ceil(budgets.length / BUDGETS_PER_PAGE),
@@ -80,27 +86,43 @@ export function BudgetPaginationWrapper({
 
   // --- Swipe Navigation (Touch Events) ---
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(0); // Reset touchEnd
-    setTouchStart(e.targetTouches[0].clientX);
+    const touch = e.targetTouches[0];
+    touchRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      endX: touch.clientX,
+      endY: touch.clientY,
+    };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    if (!touchRef.current) return;
+    const touch = e.targetTouches[0];
+    touchRef.current.endX = touch.clientX;
+    touchRef.current.endY = touch.clientY;
   };
 
+  /*
+   * Only a clearly sideways drag turns the page. Scrolling the list up or
+   * down always drifts a little sideways; counting that drift as a swipe
+   * sent people back a page while they scrolled through page 2.
+   */
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isSwipe = Math.abs(distance) > 50; // Minimum distance for a swipe
-
-    if (isSwipe) {
-      if (distance > 0) {
-        // Swiped left (Go to next page)
-        goToNextPage();
-      } else {
-        // Swiped right (Go to previous page)
-        goToPrevPage();
-      }
+    const touch = touchRef.current;
+    touchRef.current = null;
+    if (!touch) return;
+    const horizontal = touch.startX - touch.endX;
+    const vertical = touch.startY - touch.endY;
+    const isSwipe =
+      Math.abs(horizontal) > 50 &&
+      Math.abs(horizontal) > 2 * Math.abs(vertical);
+    if (!isSwipe) return;
+    if (horizontal > 0) {
+      // Swiped left: next page
+      goToNextPage();
+    } else {
+      // Swiped right: previous page
+      goToPrevPage();
     }
   };
 
