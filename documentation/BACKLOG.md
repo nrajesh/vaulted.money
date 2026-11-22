@@ -17,6 +17,10 @@ The app ignores the iPhone's text-size setting, and its own "Larger" setting sto
 - **Voice Control:** test every common task by voice, then declare it.
 - **Differentiate Without Color Alone:** the calendar marks money in and out by colour only. Add a sign or icon, then declare it.
 
+### Exports on iPhone and Android: say where the file went
+
+`saveFile` (`src/utils/backupUtils.ts`) writes exports to the app's own Documents folder and says "Saved to Documents", which people read as iCloud Drive › Documents. On iPhone the file is in Files › On My iPhone › Vaulted Money. Open the share sheet after saving (Capacitor Share) so people can choose iCloud, Mail and so on, and translate the message (it is hard-coded English).
+
 ### Mac App Store
 
 Try selling the desktop app on the Mac App Store, alongside or instead of Polar.
