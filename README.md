@@ -222,12 +222,12 @@ You can let an AI agent such as Claude read your money manager and help with it,
 
 Vaulted Money is free and open-source under the MIT license. If you find it useful and want to support development, you have several options:
 
-| Channel                                                                                                                    | Status      |
-| -------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Buy on Apple App Store (€9.99 one-time)                                                                                    | Coming soon |
-| Buy on Google Play Store (€9.99 one-time)                                                                                  | Coming soon |
+| Channel                                                | Status      |
+| ------------------------------------------------------ | ----------- |
+| Buy on Apple App Store (€9.99 one-time)                | Coming soon |
+| Buy on Google Play Store (€9.99 one-time)              | Coming soon |
 | [Buy the desktop app on Polar](https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB) (€9.99 one-time) | Active      |
-| [GitHub Sponsors](https://github.com/sponsors/nrajesh)                                                                     | Active      |
+| [GitHub Sponsors](https://github.com/sponsors/nrajesh) | Active      |
 
 **Which desktop file do I download?** One purchase includes macOS, Windows and Linux, and you get every file. Download new versions from your Polar customer portal (https://polar.sh/imaginest/portal) with the email you bought with. There is no automatic update check, because the app never contacts a server.
 
