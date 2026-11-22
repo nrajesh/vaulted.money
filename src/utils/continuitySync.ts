@@ -2,6 +2,7 @@ import type { DataProvider } from "@/types/dataProvider";
 import { decryptData, encryptData } from "./crypto";
 import { generateBackupData, SYNC_SCHEMA_VERSION } from "./backupUtils";
 import { readSyncFile, writeSyncFile } from "./fs-adapter";
+import { makeSafetyBackup } from "./safetyBackup";
 
 /**
  * Cross-device continuity through a folder the person chooses (one that
@@ -239,6 +240,8 @@ export interface SyncSettings {
   passphrase: string | null;
   /** Called after the books were replaced from the sync file. */
   onLoaded: () => Promise<void> | void;
+  /** Called when no safety copy could be made before loading the sync file. */
+  onSafetyCopyFailed?: () => void;
 }
 
 export interface SyncMemory {
@@ -320,6 +323,23 @@ export const createContinuitySync = ({
   const load = async (data: unknown, hash: string) => {
     if (!settings) return;
     setStatus({ state: "syncing", loading: true });
+    /*
+     * Keep a safety copy before the file replaces this device's books, but
+     * only when it would actually change them. The copy lives in its own
+     * table, which is neither fingerprinted nor written to the sync file, and
+     * saving it does not call `notifyChange`, so it never causes a sync write.
+     * A failed copy does not block the sync (only restores and demo data
+     * require one); the person is warned through `onSafetyCopyFailed`.
+     */
+    const localHash = await fingerprintBooks(
+      (await generateBackupData(settings.dataProvider)).data,
+    );
+    if (localHash !== hash) {
+      const copy = await makeSafetyBackup(settings.dataProvider, {
+        reason: "sync",
+      });
+      if (!copy) settings.onSafetyCopyFailed?.();
+    }
     await settings.dataProvider.importData(data);
     markSynced(hash);
     await settings.onLoaded();

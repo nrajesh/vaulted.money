@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/components/ui/use-toast";
 import { calculateAccountStats } from "@/utils/accountUtils";
 import { ToastAction } from "@/components/ui/toast";
+import { SafetyBackupFailedError } from "@/utils/safetyBackup";
 
 interface TransactionToDelete {
   id: string;
@@ -79,7 +80,14 @@ interface TransactionsContextType {
   /** Wipes ALL data for the ledger */
   clearAllTransactions: () => void;
   /** Generates random demo data for testing */
-  generateDiverseDemoData: () => void;
+  /**
+   * Replaces all data with demo data. Rejects with SafetyBackupFailedError
+   * when no safety copy could be made; call again with
+   * `continueWithoutCopy` once the person agrees.
+   */
+  generateDiverseDemoData: (options?: {
+    continueWithoutCopy?: boolean;
+  }) => Promise<void>;
 
   refetchVendors: () => Promise<QueryObserverResult<Payee[], Error>>;
   refetchAccounts: () => Promise<QueryObserverResult<Payee[], Error>>;
@@ -1348,48 +1356,53 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
     [dataProvider, invalidateAllData, triggerExport],
   );
 
-  const generateDiverseDemoData = React.useCallback(async () => {
-    try {
-      await import("@/utils/demoDataGenerator").then(async (mod) => {
-        // Set progress FIRST to trigger query disabling
-        setOperationProgress({
-          title: "Generating Demo Data",
-          description: "Initializing...",
-          stage: "Initializing",
-          progress: 0,
-          totalStages: 100,
-        });
-
-        // Forcefully cancel all running queries to release DB locks
-        await queryClient.cancelQueries();
-
-        // Wait for React to update and queries to disable/cancel
-        await new Promise((r) => setTimeout(r, 1000));
-
-        await mod.generateDiverseDemoData(dataProvider, (progress) => {
+  const generateDiverseDemoData = React.useCallback(
+    async (options: { continueWithoutCopy?: boolean } = {}) => {
+      try {
+        await import("@/utils/demoDataGenerator").then(async (mod) => {
+          // Set progress FIRST to trigger query disabling
           setOperationProgress({
             title: "Generating Demo Data",
-            description: progress.stage,
-            stage: progress.stage,
-            progress: progress.progress,
-            totalStages: progress.totalStages,
+            description: "Initializing...",
+            stage: "Initializing",
+            progress: 0,
+            totalStages: 100,
           });
+
+          // Forcefully cancel all running queries to release DB locks
+          await queryClient.cancelQueries();
+
+          // Wait for React to update and queries to disable/cancel
+          await new Promise((r) => setTimeout(r, 1000));
+
+          await mod.generateDiverseDemoData(
+            dataProvider,
+            (progress) => {
+              setOperationProgress({
+                title: "Generating Demo Data",
+                description: progress.stage,
+                stage: progress.stage,
+                progress: progress.progress,
+                totalStages: progress.totalStages,
+              });
+            },
+            { continueWithoutCopy: options.continueWithoutCopy },
+          );
         });
-      });
 
-      // Cleanup and refresh
-      // Instead of entering the first ledger, we logout to let user choose
-      await refreshLedgers();
+        // Cleanup and refresh
+        // Instead of entering the first ledger, we logout to let user choose
+        await refreshLedgers();
 
-      // Logout sequence
-      localStorage.removeItem("activeLedgerId");
-      localStorage.setItem("userLoggedOut", "true");
+        // Logout sequence
+        localStorage.removeItem("activeLedgerId");
+        localStorage.setItem("userLoggedOut", "true");
 
-      // Force reload to reset application state
-      window.location.reload();
+        // Force reload to reset application state
+        window.location.reload();
 
-      // The codes below won't be reached due to reload, but kept for logic flow correctness if reload was opt
-      /* 
+        // The codes below won't be reached due to reload, but kept for logic flow correctness if reload was opt
+        /* 
       const ledgers = await dataProvider.getLedgers();
       if (ledgers.length > 0) {
         await switchLedger(ledgers[0].id);
@@ -1397,11 +1410,15 @@ export const TransactionsProvider: React.FC<{ children: React.ReactNode }> = ({
       await invalidateAllData();
       await refetchTransactions();
       */
-    } catch (error) {
-      console.error("Failed to generate demo data:", error);
-      setOperationProgress(null);
-    }
-  }, [dataProvider, refreshLedgers, queryClient]);
+      } catch (error) {
+        console.error("Failed to generate demo data:", error);
+        setOperationProgress(null);
+        // Nothing was changed; the screen asks whether to go on without a copy.
+        if (error instanceof SafetyBackupFailedError) throw error;
+      }
+    },
+    [dataProvider, refreshLedgers, queryClient],
+  );
 
   const processScheduledTransactions = React.useCallback(async () => {
     if (

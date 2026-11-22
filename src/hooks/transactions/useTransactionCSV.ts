@@ -15,6 +15,8 @@ import {
   CSVRow,
 } from "@/utils/csvUtils";
 import { Capacitor } from "@capacitor/core";
+import { withSafetyBackup } from "@/utils/safetyBackup";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 
 export const useTransactionCSV = () => {
@@ -28,6 +30,7 @@ export const useTransactionCSV = () => {
   } = useTransactions();
   const { activeLedger } = useLedger();
   const dataProvider = useDataProvider();
+  const warnSafetyCopy = useSafetyBackupWarning();
 
   const [isImporting, setIsImporting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -78,90 +81,115 @@ export const useTransactionCSV = () => {
             totalStages: totalSteps,
           });
 
-          // Step 1: Ensure all payees exist
-          const uniqueAccountsData = parsedData
-            .map((row) => ({
-              name: row.Account,
-              currency: row.Currency,
-            }))
-            .filter((item) => item.name);
+          // A safety copy is made just before the first write (after the
+          // file was read and checked), so a rejected file makes no copy.
+          const { result: importedCount, backedUp } = await withSafetyBackup(
+            dataProvider,
+            { reason: "csv_import", entity: "transactions" },
+            async () => {
+              // Step 1: Ensure all payees exist
+              const uniqueAccountsData = parsedData
+                .map((row) => ({
+                  name: row.Account,
+                  currency: row.Currency,
+                }))
+                .filter((item) => item.name);
 
-          await Promise.all(
-            uniqueAccountsData.map(async (acc) => {
-              await dataProvider.ensurePayeeExists(
-                acc.name,
-                true,
-                activeLedger!.id,
-                { currency: acc.currency, startingBalance: 0 },
+              await Promise.all(
+                uniqueAccountsData.map(async (acc) => {
+                  await dataProvider.ensurePayeeExists(
+                    acc.name,
+                    true,
+                    activeLedger!.id,
+                    { currency: acc.currency, startingBalance: 0 },
+                  );
+                }),
               );
-            }),
-          );
 
-          const uniqueVendors = [
-            ...new Set(parsedData.map((row) => row.Vendor).filter(Boolean)),
-          ];
-          await Promise.all(
-            uniqueVendors.map((name) => {
-              const row = parsedData.find((r) => r.Vendor === name);
-              const isTransfer = row?.Category === "Transfer";
-              return dataProvider.ensurePayeeExists(
-                name,
-                isTransfer,
-                activeLedger!.id,
+              const uniqueVendors = [
+                ...new Set(parsedData.map((row) => row.Vendor).filter(Boolean)),
+              ];
+              await Promise.all(
+                uniqueVendors.map((name) => {
+                  const row = parsedData.find((r) => r.Vendor === name);
+                  const isTransfer = row?.Category === "Transfer";
+                  return dataProvider.ensurePayeeExists(
+                    name,
+                    isTransfer,
+                    activeLedger!.id,
+                  );
+                }),
               );
-            }),
-          );
 
-          setOperationProgress({
-            title: "Importing CSV",
-            description: "Checking categories...",
-            stage: "Verifying Categories...",
-            progress: 25,
-            totalStages: totalSteps,
-          });
+              setOperationProgress({
+                title: "Importing CSV",
+                description: "Checking categories...",
+                stage: "Verifying Categories...",
+                progress: 25,
+                totalStages: totalSteps,
+              });
 
-          // Step 2: Ensure all categories exist
-          const uniqueCategories = [
-            ...new Set(parsedData.map((row) => row.Category).filter(Boolean)),
-          ];
-          await Promise.all(
-            uniqueCategories.map((name) =>
-              dataProvider.ensureCategoryExists(name, activeLedger!.id),
-            ),
-          );
-
-          // Sub-categories belong to a category, so add them once the
-          // categories exist. One at a time to avoid creating duplicates.
-          for (const pair of uniqueSubCategoryPairs(parsedData)) {
-            const categoryId = await dataProvider.ensureCategoryExists(
-              pair.category,
-              activeLedger!.id,
-            );
-            if (categoryId) {
-              await dataProvider.ensureSubCategoryExists(
-                pair.subCategory,
-                categoryId,
-                activeLedger!.id,
+              // Step 2: Ensure all categories exist
+              const uniqueCategories = [
+                ...new Set(
+                  parsedData.map((row) => row.Category).filter(Boolean),
+                ),
+              ];
+              await Promise.all(
+                uniqueCategories.map((name) =>
+                  dataProvider.ensureCategoryExists(name, activeLedger!.id),
+                ),
               );
-            }
-          }
 
-          await Promise.all([refetchVendors(), refetchAccounts()]);
+              // Sub-categories belong to a category, so add them once the
+              // categories exist. One at a time to avoid creating duplicates.
+              for (const pair of uniqueSubCategoryPairs(parsedData)) {
+                const categoryId = await dataProvider.ensureCategoryExists(
+                  pair.category,
+                  activeLedger!.id,
+                );
+                if (categoryId) {
+                  await dataProvider.ensureSubCategoryExists(
+                    pair.subCategory,
+                    categoryId,
+                    activeLedger!.id,
+                  );
+                }
+              }
 
-          // Step 3: Prepare transactions for insertion using the now-updated accountCurrencyMap
-          const transactionsToInsert = parsedData
-            .map((row) => {
-              const parsed = parseCSVRow(row, "USD", accountCurrencyMap);
-              if (!parsed) return null;
+              await Promise.all([refetchVendors(), refetchAccounts()]);
 
-              return {
-                user_id: activeLedger!.id, // Required by type
-                ...parsed,
-              };
-            })
-            .filter((t): t is NonNullable<typeof t> => t !== null);
+              // Step 3: Prepare transactions for insertion using the now-updated accountCurrencyMap
+              const transactionsToInsert = parsedData
+                .map((row) => {
+                  const parsed = parseCSVRow(row, "USD", accountCurrencyMap);
+                  if (!parsed) return null;
 
-          if (transactionsToInsert.length === 0) {
+                  return {
+                    user_id: activeLedger!.id, // Required by type
+                    ...parsed,
+                  };
+                })
+                .filter((t): t is NonNullable<typeof t> => t !== null);
+
+              if (transactionsToInsert.length === 0) return 0;
+
+              setOperationProgress({
+                title: "Importing CSV",
+                description: `Importing ${transactionsToInsert.length} transactions...`,
+                stage: "Saving Transactions...",
+                progress: 50,
+                totalStages: totalSteps,
+              });
+
+              // Step 4: Insert transactions
+              await dataProvider.addMultipleTransactions(transactionsToInsert);
+              return transactionsToInsert.length;
+            },
+          );
+          warnSafetyCopy(backedUp);
+
+          if (importedCount === 0) {
             showError(
               "No valid transactions could be prepared from the CSV. Check account names, amounts, and currency column.",
             );
@@ -172,26 +200,13 @@ export const useTransactionCSV = () => {
 
           setOperationProgress({
             title: "Importing CSV",
-            description: `Importing ${transactionsToInsert.length} transactions...`,
-            stage: "Saving Transactions...",
-            progress: 50,
-            totalStages: totalSteps,
-          });
-
-          // Step 4: Insert transactions
-          await dataProvider.addMultipleTransactions(transactionsToInsert);
-
-          setOperationProgress({
-            title: "Importing CSV",
             description: "Linking transfers...",
             stage: "Detecting Transfers...",
             progress: 90,
             totalStages: totalSteps,
           });
 
-          showSuccess(
-            `${transactionsToInsert.length} transactions imported successfully!`,
-          );
+          showSuccess(`${importedCount} transactions imported successfully!`);
 
           // Transfers are never linked automatically; the user reviews them.
           showSuccess(
@@ -234,6 +249,7 @@ export const useTransactionCSV = () => {
       accountCurrencyMap,
       dataProvider,
       setOperationProgress,
+      warnSafetyCopy,
     ],
   );
 
