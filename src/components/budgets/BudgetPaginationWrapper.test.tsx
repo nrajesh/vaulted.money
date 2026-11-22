@@ -77,6 +77,38 @@ describe("BudgetPaginationWrapper touch paging", () => {
     expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
   });
 
+  // On phones the cards fill the grid, leaving only thin gaps, so the
+  // "Page n of N" row below the cards also takes paging swipes.
+  it("pages for a swipe on the page row below the cards", () => {
+    renderOnPageTwo();
+    const pageRow = screen.getByText("Page 2 of 2");
+    drag(pageRow, { x: 60, y: 700 }, { x: 260, y: 705 });
+    expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+    drag(
+      screen.getByText("Page 1 of 2"),
+      { x: 260, y: 700 },
+      { x: 60, y: 705 },
+    );
+    expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
+  });
+
+  // While budgets are being selected the cards cannot swipe, so a swipe on
+  // a card turns the page as it did before cards could swipe.
+  it("pages for a swipe on a card while selecting", () => {
+    render(
+      <BudgetPaginationWrapper
+        budgets={budgets}
+        isLoading={false}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        selectedBudgetIds={new Set(["b0"])}
+        onToggleSelection={() => {}}
+      />,
+    );
+    drag(screen.getByText("Budget 2"), { x: 260, y: 300 }, { x: 60, y: 320 });
+    expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
+  });
+
   it("arrow keys and buttons still page", () => {
     renderOnPageTwo();
     fireEvent.keyDown(document, { key: "ArrowLeft" });
