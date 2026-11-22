@@ -152,7 +152,7 @@ The desktop app can run a local API so you can manage your data with scripts, Po
 
 ## Swipe And Long Press
 
-On a phone or tablet, the cards in these lists answer to a finger:
+On a touch screen, the cards in these lists answer to a finger:
 
 | List                          | Swipe left | Swipe right |
 | ----------------------------- | ---------- | ----------- |
@@ -164,12 +164,14 @@ On a phone or tablet, the cards in these lists answer to a finger:
 | Currencies                    | Delete     | —           |
 | Safety copies (Backup screen) | Delete     | —           |
 
+Where a list shows as a table instead of cards, nothing swipes. Scheduled transactions are cards only on narrow screens such as a phone; an iPad shows them as a table. Transactions are cards on a phone and in the list beside the details panel, but not in the full table.
+
 - **A swipe only shows a button.** Nothing happens until you tap the button it reveals. Delete still asks you to confirm wherever it did before (ledgers, budgets, accounts, payees, categories and safety copies). To close a card without doing anything, tap anywhere else, scroll, or swipe it back.
-- **Long press** a card to open its menu, the same one the **…** button opens. On iPhone and Android you feel a light tap.
+- **Long press** a card to open its menu, the same one the **…** button opens. In the iPhone and Android apps you feel a light tap.
 - **The buttons still work.** The **…** menu and the Edit and Delete buttons on the cards do everything the gestures do, so you never need to swipe. Screen readers, Voice Control and keyboards use them.
 - Swiping works with a finger or a pen, not a mouse. It does not start inside a text field (so you can still select or edit text, such as an exchange rate), or right at the left edge of the screen (where iPhone's back swipe lives).
 - Cards don't swipe while you are selecting several items or editing one. The built-in "Others" payee and category can't be deleted, so they don't swipe at all.
-- On the Budgets page, a swipe that starts on a card moves the card. To turn to the next page of budgets by swiping, swipe beside the cards, or use the arrow buttons.
+- On the Budgets page, a swipe that starts on a card moves the card. To turn to the next page of budgets by swiping, swipe beside the cards or on the "Page 1 of 3" row below them, or use the arrow buttons. While you are selecting budgets, a swipe on a card turns the page too.
 
 ## Help And Display Settings
 

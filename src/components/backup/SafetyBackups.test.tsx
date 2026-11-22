@@ -287,6 +287,14 @@ describe("SafetyBackups", () => {
   });
 
   describe("phone gestures", () => {
+    /*
+     * The revealed Delete names the copy with its details (date, time,
+     * ledgers) like Restore and Save as file, so two copies made for the
+     * same reason never share a name.
+     */
+    const DELETE_NEWER =
+      /^Delete Before CSV import: transactions, .*3 ledgers$/;
+
     /** The swiping layer of a copy's row. */
     const swipeLayer = (item: HTMLElement) =>
       item.querySelector("[data-swipe-content]") as HTMLElement;
@@ -300,7 +308,7 @@ describe("SafetyBackups", () => {
       // Hidden from screen readers while the row is closed.
       expect(
         within(items[0]).queryByRole("button", {
-          name: "Delete Before CSV import: transactions",
+          name: DELETE_NEWER,
         }),
       ).toBeNull();
 
@@ -311,7 +319,7 @@ describe("SafetyBackups", () => {
       );
       await user.click(
         within(items[0]).getByRole("button", {
-          name: "Delete Before CSV import: transactions",
+          name: DELETE_NEWER,
         }),
       );
 
@@ -352,7 +360,7 @@ describe("SafetyBackups", () => {
       expect(swipeLayer(items[0]).style.transform).toBe("translateX(0px)");
       expect(
         within(items[0]).queryByRole("button", {
-          name: "Delete Before CSV import: transactions",
+          name: DELETE_NEWER,
         }),
       ).toBeNull();
     });
@@ -372,7 +380,7 @@ describe("SafetyBackups", () => {
       expect(swipeLayer(items[0]).style.transform).toBe("translateX(0px)");
       expect(
         within(items[0]).queryByRole("button", {
-          name: "Delete Before CSV import: transactions",
+          name: DELETE_NEWER,
         }),
       ).toBeNull();
     });

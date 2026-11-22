@@ -268,9 +268,12 @@ const SafetyBackups = () => {
               const deleteAction: CardAction = {
                 id: "delete",
                 label: t("safetyBackups.delete", { defaultValue: "Delete" }),
-                ariaLabel: t("management.actions.deleteNamed", {
-                  name: name,
-                  defaultValue: "Delete {{name}}",
+                // With the details, like Restore and Save as file, so two
+                // copies made for the same reason never share a name.
+                ariaLabel: t("safetyBackups.deleteOne", {
+                  name,
+                  details,
+                  defaultValue: "Delete {{name}}, {{details}}",
                 }),
                 icon: Trash2,
                 destructive: true,
