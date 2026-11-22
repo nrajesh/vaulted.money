@@ -101,6 +101,37 @@ export function useSwipeGesture({
 
   useEffect(() => clearLongPress, [clearLongPress]);
 
+  /*
+   * After a long press the menu can open under the finger, and the click the
+   * phone sends when the finger lifts lands on whatever is there now: a menu
+   * item, which would run it. Swallow that one click anywhere on the page.
+   * The guard ends at the next press or after CLICK_SUPPRESS_MS, so a
+   * deliberate tap on the menu still works.
+   */
+  const stopSwallowingClick = useRef<(() => void) | null>(null);
+  const swallowNextClickAnywhere = useCallback(() => {
+    stopSwallowingClick.current?.();
+    const until = Date.now() + CLICK_SUPPRESS_MS;
+    const onClick = (event: MouseEvent) => {
+      stop();
+      if (Date.now() < until) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    const timer = setTimeout(() => stop(), CLICK_SUPPRESS_MS);
+    function stop() {
+      clearTimeout(timer);
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("pointerdown", stop, true);
+      stopSwallowingClick.current = null;
+    }
+    document.addEventListener("click", onClick, true);
+    document.addEventListener("pointerdown", stop, true);
+    stopSwallowingClick.current = stop;
+  }, []);
+  useEffect(() => () => stopSwallowingClick.current?.(), []);
+
   const clamp = useCallback((value: number) => {
     const {
       maxReveal: max,
@@ -213,13 +244,14 @@ export function useSwipeGesture({
         suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
       } else if (ended === "longPressed") {
         suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
+        swallowNextClickAnywhere();
       } else if (ended === "pending" && currentOffset.current !== 0) {
         // A tap on an open card closes it instead of opening the card.
         applyOffset(0);
         suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
       }
     },
-    [applyOffset, clamp, clearLongPress],
+    [applyOffset, clamp, clearLongPress, swallowNextClickAnywhere],
   );
 
   const onClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {

@@ -187,6 +187,27 @@ describe("SwipeableCard", () => {
     vi.useRealTimers();
   });
 
+  it("lifting the finger after a long press does not pick the menu item under it", async () => {
+    vi.useFakeTimers();
+    const { edit } = renderCard();
+    firePointer(cardBody(), "pointerDown", { x: 200, y: 100 });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    // The menu can open under the finger; the phone then sends the lift's
+    // click to whatever is there now, here the Edit item.
+    firePointer(cardBody(), "pointerUp", { x: 200, y: 100 });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    vi.useRealTimers();
+
+    expect(edit.onSelect).not.toHaveBeenCalled();
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+
+    // A deliberate tap on the item afterwards still works.
+    await userEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(edit.onSelect).toHaveBeenCalledTimes(1);
+  });
+
   it("a normal tap still reaches the card", () => {
     const onClick = vi.fn();
     const actions = makeActions();
