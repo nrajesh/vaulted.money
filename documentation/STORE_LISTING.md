@@ -374,11 +374,21 @@ Description: One-time purchase of the Vaulted Money desktop app for macOS, Windo
 
 A Dutch buyer saw subtotal €9.99, taxes (included) €1.73, total €9.99. This matches the App Store and Google Play. Google Play first added Dutch VAT on top (€11.99), so check the total again in the live checkout before announcing it.
 
+### Live setup
+
+| Item | Value |
+|---|---|
+| Live checkout link | https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB |
+| Buyer portal (downloads) | https://polar.sh/imaginest/portal |
+
 ### Status
 
 | Step | Status |
 |---|---|
-| Sandbox product and checkout link | Done |
-| Installers built from `main` (2.0.0, App Store build 5) | Mac done (signed, not yet notarised); Windows and Linux pending |
-| Live product, checkout link and file uploads | Not started (needs owner approval) |
-| README "Coming soon" replaced with the live link | Waiting for the live link |
+| Sandbox product, file downloads and test purchase | Done (22 Nov 2026) |
+| Installers from `main` (2.0.0, App Store build 5) | Done: Mac signed and notarised, Windows and Linux built on GitHub's machines (Windows unsigned, SmartScreen warns on first launch) |
+| Live product and checkout link | Created, price €9.99 tax included |
+| Live file downloads (8 installers) | To upload in the Polar dashboard |
+| Polar organisation review | Not submitted; checkouts stay blocked until it passes |
+| README "Coming soon" replaced with the live link | After the review passes |
+| In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1 |
