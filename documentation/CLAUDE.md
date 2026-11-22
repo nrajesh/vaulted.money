@@ -149,6 +149,10 @@ These came from adding swipe and long press to phone cards (2.1).
 
 **Gestures are never the only route.** Keep the "…" button or inline buttons. Tests of "the gesture did not open the card" must send the click the phone fires on lift (`fireEvent.click`), or they prove nothing.
 
+**A long press swallows the lift's click page-wide.** The menu can open under the finger, and the click the phone sends on lift would pick the menu item there. `useSwipeGesture` drops that one click anywhere on the page; keep it.
+
+**A wrapped card still has to fit its column.** A grid item that holds a `SwipeableCard` needs `min-w-0`, and the name inside needs room (`min-w-[8rem]`, with amounts and buttons wrapping below), or at Larger text on a 360px phone the card overflows and the shell cuts off its right side.
+
 **The sliding layer is opaque.** Give `SwipeableCard` the card's radius (`className`) and the colour the card sits on (`contentClassName`), or a rectangle of the wrong colour shows behind it.
 
 ---
