@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
-import { GITHUB_REPO_URL } from "@/utils/feedbackLinks";
+import { DESKTOP_CHECKOUT_URL, GITHUB_REPO_URL } from "@/utils/feedbackLinks";
 import { showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import SiteFooter from "@/components/SiteFooter";
@@ -304,6 +304,21 @@ const HomePage = () => {
   ];
 
   const roadmapMilestones = [
+    {
+      window: t("home.milestones.desktopOnPolar.window", {
+        defaultValue: "November 2026",
+      }),
+      title: t("home.milestones.desktopOnPolar.title", {
+        defaultValue: "Desktop app on Polar",
+      }),
+      summary: t("home.milestones.desktopOnPolar.summary", {
+        defaultValue:
+          "One purchase covers Mac, Windows and Linux. Private and offline, with no licence check and no update check.",
+      }),
+      label: t("home.commands.desktop.label", { defaultValue: "Desktop" }),
+      status: t("home.status.released", { defaultValue: "Released" }),
+      accent: "orange",
+    },
     {
       window: t("home.milestones.recent", { defaultValue: "Recent release" }),
       title: t("home.milestones.search.title", {
@@ -837,6 +852,14 @@ const HomePage = () => {
                 <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
                   <GitFork className="h-4 w-4" />
                   {t("home.actions.github", { defaultValue: "View source" })}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button asChild variant="outline" className="rounded-md">
+                <a href={DESKTOP_CHECKOUT_URL} target="_blank" rel="noreferrer">
+                  {t("home.actions.buyDesktop", {
+                    defaultValue: "Buy the desktop app (€9.99)",
+                  })}
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
