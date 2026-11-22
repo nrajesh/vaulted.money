@@ -137,6 +137,22 @@ In Tailwind 4, CSS outside a layer wins over every utility class. Put shared com
 
 ---
 
+## Gestures — lessons learned
+
+These came from adding swipe and long press to phone cards (2.1).
+
+**New card lists use `SwipeableCard`.** Build one `CardAction` list per card and pass it to `leftAction`, `rightAction` and `menuActions`, so the swipe and the menu can never differ. Do not write another pointer handler for a list.
+
+**A swipe never commits.** It only reveals a button; the action runs on a tap and keeps any confirmation the menu has. Swipe left is Delete, swipe right is Duplicate or Edit, never anything destructive.
+
+**Fields, buttons and links are excluded.** A press that starts on an input, textarea, link, button or `[data-selectable-text]` does not swipe or long-press, so text stays selectable. A full-card button that should still swipe carries `data-swipe-surface`.
+
+**Gestures are never the only route.** Keep the "…" button or inline buttons. Tests of "the gesture did not open the card" must send the click the phone fires on lift (`fireEvent.click`), or they prove nothing.
+
+**The sliding layer is opaque.** Give `SwipeableCard` the card's radius (`className`) and the colour the card sits on (`contentClassName`), or a rectangle of the wrong colour shows behind it.
+
+---
+
 ## Search — lessons learned
 
 These came from reworking natural-language search.

@@ -55,6 +55,8 @@ These rules are **normative**. The AI agent that designs and implements the Andr
     - Top-level sections via **Bottom Navigation** (3–5 destinations) or **NavigationRail** / Drawer when appropriate.
     - Up/back navigation consistent with Android patterns (app bar up button vs. system back).[cite:3]
   - Ensure every tappable target is at least ~48dp in touch size.
+  - Keep a visible button for every action a gesture offers. Card swipes and long presses (`SwipeableCard`) are shortcuts, never the only route, because TalkBack users cannot swipe a card.
+  - Make haptics with `@capacitor/haptics` (`src/utils/haptics.ts`), never a custom plugin. It is a native plugin: run `cap sync android` after `pnpm build:app`, and the change needs a new Google Play build.
 - The AI MUST NOT:
   - Override the system back behavior in ways that surprise users (e.g., exiting the app unexpectedly from a deep screen).
 

@@ -58,6 +58,8 @@ These rules are **normative**. The AI agent that designs and implements the iOS 
   - Place primary actions in locations users expect:
     - On iOS, common actions appear in the **top-right** (e.g., “Add”) or bottom in toolbars, not via floating buttons.[cite:3]
   - Ensure tappable targets are at least **44x44pt** to be easily tapped.[cite:12]
+  - Keep a visible button for every action a gesture offers. Card swipes and long presses (`SwipeableCard`) are shortcuts, never the only route, because VoiceOver and Voice Control users cannot swipe a card.
+  - Make haptics with `@capacitor/haptics` (`src/utils/haptics.ts`), never a custom plugin. It is a native plugin: run `cap sync ios` after `pnpm build:app`, and the change needs a new App Store build.
 - The AI MUST NOT:
   - Copy Android interaction paradigms (e.g., FAB as primary action) unless adapted to feel native to iOS.
 
