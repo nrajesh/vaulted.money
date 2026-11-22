@@ -304,7 +304,13 @@ Play prices match the App Store price of each country, taxes included: €9.99 i
 
 - Do not set one euro base price and let Play convert it. Play treats it as the price before tax, so €9.99 became €11.99 in every country with VAT. Edit each country instead.
 - Where Play bills in another currency than Apple (Apple's USD countries such as Algeria, Argentina, Kenya and Ukraine, and Bosnia and Serbia, where Apple uses euros), Play's converted price is kept.
-- Countries Play sells in that the App Store export lacks (Aruba, Bangladesh, Monaco, Liechtenstein, San Marino and others) keep Play's price. Montenegro (€7.99 on the App Store) is not in Play's price table.
+- Countries Play sells in that the App Store export lacks follow the nearest App Store price: Monaco, San Marino and Vatican City €9.99, Liechtenstein CHF 8.00, Gibraltar £8.49, and $8.99 in Aruba, Comoros, Djibouti, Eritrea, Guinea, Haiti, Samoa and Somalia. Montenegro (€7.99 on the App Store) is not in Play's price table.
+
+### Testing a paid app
+
+Testers in closed and open tests must buy a paid app; only internal testers install it free. A country's price cannot be €0. To let the 12 closed testers in for free, use promo codes (Monetize with Play → Promo codes; up to 500 a quarter). The page is open before launch, but whether codes work while the app is still a draft is unconfirmed. Fallback: set the lowest allowed price in the testers' countries during the test, then restore the prices above before applying for Production.
+
+Console links: the Play account is the second signed-in Google account in the browser, so links use `/u/1/` (for example https://play.google.com/console/u/1/developers/9063481855871569660/app/4973580024893380928/tracks/internal-testing).
 
 ### App content answers
 
