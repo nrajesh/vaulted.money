@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type React from "react";
 import { useTranslation } from "react-i18next";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { Budget } from "../../types/budgets";
@@ -32,6 +33,8 @@ import { useNavigate } from "react-router-dom";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useGoalProgress } from "@/hooks/useGoalProgress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
 
 interface BudgetCardProps {
   budget: Budget;
@@ -40,6 +43,8 @@ interface BudgetCardProps {
   isSelected?: boolean;
   onToggleSelection?: (budgetId: string) => void;
   transactions?: Transaction[];
+  /** Something is selected (bulk mode): the card does not swipe. */
+  selectionActive?: boolean;
 }
 
 function frequencyLabel(
@@ -59,6 +64,7 @@ export function BudgetCard({
   isSelected = false,
   onToggleSelection,
   transactions = [],
+  selectionActive = false,
 }: BudgetCardProps) {
   const { accounts } = useTransactions();
   const { t, i18n } = useTranslation();
@@ -135,9 +141,44 @@ export function BudgetCard({
     navigate("/transactions", { state: navState });
   };
 
+  /*
+   * Phone gestures (see SwipeableCard): swipe left reveals Delete, swipe right
+   * reveals Edit, and a long press opens a menu with both. They run the same
+   * handlers as the inline buttons, so Delete still asks for confirmation on
+   * the Budgets page. Revealing a button never runs it.
+   */
+  const editAction: CardAction = {
+    id: "edit",
+    label: t("management.actions.edit", { defaultValue: "Edit" }),
+    icon: Edit,
+    onSelect: () => onEdit(budget),
+  };
+  const deleteAction: CardAction = {
+    id: "delete",
+    label: t("management.actions.delete", { defaultValue: "Delete" }),
+    icon: Trash2,
+    destructive: true,
+    onSelect: () => onDelete(budget.id),
+  };
+  const withGestures = (card: React.ReactNode) => (
+    <SwipeableCard
+      // The card's own corners; the sliding layer is the page colour, which
+      // the translucent card sits on, so the card looks the same as before.
+      className="rounded-lg"
+      // Fill the grid cell so cards in a row keep equal heights.
+      contentClassName="h-full"
+      leftAction={deleteAction}
+      rightAction={editAction}
+      menuActions={[editAction, deleteAction]}
+      disabled={selectionActive}
+    >
+      {card}
+    </SwipeableCard>
+  );
+
   // Render Goal Card
   if (budget.is_goal) {
-    return (
+    return withGestures(
       <GoalCard
         budget={budget}
         goalProgress={goalProgress}
@@ -146,7 +187,7 @@ export function BudgetCard({
         onTitleClick={handleTitleClick}
         isSelected={isSelected}
         onToggleSelection={onToggleSelection}
-      />
+      />,
     );
   }
 
@@ -167,12 +208,12 @@ export function BudgetCard({
     ? formatDisplayDate(budget.end_date, i18n.language)
     : t("budgets.card.ongoing", { defaultValue: "Ongoing" });
 
-  return (
+  return withGestures(
     <Card
       className={
         isOverBudget
-          ? "border-red-500 shadow-lg bg-red-50/30 dark:bg-red-950/20 relative"
-          : "bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800 relative"
+          ? "h-full border-red-500 shadow-lg bg-red-50/30 dark:bg-red-950/20 relative"
+          : "h-full bg-indigo-50/40 dark:bg-slate-900/40 border-indigo-100 dark:border-slate-800 relative"
       }
     >
       {onToggleSelection && (
@@ -322,7 +363,7 @@ export function BudgetCard({
           </div>
         </div>
       </CardContent>
-    </Card>
+    </Card>,
   );
 }
 
@@ -365,7 +406,7 @@ function GoalCard({
     : t("budgets.card.endOfMonth", { defaultValue: "End of month" });
 
   return (
-    <Card className="border-emerald-300 dark:border-emerald-700 shadow-lg bg-gradient-to-br from-emerald-50/60 via-teal-50/40 to-cyan-50/30 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-cyan-950/10 relative">
+    <Card className="h-full border-emerald-300 dark:border-emerald-700 shadow-lg bg-gradient-to-br from-emerald-50/60 via-teal-50/40 to-cyan-50/30 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-cyan-950/10 relative">
       {onToggleSelection && (
         <div className="absolute top-4 right-4 z-50">
           <Checkbox

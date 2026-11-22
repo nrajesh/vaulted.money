@@ -86,6 +86,14 @@ export function BudgetPaginationWrapper({
 
   // --- Swipe Navigation (Touch Events) ---
   const handleTouchStart = (e: React.TouchEvent) => {
+    // A touch that starts on a budget card belongs to the card (swipe to
+    // reveal Delete or Edit, see SwipeableCard), so it never turns the page.
+    // Swiping in the gaps between cards, the arrow buttons and keys still do.
+    const target = e.target as Element | null;
+    if (target?.closest?.("[data-swipe-card]")) {
+      touchRef.current = null;
+      return;
+    }
     const touch = e.targetTouches[0];
     touchRef.current = {
       startX: touch.clientX,
@@ -169,6 +177,7 @@ export function BudgetPaginationWrapper({
             transactions={transactions}
             isSelected={selectedBudgetIds?.has(budget.id)}
             onToggleSelection={onToggleSelection}
+            selectionActive={(selectedBudgetIds?.size ?? 0) > 0}
           />
         ))}
       </div>

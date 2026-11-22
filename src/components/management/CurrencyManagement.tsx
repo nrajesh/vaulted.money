@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -46,8 +47,11 @@ import {
   ThemedCardTitle,
   ThemedCardDescription,
 } from "@/components/ThemedCard";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
 
 export const CurrencyManagement = () => {
+  const { t } = useTranslation();
   const {
     selectedCurrency,
     exchangeRates,
@@ -422,58 +426,83 @@ export const CurrencyManagement = () => {
                   const rateUSD = exchangeRates[currency.code] || 1;
                   const rateRelativeToSelected =
                     rateUSD / selectedCurrencyRateUSD;
+                  // Swipe left reveals Delete, which removes the currency as
+                  // the Trash button does (no confirmation, as before). No
+                  // right swipe: a currency has no harmless quick action.
+                  const deleteAction: CardAction = {
+                    id: "delete",
+                    label: t("management.actions.delete", {
+                      defaultValue: "Delete",
+                    }),
+                    icon: Trash2,
+                    destructive: true,
+                    onSelect: () => removeCurrency(currency.code),
+                  };
 
                   return (
-                    <div
+                    <SwipeableCard
                       key={currency.code}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4 hover:bg-muted/30 transition-colors"
+                      leftAction={deleteAction}
+                      menuActions={[deleteAction]}
                     >
-                      {/* The name keeps at least 8rem; when the row is too
+                      {/* The sliding layer is the page colour; this repeats
+                          the glass card's tint on top so the row looks the
+                          same as the card around it. */}
+                      <div className="bg-white/50 dark:bg-black/20">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4 hover:bg-muted/30 transition-colors">
+                          {/* The name keeps at least 8rem; when the row is too
                           narrow, the rate and delete wrap onto their own line. */}
-                      <div className="flex min-w-[8rem] flex-1 flex-col">
-                        <span className="font-semibold text-sm flex items-center gap-2">
-                          <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-xs font-mono">
-                            {currencySymbols[currency.code]}
-                          </span>
-                          {currency.code}
-                        </span>
-                        <span className="break-words text-xs text-muted-foreground">
-                          {currency.name}
-                        </span>
-                      </div>
+                          <div className="flex min-w-[8rem] flex-1 flex-col">
+                            <span className="font-semibold text-sm flex items-center gap-2">
+                              <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-xs font-mono">
+                                {currencySymbols[currency.code]}
+                              </span>
+                              {currency.code}
+                            </span>
+                            <span className="break-words text-xs text-muted-foreground">
+                              {currency.name}
+                            </span>
+                          </div>
 
-                      <div className="ml-auto flex w-28 shrink-0 items-center justify-end">
-                        <Input
-                          type="number"
-                          className="h-8 w-full text-right text-base md:text-sm"
-                          value={rateRelativeToSelected.toFixed(4)}
-                          step="0.0001"
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            if (!isNaN(val) && val > 0) {
-                              handleRateChange(currency.code, val);
-                            }
-                          }}
-                        />
-                      </div>
+                          {/* The rate field and the box around it never swipe
+                          or long press, so the rate stays easy to edit. */}
+                          <div
+                            data-selectable-text=""
+                            className="ml-auto flex w-28 shrink-0 items-center justify-end"
+                          >
+                            <Input
+                              type="number"
+                              className="h-8 w-full text-right text-base md:text-sm"
+                              value={rateRelativeToSelected.toFixed(4)}
+                              step="0.0001"
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val > 0) {
+                                  handleRateChange(currency.code, val);
+                                }
+                              }}
+                            />
+                          </div>
 
-                      <div className="flex w-10 shrink-0 justify-center">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive-text hover:text-destructive-text hover:bg-destructive/10"
-                              onClick={() => removeCurrency(currency.code)}
-                              aria-label="Remove currency"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Remove currency</TooltipContent>
-                        </Tooltip>
+                          <div className="flex w-10 shrink-0 justify-center">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive-text hover:text-destructive-text hover:bg-destructive/10"
+                                  onClick={() => removeCurrency(currency.code)}
+                                  aria-label="Remove currency"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Remove currency</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </SwipeableCard>
                   );
                 })}
               {availableCurrencies.length <= 1 && (

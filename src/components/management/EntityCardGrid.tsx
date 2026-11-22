@@ -17,6 +17,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
 
 /**
  * One column of an entity list. On a card, the "name" column is the title,
@@ -65,6 +67,11 @@ const isBlank = (value: React.ReactNode) =>
  * Accounts, payees and categories as cards, at every screen size: a name, one
  * figure and one quiet line. Clicking a card opens its details, where every
  * field is listed and it can be edited or deleted.
+ *
+ * On phones a card swipes left to reveal Delete (the same confirmation as the
+ * inline button) and right to reveal Edit; a long press opens a menu with
+ * both. Cards that cannot be deleted (whose Edit is disabled too) do not
+ * swipe, and nothing swipes while rows are selected.
  */
 export const EntityCardGrid = <T extends { id: string; name: string }>({
   data,
@@ -113,119 +120,153 @@ export const EntityCardGrid = <T extends { id: string; name: string }>({
       </div>
     );
 
+  const selectionActive = selectedRows.length > 0;
+
   const card = (item: T) => {
     const selected = selectedRows.includes(item.id);
     const editing = isEditing(item.id);
+    const deletable = isDeletable(item);
     const metaValues = meta
       .map((col) => ({ col, value: plain(col, item) }))
       .filter(({ value }) => !isBlank(value));
+    // One list for the swipe buttons and the long-press menu; the same
+    // handlers as the inline Edit and Delete buttons.
+    const editAction: CardAction = {
+      id: "edit",
+      label: t("management.actions.edit", { defaultValue: "Edit" }),
+      icon: Edit,
+      onSelect: () => handleEditClick(item),
+    };
+    const deleteAction: CardAction = {
+      id: "delete",
+      label: t("management.actions.delete", { defaultValue: "Delete" }),
+      icon: Trash2,
+      destructive: true,
+      onSelect: () => handleDeleteClick(item),
+    };
     return (
-      <li
-        key={item.id}
-        className={`app-mobile-row relative flex items-center gap-3 ${
-          selected ? "app-row-selected" : ""
-        }`}
-      >
-        <Checkbox
-          checked={selected}
-          onCheckedChange={(checked) =>
-            handleRowSelect(item.id, Boolean(checked))
-          }
-          aria-label={t("management.actions.selectCard", {
-            defaultValue: "Select card",
-          })}
-          disabled={!isDeletable(item)}
-          className="relative z-10 shrink-0"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-3">
-            <div className="relative z-10 min-w-0 break-words text-base font-semibold">
-              {nameColumn ? rendered(nameColumn, item) : item.name}
+      <li key={item.id} className="h-full">
+        <SwipeableCard
+          // The card's own corners, so the sliding layer never shows square
+          // corners behind the rounded card.
+          className="h-full rounded-xl"
+          contentClassName="h-full"
+          // A card that cannot be deleted has its Edit disabled as well, so
+          // it offers nothing to swipe to or long press for.
+          leftAction={deletable ? deleteAction : undefined}
+          rightAction={deletable ? editAction : undefined}
+          menuActions={deletable ? [editAction, deleteAction] : []}
+          disabled={!deletable || selectionActive || editing}
+        >
+          <div
+            className={`app-mobile-row relative flex h-full items-center gap-3 ${
+              selected ? "app-row-selected" : ""
+            }`}
+          >
+            <Checkbox
+              checked={selected}
+              onCheckedChange={(checked) =>
+                handleRowSelect(item.id, Boolean(checked))
+              }
+              aria-label={t("management.actions.selectCard", {
+                defaultValue: "Select card",
+              })}
+              disabled={!deletable}
+              className="relative z-10 shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="relative z-10 min-w-0 break-words text-base font-semibold">
+                  {nameColumn ? rendered(nameColumn, item) : item.name}
+                </div>
+                {primary && (
+                  <div className="shrink-0 text-base font-semibold tabular-nums">
+                    {plain(primary, item)}
+                  </div>
+                )}
+              </div>
+              {metaValues.length > 0 && (
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {metaValues.map(({ col, value }, index) => (
+                    <React.Fragment key={col.header}>
+                      {index > 0 && " · "}
+                      {value}
+                      {col.unit && ` ${col.header.toLowerCase()}`}
+                    </React.Fragment>
+                  ))}
+                </p>
+              )}
             </div>
-            {primary && (
-              <div className="shrink-0 text-base font-semibold tabular-nums">
-                {plain(primary, item)}
+            {isUpdating && editing ? (
+              <Loader2 className="m-2 h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <div className="relative z-10 flex shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => handleEditClick(item)}
+                  disabled={!deletable}
+                  aria-label={t("management.actions.editNamed", {
+                    name: item.name,
+                    defaultValue: "Edit {{name}}",
+                  })}
+                >
+                  <Edit className="h-4 w-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text"
+                  onClick={() => handleDeleteClick(item)}
+                  disabled={!deletable}
+                  aria-label={t("management.actions.deleteNamed", {
+                    name: item.name,
+                    defaultValue: "Delete {{name}}",
+                  })}
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </Button>
               </div>
             )}
+            {/* The rest of the card opens the details. It sits under the name,
+            checkbox and buttons, which keep their own clicks. It covers the
+            card, so it is marked as a surface a swipe may start on. */}
+            {!editing && (
+              // Hovering (or focusing) a card previews what the details hold.
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    data-swipe-surface=""
+                    className="absolute inset-0 rounded-[inherit] border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                    onClick={() => setDetailsId(item.id)}
+                    aria-label={t("management.actions.detailsNamed", {
+                      name: item.name,
+                      defaultValue: "Details: {{name}}",
+                    })}
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <dl className="space-y-0.5 text-xs">
+                    {detailColumns.map((col) => {
+                      const value = plain(col, item);
+                      if (isBlank(value)) return null;
+                      return (
+                        <div key={col.header} className="flex gap-3">
+                          <dt className="opacity-80">{col.header}</dt>
+                          <dd className="ml-auto font-medium tabular-nums">
+                            {value}
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
-          {metaValues.length > 0 && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {metaValues.map(({ col, value }, index) => (
-                <React.Fragment key={col.header}>
-                  {index > 0 && " · "}
-                  {value}
-                  {col.unit && ` ${col.header.toLowerCase()}`}
-                </React.Fragment>
-              ))}
-            </p>
-          )}
-        </div>
-        {isUpdating && editing ? (
-          <Loader2 className="m-2 h-4 w-4 shrink-0 animate-spin" />
-        ) : (
-          <div className="relative z-10 flex shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9"
-              onClick={() => handleEditClick(item)}
-              disabled={!isDeletable(item)}
-              aria-label={t("management.actions.editNamed", {
-                name: item.name,
-                defaultValue: "Edit {{name}}",
-              })}
-            >
-              <Edit className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text"
-              onClick={() => handleDeleteClick(item)}
-              disabled={!isDeletable(item)}
-              aria-label={t("management.actions.deleteNamed", {
-                name: item.name,
-                defaultValue: "Delete {{name}}",
-              })}
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </div>
-        )}
-        {/* The rest of the card opens the details. It sits under the name,
-            checkbox and buttons, which keep their own clicks. */}
-        {!editing && (
-          // Hovering (or focusing) a card previews what the details hold.
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="absolute inset-0 rounded-[inherit] border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
-                onClick={() => setDetailsId(item.id)}
-                aria-label={t("management.actions.detailsNamed", {
-                  name: item.name,
-                  defaultValue: "Details: {{name}}",
-                })}
-              />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <dl className="space-y-0.5 text-xs">
-                {detailColumns.map((col) => {
-                  const value = plain(col, item);
-                  if (isBlank(value)) return null;
-                  return (
-                    <div key={col.header} className="flex gap-3">
-                      <dt className="opacity-80">{col.header}</dt>
-                      <dd className="ml-auto font-medium tabular-nums">
-                        {value}
-                      </dd>
-                    </div>
-                  );
-                })}
-              </dl>
-            </TooltipContent>
-          </Tooltip>
-        )}
+        </SwipeableCard>
       </li>
     );
   };
