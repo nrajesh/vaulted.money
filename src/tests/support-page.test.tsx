@@ -36,7 +36,7 @@ describe("Support the project page", () => {
     ).toHaveAttribute("href", "https://github.com/sponsors/nrajesh");
   });
 
-  it("lists the App Store, Google Play and Polar as coming soon", async () => {
+  it("lists the phone stores as coming soon and Polar as live", async () => {
     await i18n.changeLanguage("en");
     renderPage();
 
@@ -46,10 +46,16 @@ describe("Support the project page", () => {
     expect(stores.getByText("Apple App Store")).toBeInTheDocument();
     expect(stores.getByText("Google Play Store")).toBeInTheDocument();
     expect(stores.getByText("Polar")).toBeInTheDocument();
-    expect(stores.getAllByText("Coming soon")).toHaveLength(3);
+    expect(stores.getAllByText("Coming soon")).toHaveLength(2);
     expect(screen.queryByText(/lemon squeezy/i)).not.toBeInTheDocument();
-    // No store links (or store logos) until a listing is live.
-    expect(stores.queryAllByRole("link")).toHaveLength(0);
+    // Only the live desktop listing is a link; no store logos until the
+    // phone listings are live.
+    const links = stores.getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute(
+      "href",
+      expect.stringContaining("buy.polar.sh"),
+    );
   });
 
   it("is translated", async () => {
