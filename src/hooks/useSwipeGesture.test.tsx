@@ -150,4 +150,16 @@ describe("useSwipeGesture", () => {
     });
     expect(onLongPress).not.toHaveBeenCalled();
   });
+
+  it("does not lock below the 1.5x ratio (20px across, 15px down)", () => {
+    render(<Harness />);
+    const card = screen.getByTestId("card");
+    firePointer(card, "pointerDown", { x: 200, y: 100 });
+    firePointer(card, "pointerMove", { x: 220, y: 115 });
+    expect(offset()).toBe(0);
+    // Once it reads as a scroll, later sideways movement is ignored too.
+    firePointer(card, "pointerMove", { x: 300, y: 115 });
+    firePointer(card, "pointerUp", { x: 300, y: 115 });
+    expect(offset()).toBe(0);
+  });
 });

@@ -60,6 +60,12 @@ function renderCard(
 
 const cardBody = () => screen.getByText("Groceries card");
 
+/** The reveal button by its label, even while it is hidden. */
+const revealButton = (label: string) =>
+  document.querySelector(
+    `[data-swipe-card] > button[aria-label="${label}"]`,
+  ) as HTMLButtonElement;
+
 beforeEach(() => {
   localStorage.clear();
   resetDisplayPreferencesCache();
@@ -292,5 +298,144 @@ describe("SwipeableCard", () => {
     expect(
       screen.getByRole("button", { name: "Delete second" }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps the revealed button hidden and unfocusable until the card moves", () => {
+    renderCard();
+    const hidden = revealButton("Delete");
+    expect(hidden).toHaveAttribute("aria-hidden", "true");
+    expect(hidden).toHaveAttribute("tabindex", "-1");
+    expect(hidden.className).toContain("invisible");
+
+    // Mid-drag (finger still down) the button shows as the card moves.
+    swipe(
+      cardBody(),
+      { x: 250, y: 100 },
+      { x: 200, y: 100 },
+      { release: false },
+    );
+    expect(hidden.className).not.toContain("invisible");
+    firePointer(cardBody(), "pointerUp", { x: 200, y: 100 });
+    expect(hidden).toHaveAttribute("tabindex", "0");
+  });
+
+  it("gives the sliding layer an opaque background", () => {
+    renderCard();
+    const slider = cardBody().closest("[data-swipe-content]");
+    expect(slider?.className).toContain("bg-background");
+  });
+
+  it("clips only while the card is moved, so outlines show at rest", () => {
+    renderCard();
+    const root = cardBody().closest("[data-swipe-card]") as HTMLElement;
+    expect(root.className).not.toContain("overflow-hidden");
+    swipe(cardBody(), { x: 250, y: 100 }, { x: 100, y: 100 });
+    expect(root.className).toContain("overflow-hidden");
+  });
+
+  it("tapping an open card closes it without clicking the card", () => {
+    const onClick = vi.fn();
+    const actions = makeActions();
+    render(
+      <SwipeableCard leftAction={actions.remove} menuActions={[]}>
+        <div onClick={onClick}>Tap me</div>
+      </SwipeableCard>,
+    );
+    const body = screen.getByText("Tap me");
+    swipe(body, { x: 250, y: 100 }, { x: 100, y: 100 });
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    firePointer(body, "pointerDown", { x: 150, y: 100 });
+    firePointer(body, "pointerUp", { x: 150, y: 100 });
+    fireEvent.click(body);
+    expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("pressing a button inside an open card closes it and the button still works", () => {
+    const onClick = vi.fn();
+    const actions = makeActions();
+    render(
+      <SwipeableCard leftAction={actions.remove} menuActions={[]}>
+        <p>Groceries card</p>
+        <button type="button" onClick={onClick}>
+          Inner
+        </button>
+      </SwipeableCard>,
+    );
+    swipe(cardBody(), { x: 250, y: 100 }, { x: 100, y: 100 });
+    const inner = screen.getByRole("button", { name: "Inner" });
+    // Straight after the swipe: its click suppression must not eat this tap.
+    firePointer(inner, "pointerDown", { x: 150, y: 100 });
+    firePointer(inner, "pointerUp", { x: 150, y: 100 });
+    fireEvent.click(inner);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+  });
+
+  it("presses inside the open menu neither long-press nor swipe the card, and items still run", async () => {
+    const { edit } = renderCard({ menuButtonLabel: "More actions" });
+    await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    const item = await screen.findByRole("menuitem", { name: "Edit" });
+
+    vi.useFakeTimers();
+    firePointer(item, "pointerDown", { x: 200, y: 100 });
+    act(() => {
+      vi.advanceTimersByTime(800);
+    });
+    firePointer(item, "pointerUp", { x: 200, y: 100 });
+    swipe(item, { x: 250, y: 100 }, { x: 100, y: 100 });
+    vi.useRealTimers();
+
+    expect(lightHaptic).not.toHaveBeenCalled();
+    expect(revealButton("Delete").className).toContain("invisible");
+    const slider = cardBody().closest("[data-swipe-content]") as HTMLElement;
+    expect(slider.style.transform).toBe("translateX(0px)");
+
+    await userEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(edit.onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  it("a render function places the menu button inside the caller's card", async () => {
+    const actions = makeActions();
+    render(
+      <SwipeableCard
+        leftAction={actions.remove}
+        menuActions={[actions.edit, actions.remove]}
+        menuButtonLabel="More actions"
+      >
+        {({ menuButton }) => (
+          <div data-testid="own-card">
+            <p>Groceries card</p>
+            {menuButton}
+          </div>
+        )}
+      </SwipeableCard>,
+    );
+    const ownCard = screen.getByTestId("own-card");
+    const button = screen.getByRole("button", { name: "More actions" });
+    expect(ownCard).toContainElement(button);
+    // No extra column: the caller's card is the sliding layer's only child.
+    const slider = ownCard.closest("[data-swipe-content]") as HTMLElement;
+    expect(slider.children).toHaveLength(1);
+    expect(slider.firstElementChild).toBe(ownCard);
+
+    await userEvent.click(button);
+    const items = await screen.findAllByRole("menuitem");
+    expect(items.map((item) => item.textContent)).toEqual(["Edit", "Delete"]);
+  });
+
+  it("a render function without a label gets no menu button", () => {
+    const actions = makeActions();
+    render(
+      <SwipeableCard menuActions={[actions.edit]}>
+        {({ menuButton }) => (
+          <div>
+            <p>Groceries card</p>
+            {menuButton}
+          </div>
+        )}
+      </SwipeableCard>,
+    );
+    expect(screen.queryByRole("button", { name: "More actions" })).toBeNull();
   });
 });

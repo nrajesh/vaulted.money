@@ -16,8 +16,20 @@ const REVEAL_WIDTH = 88;
 /** Tells every other card on the page that this one opened. */
 const CARD_OPENED_EVENT = "vm:swipe-card-opened";
 
+/** What a render-function child receives. */
+export interface SwipeableCardRenderApi {
+  /** The "…" button (null without menuButtonLabel). Place it in your own row. */
+  menuButton: React.ReactNode | null;
+}
+
 export interface SwipeableCardProps {
-  children: React.ReactNode;
+  /**
+   * The card. A plain node gets the "…" button beside it (when
+   * menuButtonLabel is set); a render function places `menuButton` itself,
+   * inside its own card, and no extra column is added.
+   */
+  children:
+    React.ReactNode | ((api: SwipeableCardRenderApi) => React.ReactNode);
   leftAction?: CardAction; // revealed by swiping left (Delete)
   rightAction?: CardAction; // revealed by swiping right (Duplicate / Edit); never destructive
   menuActions: CardAction[]; // the full list shown by "…" and long press
@@ -63,6 +75,21 @@ export function SwipeableCard({
   });
 
   const isOpen = offset !== 0 && !dragging;
+
+  // Clip the sliding card only while it is moved (and while it slides back),
+  // so the selected outline and focus rings are not cut off at rest.
+  const [previousOffset, setPreviousOffset] = useState(offset);
+  const [settling, setSettling] = useState(false);
+  if (offset !== previousOffset) {
+    setPreviousOffset(offset);
+    setSettling(offset === 0 && !motionReduced);
+  }
+  useEffect(() => {
+    if (!settling) return;
+    const timer = setTimeout(() => setSettling(false), 300);
+    return () => clearTimeout(timer);
+  }, [settling]);
+  const clipped = offset !== 0 || dragging || settling;
   const leftRevealed = offset < 0;
   const rightRevealed = offset > 0;
 
@@ -138,11 +165,34 @@ export function SwipeableCard({
     );
   };
 
+  const menuButton = menuButtonLabel ? (
+    <CardActionsMenu
+      actions={menuActions}
+      open={menuOpen}
+      onOpenChange={setMenuOpen}
+      triggerLabel={menuButtonLabel}
+    />
+  ) : null;
+
+  let content: React.ReactNode;
+  if (typeof children === "function") {
+    content = children({ menuButton });
+  } else if (menuButton) {
+    content = (
+      <div className="flex items-center gap-1">
+        <div className="min-w-0 flex-1">{children}</div>
+        {menuButton}
+      </div>
+    );
+  } else {
+    content = children;
+  }
+
   return (
     <div
       ref={rootRef}
       data-swipe-card=""
-      className={cn("relative overflow-hidden", className)}
+      className={cn("relative", clipped && "overflow-hidden", className)}
     >
       {leftAction && renderRevealButton(leftAction, "left", leftRevealed)}
       {rightAction && renderRevealButton(rightAction, "right", rightRevealed)}
@@ -154,27 +204,18 @@ export function SwipeableCard({
           transform: `translateX(${offset}px)`,
         }}
         className={cn(
-          "relative",
+          // Opaque, so the action behind never shows through a translucent
+          // card or the gap beside it.
+          "relative rounded-[inherit] bg-background",
           !dragging &&
             !motionReduced &&
             "transition-transform duration-200 ease-out",
-          menuButtonLabel && "flex items-center gap-1",
         )}
       >
-        {menuButtonLabel ? (
-          <>
-            <div className="min-w-0 flex-1">{children}</div>
-            <CardActionsMenu
-              actions={menuActions}
-              open={menuOpen}
-              onOpenChange={setMenuOpen}
-              triggerLabel={menuButtonLabel}
-            />
-          </>
-        ) : (
-          children
-        )}
+        {content}
       </div>
+      {/* Without a visible "…" the menu is anchored to the card so a long
+          press can still open it. */}
       {!menuButtonLabel && hasMenu && (
         <CardActionsMenu
           actions={menuActions}

@@ -57,6 +57,11 @@ export function CardActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
+        // The anchor-only trigger is hidden from assistive technology, so
+        // focus must not be sent back to it when the menu closes.
+        onCloseAutoFocus={
+          triggerLabel ? undefined : (event) => event.preventDefault()
+        }
         aria-label={
           triggerLabel ??
           t("cardGestures.moreActions", { defaultValue: "More actions" })

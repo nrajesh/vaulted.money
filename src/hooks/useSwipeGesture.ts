@@ -114,21 +114,29 @@ export function useSwipeGesture({
 
   const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
+      // React bubbles events from portals (the card's own menu) through the
+      // component tree; only presses really inside the card count.
+      if (!event.currentTarget.contains(event.target as Node)) return;
+      // A new press: no click from an earlier gesture may be swallowed now.
+      suppressClickUntil.current = 0;
       if (!enabled) return;
-      if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
-      if (event.clientX < EDGE_GUARD) return;
-      const target = event.target as Element | null;
-      const blocker = target?.closest?.(IGNORED_TARGETS);
-      if (
-        blocker &&
-        event.currentTarget.contains(blocker) &&
-        !blocker.hasAttribute("data-swipe-surface")
-      ) {
+
+      const target = event.target as Element;
+      const blocker = target.closest?.(IGNORED_TARGETS);
+      const ignored =
+        (event.pointerType !== "touch" && event.pointerType !== "pen") ||
+        event.clientX < EDGE_GUARD ||
+        (blocker &&
+          event.currentTarget.contains(blocker) &&
+          !blocker.hasAttribute("data-swipe-surface"));
+      if (ignored) {
+        // Any press inside an open card closes it; the press itself still
+        // reaches the field or button it started on.
+        if (currentOffset.current !== 0) applyOffset(0);
         return;
       }
 
       clearLongPress();
-      suppressClickUntil.current = 0;
       phase.current = "pending";
       start.current = {
         x: event.clientX,
@@ -143,7 +151,7 @@ export function useSwipeGesture({
         onLongPressRef.current();
       }, LONG_PRESS_MS);
     },
-    [enabled, clearLongPress],
+    [enabled, clearLongPress, applyOffset],
   );
 
   const onPointerMove = useCallback(
@@ -215,6 +223,8 @@ export function useSwipeGesture({
   );
 
   const onClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    // Clicks from the card's portaled menu are not the card's to swallow.
+    if (!event.currentTarget.contains(event.target as Node)) return;
     if (Date.now() < suppressClickUntil.current) {
       suppressClickUntil.current = 0;
       event.preventDefault();
@@ -224,6 +234,7 @@ export function useSwipeGesture({
 
   // Stops the browser's own long-press menu (Android) while a gesture is ours.
   const onContextMenu = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    if (!event.currentTarget.contains(event.target as Node)) return;
     if (phase.current !== "idle" && phase.current !== "scrolling") {
       event.preventDefault();
     }
