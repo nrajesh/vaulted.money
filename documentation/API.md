@@ -193,7 +193,7 @@ The app keeps the last 5 automatic safety copies of all data, made just before s
 
 `entity` is `null` except for CSV imports. Copies hold everything, including other ledgers, but never AI provider keys. Each new copy removes the oldest beyond 5, so imports made through the API can push out older copies.
 
-For imports and AI changes a failed copy never stops the operation. Restores are different: they replace everything, so a failed copy stops them with `409 safety_copy_failed` unless you send `continue_without_safety_copy: true`.
+For imports and AI changes a failed copy never stops the operation: the operation still runs, and the failure is logged, not reported in the response. Restores are different: they replace everything, so a failed copy stops them with `409 safety_copy_failed` unless you send `continue_without_safety_copy: true`.
 
 Restoring a safety copy (it mirrors **Restore** on the Backup screen) replaces all data with the copy, so `confirm_restore: true` is required. It first makes an undo copy (`restore_safety_copy`), so the restore can itself be undone; the copy being restored is never pruned. AI providers and keys on the device are kept, because copies have none. The UI reloads afterwards. Unknown ids return `404`.
 
