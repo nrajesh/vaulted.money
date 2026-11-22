@@ -341,4 +341,6 @@ Made by `pnpm marketing:screenshots`, in `marketing/store-screenshots/out/`:
 | 7-inch tablet screenshots  | `playTablet7/en/`     |
 | 10-inch tablet screenshots | `playTablet10/en/`    |
 
-**AI asset declaration** (Store listing → Review): choose "Label assets as created or edited using AI" and label the app icon and the feature graphic. Claude designed the icon and wrote the script that draws the feature graphic. The screenshots are not labelled: they are captures of the real app running demo data, placed in frames.
+**AI asset declaration** (Store listing → Review): "Label assets as created or edited using AI", with every asset labelled (icon, feature graphic and all screenshots), since Claude made them all. Foldable screenshots are left empty.
+
+Upload screenshots in headline order: 1 "Your money never leaves your device", 2 "Ask it like you'd say it", 3 "Your money. Your labels. Your rules.", 4 "AI when you want it", 5 "Every budget at a glance", 6 "Room to breathe on big screens" (tablets only), 7 "Bills on the calendar". The phone set skips 6.
