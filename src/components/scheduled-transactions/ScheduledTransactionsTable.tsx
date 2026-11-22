@@ -389,7 +389,13 @@ export function ScheduledTransactionsTable({
                               })}
                           </div>
 
-                          <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm mt-1">
+                          {/* Wraps rather than a two-column grid: at Larger
+                          text on a 360px phone the columns were narrower than
+                          the date, which ran into the frequency. */}
+                          <div
+                            data-schedule-facts=""
+                            className="flex flex-wrap gap-y-2 gap-x-4 text-sm mt-1"
+                          >
                             <div className="flex flex-col">
                               <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 text-slate-500">
                                 {t("scheduled.table.headers.date", {
@@ -413,7 +419,7 @@ export function ScheduledTransactionsTable({
                                   })}
                               </span>
                             </div>
-                            <div className="flex flex-col col-span-2 mt-1">
+                            <div className="flex flex-col basis-full mt-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span
                                   className={cn(

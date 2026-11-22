@@ -139,6 +139,16 @@ describe("ScheduledTransactionsTable", () => {
     const card = (name: string) =>
       payeeIn(name).closest("[data-swipe-card]") as HTMLElement;
 
+    it("the date and frequency wrap instead of sharing fixed columns (Larger text, 360px)", () => {
+      renderWithHandlers();
+      const facts = card("Test Vendor").querySelector(
+        "[data-schedule-facts]",
+      ) as HTMLElement;
+      expect(facts).not.toBeNull();
+      expect(facts.className).toContain("flex-wrap");
+      expect(facts.className).not.toContain("grid-cols-2");
+    });
+
     it("swipe left reveals Delete and tapping it deletes that schedule", async () => {
       const user = userEvent.setup();
       const { onDelete } = renderWithHandlers();
