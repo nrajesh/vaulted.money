@@ -21,10 +21,6 @@ The app ignores the iPhone's text-size setting, and its own "Larger" setting sto
 
 Play Console rates the 2.0.0 bundle's DEX optimisation "Low" and obfuscation 1%, because `android/app/build.gradle` has `minifyEnabled false`. `documentation/ANDROID_RULES.md` asks for R8 on release builds. Turn on `minifyEnabled` and `shrinkResources` with `proguard-android-optimize.txt`, add keep rules for the Capacitor bridge and every plugin, upload the R8 mapping file with each bundle, and test every plugin on a real device in the release build before shipping. Left off for 2.0.0 so the first Play build is the one already tested.
 
-### Android: shrink and optimise the release build (R8)
-
-Play Console rates the 2.0.0 bundle's DEX optimisation "Low" and obfuscation 1%, because `android/app/build.gradle` has `minifyEnabled false`. `documentation/ANDROID_RULES.md` asks for R8 on release builds. Turn on `minifyEnabled` and `shrinkResources` with `proguard-android-optimize.txt`, add keep rules for the Capacitor bridge and every plugin, upload the R8 mapping file with each bundle, and test every plugin on a real device in the release build before shipping. Left off for 2.0.0 so the first Play build is the one already tested.
-
 ### Mac App Store
 
 Try selling the desktop app on the Mac App Store, alongside or instead of Polar.
