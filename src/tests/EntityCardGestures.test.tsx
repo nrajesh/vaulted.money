@@ -92,6 +92,15 @@ describe("EntityCardGrid card gestures (accounts, payees, categories)", () => {
     renderGrid();
     const item = card("Everyday Checking").closest("li")!;
     expect(item.className.split(/\s+/)).toContain("min-w-0");
+    // ...and then the amount wraps below the name instead of squeezing it.
+    const heading = item.querySelector("[data-card-heading]") as HTMLElement;
+    expect(heading.className).toContain("flex-wrap");
+    // The name keeps 8rem; the inline buttons wrap below it instead.
+    const name = item.querySelector("[data-card-name]") as HTMLElement;
+    expect(name.className).toContain("min-w-[8rem]");
+    expect(item.querySelector(".app-mobile-row")!.className).toContain(
+      "flex-wrap",
+    );
   });
 
   it("swipe left reveals Delete and tapping it calls handleDeleteClick (the existing confirmation)", async () => {

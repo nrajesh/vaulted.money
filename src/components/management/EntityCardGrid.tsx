@@ -169,7 +169,7 @@ export const EntityCardGrid = <T extends { id: string; name: string }>({
           disabled={!deletable || selectionActive || editing}
         >
           <div
-            className={`app-mobile-row relative flex h-full items-center gap-3 ${
+            className={`app-mobile-row relative flex h-full flex-wrap items-center gap-3 ${
               selected ? "app-row-selected" : ""
             }`}
           >
@@ -184,8 +184,17 @@ export const EntityCardGrid = <T extends { id: string; name: string }>({
               disabled={!deletable}
               className="relative z-10 shrink-0"
             />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-3">
+            {/* The name keeps at least 8rem; when the card is too narrow
+                (Larger text, 360px), the Edit and Delete buttons wrap onto
+                their own line instead of breaking the name mid-word. */}
+            <div data-card-name="" className="min-w-[8rem] flex-1">
+              {/* Wraps: when the name and the amount don't fit side by side
+                  (Larger text, 360px), the amount moves below the name
+                  rather than squeezing it to a letter per line. */}
+              <div
+                data-card-heading=""
+                className="flex flex-wrap items-baseline justify-between gap-x-3"
+              >
                 <div className="relative z-10 min-w-0 break-words text-base font-semibold">
                   {nameColumn ? rendered(nameColumn, item) : item.name}
                 </div>
@@ -210,7 +219,7 @@ export const EntityCardGrid = <T extends { id: string; name: string }>({
             {isUpdating && editing ? (
               <Loader2 className="m-2 h-4 w-4 shrink-0 animate-spin" />
             ) : (
-              <div className="relative z-10 flex shrink-0">
+              <div className="relative z-10 ml-auto flex shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
