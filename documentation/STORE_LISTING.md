@@ -340,3 +340,5 @@ Made by `pnpm marketing:screenshots`, in `marketing/store-screenshots/out/`:
 | Phone screenshots          | `playPhone/en/`       |
 | 7-inch tablet screenshots  | `playTablet7/en/`     |
 | 10-inch tablet screenshots | `playTablet10/en/`    |
+
+**AI asset declaration** (Store listing → Review): choose "Label assets as created or edited using AI" and label the app icon and the feature graphic. Claude designed the icon and wrote the script that draws the feature graphic. The screenshots are not labelled: they are captures of the real app running demo data, placed in frames.
