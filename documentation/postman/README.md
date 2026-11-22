@@ -4,7 +4,7 @@ This folder contains a ready-made Postman collection that exercises every endpoi
 
 | File | Purpose |
 |---|---|
-| `vaulted-money-local-api.postman_collection.json` | 210 requests in 18 folders, with tests |
+| `vaulted-money-local-api.postman_collection.json` | 220 requests in 18 folders, with tests |
 | `vaulted-money-local-api.postman_environment.json` | `baseUrl` and `token` variables |
 
 You do not need a Postman account or any special permissions. The API only listens on your own computer.
@@ -28,7 +28,7 @@ Open the collection → **Run** (Collection Runner), keep the order, and run.
 
 - Folders `00`–`15` are the safe flow, then `98 Cleanup`. Requests depend on earlier ones (for example, the ledger created in `01` is used everywhere), so run them in order. Individual requests can be re-sent, but if a folder fails midway, re-run from `01`.
 - **Untick `99 Optional (changes your settings)`** unless you want those side effects (it overwrites your stored exchange rates from the internet).
-- A passing run is 208 requests (everything except the two in `99`) with 565 assertions and no failures.
+- A passing run is 218 requests (everything except the two in `99`) with 598 assertions and no failures.
 
 ### What it touches in your real app
 
@@ -41,6 +41,7 @@ The suite is built so it can run against an app with real data:
 | Languages | Sets the language to the one already active; adds and removes a custom `pmx` language. |
 | AI providers | Creates and deletes a throwaway provider. The default provider is unchanged. |
 | Backups | Exports are read-only. Restores use `ledger_id`, so they replace **only the test ledger**. |
+| Safety copies | Each restore and CSV import keeps an automatic safety copy, as in the app. Only the last 5 are kept, so a run **pushes out your older safety copies** (export a backup first if you want to keep them). Folder 12 restores the copy made seconds earlier by its own restore (your ledgers are unchanged; all data is replaced by that copy) and deletes the undo copy it makes. |
 | Settings | Folder 15 changes future months and restores whatever it found. |
 | AI categorization | `use_ai` is never sent, so nothing is sent to an AI provider. |
 
@@ -58,7 +59,7 @@ The app UI refreshes during the run and reloads once at the end (deleting a ledg
 | 06 Recurring transactions | CRUD, skip an occurrence, invalid frequency |
 | 07 Budgets · 08 Currencies · 09 Languages · 10 AI providers | CRUD plus checks that API keys are never echoed |
 | 11 Analytics, insights and reports | JSON, CSV and file downloads, currency conversion, error cases |
-| 12 Backups | plain and encrypted export, restore round-trips, wrong password, missing confirmation |
+| 12 Backups | plain and encrypted export, restore round-trips, wrong password, missing confirmation; list, restore and delete safety copies |
 | 13 Maintenance | Detect Transfers, Cleanup Duplicates, Categorize Missing, Reconcile Balance, de-duplicate and cleanup-unused for accounts, vendors and categories, each as dry run → confirm |
 | 14 CSV import and export | all four CSV exports, imports into a second throwaway ledger, dry runs, malformed files |
 | 15 Settings | read, change and restore the global settings; atomic failure |

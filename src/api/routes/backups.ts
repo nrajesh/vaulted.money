@@ -1,7 +1,16 @@
 import { z } from "zod";
 import type { BackupConfig } from "@/types/dataProvider";
-import { generateBackupData, processImport } from "@/utils/backupUtils";
+import {
+  generateBackupData,
+  processImport,
+  restoreWithSafetyCopy,
+} from "@/utils/backupUtils";
 import { decryptData, encryptData } from "@/utils/crypto";
+import {
+  restoreSafetyBackup,
+  SafetyBackupFailedError,
+  withSafetyBackup,
+} from "@/utils/safetyBackup";
 import {
   ApiError,
   badRequest,
@@ -36,10 +45,56 @@ const importSchema = z
     confirm_replace: z.literal(true, {
       error: "restoring replaces existing data; set confirm_replace to true",
     }),
+    /**
+     * A safety copy of the current data is made before restoring. If it cannot
+     * be made the restore is refused with 409; set this to restore anyway.
+     */
+    continue_without_safety_copy: z.boolean().default(false),
   })
   .refine((v) => Boolean(v.content) !== Boolean(v.backup), {
     message: 'provide exactly one of "content" or "backup"',
   });
+
+const safetyRestoreSchema = z.object({
+  /** Restoring replaces all current data with the copy; this must be set to proceed. */
+  confirm_restore: z.literal(true, {
+    error:
+      "restoring a safety copy replaces all current data; set confirm_restore to true",
+  }),
+  /**
+   * An undo copy of the current data is made first. If it cannot be made the
+   * restore is refused with 409; set this to restore anyway.
+   */
+  continue_without_safety_copy: z.boolean().default(false),
+});
+
+const safetyDeleteSchema = z.object({
+  /** Deleting a safety copy cannot be undone; this must be set to proceed. */
+  confirm_delete: z.literal(true, {
+    error: "this deletes the safety copy; set confirm_delete to true",
+  }),
+});
+
+/**
+ * A restore that needs a safety copy first, when that copy could not be made
+ * (for example storage is full). The data is left as it was.
+ */
+const safetyCopyFailed = () =>
+  new ApiError(
+    409,
+    "safety_copy_failed",
+    'Could not make a safety copy of the current data, so nothing was restored. Retry with "continue_without_safety_copy": true to restore without one.',
+  );
+
+/** Runs a restore, turning a failed required safety copy into a 409. */
+async function guardSafetyCopy<T>(run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    if (error instanceof SafetyBackupFailedError) throw safetyCopyFailed();
+    throw error;
+  }
+}
 
 const schedulePatchSchema = z.object({
   is_active: z.boolean().optional(),
@@ -169,31 +224,99 @@ export const backupRoutes: RouteDef[] = [
         parsed = parseJson(content);
       }
 
-      let result;
-      if (input.ledger_id) {
-        // processImport has no ledger targeting, so unwrap the envelope here.
-        const envelope = parsed as { data?: unknown; appVersion?: string };
-        const data =
-          envelope.appVersion && envelope.data ? envelope.data : parsed;
-        await dp.importData(data, input.ledger_id);
-        result = { type: "success" as const };
-      } else {
-        result = await processImport(content, dp);
-        if (result.type === "warning") {
-          if (!input.force) {
-            throw conflict(
-              `${result.message} Retry with "force": true to proceed.`,
-            );
-          }
-          await dp.importData(result.dataToImport);
-          result = { type: "success" as const };
+      /*
+       * Every restore path replaces data, so each first makes a required
+       * safety copy of everything (reason "restore_file"), as restoring a file
+       * in the app does. If that copy fails the restore is refused with 409
+       * unless the caller set continue_without_safety_copy.
+       */
+      const copyOptions = {
+        continueWithoutCopy: input.continue_without_safety_copy,
+      };
+      const result = await guardSafetyCopy(async () => {
+        if (input.ledger_id) {
+          const ledgerId = input.ledger_id;
+          // processImport has no ledger targeting, so unwrap the envelope here.
+          const envelope = parsed as { data?: unknown; appVersion?: string };
+          const data =
+            envelope.appVersion && envelope.data ? envelope.data : parsed;
+          await withSafetyBackup(
+            dp,
+            { reason: "restore_file", required: true, ...copyOptions },
+            () => dp.importData(data, ledgerId),
+          );
+          return { type: "success" as const };
         }
-      }
+        const imported = await processImport(content, dp, copyOptions);
+        if (imported.type !== "warning") return imported;
+        if (!input.force) {
+          throw conflict(
+            `${imported.message} Retry with "force": true to proceed.`,
+          );
+        }
+        await restoreWithSafetyCopy(dp, imported.dataToImport, copyOptions);
+        return { type: "success" as const };
+      });
 
       if (result.type === "error") {
         throw new ApiError(400, "import_failed", result.message);
       }
       return { ...json({ restored: true }), reloadUi: true };
+    },
+  },
+  {
+    method: "GET",
+    path: "/backups/safety",
+    summary:
+      "List automatic safety copies made before imports, AI changes and sync",
+    handler: async ({ services }) =>
+      // Summaries only: the stored content (the payload) is never returned.
+      json({
+        items: (await services.dataProvider.listSafetyBackups()).map(
+          (copy) => ({
+            id: copy.id,
+            reason: copy.reason,
+            entity: copy.entity ?? null,
+            created_at: copy.created_at,
+            ledger_count: copy.ledger_count,
+          }),
+        ),
+      }),
+  },
+  {
+    method: "POST",
+    path: "/backups/safety/:safetyId/restore",
+    summary:
+      "Restore an automatic safety copy (mirrors the Restore button on the Backup screen)",
+    body: safetyRestoreSchema,
+    handler: async ({ params, body, services }) => {
+      const input = parse(safetyRestoreSchema, body);
+      const dp = services.dataProvider;
+      if (!(await dp.getSafetyBackup(params.safetyId))) {
+        throw notFound(`Safety copy "${params.safetyId}"`);
+      }
+      await guardSafetyCopy(() =>
+        restoreSafetyBackup(dp, params.safetyId, {
+          continueWithoutCopy: input.continue_without_safety_copy,
+        }),
+      );
+      return { ...json({ restored: params.safetyId }), reloadUi: true };
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/backups/safety/:safetyId",
+    summary: "Delete an automatic safety copy",
+    body: safetyDeleteSchema,
+    handler: async ({ params, body, services }) => {
+      parse(safetyDeleteSchema, body);
+      const dp = services.dataProvider;
+      if (!(await dp.getSafetyBackup(params.safetyId))) {
+        throw notFound(`Safety copy "${params.safetyId}"`);
+      }
+      return json({
+        deleted: await dp.deleteSafetyBackups([params.safetyId]),
+      });
     },
   },
   {

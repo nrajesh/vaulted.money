@@ -170,8 +170,32 @@ API keys are **write-only**: responses report `has_api_key` but never the key. T
 | `POST /backups/import` | Restore. **Destructive**: see below. |
 | `GET /backups/schedules` | scheduled backup configurations (no secrets) |
 | `PATCH/DELETE /backups/schedules/{id}` | `{is_active?, frequency_ms?}` |
+| `GET /backups/safety` | Automatic safety copies, newest first: `{items: [{id, reason, entity, created_at, ledger_count}]}`. Never the content. |
+| `POST /backups/safety/{id}/restore` | `{confirm_restore: true, continue_without_safety_copy?}` → `{restored: id}`. **Destructive**: see below. |
+| `DELETE /backups/safety/{id}` | `{confirm_delete: true}` → `{deleted: 1}` |
 
 Restoring **replaces** existing data (everything, or the target ledger with `ledger_id`), so `confirm_replace: true` is required. Body: either `content` (the backup file text) or `backup` (a parsed object), plus `password` for encrypted files and `force: true` to accept a backup from a different app/schema version. The UI reloads after a restore.
+
+Before restoring, the API keeps a safety copy of all current data (reason `restore_file`), as restoring a file in the app does. If that copy cannot be made (for example, storage is full), nothing is restored and the API answers `409 safety_copy_failed`. Send `continue_without_safety_copy: true` to restore without one.
+
+#### Safety copies
+
+The app keeps the last 5 automatic safety copies of all data, made just before something changes data in bulk. They are the **Automatic safety copies** on the Backup screen. `reason` says what came next:
+
+| `reason` | Made before | Through the API |
+|---|---|---|
+| `csv_import` | a CSV import; `entity` is `transactions`, `accounts`, `payees` (vendors) or `categories` (with sub-categories) | each `…/import` route, except with `dry_run: true` |
+| `ai_categorize` | Categorize Missing writing AI results | `categorize-missing` with `use_ai: true`, except with `dry_run: true` |
+| `restore_file` | restoring a backup file | `POST /backups/import` |
+| `restore_safety_copy` | restoring a safety copy (the undo copy) | `POST /backups/safety/{id}/restore` |
+| `sync` | applying changes from another device | app only |
+| `demo_data` | Generate demo data | app only |
+
+`entity` is `null` except for CSV imports. Copies hold everything, including other ledgers, but never AI provider keys. Each new copy removes the oldest beyond 5, so imports made through the API can push out older copies.
+
+For imports and AI changes a failed copy never stops the operation. Restores are different: they replace everything, so a failed copy stops them with `409 safety_copy_failed` unless you send `continue_without_safety_copy: true`.
+
+Restoring a safety copy (it mirrors **Restore** on the Backup screen) replaces all data with the copy, so `confirm_restore: true` is required. It first makes an undo copy (`restore_safety_copy`), so the restore can itself be undone; the copy being restored is never pruned. AI providers and keys on the device are kept, because copies have none. The UI reloads afterwards. Unknown ids return `404`.
 
 Passwords are never accepted in the URL; use `POST` for encrypted exports.
 
@@ -191,7 +215,7 @@ How each behaves:
 
 - **Detect Transfers** pairs transactions on different accounts, at most one day apart, that cancel out in the same currency or look like a transfer (swapped account/vendor, both `Transfer`, or both vendors mentioning transfer). It links them with a shared `transfer_id`. The same code runs behind the app's button.
 - **Cleanup Duplicates** removes extra copies of a recurring transaction created twice on the same day, keeping the oldest.
-- **Categorize Missing** gives uncategorized transactions the category last used with the same vendor. **AI is opt-in:** with `use_ai: true` it also asks your default AI provider about vendors with no history. That sends vendor names (never amounts) to the provider and fails with `400 ai_not_configured` if no default provider is set, or it has no key. A custom (OpenAI-compatible) provider, such as a model running on your own computer, needs no key. The default is `false`, so nothing leaves the device unless you ask.
+- **Categorize Missing** gives uncategorized transactions the category last used with the same vendor. **AI is opt-in:** with `use_ai: true` it also asks your default AI provider about vendors with no history. That sends vendor names (never amounts) to the provider and fails with `400 ai_not_configured` if no default provider is set, or it has no key. A custom (OpenAI-compatible) provider, such as a model running on your own computer, needs no key. The default is `false`, so nothing leaves the device unless you ask. When `use_ai` is true (and it is not a dry run), a [safety copy](#safety-copies) (reason `ai_categorize`) is kept before the changes are written.
 - **Reconcile Balance** compares the real balance you give with the app's balance (as of `date`, default today) and creates one `Balance Adjustment` transaction (category `Adjustment`) for the difference. Accounts that already match are left alone.
 - **Duplicate suggestions** group names that are identical after ignoring case, accents, punctuation and spacing, and suggest which to keep. (The app makes you pick duplicates by hand; the merge itself is the same.)
 - **Merging** keeps the target and moves past transactions onto it. The merged-away names' recurring transactions and budgets are deleted, not moved: with duplicates there is no telling which schedule or budget you still want. Re-create any you need on the target.
@@ -209,6 +233,7 @@ Exactly the formats of the app's **Import CSV / Export CSV** buttons, so files m
 
 - Transaction files use `;` as the delimiter and `DD/MM/YYYY` dates, with the columns `Date;Account;Vendor;Category;Sub Category;Amount;Remarks;Currency;transfer_id;is_scheduled_origin;Frequency;End Date`. `Sub Category` is optional on import; missing sub-categories are created under their category. Accounts are `Account Name,Currency,Starting Balance,Remarks`; vendors `Vendor Name`; categories `Category Name,Sub Category Name`.
 - Imports create missing accounts, vendors and categories, never overwrite existing ones, and report `imported`/`created`, `already_existed` and skipped row numbers. Use `dry_run` to validate a file first.
+- Each import that is not a `dry_run` first keeps a [safety copy](#safety-copies) of all data (reason `csv_import`). A failed copy does not stop the import.
 - Exports escape cells starting with `=`, `+`, `-` or `@` so spreadsheets do not run them as formulas.
 - CSV is for spreadsheets and bank exports. For a complete, lossless copy (budgets, schedules, sub-category tags, settings) use [Backups](#backups).
 

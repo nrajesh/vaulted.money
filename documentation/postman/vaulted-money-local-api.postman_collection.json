@@ -11294,7 +11294,7 @@
                 "import"
               ]
             },
-            "description": "Replaces ONLY the test ledger's data (ledger_id is set). Omitting ledger_id would replace everything."
+            "description": "Replaces ONLY the test ledger's data (ledger_id is set). Omitting ledger_id would replace everything. Every restore first keeps a safety copy of all data (reason `restore_file`, listed by *List safety copies* below). If that copy cannot be made the restore is refused with 409 `safety_copy_failed`; send `\"continue_without_safety_copy\": true` to restore anyway."
           },
           "response": [
             {
@@ -11510,6 +11510,826 @@
               ],
               "cookie": [],
               "body": "{\n  \"data\": [\n    {\n      \"date\": \"2026-10-05\",\n      \"amount\": -12,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Cafe\",\n      \"category\": \"PM Dining\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"d6f8f154-7e9e-4cea-9d6d-d939b1f1e74c\",\n      \"created_at\": \"2026-10-05T14:12:49.582Z\",\n      \"user_id\": \"d2e84dc4-d990-46c7-9fcb-6e84030f7a80\"\n    },\n    {\n      \"date\": \"2026-10-05\",\n      \"amount\": 3000,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Employer\",\n      \"category\": \"PM Salary\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"5a11e919-4570-445c-95b1-c9c23499b56d\",\n      \"created_at\": \"2026-10-05T14:12:49.562Z\",\n      \"user_id\": \"d2e84dc4-d990-46c7-9fcb-6e84030f7a80\"\n    },\n    {\n      \"date\": \"2026-10-05\",\n      \"amount\": -30,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Cafe\",\n      \"category\": \"PM Dining\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"15d8f2d2-bb86-41a8-ada4-f47c47d3e500\",\n      \"created_at\": \"2026-10-05T14:12:49.584Z\",\n      \"user_id\": \"d2e84dc4-d990-46c7-9fcb-6e84030f7a80\"\n    },\n    {\n      \"date\": \"2026-10-05\",\n      \"amount\": -80,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Power Co\",\n      \"category\": \"PM Utilities\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"0adc3fd2-edec-4da2-929d-8dd02d1865b3\",\n      \"created_at\": \"2026-10-05T14:12:49.586Z\",\n      \"user_id\": \"d2e84dc4-d990-46c7-9fcb-6e84030f7a80\"\n    }\n  ],\n  \"total\": 4,\n  \"limit\": 100,\n  \"offset\": 0\n}"
+            }
+          ]
+        },
+        {
+          "name": "List safety copies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Response has correct Content-Type\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Response has an 'items' array\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.items).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Copies never include their content\", () => {",
+                  "    for (const item of pm.response.json().items) {",
+                  "        pm.expect(item).to.have.all.keys(\"id\", \"reason\", \"entity\", \"created_at\", \"ledger_count\");",
+                  "        pm.expect(item).to.not.have.property(\"payload\");",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"The restores above made a restore_file copy\", () => {",
+                  "    const copy = pm.response.json().items.find(i => i.reason === \"restore_file\");",
+                  "    pm.expect(copy, \"restore_file copy\").to.be.an(\"object\");",
+                  "    pm.expect(copy.ledger_count).to.be.a(\"number\").and.to.be.at.least(1);",
+                  "    pm.collectionVariables.set(\"safetyId\", copy.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety"
+              ]
+            },
+            "description": "Lists the automatic safety copies (the **Automatic safety copies** section of the Backup screen), newest first. Only id, reason, entity, created_at and ledger_count are returned, never the content. The restores above each made a `restore_file` copy."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety"
+                  ]
+                },
+                "description": "Lists the automatic safety copies (the **Automatic safety copies** section of the Backup screen), newest first. Only id, reason, entity, created_at and ledger_count are returned, never the content. The restores above each made a `restore_file` copy."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"abb52297-af66-47ab-88d1-98c79fecb69a\",\n      \"reason\": \"restore_file\",\n      \"entity\": null,\n      \"created_at\": \"2026-11-22T12:34:10.950Z\",\n      \"ledger_count\": 1\n    },\n    {\n      \"id\": \"0aba9617-f466-47c6-b420-73d72f4aa128\",\n      \"reason\": \"restore_file\",\n      \"entity\": null,\n      \"created_at\": \"2026-11-22T12:34:10.924Z\",\n      \"ledger_count\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Restore safety copy without confirmation -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "",
+                  "pm.test(\"Response body contains error information\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"error\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety/{{safetyId}}/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety",
+                "{{safetyId}}",
+                "restore"
+              ]
+            },
+            "description": "Restoring replaces all data, so `confirm_restore: true` is required.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety/{{safetyId}}/restore",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety",
+                    "{{safetyId}}",
+                    "restore"
+                  ]
+                },
+                "description": "Restoring replaces all data, so `confirm_restore: true` is required.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"validation_error\",\n    \"message\": \"confirm_restore: restoring a safety copy replaces all current data; set confirm_restore to true\",\n    \"details\": [\n      {\n        \"path\": \"confirm_restore\",\n        \"message\": \"restoring a safety copy replaces all current data; set confirm_restore to true\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Restore unknown safety copy -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", () => pm.response.to.have.status(404));",
+                  "",
+                  "pm.test(\"Response body contains error information\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"error\");",
+                  "});",
+                  "",
+                  "pm.test(\"Error code is not_found\", () => {",
+                  "    pm.expect(pm.response.json().error.code).to.equal(\"not_found\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety/does-not-exist/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety",
+                "does-not-exist",
+                "restore"
+              ]
+            },
+            "description": "An id that is not in the list returns 404.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirm_restore\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety/does-not-exist/restore",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety",
+                    "does-not-exist",
+                    "restore"
+                  ]
+                },
+                "description": "An id that is not in the list returns 404.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"confirm_restore\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"not_found\",\n    \"message\": \"Safety copy \\\"does-not-exist\\\" not found\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Restore safety copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Response has correct Content-Type\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Reports the restored copy\", () => {",
+                  "    pm.expect(pm.response.json().restored).to.equal(pm.collectionVariables.get(\"safetyId\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety/{{safetyId}}/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety",
+                "{{safetyId}}",
+                "restore"
+              ]
+            },
+            "description": "Mirrors **Restore** on the Backup screen. Replaces all data with the copy made just before the encrypted restore above (so the test ledger is unchanged and your own ledgers are as they were seconds ago). An undo copy (`restore_safety_copy`) is made first; if it cannot be made the API answers 409 unless `continue_without_safety_copy` is true. AI providers and keys on the device are kept.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirm_restore\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety/{{safetyId}}/restore",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety",
+                    "{{safetyId}}",
+                    "restore"
+                  ]
+                },
+                "description": "Mirrors **Restore** on the Backup screen. Replaces all data with the copy made just before the encrypted restore above (so the test ledger is unchanged and your own ledgers are as they were seconds ago). An undo copy (`restore_safety_copy`) is made first; if it cannot be made the API answers 409 unless `continue_without_safety_copy` is true. AI providers and keys on the device are kept.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"confirm_restore\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"restored\": \"abb52297-af66-47ab-88d1-98c79fecb69a\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Data is intact after restoring the safety copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"At least 4 transactions are still there\", () => {",
+                  "    pm.expect(pm.response.json().total).to.be.a(\"number\").and.to.be.at.least(4);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ledgers",
+                "{{ledgerId}}",
+                "transactions"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/ledgers/{{ledgerId}}/transactions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "ledgers",
+                    "{{ledgerId}}",
+                    "transactions"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"date\": \"2026-11-22\",\n      \"amount\": -30,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Cafe\",\n      \"category\": \"PM Dining\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"e6e7c7e9-55e1-4654-9d64-d1045c7acd79\",\n      \"created_at\": \"2026-11-22T12:34:09.859Z\",\n      \"user_id\": \"c3fba2a0-0e27-4778-818c-8ccf1ad85fa5\"\n    },\n    {\n      \"date\": \"2026-11-22\",\n      \"amount\": 3000,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Employer\",\n      \"category\": \"PM Salary\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"936ecda3-f40d-4cf3-91ba-2828932f41e1\",\n      \"created_at\": \"2026-11-22T12:34:09.846Z\",\n      \"user_id\": \"c3fba2a0-0e27-4778-818c-8ccf1ad85fa5\"\n    },\n    {\n      \"date\": \"2026-11-22\",\n      \"amount\": -12,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Cafe\",\n      \"category\": \"PM Dining\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"44d6534c-de00-4840-aa35-763b48da8240\",\n      \"created_at\": \"2026-11-22T12:34:09.859Z\",\n      \"user_id\": \"c3fba2a0-0e27-4778-818c-8ccf1ad85fa5\"\n    },\n    {\n      \"date\": \"2026-11-22\",\n      \"amount\": -80,\n      \"currency\": \"USD\",\n      \"account\": \"PM Checking\",\n      \"vendor\": \"PM Power Co\",\n      \"category\": \"PM Utilities\",\n      \"sub_category\": null,\n      \"remarks\": null,\n      \"id\": \"1b4fb8e0-0c27-48dd-a59a-b71eaad260b4\",\n      \"created_at\": \"2026-11-22T12:34:09.860Z\",\n      \"user_id\": \"c3fba2a0-0e27-4778-818c-8ccf1ad85fa5\"\n    }\n  ],\n  \"total\": 4,\n  \"limit\": 100,\n  \"offset\": 0\n}"
+            }
+          ]
+        },
+        {
+          "name": "Restore made an undo copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Response has correct Content-Type\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Response has an 'items' array\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.items).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Copies never include their content\", () => {",
+                  "    for (const item of pm.response.json().items) {",
+                  "        pm.expect(item).to.have.all.keys(\"id\", \"reason\", \"entity\", \"created_at\", \"ledger_count\");",
+                  "        pm.expect(item).to.not.have.property(\"payload\");",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"There is a restore_safety_copy copy\", () => {",
+                  "    const copy = pm.response.json().items.find(i => i.reason === \"restore_safety_copy\");",
+                  "    pm.expect(copy, \"undo copy\").to.be.an(\"object\");",
+                  "    pm.collectionVariables.set(\"undoSafetyId\", copy.id);",
+                  "});",
+                  "",
+                  "pm.test(\"The restored copy is still listed\", () => {",
+                  "    const ids = pm.response.json().items.map(i => i.id);",
+                  "    pm.expect(ids).to.include(pm.collectionVariables.get(\"safetyId\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety"
+              ]
+            },
+            "description": "The restore kept a copy of the data it replaced, so it can be undone."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety"
+                  ]
+                },
+                "description": "The restore kept a copy of the data it replaced, so it can be undone."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"d1278959-57de-4e08-8c80-c07a7e816c73\",\n      \"reason\": \"restore_safety_copy\",\n      \"entity\": null,\n      \"created_at\": \"2026-11-22T12:34:11.008Z\",\n      \"ledger_count\": 1\n    },\n    {\n      \"id\": \"abb52297-af66-47ab-88d1-98c79fecb69a\",\n      \"reason\": \"restore_file\",\n      \"entity\": null,\n      \"created_at\": \"2026-11-22T12:34:10.950Z\",\n      \"ledger_count\": 1\n    },\n    {\n      \"id\": \"0aba9617-f466-47c6-b420-73d72f4aa128\",\n      \"reason\": \"restore_file\",\n      \"entity\": null,\n      \"created_at\": \"2026-11-22T12:34:10.924Z\",\n      \"ledger_count\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete safety copy without confirmation -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "",
+                  "pm.test(\"Response body contains error information\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"error\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety/{{undoSafetyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety",
+                "{{undoSafetyId}}"
+              ]
+            },
+            "description": "Deleting a copy cannot be undone, so `confirm_delete: true` is required.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety/{{undoSafetyId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety",
+                    "{{undoSafetyId}}"
+                  ]
+                },
+                "description": "Deleting a copy cannot be undone, so `confirm_delete: true` is required.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"validation_error\",\n    \"message\": \"confirm_delete: this deletes the safety copy; set confirm_delete to true\",\n    \"details\": [\n      {\n        \"path\": \"confirm_delete\",\n        \"message\": \"this deletes the safety copy; set confirm_delete to true\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete the undo safety copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Response has correct Content-Type\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"One copy was deleted\", () => {",
+                  "    pm.expect(pm.response.json().deleted).to.equal(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety/{{undoSafetyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety",
+                "{{undoSafetyId}}"
+              ]
+            },
+            "description": "Mirrors **Delete** in a copy's menu on the Backup screen. Removes the undo copy this run made.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirm_delete\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety/{{undoSafetyId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety",
+                    "{{undoSafetyId}}"
+                  ]
+                },
+                "description": "Mirrors **Delete** in a copy's menu on the Backup screen. Removes the undo copy this run made.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"confirm_delete\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"deleted\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete deleted safety copy -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", () => pm.response.to.have.status(404));",
+                  "",
+                  "pm.test(\"Response body contains error information\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"error\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety/{{undoSafetyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety",
+                "{{undoSafetyId}}"
+              ]
+            },
+            "description": "The copy is gone, so deleting it again returns 404.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirm_delete\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety/{{undoSafetyId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety",
+                    "{{undoSafetyId}}"
+                  ]
+                },
+                "description": "The copy is gone, so deleting it again returns 404.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"confirm_delete\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"not_found\",\n    \"message\": \"Safety copy \\\"d1278959-57de-4e08-8c80-c07a7e816c73\\\" not found\"\n  }\n}"
             }
           ]
         }
@@ -15497,6 +16317,88 @@
           "response": []
         },
         {
+          "name": "Import made a safety copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Response has correct Content-Type\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Response has an 'items' array\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.items).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Copies never include their content\", () => {",
+                  "    for (const item of pm.response.json().items) {",
+                  "        pm.expect(item).to.have.all.keys(\"id\", \"reason\", \"entity\", \"created_at\", \"ledger_count\");",
+                  "        pm.expect(item).to.not.have.property(\"payload\");",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Newest copy is from the transactions import\", () => {",
+                  "    const newest = pm.response.json().items[0];",
+                  "    pm.expect(newest.reason).to.equal(\"csv_import\");",
+                  "    pm.expect(newest.entity).to.equal(\"transactions\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/backups/safety",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "backups",
+                "safety"
+              ]
+            },
+            "description": "A real CSV import (not a dry run) first keeps a safety copy with reason `csv_import` and the imported entity."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/backups/safety",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "backups",
+                    "safety"
+                  ]
+                },
+                "description": "A real CSV import (not a dry run) first keeps a safety copy with reason `csv_import` and the imported entity."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"034bd913-7e1b-4a66-8ad3-5fb9c81df761\",\n      \"reason\": \"csv_import\",\n      \"entity\": \"transactions\",\n      \"created_at\": \"2026-11-22T12:34:11.627Z\",\n      \"ledger_count\": 2\n    },\n    {\n      \"id\": \"abb52297-af66-47ab-88d1-98c79fecb69a\",\n      \"reason\": \"restore_file\",\n      \"entity\": null,\n      \"created_at\": \"2026-11-22T12:34:10.950Z\",\n      \"ledger_count\": 1\n    },\n    {\n      \"id\": \"0aba9617-f466-47c6-b420-73d72f4aa128\",\n      \"reason\": \"restore_file\",\n      \"entity\": null,\n      \"created_at\": \"2026-11-22T12:34:10.924Z\",\n      \"ledger_count\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
           "name": "Import transactions: missing headers -> 400",
           "event": [
             {
@@ -18115,6 +19017,14 @@
     },
     {
       "key": "origFutureMonths",
+      "value": ""
+    },
+    {
+      "key": "safetyId",
+      "value": ""
+    },
+    {
+      "key": "undoSafetyId",
       "value": ""
     }
   ]

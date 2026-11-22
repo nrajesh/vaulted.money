@@ -3,6 +3,7 @@ import type { Transaction } from "@/types/dataProvider";
 import { readAiApiKeyFromStorage } from "@/constants/aiApiKeyStorage";
 import { categorizeVendorsBulk } from "@/hooks/useAutoCategorize";
 import { isAiReady } from "@/utils/aiModels";
+import { withSafetyBackup } from "@/utils/safetyBackup";
 import {
   findDuplicateRecurringInstances,
   findTransferPairs,
@@ -215,12 +216,21 @@ async function categorizeMissing(ctx: RouteContext) {
   }
 
   if (!dry_run) {
-    for (const t of updated) {
-      const catId = await dp.ensureCategoryExists(t.category, ledger.id);
-      if (t.sub_category && catId) {
-        await dp.ensureSubCategoryExists(t.sub_category, catId, ledger.id);
+    const write = async () => {
+      for (const t of updated) {
+        const catId = await dp.ensureCategoryExists(t.category, ledger.id);
+        if (t.sub_category && catId) {
+          await dp.ensureSubCategoryExists(t.sub_category, catId, ledger.id);
+        }
+        await dp.updateTransaction(t);
       }
-      await dp.updateTransaction(t);
+    };
+    // Writing AI suggestions is an AI change, so keep a safety copy first, as
+    // Categorize Missing in the app does. A failed copy never stops the write.
+    if (use_ai) {
+      await withSafetyBackup(dp, { reason: "ai_categorize" }, write);
+    } else {
+      await write();
     }
   }
 
