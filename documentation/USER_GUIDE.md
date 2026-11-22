@@ -131,7 +131,7 @@ Things to know:
 
 - Copies stay on this device. They are never sent anywhere, and they are deleted along with the app. To keep something safe for longer, use **Save as file** or export a backup.
 - **Reset All Data** deletes the safety copies too. **Generate Demo Data** keeps them, so you can return to your own data afterwards.
-- Copies never include your AI API keys. Restoring a copy keeps the AI providers and keys already set up on this device.
+- Copies never include your AI API keys. Restoring a copy keeps the AI providers and keys already set up on this device, and this device's backup settings too: your scheduled backups, their folders and your backup password stay as they are now.
 - If a copy can't be made (for example, because the device is full), an import, AI change or sync still goes ahead and the app warns you. A restore or **Generate Demo Data** replaces everything, so the app asks before going on without a copy.
 
 ## Syncing Between Devices

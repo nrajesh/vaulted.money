@@ -103,8 +103,19 @@ export async function restoreSafetyBackup(
    * afterwards, by id, over whatever the copy brought. `updateAIProvider`
    * is an upsert, so it also re-adds providers the copy did not have while
    * keeping their ids (the keys in localStorage are stored per id).
+   *
+   * Backup settings are kept the same way, for the same reason. The import
+   * replaces the backup settings with the copy's, and a copy never holds the
+   * folder handle a web browser needs to write to the chosen folder. Without
+   * this step a scheduled folder backup would silently stop after a restore,
+   * schedules made after the copy would vanish, and a changed backup
+   * password would revert. The schedules are settings of this device, not
+   * part of the money data, so after the import we put back exactly the
+   * device's set (handles, paths, password settings and all) and drop the
+   * copy's version.
    */
   const deviceProviders = await dp.getAIProviders();
+  const deviceBackupConfigs = await dp.getBackupConfigs();
 
   await withSafetyBackup(
     dp,
@@ -118,6 +129,12 @@ export async function restoreSafetyBackup(
       await dp.importData(data);
       for (const provider of deviceProviders) {
         await dp.updateAIProvider(provider);
+      }
+      for (const config of await dp.getBackupConfigs()) {
+        await dp.deleteBackupConfig(config.id);
+      }
+      for (const config of deviceBackupConfigs) {
+        await dp.addBackupConfig(config);
       }
     },
   );

@@ -1315,6 +1315,31 @@ describe("backups: safety copies", () => {
     ).toMatchObject({ ledger_count: 2 });
   });
 
+  it("keeps this device's backup schedules when restoring a copy", async () => {
+    await createLedger();
+    const copy = await makeSafetyBackup(dataProvider, { reason: "sync" });
+    await dataProvider.addBackupConfig({
+      id: "made-after-the-copy",
+      frequency: 3_600_000,
+      isActive: true,
+      nextBackup: "2026-02-02T00:00:00.000Z",
+      path: "/backups",
+    });
+
+    await ok(
+      call("POST", `/backups/safety/${copy!.id}/restore`, {
+        confirm_restore: true,
+      }),
+    );
+
+    const schedules = await ok<{ data: Entity[] }>(
+      call("GET", "/backups/schedules"),
+    );
+    expect(schedules.data.map((schedule) => schedule.id)).toEqual([
+      "made-after-the-copy",
+    ]);
+  });
+
   it("refuses to restore without an undo copy unless told to continue", async () => {
     await createLedger();
     const copy = await makeSafetyBackup(dataProvider, { reason: "sync" });

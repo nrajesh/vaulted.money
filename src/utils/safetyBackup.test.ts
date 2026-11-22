@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/dexieDB";
 import { LocalDataProvider } from "@/providers/LocalDataProvider";
-import type { AIProvider, DataProvider } from "@/types/dataProvider";
+import type {
+  AIProvider,
+  BackupConfig,
+  DataProvider,
+} from "@/types/dataProvider";
 import {
   SafetyBackupFailedError,
   makeSafetyBackup,
@@ -119,6 +123,58 @@ describe("safetyBackup", () => {
     })[];
     expect(providers.map((p) => p.name).sort()).toEqual(["First", "Second"]);
     expect(providers.every((p) => p.api_key === "k")).toBe(true);
+  });
+
+  it("restores a copy and keeps the backup settings on the device", async () => {
+    const scheduled: BackupConfig = {
+      id: "scheduled",
+      frequency: 86_400_000,
+      isActive: true,
+      nextBackup: "2026-02-01T00:00:00.000Z",
+      encrypted: false,
+    };
+    await addTransaction(dp, "Original");
+    await dp.addBackupConfig(scheduled);
+    const copy = await makeSafetyBackup(dp, { reason: "sync" });
+
+    // After the copy: the folder is picked again (a handle-like object), the
+    // password changes, and a second schedule is added.
+    const handle = { kind: "directory", name: "Backups" };
+    await dp.updateBackupConfig("scheduled", {
+      directoryHandle: handle,
+      encrypted: true,
+      passwordHash: "new-hash",
+    });
+    const later: BackupConfig = {
+      id: "later",
+      frequency: 3_600_000,
+      isActive: true,
+      nextBackup: "2026-02-02T00:00:00.000Z",
+      path: "/Users/me/Backups",
+    };
+    await dp.addBackupConfig(later);
+    const before = await dp.getBackupConfigs();
+
+    await restoreSafetyBackup(dp, copy!.id);
+
+    const exported = (await dp.exportData()) as {
+      transactions: { vendor: string }[];
+    };
+    expect(exported.transactions.map((t) => t.vendor)).toEqual(["Original"]);
+    const after = await dp.getBackupConfigs();
+    const byId = (list: BackupConfig[]) =>
+      [...list].sort((a, b) => a.id.localeCompare(b.id));
+    expect(byId(after)).toEqual(byId(before));
+    expect(after.find((c) => c.id === "scheduled")!.directoryHandle).toEqual(
+      handle,
+    );
+    expect(after.find((c) => c.id === "later")!.path).toBe("/Users/me/Backups");
+
+    // Neither the restored copy nor the undo copy holds the folder handle.
+    for (const summary of await dp.listSafetyBackups()) {
+      const stored = await dp.getSafetyBackup(summary.id);
+      expect(stored!.payload).not.toContain("directoryHandle");
+    }
   });
 
   it("makes an undo copy before restoring and keeps the restored copy", async () => {

@@ -195,7 +195,7 @@ The app keeps the last 5 automatic safety copies of all data, made just before s
 
 For imports and AI changes a failed copy never stops the operation: the operation still runs, and the failure is logged, not reported in the response. Restores are different: they replace everything, so a failed copy stops them with `409 safety_copy_failed` unless you send `continue_without_safety_copy: true`.
 
-Restoring a safety copy (it mirrors **Restore** on the Backup screen) replaces all data with the copy, so `confirm_restore: true` is required. It first makes an undo copy (`restore_safety_copy`), so the restore can itself be undone; the copy being restored is never pruned. AI providers and keys on the device are kept, because copies have none. The UI reloads afterwards. Unknown ids return `404`.
+Restoring a safety copy (it mirrors **Restore** on the Backup screen) replaces all data with the copy, so `confirm_restore: true` is required. It first makes an undo copy (`restore_safety_copy`), so the restore can itself be undone; the copy being restored is never pruned. AI providers and keys on the device are kept, because copies have none. The device's backup settings (`/backups/schedules`: schedules, folders and backup password settings) are kept too, exactly as they were before the restore, because a copy has no folder access and may predate schedules or a password change. The UI reloads afterwards. Unknown ids return `404`.
 
 Passwords are never accepted in the URL; use `POST` for encrypted exports.
 
