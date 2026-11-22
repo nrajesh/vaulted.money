@@ -4,6 +4,14 @@ import type { AreaTranslations } from "./types";
 export const homeLanding: AreaTranslations = {
   en: {
     home: {
+      stores: {
+        heading: "Get the app",
+        appStore: "App Store",
+        googlePlay: "Google Play",
+        desktop: "Desktop",
+        comingSoon: "Coming soon",
+        desktopPrice: "€9.99 one-time",
+      },
       actions: {
         buyDesktop: "Buy the desktop app (€9.99)",
       },
@@ -106,6 +114,14 @@ export const homeLanding: AreaTranslations = {
   },
   es: {
     home: {
+      stores: {
+        heading: "Consigue la app",
+        appStore: "App Store",
+        googlePlay: "Google Play",
+        desktop: "Escritorio",
+        comingSoon: "Próximamente",
+        desktopPrice: "9,99 € pago único",
+      },
       actions: {
         buyDesktop: "Compra la app de escritorio (9,99 €)",
       },
@@ -210,6 +226,14 @@ export const homeLanding: AreaTranslations = {
   },
   zh: {
     home: {
+      stores: {
+        heading: "获取应用",
+        appStore: "App Store",
+        googlePlay: "Google Play",
+        desktop: "桌面版",
+        comingSoon: "即将推出",
+        desktopPrice: "€9.99 一次性购买",
+      },
       actions: {
         buyDesktop: "购买桌面版应用（€9.99）",
       },
@@ -307,6 +331,14 @@ export const homeLanding: AreaTranslations = {
   },
   nl: {
     home: {
+      stores: {
+        heading: "Download de app",
+        appStore: "App Store",
+        googlePlay: "Google Play",
+        desktop: "Desktop",
+        comingSoon: "Binnenkort",
+        desktopPrice: "€9,99 eenmalig",
+      },
       actions: {
         buyDesktop: "Koop de desktop-app (€9,99)",
       },
@@ -411,6 +443,14 @@ export const homeLanding: AreaTranslations = {
   },
   ta: {
     home: {
+      stores: {
+        heading: "செயலியைப் பெறுங்கள்",
+        appStore: "App Store",
+        googlePlay: "Google Play",
+        desktop: "டெஸ்க்டாப்",
+        comingSoon: "விரைவில்",
+        desktopPrice: "€9.99 ஒருமுறை",
+      },
       actions: {
         buyDesktop: "டெஸ்க்டாப் செயலியை வாங்குங்கள் (€9.99)",
       },
