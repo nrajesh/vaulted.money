@@ -30,6 +30,7 @@ import { formatDateToDDMMYYYY, cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
+  Copy,
   MoreHorizontal,
   Pencil,
   Trash,
@@ -47,6 +48,8 @@ import {
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { ScheduledTransaction } from "@/types/dataProvider";
 import { hasScheduleEnded } from "@/utils/scheduleUtils";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
 
 interface ScheduledTransactionsTableProps {
   transactions: ScheduledTransaction[];
@@ -55,6 +58,8 @@ interface ScheduledTransactionsTableProps {
   onBulkDelete?: (ids: string[]) => void;
   onProcessToday?: (transaction: ScheduledTransaction) => void;
   onUnlink?: (transferId: string) => void;
+  /** Adds a copy of the schedule (menus and the phone card's swipe right). */
+  onDuplicate?: (transaction: ScheduledTransaction) => void;
 }
 
 export function ScheduledTransactionsTable({
@@ -64,6 +69,7 @@ export function ScheduledTransactionsTable({
   onBulkDelete,
   onProcessToday,
   onUnlink,
+  onDuplicate,
 }: ScheduledTransactionsTableProps) {
   const { t } = useTranslation();
   const { accountCurrencyMap } = useTransactions();
@@ -97,6 +103,46 @@ export function ScheduledTransactionsTable({
         <span className="text-slate-500 dark:text-slate-400">{endDate}</span>
       </span>
     );
+  };
+
+  // One action list per phone card for the swipe buttons, the "…" menu and
+  // long press, in the menu's order. Only actions with a handler appear.
+  const cardActionsFor = (transaction: ScheduledTransaction) => {
+    const duplicate: CardAction | undefined = onDuplicate && {
+      id: "duplicate",
+      label: t("scheduled.table.duplicate", { defaultValue: "Duplicate" }),
+      icon: Copy,
+      onSelect: () => onDuplicate(transaction),
+    };
+    const remove: CardAction | undefined = onDelete && {
+      id: "delete",
+      label: t("scheduled.table.delete", { defaultValue: "Delete" }),
+      icon: Trash,
+      destructive: true,
+      onSelect: () => onDelete(transaction.id),
+    };
+    const menu: CardAction[] = [];
+    if (onProcessToday) {
+      menu.push({
+        id: "make-happen-today",
+        label: t("scheduled.table.makeHappenToday", {
+          defaultValue: "Make happen today",
+        }),
+        icon: PlayCircle,
+        onSelect: () => onProcessToday(transaction),
+      });
+    }
+    if (onEdit) {
+      menu.push({
+        id: "edit",
+        label: t("scheduled.table.edit", { defaultValue: "Edit" }),
+        icon: Pencil,
+        onSelect: () => onEdit(transaction),
+      });
+    }
+    if (duplicate) menu.push(duplicate);
+    if (remove) menu.push(remove);
+    return { duplicate, remove, menu };
   };
 
   const handleAccountClick = (accountName: string) => {
@@ -268,154 +314,135 @@ export function ScheduledTransactionsTable({
               transaction.currency ||
               "USD";
 
-            return (
-              <div
-                key={transaction.id || `sched-txn-${index}`}
-                className={`app-mobile-row flex flex-col gap-3 bg-white/50 backdrop-blur-sm dark:bg-black/20 ${
-                  selectedIds.has(transaction.id) ? "app-row-selected" : ""
-                } ${isEnded(transaction) ? "italic bg-slate-50/50 dark:bg-slate-900/50" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <Checkbox
-                      checked={selectedIds.has(transaction.id)}
-                      onCheckedChange={() => toggleSelect(transaction.id)}
-                      aria-label={t("scheduled.table.selectOne", {
-                        name: transaction.vendor,
-                        defaultValue:
-                          "Select scheduled transaction for {{name}}",
-                      })}
-                      className="mt-1 flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-base truncate text-slate-800 dark:text-slate-100">
-                          {transaction.vendor ||
-                            t("scheduled.table.unknown", {
-                              defaultValue: "Unknown",
-                            })}
-                        </span>
-                        {transaction.transfer_id && (
-                          <Link className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                        )}
-                      </div>
-                      <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 truncate">
-                        {transaction.account ||
-                          t("scheduled.table.unknown", {
-                            defaultValue: "Unknown",
-                          })}
-                      </div>
+            const cardActions = cardActionsFor(transaction);
+            const payeeName =
+              transaction.vendor ||
+              t("scheduled.table.unknown", { defaultValue: "Unknown" });
 
-                      <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm mt-1">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 text-slate-500">
-                            {t("scheduled.table.headers.date", {
-                              defaultValue: "Date",
-                            })}
-                          </span>
-                          <span className="font-medium text-slate-700 dark:text-slate-300">
-                            {renderNextDate(transaction)}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 text-slate-500">
-                            {t("scheduled.table.headers.freq", {
-                              defaultValue: "Freq",
-                            })}
-                          </span>
-                          <span className="text-slate-700 dark:text-slate-300">
-                            {transaction.frequency ||
-                              t("scheduled.table.na", { defaultValue: "N/A" })}
-                          </span>
-                        </div>
-                        <div className="flex flex-col col-span-2 mt-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className={cn(
-                                badgeVariants({ variant: "outline" }),
-                                "text-xs",
-                              )}
-                            >
-                              {transaction.category ||
-                                t("scheduled.table.uncategorized", {
-                                  defaultValue: "Uncategorized",
+            return (
+              <SwipeableCard
+                key={transaction.id || `sched-txn-${index}`}
+                // The card's own corners, so the sliding layer (the page
+                // colour, which the translucent card sits on) never shows
+                // square corners behind it.
+                className="rounded-xl"
+                leftAction={cardActions.remove}
+                rightAction={cardActions.duplicate}
+                menuActions={cardActions.menu}
+                menuButtonLabel={
+                  cardActions.menu.length > 0
+                    ? t("cardGestures.moreActionsFor", {
+                        name: payeeName,
+                        defaultValue: "More actions for {{name}}",
+                      })
+                    : undefined
+                }
+                // While anything is selected the list is in bulk mode.
+                disabled={selectedIds.size > 0}
+              >
+                {({ menuButton }) => (
+                  <div
+                    className={`app-mobile-row flex flex-col gap-3 bg-white/50 backdrop-blur-sm dark:bg-black/20 ${
+                      selectedIds.has(transaction.id) ? "app-row-selected" : ""
+                    } ${isEnded(transaction) ? "italic bg-slate-50/50 dark:bg-slate-900/50" : ""}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <Checkbox
+                          checked={selectedIds.has(transaction.id)}
+                          onCheckedChange={() => toggleSelect(transaction.id)}
+                          aria-label={t("scheduled.table.selectOne", {
+                            name: transaction.vendor,
+                            defaultValue:
+                              "Select scheduled transaction for {{name}}",
+                          })}
+                          className="mt-1 flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-base truncate text-slate-800 dark:text-slate-100">
+                              {transaction.vendor ||
+                                t("scheduled.table.unknown", {
+                                  defaultValue: "Unknown",
                                 })}
                             </span>
-                            {transaction.sub_category && (
-                              <Badge variant="secondary" className="text-xs">
-                                {transaction.sub_category}
-                              </Badge>
+                            {transaction.transfer_id && (
+                              <Link className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                             )}
+                          </div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 truncate">
+                            {transaction.account ||
+                              t("scheduled.table.unknown", {
+                                defaultValue: "Unknown",
+                              })}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm mt-1">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 text-slate-500">
+                                {t("scheduled.table.headers.date", {
+                                  defaultValue: "Date",
+                                })}
+                              </span>
+                              <span className="font-medium text-slate-700 dark:text-slate-300">
+                                {renderNextDate(transaction)}
+                              </span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 text-slate-500">
+                                {t("scheduled.table.headers.freq", {
+                                  defaultValue: "Freq",
+                                })}
+                              </span>
+                              <span className="text-slate-700 dark:text-slate-300">
+                                {transaction.frequency ||
+                                  t("scheduled.table.na", {
+                                    defaultValue: "N/A",
+                                  })}
+                              </span>
+                            </div>
+                            <div className="flex flex-col col-span-2 mt-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={cn(
+                                    badgeVariants({ variant: "outline" }),
+                                    "text-xs",
+                                  )}
+                                >
+                                  {transaction.category ||
+                                    t("scheduled.table.uncategorized", {
+                                      defaultValue: "Uncategorized",
+                                    })}
+                                </span>
+                                {transaction.sub_category && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {transaction.sub_category}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
+
+                      <div className="flex flex-col items-end shrink-0 gap-2">
+                        <span
+                          className={`font-bold text-lg ${transaction.amount > 0 ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                        >
+                          {formatCurrency(
+                            transaction.amount,
+                            currentAccountCurrency,
+                          )}
+                        </span>
+                        {menuButton}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="flex flex-col items-end shrink-0 gap-2">
-                    <span
-                      className={`font-bold text-lg ${transaction.amount > 0 ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-                    >
-                      {formatCurrency(
-                        transaction.amount,
-                        currentAccountCurrency,
-                      )}
-                    </span>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="touch-target h-10 w-10 p-0"
-                          aria-label={t("scheduled.table.openMenu", {
-                            defaultValue: "Open menu",
-                          })}
-                        >
-                          <MoreHorizontal
-                            className="h-4 w-4"
-                            aria-hidden="true"
-                          />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>
-                          {t("scheduled.table.actions", {
-                            defaultValue: "Actions",
-                          })}
-                        </DropdownMenuLabel>
-                        {onProcessToday && (
-                          <DropdownMenuItem
-                            onClick={() => onProcessToday(transaction)}
-                          >
-                            <PlayCircle className="mr-2 h-4 w-4" />{" "}
-                            {t("scheduled.table.makeHappenToday", {
-                              defaultValue: "Make happen today",
-                            })}
-                          </DropdownMenuItem>
-                        )}
-                        {onEdit && (
-                          <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                            <Pencil className="mr-2 h-4 w-4" />{" "}
-                            {t("scheduled.table.edit", {
-                              defaultValue: "Edit",
-                            })}
-                          </DropdownMenuItem>
-                        )}
-                        {onDelete && (
-                          <DropdownMenuItem
-                            onClick={() => onDelete(transaction.id)}
-                            className="text-destructive-text"
-                          >
-                            <Trash className="mr-2 h-4 w-4" />{" "}
-                            {t("scheduled.table.delete", {
-                              defaultValue: "Delete",
-                            })}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </div>
+                )}
+              </SwipeableCard>
             );
           })
         )}
@@ -646,6 +673,16 @@ export function ScheduledTransactionsTable({
                                   })}
                                 </DropdownMenuItem>
                               )}
+                              {onDuplicate && (
+                                <DropdownMenuItem
+                                  onClick={() => onDuplicate(transaction)}
+                                >
+                                  <Copy className="mr-2 h-4 w-4" />{" "}
+                                  {t("scheduled.table.duplicate", {
+                                    defaultValue: "Duplicate",
+                                  })}
+                                </DropdownMenuItem>
+                              )}
                               {onDelete && (
                                 <DropdownMenuItem
                                   onClick={() => onDelete(transaction.id)}
@@ -691,6 +728,16 @@ export function ScheduledTransactionsTable({
                         <ContextMenuItem onClick={() => onEdit(transaction)}>
                           <Pencil className="mr-2 h-4 w-4" />{" "}
                           {t("scheduled.table.edit", { defaultValue: "Edit" })}
+                        </ContextMenuItem>
+                      )}
+                      {onDuplicate && (
+                        <ContextMenuItem
+                          onClick={() => onDuplicate(transaction)}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />{" "}
+                          {t("scheduled.table.duplicate", {
+                            defaultValue: "Duplicate",
+                          })}
                         </ContextMenuItem>
                       )}
                       {onDelete && (

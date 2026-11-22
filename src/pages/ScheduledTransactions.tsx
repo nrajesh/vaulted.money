@@ -15,6 +15,7 @@ import { addMonths, addWeeks, addYears } from "date-fns";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { slugify } from "@/lib/utils";
 import { matchesTransactionText } from "@/utils/searchFilters";
+import { duplicateScheduledTransactionPayload } from "@/utils/duplicateTransaction";
 import { useTranslation } from "react-i18next";
 
 const ScheduledTransactionsPage = () => {
@@ -173,6 +174,28 @@ const ScheduledTransactionsPage = () => {
       toast.error(
         t("scheduled.page.deleteFailed", {
           defaultValue: "Failed to delete scheduled transaction",
+        }),
+      );
+    }
+  };
+
+  // Adds a copy of the schedule (same payee, amount, account, category,
+  // interval and dates) through the usual add path, which gives it a new id.
+  const handleDuplicate = async (schedule: ScheduledTransaction) => {
+    try {
+      await addScheduledTransaction(
+        duplicateScheduledTransactionPayload(schedule),
+      );
+      toast.success(
+        t("scheduled.page.duplicated", {
+          defaultValue: "Scheduled transaction duplicated",
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to duplicate scheduled transaction:", error);
+      toast.error(
+        t("scheduled.page.duplicateFailed", {
+          defaultValue: "Failed to duplicate scheduled transaction",
         }),
       );
     }
@@ -366,6 +389,7 @@ const ScheduledTransactionsPage = () => {
           onBulkDelete={handleBulkDelete}
           onProcessToday={handleProcessToday}
           onUnlink={unlinkScheduledTransaction}
+          onDuplicate={handleDuplicate}
         />
       </div>
 

@@ -43,6 +43,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Transaction } from "@/types/dataProvider";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -55,9 +57,10 @@ interface TransactionTableProps {
   onAddTransaction: (
     transaction: Omit<Transaction, "id" | "created_at">,
   ) => void;
+  /** Opens the edit dialog. The phone card's menu has no mouse event. */
   onRowDoubleClick?: (
     transaction: Transaction,
-    event: React.MouseEvent,
+    event?: React.MouseEvent,
   ) => void;
   onScheduleTransactions?: (
     transactions: Transaction[],
@@ -353,6 +356,7 @@ const TransactionMobileCard = React.memo(
     navigate,
     toast,
     isValidTransfer,
+    selectionActive,
   }: {
     transaction: Transaction;
     isSelected: boolean;
@@ -361,7 +365,7 @@ const TransactionMobileCard = React.memo(
     onToggleSelect: (id: string) => void;
     onRowDoubleClick?: (
       transaction: Transaction,
-      event: React.MouseEvent,
+      event?: React.MouseEvent,
     ) => void;
     onUnlinkTransaction?: (transferId: string) => void;
     onAddTransaction: (
@@ -380,6 +384,8 @@ const TransactionMobileCard = React.memo(
     navigate: ReturnType<typeof useNavigate>;
     toast: ReturnType<typeof useToast>["toast"];
     isValidTransfer: boolean;
+    /** Something is selected (bulk mode): the card does not swipe. */
+    selectionActive: boolean;
   }) => {
     const { t } = useTranslation();
     const isFuture = useMemo(() => {
@@ -396,9 +402,78 @@ const TransactionMobileCard = React.memo(
         selectedCurrency,
     });
 
+    const payeeName =
+      transaction.vendor ||
+      t("transactionsTable.noPayee", {
+        defaultValue: "No Payee",
+      });
+
+    // One action list for the swipe buttons, the "…" menu and long press, in
+    // the order the card's right-click menu had: select, edit (not for a
+    // projected occurrence), schedule, duplicate, delete. Delete on a
+    // projected occurrence skips it, as before; nothing asks to confirm.
+    const duplicateAction: CardAction = {
+      id: "duplicate",
+      label: t("transactionsTable.duplicate", { defaultValue: "Duplicate" }),
+      icon: Copy,
+      onSelect: () =>
+        onAddTransaction(duplicateTransactionPayload(transaction)),
+    };
+    const deleteAction: CardAction = {
+      id: "delete",
+      label: t("management.actions.delete", { defaultValue: "Delete" }),
+      icon: Trash,
+      destructive: true,
+      onSelect: () => onDeleteTransactions([{ id: transaction.id }]),
+    };
+    const menuActions: CardAction[] = [
+      {
+        id: "select",
+        label: isSelected
+          ? t("management.actions.deselect", { defaultValue: "Deselect" })
+          : t("management.actions.select", { defaultValue: "Select" }),
+        onSelect: () => onToggleSelect(transaction.id),
+      },
+      ...(transaction.is_projected
+        ? []
+        : [
+            {
+              id: "edit",
+              label: t("management.actions.edit", { defaultValue: "Edit" }),
+              icon: Pencil,
+              onSelect: () => onRowDoubleClick?.(transaction),
+            },
+          ]),
+      {
+        id: "schedule",
+        label: transaction.recurrence_id
+          ? t("transactionsTable.editSchedule", {
+              defaultValue: "Edit Schedule",
+            })
+          : t("transactionsTable.schedule", { defaultValue: "Schedule" }),
+        icon: CalendarClock,
+        onSelect: () => onScheduleTransactions?.([transaction], () => {}),
+      },
+      duplicateAction,
+      deleteAction,
+    ];
+
     return (
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
+      <SwipeableCard
+        // The card's own corners, so the sliding layer (the page colour by
+        // default) never shows square corners behind the rounded card.
+        className="rounded-xl"
+        leftAction={deleteAction}
+        rightAction={duplicateAction}
+        menuActions={menuActions}
+        menuButtonLabel={t("cardGestures.moreActionsFor", {
+          name: payeeName,
+          defaultValue: "More actions for {{name}}",
+        })}
+        // While anything is selected the list is in bulk mode: no swiping.
+        disabled={selectionActive}
+      >
+        {({ menuButton }) => (
           <div
             className={`app-mobile-row ${isSelected || isActive ? "app-row-selected" : ""} ${
               isFuture ? "italic bg-slate-50/50 dark:bg-slate-900/50" : ""
@@ -538,64 +613,21 @@ const TransactionMobileCard = React.memo(
                     <CalendarClock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   </button>
                 )}
+                {/* The "…" menu (the same actions as swipe and long press).
+                    Clicks stop here so choosing from it never opens the
+                    card. It sits below the amount, so the payee column keeps
+                    its width at Larger text on a narrow phone. */}
+                <div
+                  className="-mb-2 -mr-2"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {menuButton}
+                </div>
               </div>
             </div>
           </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent className="w-64">
-          <ContextMenuItem inset onClick={() => onToggleSelect(transaction.id)}>
-            {isSelected
-              ? t("management.actions.deselect", { defaultValue: "Deselect" })
-              : t("management.actions.select", { defaultValue: "Select" })}
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          {!transaction.is_projected && (
-            <>
-              <ContextMenuItem
-                inset
-                onClick={(e) =>
-                  onRowDoubleClick && onRowDoubleClick(transaction, e)
-                }
-              >
-                <Pencil className="h-4 w-4 mr-2" />{" "}
-                {t("management.actions.edit", { defaultValue: "Edit" })}
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-            </>
-          )}
-          <ContextMenuItem
-            inset
-            onClick={() =>
-              onScheduleTransactions &&
-              onScheduleTransactions([transaction], () => {})
-            }
-          >
-            <CalendarClock className="h-4 w-4 mr-2" />{" "}
-            {transaction.recurrence_id
-              ? t("transactionsTable.editSchedule", {
-                  defaultValue: "Edit Schedule",
-                })
-              : t("transactionsTable.schedule", { defaultValue: "Schedule" })}
-          </ContextMenuItem>
-          <ContextMenuItem
-            inset
-            onClick={() =>
-              onAddTransaction(duplicateTransactionPayload(transaction))
-            }
-          >
-            <Copy className="h-4 w-4 mr-2" />{" "}
-            {t("transactionsTable.duplicate", { defaultValue: "Duplicate" })}
-          </ContextMenuItem>
-          <ContextMenuItem
-            inset
-            className="text-red-600"
-            onClick={() => onDeleteTransactions([{ id: transaction.id }])}
-          >
-            <Trash className="h-4 w-4 mr-2" />{" "}
-            {t("management.actions.delete", { defaultValue: "Delete" })}
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
+        )}
+      </SwipeableCard>
     );
   },
 );
@@ -939,6 +971,7 @@ const TransactionTable = ({
                   !transaction.transfer_id.startsWith("split-")
                 )
               }
+              selectionActive={numSelected > 0}
             />
           ))
         )}

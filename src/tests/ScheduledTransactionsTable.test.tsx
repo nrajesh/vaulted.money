@@ -1,9 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import "@testing-library/jest-dom/vitest"; // Ensure jest-dom matchers are available
 import { ScheduledTransactionsTable } from "@/components/scheduled-transactions/ScheduledTransactionsTable";
 import { BrowserRouter } from "react-router-dom";
 import { ScheduledTransaction } from "@/types/dataProvider";
+import { swipe } from "@/tests/pointerEvents";
+
+vi.mock("@/utils/haptics", () => ({
+  lightHaptic: vi.fn(() => Promise.resolve()),
+}));
 
 // Mock the contexts
 vi.mock("@/contexts/TransactionsContext", () => ({
@@ -104,5 +110,117 @@ describe("ScheduledTransactionsTable", () => {
     const unlinkButtons = screen.getAllByLabelText("Unlink Pair");
     expect(unlinkButtons.length).toBeGreaterThan(0);
     expect(unlinkButtons[0]).toBeInTheDocument();
+  });
+
+  describe("phone card gestures", () => {
+    const renderWithHandlers = () => {
+      const handlers = {
+        onEdit: vi.fn(),
+        onDelete: vi.fn(),
+        onDuplicate: vi.fn(),
+        onProcessToday: vi.fn(),
+      };
+      render(
+        <BrowserRouter>
+          <ScheduledTransactionsTable
+            transactions={mockTransactions}
+            {...handlers}
+          />
+        </BrowserRouter>,
+      );
+      return handlers;
+    };
+
+    /** The payee name inside the phone card (the desktop row repeats it). */
+    const payeeIn = (name: string) =>
+      screen
+        .getAllByText(name)
+        .find((element) => element.closest("[data-swipe-card]")) as HTMLElement;
+    const card = (name: string) =>
+      payeeIn(name).closest("[data-swipe-card]") as HTMLElement;
+
+    it("swipe left reveals Delete and tapping it deletes that schedule", async () => {
+      const user = userEvent.setup();
+      const { onDelete } = renderWithHandlers();
+
+      expect(
+        within(card("Test Vendor")).queryByRole("button", { name: "Delete" }),
+      ).toBeNull();
+      swipe(payeeIn("Test Vendor"), { x: 250, y: 100 }, { x: 120, y: 104 });
+      expect(onDelete).not.toHaveBeenCalled();
+      await user.click(
+        within(card("Test Vendor")).getByRole("button", { name: "Delete" }),
+      );
+      expect(onDelete).toHaveBeenCalledWith("1");
+    });
+
+    it("swipe right reveals Duplicate and tapping calls onDuplicate with the schedule", async () => {
+      const user = userEvent.setup();
+      const { onDuplicate } = renderWithHandlers();
+
+      swipe(payeeIn("Test Vendor"), { x: 100, y: 100 }, { x: 230, y: 100 });
+      expect(onDuplicate).not.toHaveBeenCalled();
+      await user.click(
+        within(card("Test Vendor")).getByRole("button", {
+          name: "Duplicate",
+        }),
+      );
+      expect(onDuplicate).toHaveBeenCalledWith(mockTransactions[0]);
+    });
+
+    it("Duplicate appears in the card menu, between Edit and Delete", async () => {
+      const user = userEvent.setup();
+      const { onDuplicate } = renderWithHandlers();
+
+      await user.click(
+        within(card("Test Vendor")).getByRole("button", {
+          name: "More actions for Test Vendor",
+        }),
+      );
+      const items = await screen.findAllByRole("menuitem");
+      expect(items.map((item) => item.textContent?.trim())).toEqual([
+        "Make happen today",
+        "Edit",
+        "Duplicate",
+        "Delete",
+      ]);
+      await user.click(screen.getByRole("menuitem", { name: "Duplicate" }));
+      expect(onDuplicate).toHaveBeenCalledWith(mockTransactions[0]);
+    });
+
+    it("Duplicate appears in the desktop row menu", async () => {
+      const user = userEvent.setup();
+      const { onDuplicate } = renderWithHandlers();
+
+      const desktopMenuButtons = screen.getAllByRole("button", {
+        name: "Open menu",
+      });
+      await user.click(desktopMenuButtons[0]);
+      const items = await screen.findAllByRole("menuitem");
+      expect(items.map((item) => item.textContent?.trim())).toEqual([
+        "Make happen today",
+        "Edit",
+        "Duplicate",
+        "Delete",
+      ]);
+      await user.click(screen.getByRole("menuitem", { name: "Duplicate" }));
+      expect(onDuplicate).toHaveBeenCalledWith(mockTransactions[0]);
+    });
+
+    it("a card does not swipe while something is selected", async () => {
+      const user = userEvent.setup();
+      renderWithHandlers();
+
+      await user.click(
+        within(card("Test Vendor")).getByRole("checkbox", {
+          name: "Select scheduled transaction for Test Vendor",
+        }),
+      );
+      swipe(payeeIn("Bank B"), { x: 250, y: 100 }, { x: 120, y: 104 });
+      expect(
+        (card("Bank B").querySelector("[data-swipe-content]") as HTMLElement)
+          .style.transform,
+      ).toBe("translateX(0px)");
+    });
   });
 });
