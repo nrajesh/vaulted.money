@@ -312,7 +312,19 @@ Testers in closed and open tests must buy a paid app; only internal testers inst
 
 Status (22 November 2026): version 2.0.0 (version code 20000) is live on **internal testing** (list "Vaulted Money internal"); it installs and runs from Play on a Pixel emulator. Production needs the closed test first.
 
-The store listing, App content declarations and category (9 changes) were sent to Google for review on 22 November 2026, with managed publishing off. This publishes nothing publicly; approval replaces "Unrated" with PEGI 3 and the temporary name with Vaulted Money for testers.
+The store listing, App content declarations and category were first sent for review on 22 November 2026; that submission was cancelled automatically when the closed test was submitted, and everything went into one review (submission 2, 22 November 2026, "In review"), with managed publishing off. Approval publishes nothing publicly: it replaces "Unrated" with PEGI 3 and the temporary name with Vaulted Money for testers, and makes the closed test live for its testers.
+
+**Closed testing – Alpha:** 173 countries (all Play offers), release "Vaulted Money v2.0.0" with bundle 20000 from the library and the same notes, full rollout to the email list "Vaulted Money closed testers", feedback to apps@imaginest.nl. Opt-in link: https://play.google.com/apps/testing/com.vaultedmoney.app. The internal list keeps only the owner's account, so every tester follows one path: opt-in link, promo code, install. Only closed-test testers count towards the 12 testers for 14 days, and each tester's 14 days start when they opt in.
+
+**Message to testers** (one code each; send only after the closed test is approved):
+
+> Thanks for helping! Vaulted Money is my private money-manager app: accounts, budgets and bills, fully offline, no sign-up. Google needs 12 people to test it for 14 days in a row before it can go on the Play Store.
+>
+> 1. Join the test on your Android phone, in Chrome: https://play.google.com/apps/testing/com.vaultedmoney.app and tap Become a tester. Use the same Google account in Chrome and in the Play Store.
+> 2. Get the app free with your personal code (it normally costs €9.99): https://play.google.com/redeem?code=[CODE], or Play Store → profile picture → Payments & subscriptions → Redeem code. Please don't share the code.
+> 3. Install from the link in step 1.
+>
+> Open it now and then over the next 14 days (Generate demo data on the first screen lets you try everything), please don't leave the test before [date], and tell me anything odd or broken (reply, or apps@imaginest.nl). If Play says "Item not found", wait an hour and try again.
 
 - **Testers must be adults.** An unsupervised under-18 account on a certified Pixel 10a saw "This item isn't available", while an adult account on the same phone got the Install button. Until Google reviews the app it shows as "Unrated", and it is paid; Google limits both for minors.
 - **Chrome and the Play Store must use the same Google account** when opening the test link; mixing accounts gives "Item not found" or a blank sheet. A tester who leaves and rejoins may see "Something went wrong on our end" for a while.
@@ -361,14 +373,14 @@ The desktop app (macOS, Windows, Linux) is sold only through Polar, not the Mac 
 
 ### Product
 
-| Field | Value |
-|---|---|
-| Name | Vaulted Money Desktop |
-| Type | One-time purchase, no subscription |
-| Price | €9.99, **tax included** (set on the price itself, not left to the organisation default) |
-| Delivery | Polar file downloads: Mac (Apple Silicon and Intel), Windows, Linux |
-| Licence keys | None. The app is MIT-licensed and free to build, and it never contacts a server, so there is no in-app licence check |
-| Updates | Buyers download new versions from their Polar customer portal. There is no automatic in-app updater, because it would have to phone home |
+| Field        | Value                                                                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Name         | Vaulted Money Desktop                                                                                                                    |
+| Type         | One-time purchase, no subscription                                                                                                       |
+| Price        | €9.99, **tax included** (set on the price itself, not left to the organisation default)                                                  |
+| Delivery     | Polar file downloads: Mac (Apple Silicon and Intel), Windows, Linux                                                                      |
+| Licence keys | None. The app is MIT-licensed and free to build, and it never contacts a server, so there is no in-app licence check                     |
+| Updates      | Buyers download new versions from their Polar customer portal. There is no automatic in-app updater, because it would have to phone home |
 
 Description: One-time purchase of the Vaulted Money desktop app for macOS, Windows and Linux. Private and offline: your data stays on your computer.
 
@@ -378,20 +390,20 @@ A Dutch buyer saw subtotal €9.99, taxes (included) €1.73, total €9.99. Thi
 
 ### Live setup
 
-| Item | Value |
-|---|---|
-| Live checkout link | https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB |
-| Buyer portal (downloads) | https://polar.sh/imaginest/portal |
+| Item                     | Value                                                                     |
+| ------------------------ | ------------------------------------------------------------------------- |
+| Live checkout link       | https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB |
+| Buyer portal (downloads) | https://polar.sh/imaginest/portal                                         |
 
 ### Status
 
-| Step | Status |
-|---|---|
-| Sandbox product, file downloads and test purchase | Done (22 Nov 2026) |
-| Installers from `main` (2.0.0, App Store build 5) | Done: Mac signed and notarised, Windows and Linux built on GitHub's machines (Windows unsigned, SmartScreen warns on first launch) |
-| Live product and checkout link | Created, price €9.99 tax included |
-| Live file downloads (8 installers) | Uploaded |
-| Polar organisation review | Approved (22 Nov 2026) |
-| README link, "which file" guide and website buy button | In the PR to `pre-prod`; live after it reaches `main` |
-| Live checkout total for a Dutch buyer | Check it is €9.99 before announcing |
-| In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1 |
+| Step                                                                              | Status                                                                                                                             |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Sandbox product, file downloads and test purchase                                 | Done (22 Nov 2026)                                                                                                                 |
+| Installers from `main` (2.0.0, App Store build 5)                                 | Done: Mac signed and notarised, Windows and Linux built on GitHub's machines (Windows unsigned, SmartScreen warns on first launch) |
+| Live product and checkout link                                                    | Created, price €9.99 tax included                                                                                                  |
+| Live file downloads (8 installers)                                                | Uploaded                                                                                                                           |
+| Polar organisation review                                                         | Approved (22 Nov 2026)                                                                                                             |
+| README link, "which file" guide and website buy button                            | In the PR to `pre-prod`; live after it reaches `main`                                                                              |
+| Live checkout total for a Dutch buyer                                             | Check it is €9.99 before announcing                                                                                                |
+| In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1                                                                                                                       |
