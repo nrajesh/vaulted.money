@@ -32,7 +32,7 @@ describe("MobileHeaderActionsMenu", () => {
     delete win.electron;
   });
 
-  it("offers Connect an AI agent between Home and Dark mode", async () => {
+  it("offers Connect an AI agent after Settings", async () => {
     renderMenu();
     await userEvent.click(screen.getByRole("button", { name: "More actions" }));
     const items = screen.getAllByRole("menuitem").map((i) => i.textContent);
@@ -40,7 +40,6 @@ describe("MobileHeaderActionsMenu", () => {
       "Home",
       "Settings",
       "Connect an AI agent",
-      "Dark mode",
       "Log out",
     ]);
     expect(
@@ -68,7 +67,7 @@ describe("agent entry points without the desktop bridge", () => {
     await userEvent.click(screen.getByRole("button", { name: "More actions" }));
     expect(
       screen.getAllByRole("menuitem").map((item) => item.textContent),
-    ).toEqual(["Home", "Settings", "Dark mode", "Log out"]);
+    ).toEqual(["Home", "Settings", "Log out"]);
     expect(screen.getByRole("menuitem", { name: "Settings" })).toHaveAttribute(
       "href",
       "/settings",
@@ -97,5 +96,30 @@ describe("agent entry points without the desktop bridge", () => {
       "href",
       "/settings",
     );
+  });
+});
+
+describe("theme choice in the phone menu", () => {
+  it("shows Light, Auto and Dark with the saved choice selected", async () => {
+    const setTheme = vi.fn();
+    render(
+      <MemoryRouter>
+        <MobileHeaderActionsMenu
+          displayName="Home Budget"
+          logout={vi.fn()}
+          resolvedTheme="dark"
+          theme="system"
+          setTheme={setTheme}
+          t={translate}
+        />
+      </MemoryRouter>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(screen.getByRole("radio", { name: "Auto" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Light" })).not.toBeChecked();
+    await userEvent.click(screen.getByRole("radio", { name: "Light" }));
+    expect(setTheme).toHaveBeenCalledWith("light");
+    await userEvent.click(screen.getByRole("radio", { name: "Auto" }));
+    expect(setTheme).toHaveBeenCalledWith("system");
   });
 });
