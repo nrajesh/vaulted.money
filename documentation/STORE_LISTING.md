@@ -405,5 +405,9 @@ A Dutch buyer saw subtotal €9.99, taxes (included) €1.73, total €9.99. Thi
 | Live file downloads (8 installers)                                                | Uploaded                                                                                                                           |
 | Polar organisation review                                                         | Approved (22 Nov 2026)                                                                                                             |
 | README link, "which file" guide and website buy button                            | In the PR to `pre-prod`; live after it reaches `main`                                                                              |
-| Live checkout total for a Dutch buyer                                             | Checked 22 Nov 2026: subtotal €9.99, taxes (included) €1.73, total €9.99                                                                                                |
+| Live checkout total for a Dutch buyer                                             | Checked 22 Nov 2026: subtotal €9.99, taxes (included) €1.73, total €9.99                                                           |
 | In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1                                                                                                                       |
+
+### Desktop file names (from 2.1)
+
+From 2.1 the desktop files have no spaces: `Vaulted-Money-<version>-mac-arm64.dmg`, `Vaulted-Money-<version>-win-x64.exe`, `Vaulted-Money-<version>-x86_64.AppImage` (the Linux files leave out the system name, which AppImage catalogues ask for). The 2.0.0 files on Polar keep their old names; upload the new names as the 2.1 files and remove the old ones.
