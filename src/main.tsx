@@ -42,7 +42,7 @@ if (import.meta.env.VITE_PREVIEW_AUTOPLAY === "1") {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <App />
     </ThemeProvider>
   </React.StrictMode>,

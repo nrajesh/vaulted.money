@@ -25,6 +25,10 @@ Play Console rates the 2.0.0 bundle's DEX optimisation "Low" and obfuscation 1%,
 
 The desktop app is sold on Polar with no automatic updates, because a background check would have to phone home. Add a **Check for updates** button on the desktop app only (Electron). It should do nothing until someone clicks it, then open the Polar customer portal (https://polar.sh/imaginest/portal) in the browser, where buyers download new versions with the email they bought with. No background check, no version lookup and no data sent. Phones need nothing: the app stores update them, and the website is always current. Show the installed version next to the button, and translate the text into all five languages.
 
+### Phone: open each page at the top
+
+On Android, opening a menu item or sub-menu can leave the next page scrolled part-way down, apparently where the previous page was. Each page should open at the top. Check iOS too, and the desktop app.
+
 ### Mac App Store
 
 Try selling the desktop app on the Mac App Store, alongside or instead of Polar.
