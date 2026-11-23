@@ -353,13 +353,15 @@ Console links: the Play account is the second signed-in Google account in the br
 
 Made by `pnpm marketing:screenshots`, in `marketing/store-screenshots/out/`:
 
-| Play asset                 | Folder                |
-| -------------------------- | --------------------- |
-| App icon 512×512           | `public/icon-512.png` |
-| Feature graphic 1024×500   | `playFeature/en/`     |
-| Phone screenshots          | `playPhone/en/`       |
-| 7-inch tablet screenshots  | `playTablet7/en/`     |
-| 10-inch tablet screenshots | `playTablet10/en/`    |
+| Play asset                 | Folder             |
+| -------------------------- | ------------------ |
+| App icon 512×512           | see the note below |
+| Feature graphic 1024×500   | `playFeature/en/`  |
+| Phone screenshots          | `playPhone/en/`    |
+| 7-inch tablet screenshots  | `playTablet7/en/`  |
+| 10-inch tablet screenshots | `playTablet10/en/` |
+
+**App icon:** use the iOS icon, made 512×512 and opaque, so the listing shows the same dark navy square as the home screen and TestFlight. Do not upload `public/icon-512.png`: it is transparent, so Play shows a small mark on white. Make it with `sips -s format png -Z 512 ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png --out play-icon-512.png` (that icon has no transparent pixels).
 
 **AI asset declaration** (Store listing → Review): "Label assets as created or edited using AI", with every asset labelled (icon, feature graphic and all screenshots), since Claude made them all. Foldable screenshots are left empty.
 
