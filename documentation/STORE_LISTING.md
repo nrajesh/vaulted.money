@@ -405,7 +405,7 @@ A Dutch buyer saw subtotal €9.99, taxes (included) €1.73, total €9.99. Thi
 | Live file downloads (8 installers)                                                | Uploaded                                                                                                                           |
 | Polar organisation review                                                         | Approved (22 Nov 2026)                                                                                                             |
 | README link, "which file" guide and website buy button                            | In the PR to `pre-prod`; live after it reaches `main`                                                                              |
-| Live checkout total for a Dutch buyer                                             | Checked 22 Nov 2026: subtotal €9.99, taxes (included) €1.73, total €9.99                                                                                                |
+| Live checkout total for a Dutch buyer                                             | Checked 22 Nov 2026: subtotal €9.99, taxes (included) €1.73, total €9.99                                                           |
 | In-app "Check for updates" (opens the buyer portal on click, no background check) | Idea for 2.1                                                                                                                       |
 
 ### Desktop file names (from 2.1)
