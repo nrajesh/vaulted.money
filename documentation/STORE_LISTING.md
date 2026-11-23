@@ -320,6 +320,10 @@ Submission 4 (23 November 2026, "In review", store listing only; submission 3 wa
 
 **12 testers for 14 days** applies to each new app on this personal account, not once per account. An app that has production access does not need it again for updates. An organisation account (for example under Imaginest's KvK number) is exempt.
 
+**Organisation account (in verification).** On 23 November 2026 an organisation developer account was opened for Imaginest. It uses the Google account admin@imaginest.nl (no Gmail inbox; mail goes to the imaginest.nl mailbox), the developer name "Imaginest, NL" ("Imaginest" is taken by the personal account), contact email apps@imaginest.nl, and D-U-N-S 473960705 (Imaginest, Kwikstaartlaan 42 Box G0996, 3704 GS Zeist; found free with Apple's D-U-N-S lookup). The KvK extract was sent as proof of the organisation, with the owner's passport for identity. The personal account was declared as another account used with Play Console.
+
+Plan once it is approved: move Vaulted Money there with Play's app transfer (the package name cannot be reused in a new app, so a transfer is the only way), then rename the personal account and call the organisation account "Imaginest". Check whether a transfer before the 14-day test ends would skip the test; otherwise launch first and transfer afterwards. Apple most likely won't accept an eenmanszaak as an organisation, so the App Store account stays individual.
+
 **Closed testing – Alpha:** 173 countries (all Play offers), release "Vaulted Money v2.0.0" with bundle 20000 from the library and the same notes, full rollout to the email list "Vaulted Money closed testers", feedback to apps@imaginest.nl. Opt-in link: https://play.google.com/apps/testing/com.vaultedmoney.app. The internal list keeps only the owner's account, so every tester follows one path: opt-in link, promo code, install. Only closed-test testers count towards the 12 testers for 14 days, and each tester's 14 days start when they opt in.
 
 **Message to testers** (one code each; send only after the closed test is approved):
