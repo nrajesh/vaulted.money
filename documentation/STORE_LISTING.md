@@ -302,6 +302,8 @@ First release on Google Play.
 
 Play prices match the App Store price of each country, taxes included: €9.99 in the euro countries, £8.99 in the UK, $8.99 in the US, CHF 8.00, ¥1,500, R$39.90 and so on. The source is the App Store Connect price export (three CSVs: current prices that may adjust automatically, manually adjusted prices, and prices ending on Dec 3, 2026).
 
+**Family sharing:** one purchase covers the family on both stores, at the same price. Neither store has a separate family price for a paid app. On the App Store, Family Sharing is always on for paid apps. On Play, the listing shows "Eligible for Family Library" (checked on Nov 23, 2026), so it is on, and Play does not let it be switched off again. A family price would need a free app with two in-app purchases, which is not planned.
+
 - Do not set one euro base price and let Play convert it. Play treats it as the price before tax, so €9.99 became €11.99 in every country with VAT. Edit each country instead.
 - Where Play bills in another currency than Apple (Apple's USD countries such as Algeria, Argentina, Kenya and Ukraine, and Bosnia and Serbia, where Apple uses euros), Play's converted price is kept.
 - Countries Play sells in that the App Store export lacks follow the nearest App Store price: Monaco, San Marino and Vatican City €9.99, Liechtenstein CHF 8.00, Gibraltar £8.49, and $8.99 in Aruba, Comoros, Djibouti, Eritrea, Guinea, Haiti, Samoa and Somalia. Montenegro (€7.99 on the App Store) is not in Play's price table.
