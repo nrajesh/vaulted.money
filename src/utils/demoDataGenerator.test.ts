@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
+
+// Vite injects this at build time; vitest does not. The safety copy needs it.
+vi.stubGlobal("__APP_VERSION__", "test");
 import { generateDiverseDemoData } from "./demoDataGenerator";
 import { DataProvider } from "@/types/dataProvider";
 
@@ -59,6 +62,7 @@ function createMockProvider(): DataProvider {
     linkTransactionsAsTransfer: vi.fn().mockResolvedValue(undefined),
     unlinkTransactions: vi.fn().mockResolvedValue(undefined),
     clearAllData: vi.fn().mockResolvedValue(undefined),
+    saveSafetyBackup: vi.fn().mockResolvedValue({ id: "copy-1" }),
     exportData: vi.fn().mockResolvedValue({}),
     importData: vi.fn().mockResolvedValue(undefined),
     getAIProviders: vi.fn().mockResolvedValue([]),
@@ -87,6 +91,15 @@ describe("generateDiverseDemoData", () => {
   it("clears everything first, then creates the four ledgers", async () => {
     const { provider } = await run();
     expect(provider.clearAllData).toHaveBeenCalledOnce();
+    // The wipe keeps the safety copy made just before it.
+    expect(provider.clearAllData).toHaveBeenCalledWith({
+      keepSafetyBackups: true,
+    });
+    expect(
+      vi.mocked(provider.saveSafetyBackup).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(provider.clearAllData).mock.invocationCallOrder[0],
+    );
     const order = [
       vi.mocked(provider.clearAllData).mock.invocationCallOrder[0],
       vi.mocked(provider.addLedger).mock.invocationCallOrder[0],

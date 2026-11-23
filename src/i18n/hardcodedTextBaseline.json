@@ -1,6 +1,6 @@
 {
   "src/components/BrandLockup.tsx": 2,
-  "src/components/Layout.tsx": 5,
+  "src/components/Layout.tsx": 2,
   "src/components/RecentTransactions.tsx": 8,
   "src/components/SiteFooter.tsx": 2,
   "src/components/backup/ScheduledBackups.tsx": 2,

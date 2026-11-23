@@ -19,6 +19,7 @@ import {
 import { useDataProvider } from "@/context/DataProviderContext";
 import { useLedger } from "@/contexts/LedgerContext";
 import { continuitySync } from "@/utils/continuitySync";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
 import LoadingSpinner from "./feedback/LoadingSpinner";
 
 /**
@@ -35,13 +36,16 @@ export const ContinuitySyncManager = () => {
   const { activeLedger, switchLedger } = useLedger();
   const queryClient = useQueryClient();
   const status = useContinuitySyncStatus();
+  const warnSafetyCopy = useSafetyBackupWarning();
 
   // Read through refs so a ledger switch does not restart syncing.
   const activeLedgerId = useRef<string | undefined>(activeLedger?.id);
   const switchLedgerRef = useRef(switchLedger);
+  const warnSafetyCopyRef = useRef(warnSafetyCopy);
   useEffect(() => {
     activeLedgerId.current = activeLedger?.id;
     switchLedgerRef.current = switchLedger;
+    warnSafetyCopyRef.current = warnSafetyCopy;
   });
 
   const enabled =
@@ -68,6 +72,7 @@ export const ContinuitySyncManager = () => {
           ledgers[0];
         if (target) await switchLedgerRef.current(target.id, target);
       },
+      onSafetyCopyFailed: () => warnSafetyCopyRef.current(false),
     });
     void continuitySync.syncNow();
 

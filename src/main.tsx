@@ -6,6 +6,12 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "@/i18n/config";
 import { Capacitor } from "@capacitor/core";
 import { isElectron } from "@/utils/electron";
+import { z } from "zod";
+
+// Zod's speed-up compiles validators with `new Function`, which the page's
+// Content-Security-Policy forbids (it logged an "eval" error on every load).
+// Turn it off: validation behaves the same, only a little slower.
+z.config({ jitless: true });
 
 // Suppress Recharts ResponsiveContainer annoying warning
 const originalWarn = console.warn;
@@ -36,7 +42,7 @@ if (import.meta.env.VITE_PREVIEW_AUTOPLAY === "1") {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <App />
     </ThemeProvider>
   </React.StrictMode>,

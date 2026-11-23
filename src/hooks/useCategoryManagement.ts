@@ -10,6 +10,8 @@ import { useLedger } from "@/contexts/LedgerContext";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { slugify } from "@/lib/utils";
 import { saveFile } from "@/utils/backupUtils";
+import { withSafetyBackup } from "@/utils/safetyBackup";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
 
 export const useCategoryManagement = () => {
   const { activeLedger } = useLedger();
@@ -23,6 +25,7 @@ export const useCategoryManagement = () => {
   } = useTransactions();
   const navigate = useNavigate();
   const dataProvider = useDataProvider();
+  const warnSafetyCopy = useSafetyBackupWarning();
 
   // The sub-category dialog works with names, the provider with ids. Names
   // are unique within a category.
@@ -211,47 +214,57 @@ export const useCategoryManagement = () => {
         }
 
         try {
-          // 1. Create Categories
-          await batchUpsertCategoriesMutation.mutateAsync(
-            Array.from(categoryNames),
-          );
+          // Safety copy just before the first write; parsing is done.
+          const { backedUp } = await withSafetyBackup(
+            dataProvider,
+            { reason: "csv_import", entity: "categories" },
+            async () => {
+              // 1. Create Categories
+              await batchUpsertCategoriesMutation.mutateAsync(
+                Array.from(categoryNames),
+              );
 
-          // 2. Create Sub-Categories
-          // We need IDs of created categories.
-          // Since dataProvider.ensureCategoryExists returns ID, we can do it one by one or fetch all categories again.
-          // Fetching all categories is safer/easier since we just refreshed in batchUpsert.
-          // But batchUpsert is async. We should wait.
-          // batchUpsertCategoriesMutation.mutateAsync ALREADY waits for refetchCategories() in onSuccess.
-          // Wait, query invalidation might be async.
-          // Let's rely on dataProvider.ensureCategoryExists within a loop here to get IDs properly.
+              // 2. Create Sub-Categories
+              // We need IDs of created categories.
+              // Since dataProvider.ensureCategoryExists returns ID, we can do it one by one or fetch all categories again.
+              // Fetching all categories is safer/easier since we just refreshed in batchUpsert.
+              // But batchUpsert is async. We should wait.
+              // batchUpsertCategoriesMutation.mutateAsync ALREADY waits for refetchCategories() in onSuccess.
+              // Wait, query invalidation might be async.
+              // Let's rely on dataProvider.ensureCategoryExists within a loop here to get IDs properly.
 
-          // Actually, let's just use dataProvider directly here for sub-cats to be sure.
-          // batchUpsertCategoriesMutation already called ensuredCategoryExists.
-          // So now we just need to get the IDs.
+              // Actually, let's just use dataProvider directly here for sub-cats to be sure.
+              // batchUpsertCategoriesMutation already called ensuredCategoryExists.
+              // So now we just need to get the IDs.
 
-          const allCats = await dataProvider.getUserCategories(activeLedger.id);
-          const catMap = new Map<string, string>();
-          allCats.forEach((c) => catMap.set(c.name, c.id));
+              const allCats = await dataProvider.getUserCategories(
+                activeLedger.id,
+              );
+              const catMap = new Map<string, string>();
+              allCats.forEach((c) => catMap.set(c.name, c.id));
 
-          let subCatCount = 0;
-          for (const [catName, subNames] of subCategoryMap.entries()) {
-            const catId = catMap.get(catName);
-            if (catId) {
-              for (const subName of subNames) {
-                await dataProvider.ensureSubCategoryExists(
-                  subName,
-                  catId,
-                  activeLedger.id,
-                );
-                subCatCount++;
+              let subCatCount = 0;
+              for (const [catName, subNames] of subCategoryMap.entries()) {
+                const catId = catMap.get(catName);
+                if (catId) {
+                  for (const subName of subNames) {
+                    await dataProvider.ensureSubCategoryExists(
+                      subName,
+                      catId,
+                      activeLedger.id,
+                    );
+                    subCatCount++;
+                  }
+                }
               }
-            }
-          }
 
-          if (subCatCount > 0) {
-            showSuccess(`Imported ${subCatCount} sub-categories.`);
-            await invalidateAllData(); // Refresh everything
-          }
+              if (subCatCount > 0) {
+                showSuccess(`Imported ${subCatCount} sub-categories.`);
+                await invalidateAllData(); // Refresh everything
+              }
+            },
+          );
+          warnSafetyCopy(backedUp);
         } catch (e: unknown) {
           showError(`Partial import error: ${(e as Error).message}`);
         } finally {

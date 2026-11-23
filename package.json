@@ -41,8 +41,9 @@
   "dependencies": {
     "@capacitor/core": "^8.6.2",
     "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/haptics": "^8.0.2",
     "@capawesome/capacitor-file-picker": "^8.1.1",
-    "@hookform/resolvers": "^7.0.3",
+    "@hookform/resolvers": "^7.0.7",
     "@radix-ui/react-alert-dialog": "^1.1.18",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-collapsible": "^1.1.0",
@@ -96,7 +97,7 @@
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "4.3.5",
     "@tailwindcss/typography": "^0.5.15",
-    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/jest-dom": "^8.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^26.0.1",
@@ -131,7 +132,7 @@
   "build": {
     "appId": "com.vaultedmoney.app",
     "productName": "Vaulted Money",
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "artifactName": "Vaulted-Money-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "release"
     },
@@ -180,6 +181,7 @@
       "icon": "assets/brand/mac-icon.png"
     },
     "linux": {
+      "artifactName": "Vaulted-Money-${version}-${arch}.${ext}",
       "target": [
         {
           "target": "AppImage",

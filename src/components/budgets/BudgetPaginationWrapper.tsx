@@ -37,8 +37,14 @@ export function BudgetPaginationWrapper({
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  // Where the finger went down and where it is now. A ref, not state:
+  // tracking a drag must not re-render every card on each touchmove.
+  const touchRef = useRef<{
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+  } | null>(null);
 
   const totalPages = useMemo(
     () => Math.ceil(budgets.length / BUDGETS_PER_PAGE),
@@ -78,29 +84,58 @@ export function BudgetPaginationWrapper({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [goToNextPage, goToPrevPage]);
 
+  // While budgets are being selected the cards cannot swipe.
+  const selectionActive = (selectedBudgetIds?.size ?? 0) > 0;
+
   // --- Swipe Navigation (Touch Events) ---
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(0); // Reset touchEnd
-    setTouchStart(e.targetTouches[0].clientX);
+    // A touch that starts on a budget card belongs to the card (swipe to
+    // reveal Delete or Edit, see SwipeableCard), so it never turns the page.
+    // Swiping in the gaps between cards, on the "Page n of N" row, the arrow
+    // buttons and keys still do. While selecting, the cards cannot swipe, so
+    // a swipe on a card turns the page too.
+    const target = e.target as Element | null;
+    if (!selectionActive && target?.closest?.("[data-swipe-card]")) {
+      touchRef.current = null;
+      return;
+    }
+    const touch = e.targetTouches[0];
+    touchRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      endX: touch.clientX,
+      endY: touch.clientY,
+    };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    if (!touchRef.current) return;
+    const touch = e.targetTouches[0];
+    touchRef.current.endX = touch.clientX;
+    touchRef.current.endY = touch.clientY;
   };
 
+  /*
+   * Only a clearly sideways drag turns the page. Scrolling the list up or
+   * down always drifts a little sideways; counting that drift as a swipe
+   * sent people back a page while they scrolled through page 2.
+   */
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isSwipe = Math.abs(distance) > 50; // Minimum distance for a swipe
-
-    if (isSwipe) {
-      if (distance > 0) {
-        // Swiped left (Go to next page)
-        goToNextPage();
-      } else {
-        // Swiped right (Go to previous page)
-        goToPrevPage();
-      }
+    const touch = touchRef.current;
+    touchRef.current = null;
+    if (!touch) return;
+    const horizontal = touch.startX - touch.endX;
+    const vertical = touch.startY - touch.endY;
+    const isSwipe =
+      Math.abs(horizontal) > 50 &&
+      Math.abs(horizontal) > 2 * Math.abs(vertical);
+    if (!isSwipe) return;
+    if (horizontal > 0) {
+      // Swiped left: next page
+      goToNextPage();
+    } else {
+      // Swiped right: previous page
+      goToPrevPage();
     }
   };
 
@@ -130,13 +165,17 @@ export function BudgetPaginationWrapper({
   }
 
   return (
-    <div className="space-y-4">
+    // The touch handlers sit on the outer wrapper, not the grid: on phones
+    // the cards fill the grid, so the page row below takes swipes too.
+    <div
+      className="space-y-4"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div
         ref={containerRef}
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         {paginatedBudgets.map((budget) => (
           <BudgetCard
@@ -147,6 +186,7 @@ export function BudgetPaginationWrapper({
             transactions={transactions}
             isSelected={selectedBudgetIds?.has(budget.id)}
             onToggleSelection={onToggleSelection}
+            selectionActive={selectionActive}
           />
         ))}
       </div>

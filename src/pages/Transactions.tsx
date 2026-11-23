@@ -52,6 +52,8 @@ import { Link } from "react-router-dom";
 import { isAiReady } from "@/utils/aiModels";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { withSafetyBackup } from "@/utils/safetyBackup";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
 
 const Transactions = () => {
   const { t } = useTranslation();
@@ -141,6 +143,7 @@ const Transactions = () => {
   ]);
 
   const dataProvider = useDataProvider();
+  const warnSafetyCopy = useSafetyBackupWarning();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] =
@@ -556,7 +559,7 @@ const Transactions = () => {
       }
 
       const combinedMappings = { ...localMappings, ...aiMappings };
-      const updates = [];
+      const updates: typeof uncategorizedItems = [];
 
       for (const t of uncategorizedItems) {
         if (!t.vendor) continue;
@@ -575,9 +578,18 @@ const Transactions = () => {
       }
 
       if (updates.length > 0) {
-        for (let i = 0; i < updates.length; i++) {
-          await updateTransaction(updates[i]);
-        }
+        // Safety copy only now, after the AI answered and before anything
+        // is written, so a cancelled or failed AI call makes no copy.
+        const { backedUp } = await withSafetyBackup(
+          dataProvider,
+          { reason: "ai_categorize" },
+          async () => {
+            for (let i = 0; i < updates.length; i++) {
+              await updateTransaction(updates[i]);
+            }
+          },
+        );
+        warnSafetyCopy(backedUp);
         toast({
           title: t("transactions.toasts.bulkCategorization.title", {
             defaultValue: "Bulk Categorization",

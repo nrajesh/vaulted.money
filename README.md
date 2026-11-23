@@ -103,7 +103,7 @@ The important bit: your data stays local by default. There is no hosted Vaulted 
 | Imports      | Bring in bank CSV exports.                                                                    |
 | Search       | Type a sentence such as "groceries over 50 last month" and pick what it understood.           |
 | Reports      | See income, spending, net worth, trends, and summaries.                                       |
-| Backups      | Export your data as JSON, with encrypted backup options.                                      |
+| Backups      | Export JSON or encrypted backups. Safety copies are made before imports, AI changes and sync. |
 | Sync         | Keep devices in step through your own cloud folder, encrypted with your passphrase.           |
 | Optional AI  | Bring your own API key, or run a model on your own computer, to help categorize transactions. |
 
@@ -233,7 +233,7 @@ Vaulted Money is free and open-source under the MIT license. If you find it usef
 
 - **Mac with an Apple chip (M1 or newer):** `mac-arm64.dmg`. **Mac with an Intel chip:** `mac-x64.dmg`.
 - **Windows:** `win-x64.exe` for most PCs, `win-arm64.exe` for Windows on Arm. Windows may warn on first launch: choose More info, then Run anyway.
-- **Linux:** `.deb` for Debian and Ubuntu, `.AppImage` for other systems (`amd64` or `x86_64` for most PCs, `arm64` for Arm).
+- **Linux:** `.deb` for Debian and Ubuntu, `.AppImage` for other systems (`amd64` in the `.deb`, `x86_64` in the `.AppImage` for most PCs; `arm64` for Arm).
 
 The same app is free to build from source, regardless of which channel you choose. Store purchases exist to make installation simpler for non-technical users and to support continued development.
 

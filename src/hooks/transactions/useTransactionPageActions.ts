@@ -10,6 +10,8 @@ import { slugify } from "@/lib/utils";
 import { Transaction, AccountType, Ledger } from "@/types/dataProvider";
 import { saveFile } from "@/utils/backupUtils";
 import { sanitizeCSVField } from "@/utils/csvUtils";
+import { withSafetyBackup } from "@/utils/safetyBackup";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
 
 export interface ImportConfig {
   importMode?: "replace" | "append";
@@ -102,6 +104,7 @@ export const useTransactionPageActions = (
     pairs: [Transaction, Transaction][];
   }>({ isOpen: false, pairs: [] });
   const { toast } = useToast();
+  const warnSafetyCopy = useSafetyBackupWarning();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [mappingDialogState, setMappingDialogState] =
@@ -284,376 +287,414 @@ export const useTransactionPageActions = (
       const ledgerId = activeLedger?.id;
       if (!ledgerId) return;
 
-      const isReplace = config?.importMode === "replace";
+      /*
+       * The mapping and missing-currency dialogs are behind us, so the person
+       * has committed to the import: make the safety copy now, before the
+       * first write (including the "replace" wipe). Cancelling earlier makes
+       * no copy.
+       */
+      const { backedUp } = await withSafetyBackup(
+        dataProvider,
+        { reason: "csv_import", entity: "transactions" },
+        async () => {
+          const isReplace = config?.importMode === "replace";
 
-      if (isReplace) {
-        await dataProvider.clearTransactions(ledgerId);
-        await dataProvider.clearBudgets(ledgerId);
-        await dataProvider.clearScheduledTransactions(ledgerId);
-      }
-
-      const totalSteps = 4;
-      setOperationProgress({
-        title: "Importing CSV",
-        description: "Preparing to import transactions...",
-        stage: "Analyzing Entities...",
-        progress: 10,
-        totalStages: totalSteps,
-      });
-
-      const knownAccountIds = new Set<string>();
-      const knownVendorIds = new Set<string>();
-      const knownCategoryIds = new Set<string>();
-      const knownSubCategoryIds = new Set<string>();
-
-      const existingVendors = await dataProvider.getAllVendors(ledgerId);
-      existingVendors.forEach((v) => {
-        if (v.is_account) knownAccountIds.add(v.id);
-        else knownVendorIds.add(v.id);
-      });
-      const existingCategories = await dataProvider.getUserCategories(ledgerId);
-      existingCategories.forEach((c) => knownCategoryIds.add(c.id));
-      const existingSubCategories =
-        await dataProvider.getSubCategories(ledgerId);
-      existingSubCategories.forEach((s) => knownSubCategoryIds.add(s.id));
-
-      // 1. Process Accounts
-      setOperationProgress({
-        title: "Importing CSV",
-        description: "Processing Accounts...",
-        stage: "Stage 1/4: Accounts",
-        progress: 10,
-        totalStages: 4,
-      });
-      let newAccountsCount = 0;
-
-      const uniqueAccounts = new Set<string>();
-      data.forEach((r) => {
-        const main = (r.Account || "").trim();
-        if (main) uniqueAccounts.add(main);
-
-        const transfer = (
-          r["Transfer Account"] ||
-          r["transfer account"] ||
-          ""
-        ).trim();
-        if (transfer) uniqueAccounts.add(transfer);
-      });
-
-      for (const name of Array.from(uniqueAccounts)) {
-        let currency = newAccountCurrencies?.[name];
-
-        if (!currency) {
-          const row = data.find((r) => (r.Account || "").trim() === name);
-          currency = row?.Currency || "USD";
-        }
-
-        const row = data.find((r) => (r.Account || "").trim() === name);
-        const type = row?.["Account Type"] as AccountType | undefined;
-
-        const id = await dataProvider.ensurePayeeExists(name, true, ledgerId, {
-          currency,
-          type,
-        });
-        if (id && !knownAccountIds.has(id)) {
-          newAccountsCount++;
-          knownAccountIds.add(id);
-        }
-      }
-
-      // 2. Process Payees
-      setOperationProgress({
-        title: "Importing CSV",
-        description: "Processing Payees...",
-        stage: "Stage 2/4: Payees",
-        progress: 25,
-        totalStages: 4,
-      });
-      let newVendorsCount = 0;
-      const uniquePayees = [
-        ...new Set(
-          data.map((r) => (r.Payee || r.Vendor || "").trim()).filter(Boolean),
-        ),
-      ];
-      for (const name of uniquePayees) {
-        const id = await dataProvider.ensurePayeeExists(name, false, ledgerId);
-        if (id && !knownVendorIds.has(id) && !knownAccountIds.has(id)) {
-          newVendorsCount++;
-          knownVendorIds.add(id);
-        }
-      }
-
-      // 3. Process Categories
-      setOperationProgress({
-        title: "Importing CSV",
-        description: "Processing Categories...",
-        stage: "Stage 3/4: Categories",
-        progress: 40,
-        totalStages: 4,
-      });
-      let newCategoriesCount = 0;
-      let newSubCategoriesCount = 0;
-
-      const categoryNameIdMap = new Map<string, string>();
-      existingCategories.forEach((c) => categoryNameIdMap.set(c.name, c.id));
-
-      const uniqueCategories = [
-        ...new Set(data.map((r) => (r.Category || "").trim()).filter(Boolean)),
-      ];
-      for (const name of uniqueCategories) {
-        const id = await dataProvider.ensureCategoryExists(name, ledgerId);
-        if (id) {
-          if (!knownCategoryIds.has(id)) {
-            newCategoriesCount++;
-            knownCategoryIds.add(id);
+          if (isReplace) {
+            await dataProvider.clearTransactions(ledgerId);
+            await dataProvider.clearBudgets(ledgerId);
+            await dataProvider.clearScheduledTransactions(ledgerId);
           }
-          categoryNameIdMap.set(name, id);
-        }
-      }
 
-      const uniqueSubCats = new Set<string>();
-      data.forEach((r) => {
-        const cat = (r.Category || "").trim();
-        const sub = (r.Subcategory || r.Sub_Category || "").trim();
-        if (cat && sub) {
-          uniqueSubCats.add(`${cat}:${sub}`);
-        }
-      });
-
-      for (const item of Array.from(uniqueSubCats)) {
-        const [catName, subName] = item.split(":");
-        const catId = categoryNameIdMap.get(catName);
-        if (catId && subName) {
-          const id = await dataProvider.ensureSubCategoryExists(
-            subName,
-            catId,
-            ledgerId,
-          );
-          if (id && !knownSubCategoryIds.has(id)) {
-            newSubCategoriesCount++;
-            knownSubCategoryIds.add(id);
-          }
-        }
-      }
-
-      // 4. Prepare Transactions
-      const transactionsToInsert: Omit<
-        Transaction,
-        "id" | "created_at" | "updated_at"
-      >[] = [];
-      let skippedCount = 0;
-
-      for (const row of data) {
-        const amountRaw = row.Amount;
-        const dateRaw = row.Date;
-
-        if (!amountRaw || !dateRaw) {
-          skippedCount++;
-          continue;
-        }
-
-        let amount = parseRobustAmount(
-          amountRaw as string,
-          config?.decimalSeparator,
-        );
-        const date = parseRobustDate(dateRaw as string, config?.dateFormat);
-
-        // Apply Expense Sign Logic
-        if (config?.expenseSign === "positive") {
-          // User indicated Positive numbers are Expenses.
-          // Since we store Expenses as negative, we invert the sign.
-          // Example: CSV has 100 (Expense) -> We store -100.
-          // Example: CSV has -100 (Refund/Income) -> We store 100.
-          amount = -amount;
-        }
-
-        if (!date) {
-          console.warn("Skipping row due to invalid date", row);
-          skippedCount++;
-          continue;
-        }
-
-        const transferAccount = (
-          row["Transfer Account"] ||
-          row["transfer account"] ||
-          ""
-        ).trim();
-
-        const baseTx: Omit<Transaction, "id" | "created_at" | "updated_at"> = {
-          user_id: ledgerId,
-          date: date,
-          account: (
-            row.Account ||
-            row.account ||
-            "Uncategorized Account"
-          ).trim(),
-          vendor: (
-            row.Payee ||
-            row.Vendor ||
-            row.Counterparty ||
-            row.Transfer ||
-            row.payee ||
-            row.vendor ||
-            row.counterparty ||
-            row.transfer ||
-            ""
-          ).trim(),
-          category: (row.Category || row.category || "Uncategorized").trim(),
-          sub_category: (
-            row.Subcategory ||
-            row.Sub_Category ||
-            row.subcategory ||
-            row["sub-category"] ||
-            ""
-          ).trim(),
-          amount: amount,
-          remarks: (
-            row.Notes ||
-            row.Remarks ||
-            row.notes ||
-            row.remarks ||
-            ""
-          ).trim(),
-          currency: (row.Currency || row.currency || "USD").trim(),
-          recurrence_frequency: row.Frequency || row.frequency || null,
-          recurrence_end_date:
-            parseRobustDate(
-              row["End Date"] || row["end date"] || "",
-              config?.dateFormat,
-            ) || null,
-          transfer_id:
-            (row["Transfer ID"] || row["transfer id"] || "").trim() || null,
-          is_scheduled_origin: false,
-        };
-
-        if (
-          transferAccount &&
-          transferAccount.toLowerCase() !== baseTx.account.toLowerCase()
-        ) {
-          const transferAmountRaw =
-            row["Transfer Amount"] || row["transfer amount"];
-          const sharedTransferId = `split-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-
-          // Transaction 1: From Main Account (Use original amount)
-          const amountFrom = amount;
-
-          transactionsToInsert.push({
-            ...baseTx,
-            amount: amountFrom,
-            category: "Transfer",
-            transfer_id: sharedTransferId,
-            remarks: baseTx.remarks || `Transfer to ${transferAccount}`,
-            vendor: `Transfer to ${transferAccount}`,
-          });
-
-          // Transaction 2: To Receiving Account (Invert sign if no specific amount provided)
-          const amountTo = transferAmountRaw
-            ? parseRobustAmount(
-                transferAmountRaw as string,
-                config?.decimalSeparator,
-              )
-            : -amount;
-
-          // Resolve currency
-          let currencyTo = newAccountCurrencies?.[transferAccount];
-          if (!currencyTo) {
-            currencyTo = await dataProvider.getAccountCurrency(
-              transferAccount,
-              ledgerId,
-            );
-          }
-          if (!currencyTo) currencyTo = "USD";
-
-          transactionsToInsert.push({
-            ...baseTx,
-            account: transferAccount,
-            vendor: `Transfer from ${baseTx.account}`,
-            category: "Transfer",
-            amount: amountTo,
-            currency: currencyTo,
-            transfer_id: sharedTransferId,
-            remarks: baseTx.remarks || `Transfer from ${baseTx.account}`,
-          });
-        } else {
-          transactionsToInsert.push(baseTx);
-        }
-      }
-
-      if (transactionsToInsert.length === 0) {
-        toast({
-          title: "Import Failed",
-          description:
-            "No valid transactions found. Please checks your date and amount column mappings.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // 5. Insert
-      setOperationProgress({
-        title: "Importing CSV",
-        description: `Importing ${transactionsToInsert.length} transactions...`,
-        stage: "Stage 4/4: Transactions",
-        progress: 55,
-        totalStages: 4,
-      });
-
-      let successCount = 0;
-      const UPDATE_BATCH = Math.max(
-        10,
-        Math.floor(transactionsToInsert.length / 20),
-      );
-
-      for (const t of transactionsToInsert) {
-        await dataProvider.addTransaction(t as Transaction);
-        successCount++;
-        if (successCount % UPDATE_BATCH === 0) {
-          const percent =
-            55 + Math.floor((successCount / transactionsToInsert.length) * 40);
+          const totalSteps = 4;
           setOperationProgress({
             title: "Importing CSV",
-            description: `Saving... (${successCount}/${transactionsToInsert.length})`,
-            stage: "Stage 4/4: Transactions",
-            progress: Math.min(99, percent),
+            description: "Preparing to import transactions...",
+            stage: "Analyzing Entities...",
+            progress: 10,
+            totalStages: totalSteps,
+          });
+
+          const knownAccountIds = new Set<string>();
+          const knownVendorIds = new Set<string>();
+          const knownCategoryIds = new Set<string>();
+          const knownSubCategoryIds = new Set<string>();
+
+          const existingVendors = await dataProvider.getAllVendors(ledgerId);
+          existingVendors.forEach((v) => {
+            if (v.is_account) knownAccountIds.add(v.id);
+            else knownVendorIds.add(v.id);
+          });
+          const existingCategories =
+            await dataProvider.getUserCategories(ledgerId);
+          existingCategories.forEach((c) => knownCategoryIds.add(c.id));
+          const existingSubCategories =
+            await dataProvider.getSubCategories(ledgerId);
+          existingSubCategories.forEach((s) => knownSubCategoryIds.add(s.id));
+
+          // 1. Process Accounts
+          setOperationProgress({
+            title: "Importing CSV",
+            description: "Processing Accounts...",
+            stage: "Stage 1/4: Accounts",
+            progress: 10,
             totalStages: 4,
           });
-        }
-      }
+          let newAccountsCount = 0;
 
-      let desc = `Imported ${transactionsToInsert.length} transactions.`;
-      const details = [];
-      if (newAccountsCount > 0) details.push(`${newAccountsCount} accounts`);
-      if (newVendorsCount > 0) details.push(`${newVendorsCount} vendors`);
-      if (newCategoriesCount > 0)
-        details.push(`${newCategoriesCount} categories`);
-      if (newSubCategoriesCount > 0)
-        details.push(`${newSubCategoriesCount} sub-categories`);
+          const uniqueAccounts = new Set<string>();
+          data.forEach((r) => {
+            const main = (r.Account || "").trim();
+            if (main) uniqueAccounts.add(main);
 
-      if (details.length > 0) {
-        desc += ` Added ${details.join(", ")}.`;
-      }
+            const transfer = (
+              r["Transfer Account"] ||
+              r["transfer account"] ||
+              ""
+            ).trim();
+            if (transfer) uniqueAccounts.add(transfer);
+          });
 
-      if (skippedCount > 0) {
-        desc += ` Skipped ${skippedCount} invalid rows.`;
-      }
+          for (const name of Array.from(uniqueAccounts)) {
+            let currency = newAccountCurrencies?.[name];
 
-      desc += " Use Detect Transfers to review possible transfer pairs.";
+            if (!currency) {
+              const row = data.find((r) => (r.Account || "").trim() === name);
+              currency = row?.Currency || "USD";
+            }
 
-      toast({
-        title: "Import Successful",
-        description: desc,
-        duration: 5000,
-      });
+            const row = data.find((r) => (r.Account || "").trim() === name);
+            const type = row?.["Account Type"] as AccountType | undefined;
 
-      invalidateAllData();
+            const id = await dataProvider.ensurePayeeExists(
+              name,
+              true,
+              ledgerId,
+              {
+                currency,
+                type,
+              },
+            );
+            if (id && !knownAccountIds.has(id)) {
+              newAccountsCount++;
+              knownAccountIds.add(id);
+            }
+          }
 
-      setOperationProgress({
-        title: "Import Complete",
-        description: "All done!",
-        stage: "Stage 4/4: Complete",
-        progress: 100,
-        totalStages: 4,
-      });
+          // 2. Process Payees
+          setOperationProgress({
+            title: "Importing CSV",
+            description: "Processing Payees...",
+            stage: "Stage 2/4: Payees",
+            progress: 25,
+            totalStages: 4,
+          });
+          let newVendorsCount = 0;
+          const uniquePayees = [
+            ...new Set(
+              data
+                .map((r) => (r.Payee || r.Vendor || "").trim())
+                .filter(Boolean),
+            ),
+          ];
+          for (const name of uniquePayees) {
+            const id = await dataProvider.ensurePayeeExists(
+              name,
+              false,
+              ledgerId,
+            );
+            if (id && !knownVendorIds.has(id) && !knownAccountIds.has(id)) {
+              newVendorsCount++;
+              knownVendorIds.add(id);
+            }
+          }
+
+          // 3. Process Categories
+          setOperationProgress({
+            title: "Importing CSV",
+            description: "Processing Categories...",
+            stage: "Stage 3/4: Categories",
+            progress: 40,
+            totalStages: 4,
+          });
+          let newCategoriesCount = 0;
+          let newSubCategoriesCount = 0;
+
+          const categoryNameIdMap = new Map<string, string>();
+          existingCategories.forEach((c) =>
+            categoryNameIdMap.set(c.name, c.id),
+          );
+
+          const uniqueCategories = [
+            ...new Set(
+              data.map((r) => (r.Category || "").trim()).filter(Boolean),
+            ),
+          ];
+          for (const name of uniqueCategories) {
+            const id = await dataProvider.ensureCategoryExists(name, ledgerId);
+            if (id) {
+              if (!knownCategoryIds.has(id)) {
+                newCategoriesCount++;
+                knownCategoryIds.add(id);
+              }
+              categoryNameIdMap.set(name, id);
+            }
+          }
+
+          const uniqueSubCats = new Set<string>();
+          data.forEach((r) => {
+            const cat = (r.Category || "").trim();
+            const sub = (r.Subcategory || r.Sub_Category || "").trim();
+            if (cat && sub) {
+              uniqueSubCats.add(`${cat}:${sub}`);
+            }
+          });
+
+          for (const item of Array.from(uniqueSubCats)) {
+            const [catName, subName] = item.split(":");
+            const catId = categoryNameIdMap.get(catName);
+            if (catId && subName) {
+              const id = await dataProvider.ensureSubCategoryExists(
+                subName,
+                catId,
+                ledgerId,
+              );
+              if (id && !knownSubCategoryIds.has(id)) {
+                newSubCategoriesCount++;
+                knownSubCategoryIds.add(id);
+              }
+            }
+          }
+
+          // 4. Prepare Transactions
+          const transactionsToInsert: Omit<
+            Transaction,
+            "id" | "created_at" | "updated_at"
+          >[] = [];
+          let skippedCount = 0;
+
+          for (const row of data) {
+            const amountRaw = row.Amount;
+            const dateRaw = row.Date;
+
+            if (!amountRaw || !dateRaw) {
+              skippedCount++;
+              continue;
+            }
+
+            let amount = parseRobustAmount(
+              amountRaw as string,
+              config?.decimalSeparator,
+            );
+            const date = parseRobustDate(dateRaw as string, config?.dateFormat);
+
+            // Apply Expense Sign Logic
+            if (config?.expenseSign === "positive") {
+              // User indicated Positive numbers are Expenses.
+              // Since we store Expenses as negative, we invert the sign.
+              // Example: CSV has 100 (Expense) -> We store -100.
+              // Example: CSV has -100 (Refund/Income) -> We store 100.
+              amount = -amount;
+            }
+
+            if (!date) {
+              console.warn("Skipping row due to invalid date", row);
+              skippedCount++;
+              continue;
+            }
+
+            const transferAccount = (
+              row["Transfer Account"] ||
+              row["transfer account"] ||
+              ""
+            ).trim();
+
+            const baseTx: Omit<
+              Transaction,
+              "id" | "created_at" | "updated_at"
+            > = {
+              user_id: ledgerId,
+              date: date,
+              account: (
+                row.Account ||
+                row.account ||
+                "Uncategorized Account"
+              ).trim(),
+              vendor: (
+                row.Payee ||
+                row.Vendor ||
+                row.Counterparty ||
+                row.Transfer ||
+                row.payee ||
+                row.vendor ||
+                row.counterparty ||
+                row.transfer ||
+                ""
+              ).trim(),
+              category: (
+                row.Category ||
+                row.category ||
+                "Uncategorized"
+              ).trim(),
+              sub_category: (
+                row.Subcategory ||
+                row.Sub_Category ||
+                row.subcategory ||
+                row["sub-category"] ||
+                ""
+              ).trim(),
+              amount: amount,
+              remarks: (
+                row.Notes ||
+                row.Remarks ||
+                row.notes ||
+                row.remarks ||
+                ""
+              ).trim(),
+              currency: (row.Currency || row.currency || "USD").trim(),
+              recurrence_frequency: row.Frequency || row.frequency || null,
+              recurrence_end_date:
+                parseRobustDate(
+                  row["End Date"] || row["end date"] || "",
+                  config?.dateFormat,
+                ) || null,
+              transfer_id:
+                (row["Transfer ID"] || row["transfer id"] || "").trim() || null,
+              is_scheduled_origin: false,
+            };
+
+            if (
+              transferAccount &&
+              transferAccount.toLowerCase() !== baseTx.account.toLowerCase()
+            ) {
+              const transferAmountRaw =
+                row["Transfer Amount"] || row["transfer amount"];
+              const sharedTransferId = `split-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+
+              // Transaction 1: From Main Account (Use original amount)
+              const amountFrom = amount;
+
+              transactionsToInsert.push({
+                ...baseTx,
+                amount: amountFrom,
+                category: "Transfer",
+                transfer_id: sharedTransferId,
+                remarks: baseTx.remarks || `Transfer to ${transferAccount}`,
+                vendor: `Transfer to ${transferAccount}`,
+              });
+
+              // Transaction 2: To Receiving Account (Invert sign if no specific amount provided)
+              const amountTo = transferAmountRaw
+                ? parseRobustAmount(
+                    transferAmountRaw as string,
+                    config?.decimalSeparator,
+                  )
+                : -amount;
+
+              // Resolve currency
+              let currencyTo = newAccountCurrencies?.[transferAccount];
+              if (!currencyTo) {
+                currencyTo = await dataProvider.getAccountCurrency(
+                  transferAccount,
+                  ledgerId,
+                );
+              }
+              if (!currencyTo) currencyTo = "USD";
+
+              transactionsToInsert.push({
+                ...baseTx,
+                account: transferAccount,
+                vendor: `Transfer from ${baseTx.account}`,
+                category: "Transfer",
+                amount: amountTo,
+                currency: currencyTo,
+                transfer_id: sharedTransferId,
+                remarks: baseTx.remarks || `Transfer from ${baseTx.account}`,
+              });
+            } else {
+              transactionsToInsert.push(baseTx);
+            }
+          }
+
+          if (transactionsToInsert.length === 0) {
+            toast({
+              title: "Import Failed",
+              description:
+                "No valid transactions found. Please checks your date and amount column mappings.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          // 5. Insert
+          setOperationProgress({
+            title: "Importing CSV",
+            description: `Importing ${transactionsToInsert.length} transactions...`,
+            stage: "Stage 4/4: Transactions",
+            progress: 55,
+            totalStages: 4,
+          });
+
+          let successCount = 0;
+          const UPDATE_BATCH = Math.max(
+            10,
+            Math.floor(transactionsToInsert.length / 20),
+          );
+
+          for (const t of transactionsToInsert) {
+            await dataProvider.addTransaction(t as Transaction);
+            successCount++;
+            if (successCount % UPDATE_BATCH === 0) {
+              const percent =
+                55 +
+                Math.floor((successCount / transactionsToInsert.length) * 40);
+              setOperationProgress({
+                title: "Importing CSV",
+                description: `Saving... (${successCount}/${transactionsToInsert.length})`,
+                stage: "Stage 4/4: Transactions",
+                progress: Math.min(99, percent),
+                totalStages: 4,
+              });
+            }
+          }
+
+          let desc = `Imported ${transactionsToInsert.length} transactions.`;
+          const details = [];
+          if (newAccountsCount > 0)
+            details.push(`${newAccountsCount} accounts`);
+          if (newVendorsCount > 0) details.push(`${newVendorsCount} vendors`);
+          if (newCategoriesCount > 0)
+            details.push(`${newCategoriesCount} categories`);
+          if (newSubCategoriesCount > 0)
+            details.push(`${newSubCategoriesCount} sub-categories`);
+
+          if (details.length > 0) {
+            desc += ` Added ${details.join(", ")}.`;
+          }
+
+          if (skippedCount > 0) {
+            desc += ` Skipped ${skippedCount} invalid rows.`;
+          }
+
+          desc += " Use Detect Transfers to review possible transfer pairs.";
+
+          toast({
+            title: "Import Successful",
+            description: desc,
+            duration: 5000,
+          });
+
+          invalidateAllData();
+
+          setOperationProgress({
+            title: "Import Complete",
+            description: "All done!",
+            stage: "Stage 4/4: Complete",
+            progress: 100,
+            totalStages: 4,
+          });
+        },
+      );
+      warnSafetyCopy(backedUp);
     } catch (error: unknown) {
       setOperationProgress(null);
       toast({

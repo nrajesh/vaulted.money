@@ -77,6 +77,20 @@ Boundaries need contrast too (WCAG 1.4.11): the outline of an input, select, sea
 - **Rows of buttons are centred** on small screens (`flex flex-wrap justify-center`, left-aligned from `sm:` up) and share the space (`flex-1` with a small `basis`/`max-w`). Do not use an `auto-fit` grid for a row whose last item spans the full width: it keeps an empty column, so the buttons sit left with a gap at the right.
 - **A page is never wider than the screen.** The sidebar's inset area is a flex item and needs `min-w-0` (it has it); any flex or grid child that holds text needs `min-w-0` and `truncate`/wrapping too. One unwrappable line (a long remark, a long placeholder) otherwise stretches the whole page past the screen, which also makes centred content look off-centre. Check by emulating a 390 px phone and comparing `document.documentElement.scrollWidth` with the window width on every screen.
 
+## Gestures
+
+Phone cards swipe and long press through one shared component, `SwipeableCard` (`src/components/cards/`). Use it for every new list of cards; do not write another gesture handler.
+
+- **Reveal, then tap.** A swipe slides the card to show one button; the action runs only when that button is tapped. A swipe never deletes or changes anything on its own, and there is no full-swipe shortcut.
+- **Left is Delete, right is harmless.** Swipe left reveals Delete; swipe right reveals the card's most useful harmless action (Duplicate or Edit), or nothing. Never put a destructive action on the right. Delete keeps the confirmation the menu already has.
+- **One action list.** Build the card's `CardAction` list once and pass it to the swipe buttons and the menu, so a gesture can never offer something the menu does not. Give revealed buttons an `ariaLabel` that names the item ("Delete Everyday Checking").
+- **Gestures are never the only route.** Keep a visible "…" button or inline Edit/Delete buttons on every card. Long press opens the same menu as the "…" button.
+- **Don't fight the system.** Vertical scrolling wins: the card claims a drag only after 12px sideways movement that is at least 1.5 times the vertical movement. Touches that start within 20px of the left screen edge belong to the iOS back swipe. Presses that start on an input, textarea, link, button or `[data-selectable-text]` element neither swipe nor long-press. Only touch and pen swipe; a mouse keeps its buttons.
+- **Off when it would surprise.** Cards don't swipe in select mode, while the item is being edited, or when it can't be deleted.
+- **Reduced motion.** With reduce motion on (the app's setting or the device's), the card jumps open and shut without sliding.
+- **Contrast.** White text on the revealed button: `bg-red-700 dark:bg-red-600` for Delete (6.4:1 and 4.8:1), `bg-blue-700 dark:bg-blue-600` for the others. The revealed button is at least 44px tall and its label wraps at Larger text.
+- **Opaque sliding layer.** The sliding layer must be the colour the card sits on (`contentClassName`, e.g. `bg-card` inside a Card), and the wrapper takes the card's corner radius, so no mismatched rectangle shows behind a card while it moves.
+
 ## Tables And Lists
 
 Every selectable data surface should include:
@@ -118,6 +132,7 @@ Before shipping a module screen, check:
 - Text passes 4.5:1 in light and dark mode (see Text Contrast), including empty and "inactive" states.
 - Selectable tables show a zero-selection toolbar.
 - Mobile bulk actions do not create horizontal scrolling.
+- Phone cards use `SwipeableCard`, with a visible "…" or inline buttons as well (see Gestures).
 - Selected mobile rows/cards have a full perimeter highlight.
 - Section headings are smaller than page headings.
 - Section headers use the same border treatment.

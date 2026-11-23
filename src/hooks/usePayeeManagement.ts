@@ -11,6 +11,8 @@ import { saveFile } from "@/utils/backupUtils";
 
 import { useLedger } from "@/contexts/LedgerContext";
 import { slugify } from "@/lib/utils";
+import { withSafetyBackup } from "@/utils/safetyBackup";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
 
 /** A single row parsed from a payee/account CSV import. */
 interface PayeeImportRow {
@@ -25,6 +27,7 @@ export const usePayeeManagement = (isAccount: boolean) => {
   const { activeLedger } = useLedger();
   const dataProvider = useDataProvider();
   const navigate = useNavigate();
+  const warnSafetyCopy = useSafetyBackupWarning();
 
   const entityName = isAccount ? "Account" : "Vendor";
   const entityNamePlural = isAccount ? "accounts" : "vendors";
@@ -50,18 +53,28 @@ export const usePayeeManagement = (isAccount: boolean) => {
   // category import in useCategoryManagement) to actually save anything.
   const batchUpsertPayeesMutation = useMutation({
     mutationFn: async (rows: PayeeImportRow[]) => {
-      if (!activeLedger?.id) throw new Error("No active ledger.");
-      for (const row of rows) {
-        const name = row.name?.trim();
-        if (!name) continue;
-        await dataProvider.ensurePayeeExists(name, isAccount, activeLedger.id, {
-          currency: row.currency,
-          startingBalance: row.starting_balance,
-          remarks: row.remarks,
-        });
-      }
+      const ledgerId = activeLedger?.id;
+      if (!ledgerId) throw new Error("No active ledger.");
+      // Safety copy just before the write; parsing already happened.
+      const { backedUp } = await withSafetyBackup(
+        dataProvider,
+        { reason: "csv_import", entity: isAccount ? "accounts" : "payees" },
+        async () => {
+          for (const row of rows) {
+            const name = row.name?.trim();
+            if (!name) continue;
+            await dataProvider.ensurePayeeExists(name, isAccount, ledgerId, {
+              currency: row.currency,
+              startingBalance: row.starting_balance,
+              remarks: row.remarks,
+            });
+          }
+        },
+      );
+      return backedUp;
     },
-    onSuccess: async (_data, rows) => {
+    onSuccess: async (backedUp, rows) => {
+      warnSafetyCopy(backedUp);
       showSuccess(`${rows.length} ${entityNamePlural} imported successfully!`);
       await invalidateAllData();
       if (managementProps.fileInputRef.current)

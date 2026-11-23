@@ -24,6 +24,7 @@ import {
   ChevronRight,
   HelpCircle,
   MoreHorizontal,
+  Pencil,
   X,
   Settings,
 } from "lucide-react";
@@ -36,7 +37,17 @@ import { ManageLedgerDialog } from "@/components/dialogs/ManageLedgerDialog";
 import CSVMappingDialog from "@/components/transactions/CSVMappingDialog";
 import { useDataProvider } from "@/context/DataProviderContext";
 import { decryptData } from "@/utils/crypto";
-import { unwrapBackupEnvelope } from "@/utils/backupUtils";
+import {
+  restoreWithSafetyCopy,
+  unwrapBackupEnvelope,
+  type RestoreFileOptions,
+} from "@/utils/backupUtils";
+import {
+  SafetyBackupFailedError,
+  withSafetyBackup,
+} from "@/utils/safetyBackup";
+import { useSafetyBackupWarning } from "@/hooks/useSafetyBackupWarning";
+import { useContinueWithoutCopy } from "@/hooks/useContinueWithoutCopy";
 import { showSuccess, showError } from "@/utils/toast";
 import PasswordDialog from "@/components/dialogs/PasswordDialog";
 import { Button } from "@/components/ui/button";
@@ -66,6 +77,13 @@ import { useTranslation } from "react-i18next";
 import { FeedbackLauncher } from "@/components/feedback/FeedbackLauncher";
 import SiteFooter from "@/components/SiteFooter";
 import BrandLockup from "@/components/BrandLockup";
+import { SwipeableCard } from "@/components/cards/SwipeableCard";
+import type { CardAction } from "@/components/cards/cardActions";
+import type { Ledger } from "@/types/dataProvider";
+
+/** The round chevron that says "tap to open" on a ledger card. */
+const ledgerOpenHintClass =
+  "h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white/80 text-emerald-700 dark:border-emerald-800 dark:bg-slate-950/70 dark:text-emerald-300";
 
 const LedgerEntryPage = () => {
   const { t } = useTranslation();
@@ -82,6 +100,9 @@ const LedgerEntryPage = () => {
   const { generateDiverseDemoData, setOperationProgress } = useTransactions();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isGenerateConfirmOpen, setIsGenerateConfirmOpen] = useState(false);
+  const warnSafetyCopy = useSafetyBackupWarning();
+  // Restores and demo data need a safety copy; ask before going on without one.
+  const { runRequired, continueWithoutCopyDialog } = useContinueWithoutCopy();
 
   // Filter & Select State
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,6 +113,10 @@ const LedgerEntryPage = () => {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [ledgerToDelete, setLedgerToDelete] = useState<string | null>(null); // For single delete
   const [isMassDelete, setIsMassDelete] = useState(false);
+  // The ledger being edited from its card (swipe right or the "…" menu). Kept
+  // after the dialog closes so its title doesn't flip while it fades out.
+  const [ledgerToEdit, setLedgerToEdit] = useState<Ledger | undefined>();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Import Logic State
   const dataProvider = useDataProvider();
@@ -184,24 +209,137 @@ const LedgerEntryPage = () => {
         totalStages: 100,
       });
 
-      // 1. Create New Ledger
-      const newLedger = await dataProvider.addLedger({
-        name: newLedgerDetails.name,
-        currency: newLedgerDetails.currency,
-        icon: newLedgerDetails.icon || "wallet",
-        short_name: newLedgerDetails.short_name,
-      });
+      // The ledger-details and mapping dialogs are done: make the safety copy
+      // just before the first write, so cancelling them makes no copy.
+      const { result: importedCount, backedUp } = await withSafetyBackup(
+        dataProvider,
+        { reason: "csv_import", entity: "transactions" },
+        async () => {
+          // 1. Create New Ledger
+          const newLedger = await dataProvider.addLedger({
+            name: newLedgerDetails.name,
+            currency: newLedgerDetails.currency,
+            icon: newLedgerDetails.icon || "wallet",
+            short_name: newLedgerDetails.short_name,
+          });
 
-      const ledgerId = newLedger.id;
+          const ledgerId = newLedger.id;
 
-      // 2. Parse and Import Transactions
-      const transactions = parseImportedData(
-        mappedData,
-        config,
-        newLedgerDetails.currency,
+          // 2. Parse and Import Transactions
+          const transactions = parseImportedData(
+            mappedData,
+            config,
+            newLedgerDetails.currency,
+          );
+
+          if (transactions.length === 0) return null;
+
+          // Step A: Payees/Accounts
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.settingUpAccounts", {
+              defaultValue: "Setting up accounts...",
+            }),
+            stage: t("ledgerEntry.progress.settingUpAccounts", {
+              defaultValue: "Setting up accounts...",
+            }),
+            progress: 15,
+            totalStages: 100,
+          });
+
+          const uniqueAccounts = [
+            ...new Set(transactions.map((t) => t.account).filter(Boolean)),
+          ];
+          for (const accName of uniqueAccounts) {
+            const t = transactions.find((tx) => tx.account === accName);
+            const accCurrency = t?.currency || newLedgerDetails.currency;
+            await dataProvider.ensurePayeeExists(accName, true, ledgerId, {
+              currency: accCurrency,
+            });
+          }
+
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.settingUpVendors", {
+              defaultValue: "Setting up payees...",
+            }),
+            stage: t("ledgerEntry.progress.settingUpVendors", {
+              defaultValue: "Setting up payees...",
+            }),
+            progress: 40,
+            totalStages: 100,
+          });
+
+          const uniqueVendors = [
+            ...new Set(transactions.map((t) => t.vendor).filter(Boolean)),
+          ];
+          for (const vendName of uniqueVendors) {
+            await dataProvider.ensurePayeeExists(vendName, false, ledgerId);
+          }
+
+          // Step B: Categories
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.settingUpCategories", {
+              defaultValue: "Setting up categories...",
+            }),
+            stage: t("ledgerEntry.progress.settingUpCategories", {
+              defaultValue: "Setting up categories...",
+            }),
+            progress: 60,
+            totalStages: 100,
+          });
+
+          const uniqueCategories = [
+            ...new Set(transactions.map((t) => t.category).filter(Boolean)),
+          ];
+          for (const catName of uniqueCategories) {
+            await dataProvider.ensureCategoryExists(catName, ledgerId);
+          }
+
+          // Step C: Insert Transactions
+          setOperationProgress({
+            title: t("ledgerEntry.progress.importingCsv", {
+              defaultValue: "Importing CSV",
+            }),
+            description: t("ledgerEntry.progress.insertingTransactions", {
+              defaultValue: "Inserting transactions...",
+            }),
+            stage: t("ledgerEntry.progress.insertingTransactions", {
+              defaultValue: "Inserting transactions...",
+            }),
+            progress: 80,
+            totalStages: 100,
+          });
+
+          const transactionsToInsert = transactions.map((t) => ({
+            user_id: ledgerId,
+            date: t.date,
+            account: t.account,
+            vendor: t.vendor,
+            category: t.category,
+            amount: t.amount,
+            remarks: t.remarks,
+            currency: t.currency,
+            transfer_id: t.transfer_id,
+            is_scheduled_origin: t.is_scheduled_origin,
+            recurrence_frequency: t.recurrence_frequency,
+            recurrence_end_date: t.recurrence_end_date,
+          }));
+
+          await dataProvider.addMultipleTransactions(transactionsToInsert);
+          return transactionsToInsert.length;
+        },
       );
+      warnSafetyCopy(backedUp);
 
-      if (transactions.length === 0) {
+      if (importedCount === null) {
         showError(
           t("ledgerEntry.toasts.noValidTransactions", {
             defaultValue: "No valid transactions found after parsing.",
@@ -210,107 +348,6 @@ const LedgerEntryPage = () => {
         setOperationProgress(null);
         return;
       }
-
-      // Step A: Payees/Accounts
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.settingUpAccounts", {
-          defaultValue: "Setting up accounts...",
-        }),
-        stage: t("ledgerEntry.progress.settingUpAccounts", {
-          defaultValue: "Setting up accounts...",
-        }),
-        progress: 15,
-        totalStages: 100,
-      });
-
-      const uniqueAccounts = [
-        ...new Set(transactions.map((t) => t.account).filter(Boolean)),
-      ];
-      for (const accName of uniqueAccounts) {
-        const t = transactions.find((tx) => tx.account === accName);
-        const accCurrency = t?.currency || newLedgerDetails.currency;
-        await dataProvider.ensurePayeeExists(accName, true, ledgerId, {
-          currency: accCurrency,
-        });
-      }
-
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.settingUpVendors", {
-          defaultValue: "Setting up payees...",
-        }),
-        stage: t("ledgerEntry.progress.settingUpVendors", {
-          defaultValue: "Setting up payees...",
-        }),
-        progress: 40,
-        totalStages: 100,
-      });
-
-      const uniqueVendors = [
-        ...new Set(transactions.map((t) => t.vendor).filter(Boolean)),
-      ];
-      for (const vendName of uniqueVendors) {
-        await dataProvider.ensurePayeeExists(vendName, false, ledgerId);
-      }
-
-      // Step B: Categories
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.settingUpCategories", {
-          defaultValue: "Setting up categories...",
-        }),
-        stage: t("ledgerEntry.progress.settingUpCategories", {
-          defaultValue: "Setting up categories...",
-        }),
-        progress: 60,
-        totalStages: 100,
-      });
-
-      const uniqueCategories = [
-        ...new Set(transactions.map((t) => t.category).filter(Boolean)),
-      ];
-      for (const catName of uniqueCategories) {
-        await dataProvider.ensureCategoryExists(catName, ledgerId);
-      }
-
-      // Step C: Insert Transactions
-      setOperationProgress({
-        title: t("ledgerEntry.progress.importingCsv", {
-          defaultValue: "Importing CSV",
-        }),
-        description: t("ledgerEntry.progress.insertingTransactions", {
-          defaultValue: "Inserting transactions...",
-        }),
-        stage: t("ledgerEntry.progress.insertingTransactions", {
-          defaultValue: "Inserting transactions...",
-        }),
-        progress: 80,
-        totalStages: 100,
-      });
-
-      const transactionsToInsert = transactions.map((t) => ({
-        user_id: ledgerId,
-        date: t.date,
-        account: t.account,
-        vendor: t.vendor,
-        category: t.category,
-        amount: t.amount,
-        remarks: t.remarks,
-        currency: t.currency,
-        transfer_id: t.transfer_id,
-        is_scheduled_origin: t.is_scheduled_origin,
-        recurrence_frequency: t.recurrence_frequency,
-        recurrence_end_date: t.recurrence_end_date,
-      }));
-
-      await dataProvider.addMultipleTransactions(transactionsToInsert);
 
       setOperationProgress({
         title: t("ledgerEntry.progress.importingCsv", {
@@ -326,7 +363,7 @@ const LedgerEntryPage = () => {
 
       showSuccess(
         t("ledgerEntry.toasts.csvImported", {
-          count: transactionsToInsert.length,
+          count: importedCount,
           name: newLedgerDetails.name,
           defaultValue:
             'Imported {{count}} transactions into new ledger "{{name}}".',
@@ -348,6 +385,66 @@ const LedgerEntryPage = () => {
     }
   };
 
+  /**
+   * Restores a plain backup file. A safety copy is required first; when it
+   * cannot be made this rethrows SafetyBackupFailedError (nothing changed) so
+   * `runRequired` can ask whether to continue without one.
+   */
+  const restorePlainBackup = async (
+    parsed: unknown,
+    options: RestoreFileOptions,
+  ) => {
+    try {
+      setOperationProgress({
+        title: t("ledgerEntry.progress.importingData", {
+          defaultValue: "Importing Data",
+        }),
+        description: t("ledgerEntry.progress.importingBackup", {
+          defaultValue: "Importing backup data...",
+        }),
+        stage: "Importing...",
+        progress: 50,
+        totalStages: 100,
+      });
+
+      await restoreWithSafetyCopy(
+        dataProvider,
+        unwrapBackupEnvelope(parsed),
+        options,
+      );
+
+      setOperationProgress({
+        title: t("ledgerEntry.progress.importingData", {
+          defaultValue: "Importing Data",
+        }),
+        description: t("ledgerEntry.progress.importComplete", {
+          defaultValue: "Import complete!",
+        }),
+        stage: "Complete",
+        progress: 100,
+        totalStages: 100,
+      });
+
+      showSuccess(
+        t("ledgerEntry.toasts.dataImported", {
+          defaultValue: "Data imported successfully!",
+        }),
+      );
+
+      // Instant refresh instead of reload
+      await refreshLedgers();
+      setTimeout(() => setOperationProgress(null), 500);
+    } catch (error) {
+      setOperationProgress(null);
+      if (error instanceof SafetyBackupFailedError) throw error;
+      showError(
+        t("ledgerEntry.toasts.invalidFile", {
+          defaultValue: "Invalid file format.",
+        }),
+      );
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -357,59 +454,26 @@ const LedgerEntryPage = () => {
       const content = event.target?.result as string;
       if (!content) return;
 
+      let parsed: { ciphertext?: unknown; iv?: unknown; salt?: unknown };
       try {
         // Optimize: Parse once
-        const parsed = JSON.parse(content);
-
-        if (parsed.ciphertext && parsed.iv && parsed.salt) {
-          // It's encrypted
-          setTempImportFile(content);
-          setIsImportPasswordOpen(true);
-        } else {
-          // Assume plain text
-          setOperationProgress({
-            title: t("ledgerEntry.progress.importingData", {
-              defaultValue: "Importing Data",
-            }),
-            description: t("ledgerEntry.progress.importingBackup", {
-              defaultValue: "Importing backup data...",
-            }),
-            stage: "Importing...",
-            progress: 50,
-            totalStages: 100,
-          });
-
-          await dataProvider.importData(unwrapBackupEnvelope(parsed));
-
-          setOperationProgress({
-            title: t("ledgerEntry.progress.importingData", {
-              defaultValue: "Importing Data",
-            }),
-            description: t("ledgerEntry.progress.importComplete", {
-              defaultValue: "Import complete!",
-            }),
-            stage: "Complete",
-            progress: 100,
-            totalStages: 100,
-          });
-
-          showSuccess(
-            t("ledgerEntry.toasts.dataImported", {
-              defaultValue: "Data imported successfully!",
-            }),
-          );
-
-          // Instant refresh instead of reload
-          await refreshLedgers();
-          setTimeout(() => setOperationProgress(null), 500);
-        }
+        parsed = JSON.parse(content);
       } catch {
-        setOperationProgress(null);
         showError(
           t("ledgerEntry.toasts.invalidFile", {
             defaultValue: "Invalid file format.",
           }),
         );
+        return;
+      }
+
+      if (parsed.ciphertext && parsed.iv && parsed.salt) {
+        // It's encrypted
+        setTempImportFile(content);
+        setIsImportPasswordOpen(true);
+      } else {
+        // Assume plain text
+        await runRequired((options) => restorePlainBackup(parsed, options));
       }
     };
     reader.readAsText(file);
@@ -417,7 +481,13 @@ const LedgerEntryPage = () => {
     e.target.value = "";
   };
 
-  const handleImportEncryptedParams = async (password: string) => {
+  const handleImportEncryptedParams = (password: string) =>
+    runRequired((options) => importEncryptedBackup(password, options));
+
+  const importEncryptedBackup = async (
+    password: string,
+    options: RestoreFileOptions,
+  ) => {
     if (!tempImportFile) return;
     try {
       setOperationProgress({
@@ -447,7 +517,7 @@ const LedgerEntryPage = () => {
         totalStages: 100,
       });
 
-      await dataProvider.importData(data);
+      await restoreWithSafetyCopy(dataProvider, data, options);
 
       setOperationProgress({
         title: t("ledgerEntry.progress.importingEncrypted", {
@@ -473,6 +543,7 @@ const LedgerEntryPage = () => {
       setTimeout(() => setOperationProgress(null), 500);
     } catch (e) {
       setOperationProgress(null);
+      if (e instanceof SafetyBackupFailedError) throw e;
       const message =
         e instanceof Error
           ? e.message
@@ -508,11 +579,24 @@ const LedgerEntryPage = () => {
     setSelectedLedgers(newSelected);
   };
 
-  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Opens the delete confirmation for one ledger. Shared by the desktop
+  // Trash button, the card's swipe and its "…" menu: ledgers always confirm.
+  const requestDeleteLedger = (id: string) => {
     setLedgerToDelete(id);
     setIsMassDelete(false);
     setIsDeleteAlertOpen(true);
+  };
+
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    requestDeleteLedger(id);
+  };
+
+  // The same ledger dialog Settings uses for "Edit Current Ledger", for any
+  // ledger on this screen.
+  const requestEditLedger = (ledger: Ledger) => {
+    setLedgerToEdit(ledger);
+    setIsEditOpen(true);
   };
 
   const handleMassDeleteClick = () => {
@@ -557,7 +641,7 @@ const LedgerEntryPage = () => {
 
   const handleGenerateDemoData = async () => {
     try {
-      await generateDiverseDemoData();
+      await runRequired((options) => generateDiverseDemoData(options));
     } catch {
       // Ignore error
     } finally {
@@ -912,109 +996,184 @@ const LedgerEntryPage = () => {
 
             {filteredLedgers.map((ledger) => {
               const isSelected = selectedLedgers.has(ledger.id);
+              // One action list for the swipe, the "…" menu and long press.
+              const editAction: CardAction = {
+                id: "edit",
+                label: t("management.actions.edit", { defaultValue: "Edit" }),
+                ariaLabel: t("management.actions.editNamed", {
+                  name: ledger.name,
+                  defaultValue: "Edit {{name}}",
+                }),
+                icon: Pencil,
+                onSelect: () => requestEditLedger(ledger),
+              };
+              const deleteAction: CardAction = {
+                id: "delete",
+                label: t("management.actions.delete", {
+                  defaultValue: "Delete",
+                }),
+                ariaLabel: t("management.actions.deleteNamed", {
+                  name: ledger.name,
+                  defaultValue: "Delete {{name}}",
+                }),
+                icon: Trash2,
+                destructive: true,
+                onSelect: () => requestDeleteLedger(ledger.id),
+              };
               return (
-                <ThemedCard
+                <SwipeableCard
                   key={ledger.id}
-                  className={cn(
-                    "group/card cursor-pointer rounded-2xl border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-white dark:border-emerald-900/50 dark:from-emerald-950/30 dark:via-slate-950 dark:to-slate-950",
-                    "shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md dark:hover:bg-emerald-900/35",
-                    isSelected &&
-                      "border-emerald-500 bg-emerald-100/80 dark:bg-emerald-900/60",
-                  )}
-                  onClick={() => handleSelectLedger(ledger.id)}
+                  className="rounded-2xl"
+                  // The page colour: the card's gradient is translucent, so
+                  // the sliding layer must be what it sat on before.
+                  contentClassName="bg-gray-50 dark:bg-gray-900"
+                  leftAction={deleteAction}
+                  rightAction={editAction}
+                  menuActions={[editAction, deleteAction]}
+                  menuButtonLabel={t("cardGestures.moreActionsFor", {
+                    name: ledger.name,
+                    defaultValue: "More actions for {{name}}",
+                  })}
+                  disabled={isSelectionMode}
                 >
-                  <ThemedCardContent className="p-4 sm:p-5">
-                    <div className="flex items-start gap-3">
-                      {isSelectionMode && (
-                        <div
-                          className="pt-1"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Checkbox
-                            aria-label={t("ledgerEntry.selectLedger", {
-                              name: ledger.name,
-                              defaultValue: "Select ledger {{name}}",
-                            })}
-                            checked={isSelected}
-                            onCheckedChange={(checked) =>
-                              handleToggleSelect(ledger.id, checked as boolean)
-                            }
-                            className="h-5 w-5 border-primary/50 bg-background data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                          />
-                        </div>
+                  {({ menuButton }) => (
+                    <ThemedCard
+                      className={cn(
+                        "group/card cursor-pointer rounded-2xl border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-white dark:border-emerald-900/50 dark:from-emerald-950/30 dark:via-slate-950 dark:to-slate-950",
+                        "shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md dark:hover:bg-emerald-900/35",
+                        isSelected &&
+                          "border-emerald-500 bg-emerald-100/80 dark:bg-emerald-900/60",
                       )}
+                      onClick={() => handleSelectLedger(ledger.id)}
+                    >
+                      <ThemedCardContent className="p-4 sm:p-5">
+                        <div className="flex items-start gap-3">
+                          {isSelectionMode && (
+                            <div
+                              className="pt-1"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <Checkbox
+                                aria-label={t("ledgerEntry.selectLedger", {
+                                  name: ledger.name,
+                                  defaultValue: "Select ledger {{name}}",
+                                })}
+                                checked={isSelected}
+                                onCheckedChange={(checked) =>
+                                  handleToggleSelect(
+                                    ledger.id,
+                                    checked as boolean,
+                                  )
+                                }
+                                className="h-5 w-5 border-primary/50 bg-background data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                              />
+                            </div>
+                          )}
 
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
-                        {getIcon(ledger.icon)}
-                      </div>
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
+                            {getIcon(ledger.icon)}
+                          </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h2 className="break-words text-lg font-semibold text-emerald-900 dark:text-emerald-200">
-                              {ledger.name}
-                            </h2>
-                            <div className="mt-2 flex flex-wrap items-center gap-2">
-                              {ledger.short_name && (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200">
-                                  {ledger.short_name}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <h2 className="break-words text-lg font-semibold text-emerald-900 dark:text-emerald-200">
+                                  {ledger.name}
+                                </h2>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  {ledger.short_name && (
+                                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200">
+                                      {ledger.short_name}
+                                    </span>
+                                  )}
+                                  <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                                    {ledger.currency}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {!isSelectionMode && (
+                                <div className="relative flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="hidden h-9 w-9 rounded-full text-destructive-text hover:bg-destructive/10 hover:text-destructive-text sm:inline-flex"
+                                    onClick={(event) =>
+                                      handleDeleteClick(ledger.id, event)
+                                    }
+                                    title={t("ledgerEntry.deleteLedger", {
+                                      defaultValue: "Delete Ledger",
+                                    })}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                  {/* The "…" menu, for phones (wider screens keep
+                                  the Trash button). On wider screens it stays
+                                  in place but invisible, so a long press on a
+                                  touch tablet still has an anchor. Clicks are
+                                  stopped so the menu never opens the ledger. */}
+                                  <div
+                                    className="sm:invisible sm:absolute sm:right-0 sm:top-0"
+                                    onClick={(event) => event.stopPropagation()}
+                                  >
+                                    {menuButton}
+                                  </div>
+                                  {/* On phones the chevron sits in the
+                                  "Last opened" row instead, so the name keeps
+                                  room beside the "…" button at Larger text. */}
+                                  <div
+                                    data-open-hint=""
+                                    className={cn(
+                                      "hidden sm:flex",
+                                      ledgerOpenHintClass,
+                                    )}
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="mt-4 flex items-end justify-between gap-3">
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700/80 dark:text-emerald-300/80">
+                                  {t("ledgerEntry.lastOpened", {
+                                    defaultValue: "Last opened",
+                                  })}
+                                </p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                  {formatLastAccessed(ledger.last_accessed)}
+                                </p>
+                              </div>
+                              {!isSelectionMode && (
+                                <div
+                                  data-open-hint=""
+                                  className={cn(
+                                    "flex sm:hidden",
+                                    ledgerOpenHintClass,
+                                  )}
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </div>
+                              )}
+                              {isSelectionMode && (
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {isSelected
+                                    ? t("ledgerEntry.selected", {
+                                        defaultValue: "Selected",
+                                      })
+                                    : t("ledgerEntry.tapToSelect", {
+                                        defaultValue: "Tap to select",
+                                      })}
                                 </span>
                               )}
-                              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                                {ledger.currency}
-                              </span>
                             </div>
                           </div>
-
-                          {!isSelectionMode && (
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="hidden h-9 w-9 rounded-full text-destructive-text hover:bg-destructive/10 hover:text-destructive-text sm:inline-flex"
-                                onClick={(event) =>
-                                  handleDeleteClick(ledger.id, event)
-                                }
-                                title={t("ledgerEntry.deleteLedger", {
-                                  defaultValue: "Delete Ledger",
-                                })}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white/80 text-emerald-700 dark:border-emerald-800 dark:bg-slate-950/70 dark:text-emerald-300">
-                                <ChevronRight className="h-4 w-4" />
-                              </div>
-                            </div>
-                          )}
                         </div>
-
-                        <div className="mt-4 flex items-end justify-between gap-3">
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700/80 dark:text-emerald-300/80">
-                              {t("ledgerEntry.lastOpened", {
-                                defaultValue: "Last opened",
-                              })}
-                            </p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {formatLastAccessed(ledger.last_accessed)}
-                            </p>
-                          </div>
-                          {isSelectionMode && (
-                            <span className="text-sm font-medium text-muted-foreground">
-                              {isSelected
-                                ? t("ledgerEntry.selected", {
-                                    defaultValue: "Selected",
-                                  })
-                                : t("ledgerEntry.tapToSelect", {
-                                    defaultValue: "Tap to select",
-                                  })}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </ThemedCardContent>
-                </ThemedCard>
+                      </ThemedCardContent>
+                    </ThemedCard>
+                  )}
+                </SwipeableCard>
               );
             })}
 
@@ -1156,6 +1315,12 @@ const LedgerEntryPage = () => {
         onOpenChange={setIsCreateOpen}
       />
 
+      <ManageLedgerDialog
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        ledgerToEdit={ledgerToEdit}
+      />
+
       {/* New Ledger Dialog for CSV Import */}
       <ManageLedgerDialog
         isOpen={isNewLedgerDialogOpen}
@@ -1233,6 +1398,7 @@ const LedgerEntryPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {continueWithoutCopyDialog}
       <EraseAllDataDialog
         ledgerCount={ledgers.length}
         isOpen={isGenerateConfirmOpen}

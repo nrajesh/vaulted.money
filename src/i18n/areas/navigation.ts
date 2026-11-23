@@ -8,6 +8,12 @@ import type { AreaTranslations } from "./types";
 export const navigation: AreaTranslations = {
   en: {
     nav: {
+      themeMenu: {
+        title: "Theme",
+        light: "Light",
+        auto: "Auto",
+        dark: "Dark",
+      },
       menuTitle: "Menu",
       openAiAssistant: "Open AI assistant",
       groups: {
@@ -48,6 +54,12 @@ export const navigation: AreaTranslations = {
   },
   es: {
     nav: {
+      themeMenu: {
+        title: "Tema",
+        light: "Claro",
+        auto: "Auto",
+        dark: "Oscuro",
+      },
       menuTitle: "Menú",
       openAiAssistant: "Abrir asistente de IA",
       groups: {
@@ -88,6 +100,12 @@ export const navigation: AreaTranslations = {
   },
   zh: {
     nav: {
+      themeMenu: {
+        title: "主题",
+        light: "浅色",
+        auto: "自动",
+        dark: "深色",
+      },
       menuTitle: "菜单",
       openAiAssistant: "打开 AI 助手",
       groups: {
@@ -128,6 +146,12 @@ export const navigation: AreaTranslations = {
   },
   nl: {
     nav: {
+      themeMenu: {
+        title: "Thema",
+        light: "Licht",
+        auto: "Auto",
+        dark: "Donker",
+      },
       menuTitle: "Menu",
       openAiAssistant: "AI-assistent openen",
       groups: {
@@ -168,6 +192,12 @@ export const navigation: AreaTranslations = {
   },
   ta: {
     nav: {
+      themeMenu: {
+        title: "தீம்",
+        light: "ஒளி",
+        auto: "தானியங்கி",
+        dark: "இருள்",
+      },
       menuTitle: "பட்டி",
       openAiAssistant: "AI உதவியாளரைத் திற",
       groups: {

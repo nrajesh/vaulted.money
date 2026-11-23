@@ -111,6 +111,29 @@ Use backup exports before:
 
 Encrypted backups are recommended when the file may live in cloud storage or on a shared computer.
 
+### Safety copies
+
+Some actions change a lot of your data at once. Just before one of them, the app quietly saves a full copy of your data, so you can go back if the result isn't what you wanted. A copy is made before:
+
+- importing a CSV file of transactions, accounts, payees or categories (with sub-categories), including imports made through the Local API
+- an AI change, such as **Categorize Missing**
+- a sync that brings in changes from another device (a sync that changes nothing makes no copy)
+- **Generate Demo Data**
+- restoring a backup file or a safety copy
+
+The copies are listed under **Automatic safety copies** on the **Backup** screen, newest first, with why and when each was made and how many ledgers it holds. The app keeps the last 5 and deletes older ones by itself.
+
+- **Restore** replaces all your current data with the copy. Before it does, the app saves a copy of your current data, so you can undo the restore. The app then reloads.
+- **Save as file** keeps a copy as a backup file you can store wherever you like.
+- **Delete** (in the **⋯** menu) removes one copy. To remove several, tap **Select**, tick the ones you want and delete them together.
+
+Things to know:
+
+- Copies stay on this device. They are never sent anywhere, and they are deleted along with the app. To keep something safe for longer, use **Save as file** or export a backup.
+- **Reset All Data** deletes the safety copies too. **Generate Demo Data** keeps them, so you can return to your own data afterwards.
+- Copies never include your AI API keys. Restoring a copy keeps the AI providers and keys already set up on this device, and this device's backup settings too: your scheduled backups, their folders and your backup password stay as they are now.
+- If a copy can't be made (for example, because the device is full), an import, AI change or sync still goes ahead and the app warns you. A restore or **Generate Demo Data** replaces everything, so the app asks before going on without a copy.
+
 ## Syncing Between Devices
 
 **Settings → Cross-Device Continuity** keeps devices in step through a folder that your own cloud service (iCloud Drive, Google Drive, Dropbox, Nextcloud) already syncs. There is no Vaulted Money server involved.
@@ -126,6 +149,29 @@ If a device says the file is encrypted or the passphrase is wrong, enter the pas
 ## Local API (Desktop App)
 
 The desktop app can run a local API so you can manage your data with scripts, Postman or your own interface instead of the GUI. It is off by default. Turn it on in Settings, copy the token, and see [API.md](API.md) and [API_COOKBOOK.md](API_COOKBOOK.md) for what you can do. It only accepts connections from your own computer and is not available in the web or mobile apps.
+
+## Swipe And Long Press
+
+On a touch screen, the cards in these lists answer to a finger:
+
+| List                          | Swipe left | Swipe right |
+| ----------------------------- | ---------- | ----------- |
+| Ledgers                       | Delete     | Edit        |
+| Transactions                  | Delete     | Duplicate   |
+| Scheduled transactions        | Delete     | Duplicate   |
+| Budgets                       | Delete     | Edit        |
+| Accounts, payees, categories  | Delete     | Edit        |
+| Currencies                    | Delete     | —           |
+| Safety copies (Backup screen) | Delete     | —           |
+
+Where a list shows as a table instead of cards, nothing swipes. Scheduled transactions are cards only on narrow screens such as a phone; an iPad shows them as a table. Transactions are cards on a phone and in the list beside the details panel, but not in the full table.
+
+- **A swipe only shows a button.** Nothing happens until you tap the button it reveals. Delete still asks you to confirm wherever it did before (ledgers, budgets, accounts, payees, categories and safety copies). To close a card without doing anything, tap anywhere else, scroll, or swipe it back.
+- **Long press** a card to open its menu, the same one the **…** button opens. In the iPhone and Android apps you feel a light tap.
+- **The buttons still work.** The **…** menu and the Edit and Delete buttons on the cards do everything the gestures do, so you never need to swipe. Screen readers, Voice Control and keyboards use them.
+- Swiping works with a finger or a pen, not a mouse. It does not start inside a text field (so you can still select or edit text, such as an exchange rate), or right at the left edge of the screen (where iPhone's back swipe lives).
+- Cards don't swipe while you are selecting several items or editing one. The built-in "Others" payee and category can't be deleted, so they don't swipe at all.
+- On the Budgets page, a swipe that starts on a card moves the card. To turn to the next page of budgets by swiping, swipe beside the cards or on the "Page 1 of 3" row below them, or use the arrow buttons. While you are selecting budgets, a swipe on a card turns the page too.
 
 ## Help And Display Settings
 

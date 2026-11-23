@@ -32,6 +32,7 @@ import { useTransactionFilters } from "@/hooks/transactions/useTransactionFilter
 import { useLedger } from "@/contexts/LedgerContext";
 import ConfirmationDialog from "@/components/dialogs/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
+import { useContinueWithoutCopy } from "@/hooks/useContinueWithoutCopy";
 
 const DataManagementPage = () => {
   const { t } = useTranslation();
@@ -40,6 +41,8 @@ const DataManagementPage = () => {
   const { generateDiverseDemoData, clearAllTransactions } = useTransactions();
   const { handleClearAllFilters } = useTransactionFilters();
   const { refreshLedgers } = useLedger();
+  // Restores and demo data need a safety copy; ask before going on without one.
+  const { runRequired, continueWithoutCopyDialog } = useContinueWithoutCopy();
 
   // Data Management State
   const [isExportPasswordOpen, setIsExportPasswordOpen] = React.useState(false);
@@ -142,38 +145,47 @@ const DataManagementPage = () => {
       const content = event.target?.result as string;
       if (!content) return;
 
-      const result = await processImport(content, dataProvider);
+      await runRequired(async (options) => {
+        const result = await processImport(content, dataProvider, options);
 
-      if (result.type === "success") {
-        showSuccess(
-          t("dataManagement.import.done", {
-            defaultValue: "Data imported successfully!",
-          }),
-        );
-        window.location.reload();
-      } else if (result.type === "encrypted") {
-        setTempImportFile(result.content);
-        setIsImportPasswordOpen(true);
-      } else if (result.type === "error") {
-        showError(
-          result.message ||
-            t("dataManagement.import.failed", {
-              defaultValue: "Import failed",
+        if (result.type === "success") {
+          showSuccess(
+            t("dataManagement.import.done", {
+              defaultValue: "Data imported successfully!",
             }),
-        );
-      }
+          );
+          window.location.reload();
+        } else if (result.type === "encrypted") {
+          setTempImportFile(result.content);
+          setIsImportPasswordOpen(true);
+        } else if (result.type === "error") {
+          showError(
+            result.message ||
+              t("dataManagement.import.failed", {
+                defaultValue: "Import failed",
+              }),
+          );
+        }
+      });
     };
     reader.readAsText(file);
     // Reset input
     e.target.value = "";
   };
 
-  const handleImportEncryptedParams = async (password: string) => {
+  const handleImportEncryptedParams = (password: string) =>
+    runRequired((options) => importEncrypted(password, options));
+
+  const importEncrypted = async (
+    password: string,
+    options: { continueWithoutCopy?: boolean },
+  ) => {
     if (!tempImportFile) return;
     const result = await processEncryptedImport(
       tempImportFile,
       password,
       dataProvider,
+      options,
     );
 
     if (result.type === "success") {
@@ -227,7 +239,7 @@ const DataManagementPage = () => {
   const handleGenerateDemoData = async () => {
     try {
       handleClearAllFilters();
-      await generateDiverseDemoData();
+      await runRequired((options) => generateDiverseDemoData(options));
     } catch {
       // Ignore error during demo data generation
     } finally {
@@ -403,6 +415,7 @@ const DataManagementPage = () => {
           defaultValue: "Generate",
         })}
       />
+      {continueWithoutCopyDialog}
       <PasswordDialog
         isOpen={isExportPasswordOpen}
         onOpenChange={setIsExportPasswordOpen}

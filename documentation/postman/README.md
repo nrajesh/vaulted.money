@@ -4,7 +4,7 @@ This folder contains a ready-made Postman collection that exercises every endpoi
 
 | File | Purpose |
 |---|---|
-| `vaulted-money-local-api.postman_collection.json` | 210 requests in 18 folders, with tests |
+| `vaulted-money-local-api.postman_collection.json` | 217 requests in 18 folders, with tests |
 | `vaulted-money-local-api.postman_environment.json` | `baseUrl` and `token` variables |
 
 You do not need a Postman account or any special permissions. The API only listens on your own computer.
@@ -28,7 +28,7 @@ Open the collection → **Run** (Collection Runner), keep the order, and run.
 
 - Folders `00`–`15` are the safe flow, then `98 Cleanup`. Requests depend on earlier ones (for example, the ledger created in `01` is used everywhere), so run them in order. Individual requests can be re-sent, but if a folder fails midway, re-run from `01`.
 - **Untick `99 Optional (changes your settings)`** unless you want those side effects (it overwrites your stored exchange rates from the internet).
-- A passing run is 208 requests (everything except the two in `99`) with 565 assertions and no failures.
+- A passing run is 215 requests (everything except the two in `99`) with 587 assertions and no failures.
 
 ### What it touches in your real app
 
@@ -40,7 +40,8 @@ The suite is built so it can run against an app with real data:
 | Currencies | Adds and removes a made-up `ZZZ` currency. Base currency and rates are unchanged. |
 | Languages | Sets the language to the one already active; adds and removes a custom `pmx` language. |
 | AI providers | Creates and deletes a throwaway provider. The default provider is unchanged. |
-| Backups | Exports are read-only. Restores use `ledger_id`, so they replace **only the test ledger**. |
+| Backups | Exports are read-only. Every restore the collection runs is a backup-file restore with `ledger_id`, so it replaces **only the test ledger**. It never restores a safety copy (next row). |
+| Safety copies | Each restore and CSV import keeps an automatic safety copy, as in the app. Only the last 5 are kept, so a run **pushes out your older safety copies** (export a backup first if you want to keep them). The collection **never restores a safety copy**: a copy holds every ledger, so restoring one would replace your real data, not just the test ledger. It only checks the restore errors (400, 404); the unit tests cover a successful restore. The only copy it deletes is the one its own CSV import in folder 14 just made (checked by reason, entity and a timestamp from the last few minutes). |
 | Settings | Folder 15 changes future months and restores whatever it found. |
 | AI categorization | `use_ai` is never sent, so nothing is sent to an AI provider. |
 
@@ -58,9 +59,9 @@ The app UI refreshes during the run and reloads once at the end (deleting a ledg
 | 06 Recurring transactions | CRUD, skip an occurrence, invalid frequency |
 | 07 Budgets · 08 Currencies · 09 Languages · 10 AI providers | CRUD plus checks that API keys are never echoed |
 | 11 Analytics, insights and reports | JSON, CSV and file downloads, currency conversion, error cases |
-| 12 Backups | plain and encrypted export, restore round-trips, wrong password, missing confirmation |
+| 12 Backups | plain and encrypted export, restore round-trips, wrong password, missing confirmation; list safety copies and restore errors (never a real restore) |
 | 13 Maintenance | Detect Transfers, Cleanup Duplicates, Categorize Missing, Reconcile Balance, de-duplicate and cleanup-unused for accounts, vendors and categories, each as dry run → confirm |
-| 14 CSV import and export | all four CSV exports, imports into a second throwaway ledger, dry runs, malformed files |
+| 14 CSV import and export | all four CSV exports, imports into a second throwaway ledger, dry runs, malformed files; the import's safety copy, which it then deletes |
 | 15 Settings | read, change and restore the global settings; atomic failure |
 | 98 Cleanup | deletes the test ledger |
 | 99 Optional | refresh exchange rates, set base currency |
