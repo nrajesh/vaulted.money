@@ -13,6 +13,7 @@ import {
   Wallet,
   Landmark,
   ChevronDown,
+  Monitor,
   Moon,
   Sun,
   Plus,
@@ -310,6 +311,8 @@ type MobileHeaderActionsMenuProps = {
   displayName: string;
   logout: () => void;
   resolvedTheme?: string;
+  /** The saved choice: light, dark or system (follow the phone). */
+  theme?: string;
   setTheme: (theme: string) => void;
   t: ReturnType<typeof useTranslation>["t"];
   isHomepageMobilePreview?: boolean;
@@ -348,13 +351,32 @@ export const SettingsHeaderButton = ({
 export const MobileHeaderActionsMenu = ({
   displayName,
   logout,
-  resolvedTheme,
+  theme,
   setTheme,
   t,
   isHomepageMobilePreview,
 }: MobileHeaderActionsMenuProps) => {
   const actionItemClassName =
     "min-h-14 rounded-xl px-4 py-3 text-[1.05rem] font-medium text-foreground gap-3";
+  // Light, Auto (follows the phone) and Dark, shown together so the current
+  // choice is visible and "Auto" can be picked again after choosing a fixed one.
+  const themeChoices = [
+    {
+      value: "light",
+      label: t("nav.themeMenu.light", { defaultValue: "Light" }),
+      Icon: Sun,
+    },
+    {
+      value: "system",
+      label: t("nav.themeMenu.auto", { defaultValue: "Auto" }),
+      Icon: Monitor,
+    },
+    {
+      value: "dark",
+      label: t("nav.themeMenu.dark", { defaultValue: "Dark" }),
+      Icon: Moon,
+    },
+  ];
 
   return (
     <DropdownMenu>
@@ -363,10 +385,14 @@ export const MobileHeaderActionsMenu = ({
           variant="ghost"
           size="icon"
           className="h-10 w-10 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-sm hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-input"
-          aria-label="More actions"
+          aria-label={t("ledgerEntry.moreActions", {
+            defaultValue: "More actions",
+          })}
         >
           <MoreHorizontal className="h-5 w-5 text-slate-600 dark:text-gray-300" />
-          <span className="sr-only">More actions</span>
+          <span className="sr-only">
+            {t("ledgerEntry.moreActions", { defaultValue: "More actions" })}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -378,7 +404,9 @@ export const MobileHeaderActionsMenu = ({
           <p className="truncate text-lg font-semibold text-foreground">
             {displayName}
           </p>
-          <p className="text-sm text-muted-foreground">Quick actions</p>
+          <p className="text-sm text-muted-foreground">
+            {t("ledgerEntry.quickActions", { defaultValue: "Quick actions" })}
+          </p>
         </div>
         <DropdownMenuSeparator className="mx-1" />
         {isHomepageMobilePreview ? (
@@ -410,17 +438,39 @@ export const MobileHeaderActionsMenu = ({
             </Link>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          className={actionItemClassName}
-        >
-          {resolvedTheme === "dark" ? (
-            <Sun className="h-5 w-5" />
-          ) : (
-            <Moon className="h-5 w-5" />
-          )}
-          {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
-        </DropdownMenuItem>
+        <DropdownMenuSeparator className="mx-1" />
+        <div className="px-2 py-2">
+          <p className="px-2 pb-2 text-[1.05rem] font-medium text-foreground">
+            {t("nav.themeMenu.title", { defaultValue: "Theme" })}
+          </p>
+          <div
+            role="radiogroup"
+            aria-label={t("nav.themeMenu.title", { defaultValue: "Theme" })}
+            className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1"
+          >
+            {themeChoices.map(({ value, label, Icon }) => {
+              const selected = (theme ?? "system") === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setTheme(value)}
+                  className={cn(
+                    "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    selected
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground hover:bg-background/60",
+                  )}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <DropdownMenuSeparator className="mx-1" />
         <DropdownMenuItem onClick={logout} className={actionItemClassName}>
           <LogOut className="h-5 w-5" />
@@ -433,7 +483,7 @@ export const MobileHeaderActionsMenu = ({
 
 const Layout = () => {
   const { t } = useTranslation();
-  const { setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   // const { user, userProfile, isLoadingUser } = useUser();
   const { activeLedger, ledgers, switchLedger, logout, isLoading } =
     useLedger();
@@ -672,6 +722,7 @@ const Layout = () => {
               displayName={displayName}
               logout={logout}
               resolvedTheme={resolvedTheme}
+              theme={theme}
               setTheme={setTheme}
               t={t}
               isHomepageMobilePreview={isHomepageMobilePreview}
