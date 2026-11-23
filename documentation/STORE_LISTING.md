@@ -314,7 +314,11 @@ Testers in closed and open tests must buy a paid app; only internal testers inst
 
 Status (22 November 2026): version 2.0.0 (version code 20000) is live on **internal testing** (list "Vaulted Money internal"); it installs and runs from Play on a Pixel emulator. Production needs the closed test first.
 
-The store listing, App content declarations and category were first sent for review on 22 November 2026; that submission was cancelled automatically when the closed test was submitted, and everything went into one review (submission 2, 22 November 2026, "In review"), with managed publishing off. Approval publishes nothing publicly: it replaces "Unrated" with PEGI 3 and the temporary name with Vaulted Money for testers, and makes the closed test live for its testers.
+The store listing, App content declarations and category were first sent for review on 22 November 2026; that submission was cancelled automatically when the closed test was submitted, and everything went into one review (submission 2, 22 November 2026, "In review"), with managed publishing off. Approval publishes nothing publicly: it replaces "Unrated" with PEGI 3 and the temporary name with Vaulted Money for testers, and makes the closed test live for its testers. Submission 2 was published on 22 November 2026.
+
+Submission 4 (23 November 2026, "In review", store listing only; submission 3 was cancelled and replaced by it) changes the app icon to the opaque one and the phone and tablet screenshots. It goes live as soon as it is approved and does not affect testers' build.
+
+**12 testers for 14 days** applies to each new app on this personal account, not once per account. An app that has production access does not need it again for updates. An organisation account (for example under Imaginest's KvK number) is exempt.
 
 **Closed testing – Alpha:** 173 countries (all Play offers), release "Vaulted Money v2.0.0" with bundle 20000 from the library and the same notes, full rollout to the email list "Vaulted Money closed testers", feedback to apps@imaginest.nl. Opt-in link: https://play.google.com/apps/testing/com.vaultedmoney.app. The internal list keeps only the owner's account, so every tester follows one path: opt-in link, promo code, install. Only closed-test testers count towards the 12 testers for 14 days, and each tester's 14 days start when they opt in.
 
