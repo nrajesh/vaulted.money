@@ -220,7 +220,9 @@ Where each file goes on the version page, tab **App Previews and Screenshots**. 
 
 ## Google Play
 
-**Current app (from 24 November 2026):** package `com.vaultedmoney.android`, in the **organisation** developer account "Imaginest, NL" (Google account admin@imaginest.nl, verified with D-U-N-S 473960705 and the imaginest.nl website through a DNS TXT record in Vercel; keep that record). Organisation accounts need no closed test, so the first release goes straight to Production. The Console links in this section point at the old app until the new app's ID is filled in.
+**Current app (from 24 November 2026):** package `com.vaultedmoney.android`, in the **organisation** developer account "Imaginest, NL" (Google account admin@imaginest.nl, verified with D-U-N-S 473960705 and the imaginest.nl website through a DNS TXT record in Vercel; keep that record). Organisation accounts need no closed test, so the first release goes straight to Production. New app: https://play.google.com/console/u/2/developers/4878850358013753151/app/4975167201219820004/app-dashboard (developer ID 4878850358013753151, app ID 4975167201219820004, created as Paid; the account is the third signed-in Google account, `/u/2/`).
+
+- Status on 24 November 2026: store settings, listing text, privacy policy, app access, ads, content rating (all "No"; same ratings as the old app), target audience 18+, government, financial features, health, Data safety, advertising ID, trader status and 173 countries (as the old app's closed test: all except China, Cuba, Iran, Sudan and Rest of World) are entered. Still to do: a payments profile (merchant account) for Imaginest, NL, which Play needs before a paid app can have prices; then prices per country and Family Library; graphics and AI asset labels; the bundle and release notes.
 
 - Build the first release from the `v2.0.0` tag (what App Store build 5 is) with `applicationId "com.vaultedmoney.android"`; `pre-prod` and later versions already use it. The Java namespace and the iOS bundle ID stay `com.vaultedmoney.app`. Bundle: `release/android/VaultedMoney-2.0.0-20000-com.vaultedmoney.android.aab`, signed with the same upload key.
 - Every setting below is entered again in the new app: listing, graphics, App content answers, prices per country, trader status, Family Library.
@@ -345,7 +347,7 @@ Plan once it is approved: move Vaulted Money there with Play's app transfer (the
 - **Chrome and the Play Store must use the same Google account** when opening the test link; mixing accounts gives "Item not found" or a blank sheet. A tester who leaves and rejoins may see "Something went wrong on our end" for a while.
 - Promo codes: batch "Vaulted Money Promo 1", 25 codes, valid until 31 December 2026 (codes kept outside the repository). Internal testers don't need one.
 
-Console links: the Play account is the second signed-in Google account in the browser, so links use `/u/1/` (for example https://play.google.com/console/u/1/developers/9063481855871569660/app/4973580024893380928/tracks/internal-testing).
+Console links (old app): the personal account is the second signed-in Google account in the browser, so links use `/u/1/` (for example https://play.google.com/console/u/1/developers/9063481855871569660/app/4973580024893380928/tracks/internal-testing).
 
 ### App content answers
 
