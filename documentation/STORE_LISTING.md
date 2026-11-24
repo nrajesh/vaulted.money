@@ -220,7 +220,12 @@ Where each file goes on the version page, tab **App Previews and Screenshots**. 
 
 ## Google Play
 
-App created in November 2026 under the developer account "Imaginest" (a **personal** account), app ID 4973580024893380928, package `com.vaultedmoney.app`. Personal accounts must run a closed test with at least 12 opted-in testers for 14 days in a row before Production can be requested.
+**Current app (from 24 November 2026):** package `com.vaultedmoney.android`, in the **organisation** developer account "Imaginest, NL" (Google account admin@imaginest.nl, verified with D-U-N-S 473960705 and the imaginest.nl website through a DNS TXT record in Vercel; keep that record). Organisation accounts need no closed test, so the first release goes straight to Production. The Console links in this section point at the old app until the new app's ID is filled in.
+
+- Build the first release from the `v2.0.0` tag (what App Store build 5 is) with `applicationId "com.vaultedmoney.android"`; `pre-prod` and later versions already use it. The Java namespace and the iOS bundle ID stay `com.vaultedmoney.app`. Bundle: `release/android/VaultedMoney-2.0.0-20000-com.vaultedmoney.android.aab`, signed with the same upload key.
+- Every setting below is entered again in the new app: listing, graphics, App content answers, prices per country, trader status, Family Library.
+
+**Old app (to retire):** "Imaginest" **personal** account, app ID 4973580024893380928, package `com.vaultedmoney.app`, which Play never lets another app use. Personal accounts must run a closed test with at least 12 opted-in testers for 14 days in a row before Production. Once the new app is live, stop its closed test, unpublish it and send testers the new link (they back up in the old app and restore in the new one, since the two cannot see each other's data). Leave the personal account dormant; rename it later so the organisation account can be called "Imaginest".
 
 ### App name [30]
 
