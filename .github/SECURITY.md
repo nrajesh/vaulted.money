@@ -1,29 +1,29 @@
-# Security Policy
+# Security policy
 
-Thanks for helping make this project safe for everyone.
+## Reporting a vulnerability
 
-We take the security of our software seriously.
+Please report security problems **privately**, not in a public issue.
 
-## Reporting Security Issues
+1. Open the **Security** tab of this repository on GitHub.
+2. Choose **Report a vulnerability**.
+3. Describe what you found and how to reproduce it.
 
-**Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**
+Only the maintainer can see your report. You will get a reply there, and the fix is released before details are made public.
 
-If you believe you have found a security vulnerability, please report it to us via email.
+## What to include
 
-**Email**: `noreply[@]imaginest.nl`
+- The app and version (for example, desktop 2.1 on macOS).
+- The steps that show the problem.
+- What you expected, and what happened.
 
-Please include as much of the information listed below as you can to help us better understand and resolve the issue:
+## Supported versions
 
-- The type of issue (e.g., buffer overflow, SQL injection, or cross-site scripting)
-- Full paths of source file(s) related to the manifestation of the issue
-- The location of the affected source code (tag/branch/commit or direct URL)
-- Any special configuration required to reproduce the issue
-- Step-by-step instructions to reproduce the issue
-- Proof-of-concept or exploit code (if possible)
-- Impact of the issue, including how an attacker might exploit the issue
+Security fixes go into the latest release of the app and the website.
 
-This information will help us triage your report more quickly.
+## Privacy by design
+
+Vaulted Money keeps data on your device and never sends it anywhere unless you export it. If you think you have found a way for data to leave a device without your say-so, please report it the same way.
 
 ## Policy
 
-This project does not offer a bug bounty program. We appreciate your responsible disclosure and will acknowledge your contribution if desired.
+This project does not offer a bug bounty program. We appreciate your responsible disclosure and will acknowledge your contribution if you like.
