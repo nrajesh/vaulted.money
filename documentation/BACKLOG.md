@@ -33,6 +33,9 @@ Seen on Android and on iPhone: opening a menu item or sub-menu can leave the nex
 
 Try selling the desktop app on the Mac App Store, alongside or instead of Polar.
 
+1. **Quick first step, no new build:** in App Store Connect, tick Vaulted Money under **iOS Apps on Mac Availability**. The iPhone app then appears on the Mac App Store for Apple-chip Macs (M1 and newer) at the same price. Do it only after iOS 2.0.0 (or the current version) has been approved, and try it first through TestFlight on an Apple-chip Mac. It runs like a phone app in a window: gestures, vibration and the bottom tab bar fit a Mac poorly, and Intel Macs are left out. It can be switched off again.
+2. **Later, if it sells:** a native Mac build for the Mac App Store (sandboxing, its own review), alongside the Polar desktop app.
+
 1. Build a Mac App Store version of the Electron app (`mas` target) with the App Sandbox on.
 2. Check which desktop features survive the sandbox and adjust or drop the rest for that version:
    - the Local API (`electron/apiServer.ts`), which listens on localhost for scripts;
