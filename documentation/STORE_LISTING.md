@@ -220,7 +220,20 @@ Where each file goes on the version page, tab **App Previews and Screenshots**. 
 
 ## Google Play
 
-App created in November 2026 under the developer account "Imaginest" (a **personal** account), app ID 4973580024893380928, package `com.vaultedmoney.app`. Personal accounts must run a closed test with at least 12 opted-in testers for 14 days in a row before Production can be requested.
+**Current app (from 24 November 2026):** package `com.vaultedmoney.android`, in the **organisation** developer account "Imaginest, NL" (Google account admin@imaginest.nl, verified with D-U-N-S 473960705 and the imaginest.nl website through a DNS TXT record in Vercel; keep that record). Organisation accounts need no closed test, so the first release goes straight to Production. New app: https://play.google.com/console/u/2/developers/4878850358013753151/app/4975167201219820004/app-dashboard (developer ID 4878850358013753151, app ID 4975167201219820004, created as Paid; the account is the third signed-in Google account, `/u/2/`).
+
+- Status on 24 November 2026: store settings, listing text, privacy policy, app access, ads, content rating (all "No"; same ratings as the old app), target audience 18+, government, financial features, health, Data safety, advertising ID, trader status and 173 countries (as the old app's closed test: all except China, Cuba, Iran, Sudan and Rest of World) are entered. Since then: payments profile (organisation, Imaginest), account group with the personal account and the 15% service fee, all 174 prices entered per country as in the old app, graphics uploaded. Family Library needs no setting: apps bought after July 2016 are shared automatically. Then: screenshots reordered to headline order, AI asset labels, promo video https://youtu.be/yE3uL3M3eL4, and a Production release draft (bundle 20000 from the library, Play App Signing, no closed test since organisation accounts are exempt). A read-only check of all 11 changes in Publishing overview found nothing blocking. The bank account in the payments profile was still "Verification pending" (needed for payouts, not for review). Pre-launch report languages: en-US, es-ES, zh-CN, nl-NL, ta-IN (neither app had a pre-launch report before review). Sent for review on 24 November 2026 (11 changes, Production full rollout of 2.0.0) with managed publishing on, so approval publishes nothing until "Publish" is clicked.
+
+- Build the first release from the `v2.0.0` tag (what App Store build 5 is) with `applicationId "com.vaultedmoney.android"`; `pre-prod` and later versions already use it. The Java namespace and the iOS bundle ID stay `com.vaultedmoney.app`. Bundle: `release/android/VaultedMoney-2.0.0-20000-com.vaultedmoney.android.aab`, signed with the same upload key.
+- Every setting below is entered again in the new app: listing, graphics, App content answers, prices per country, trader status, Family Library.
+
+**Developer page (organisation account):** header image `2-brand-dark.jpg` (from the Imaginest desktop folder, not in the repository), website https://imaginest.nl, promotional text [140]:
+
+```
+Imaginest is an independent studio for photography, bespoke websites and privacy-friendly, offline-first apps. Made in the Netherlands.
+```
+
+**Old app (to retire):** "Imaginest" **personal** account, app ID 4973580024893380928, package `com.vaultedmoney.app`, which Play never lets another app use. Personal accounts must run a closed test with at least 12 opted-in testers for 14 days in a row before Production. Once the new app is live, stop its closed test, unpublish it and send testers the new link (they back up in the old app and restore in the new one, since the two cannot see each other's data). Leave the personal account dormant; rename it later so the organisation account can be called "Imaginest".
 
 ### App name [30]
 
@@ -316,9 +329,13 @@ Status (22 November 2026): version 2.0.0 (version code 20000) is live on **inter
 
 The store listing, App content declarations and category were first sent for review on 22 November 2026; that submission was cancelled automatically when the closed test was submitted, and everything went into one review (submission 2, 22 November 2026, "In review"), with managed publishing off. Approval publishes nothing publicly: it replaces "Unrated" with PEGI 3 and the temporary name with Vaulted Money for testers, and makes the closed test live for its testers. Submission 2 was published on 22 November 2026.
 
-Submission 4 (23 November 2026, "In review", store listing only; submission 3 was cancelled and replaced by it) changes the app icon to the opaque one and the phone and tablet screenshots. It goes live as soon as it is approved and does not affect testers' build.
+Submission 4 (23 November 2026, store listing only; submission 3 was cancelled and replaced by it) changes the app icon to the opaque one and the phone and tablet screenshots. It was published on 23 November 2026. The old app was never in Production, so it has no Unpublish option; it is visible only to its internal and closed testers. To retire it, pause the Closed testing – Alpha and Internal testing tracks (track → Manage track → Pause track); testers keep the installed app and their data. Both tracks were paused on 24 November 2026.
 
 **12 testers for 14 days** applies to each new app on this personal account, not once per account. An app that has production access does not need it again for updates. An organisation account (for example under Imaginest's KvK number) is exempt.
+
+**Organisation account (in verification).** On 23 November 2026 an organisation developer account was opened for Imaginest. It uses the Google account admin@imaginest.nl (no Gmail inbox; mail goes to the imaginest.nl mailbox), the developer name "Imaginest, NL" ("Imaginest" is taken by the personal account), contact email apps@imaginest.nl, and D-U-N-S 473960705 (Imaginest, Kwikstaartlaan 42 Box G0996, 3704 GS Zeist; found free with Apple's D-U-N-S lookup). The KvK extract was sent as proof of the organisation, with the owner's passport for identity. The personal account was declared as another account used with Play Console.
+
+Plan once it is approved: move Vaulted Money there with Play's app transfer (the package name cannot be reused in a new app, so a transfer is the only way), then rename the personal account and call the organisation account "Imaginest". Check whether a transfer before the 14-day test ends would skip the test; otherwise launch first and transfer afterwards. Apple most likely won't accept an eenmanszaak as an organisation. On 23 November 2026 Apple Developer Support was asked (Membership and Account → Other Membership or Account Questions) whether it can convert the individual membership for Imaginest, and asked not to convert before Vaulted Money is released. Until Apple answers, the App Store account stays individual.
 
 **Closed testing – Alpha:** 173 countries (all Play offers), release "Vaulted Money v2.0.0" with bundle 20000 from the library and the same notes, full rollout to the email list "Vaulted Money closed testers", feedback to apps@imaginest.nl. Opt-in link: https://play.google.com/apps/testing/com.vaultedmoney.app. The internal list keeps only the owner's account, so every tester follows one path: opt-in link, promo code, install. Only closed-test testers count towards the 12 testers for 14 days, and each tester's 14 days start when they opt in.
 
@@ -336,7 +353,7 @@ Submission 4 (23 November 2026, "In review", store listing only; submission 3 wa
 - **Chrome and the Play Store must use the same Google account** when opening the test link; mixing accounts gives "Item not found" or a blank sheet. A tester who leaves and rejoins may see "Something went wrong on our end" for a while.
 - Promo codes: batch "Vaulted Money Promo 1", 25 codes, valid until 31 December 2026 (codes kept outside the repository). Internal testers don't need one.
 
-Console links: the Play account is the second signed-in Google account in the browser, so links use `/u/1/` (for example https://play.google.com/console/u/1/developers/9063481855871569660/app/4973580024893380928/tracks/internal-testing).
+Console links (old app): the personal account is the second signed-in Google account in the browser, so links use `/u/1/` (for example https://play.google.com/console/u/1/developers/9063481855871569660/app/4973580024893380928/tracks/internal-testing).
 
 ### App content answers
 

@@ -43,6 +43,10 @@ export interface ClaudeCodeDeps {
 
 const MARKETPLACE_NAME = "vaulted-money";
 const MARKETPLACE_SOURCE = "nrajesh/vaulted.money";
+
+/** Escapes every character that has a special meaning in a regular expression. */
+const escapeRegExp = (text: string) =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const PLUGIN_ID = "vaulted-money@vaulted-money";
 const COMMAND_TIMEOUT_MS = 120_000;
 
@@ -157,7 +161,7 @@ export const setupClaudeCodePlugin = async (
 
   const listing = await run(["plugin", "marketplace", "list"]);
   const alreadyOurs = new RegExp(
-    `${MARKETPLACE_NAME}\\s*\\n\\s*Source:\\s*GitHub \\(${MARKETPLACE_SOURCE.replace(/[.]/g, "\\.")}\\)`,
+    `${escapeRegExp(MARKETPLACE_NAME)}\\s*\\n\\s*Source:\\s*GitHub \\(${escapeRegExp(MARKETPLACE_SOURCE)}\\)`,
   ).test(listing.stdout);
 
   if (alreadyOurs) {

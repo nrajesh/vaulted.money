@@ -4,7 +4,7 @@ android {
     namespace = "com.vaultedmoney.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.vaultedmoney.app"
+        applicationId "com.vaultedmoney.android"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 20000
