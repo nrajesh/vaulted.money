@@ -227,6 +227,12 @@ Where each file goes on the version page, tab **App Previews and Screenshots**. 
 - Build the first release from the `v2.0.0` tag (what App Store build 5 is) with `applicationId "com.vaultedmoney.android"`; `pre-prod` and later versions already use it. The Java namespace and the iOS bundle ID stay `com.vaultedmoney.app`. Bundle: `release/android/VaultedMoney-2.0.0-20000-com.vaultedmoney.android.aab`, signed with the same upload key.
 - Every setting below is entered again in the new app: listing, graphics, App content answers, prices per country, trader status, Family Library.
 
+**Developer page (organisation account):** header image `2-brand-dark.jpg` (from the Imaginest desktop folder, not in the repository), website https://imaginest.nl, promotional text [140]:
+
+```
+Imaginest is an independent studio for photography, bespoke websites and privacy-friendly, offline-first apps. Made in the Netherlands.
+```
+
 **Old app (to retire):** "Imaginest" **personal** account, app ID 4973580024893380928, package `com.vaultedmoney.app`, which Play never lets another app use. Personal accounts must run a closed test with at least 12 opted-in testers for 14 days in a row before Production. Once the new app is live, stop its closed test, unpublish it and send testers the new link (they back up in the old app and restore in the new one, since the two cannot see each other's data). Leave the personal account dormant; rename it later so the organisation account can be called "Imaginest".
 
 ### App name [30]
