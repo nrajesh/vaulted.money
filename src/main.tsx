@@ -1,3 +1,4 @@
+import "./zodConfig";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
@@ -6,12 +7,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "@/i18n/config";
 import { Capacitor } from "@capacitor/core";
 import { isElectron } from "@/utils/electron";
-import { z } from "zod";
-
-// Zod's speed-up compiles validators with `new Function`, which the page's
-// Content-Security-Policy forbids (it logged an "eval" error on every load).
-// Turn it off: validation behaves the same, only a little slower.
-z.config({ jitless: true });
 
 // Suppress Recharts ResponsiveContainer annoying warning
 const originalWarn = console.warn;
