@@ -494,8 +494,8 @@ export function ConversationalSearchInput({
             trailing space would otherwise filter this row out. */}
         <CommandGroup
           forceMount
-          heading={t("filters.conversational.search", {
-            defaultValue: "Search",
+          heading={t("filters.conversational.searchTextHeading", {
+            defaultValue: "Search Text",
           })}
         >
           <CommandItem
@@ -504,10 +504,7 @@ export function ConversationalSearchInput({
             onSelect={() => handleGenericSearch()}
           >
             <Search className="mr-2 h-4 w-4" />
-            {t("filters.conversational.searchText", {
-              input,
-              defaultValue: `Search Text "${input}"`,
-            })}
+            <span className="min-w-0 break-words">{`“${input}”`}</span>
           </CommandItem>
         </CommandGroup>
 

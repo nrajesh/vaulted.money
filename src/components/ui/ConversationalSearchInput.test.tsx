@@ -98,9 +98,7 @@ describe("ConversationalSearchInput suggestion", () => {
 
   it("keeps offering Search Text after a trailing space", async () => {
     await openAndType("groceries over 20 ");
-    expect(
-      await screen.findByText(/Search Text "groceries over 20 "/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("“groceries over 20 ”")).toBeInTheDocument();
     expect(screen.getAllByText(/Search Text/)).toHaveLength(1);
     expect(screen.getByText("Over 20")).toBeInTheDocument();
   });
@@ -199,6 +197,7 @@ describe("ConversationalSearchInput suggestion", () => {
   it("shows no suggestion for plain text", async () => {
     await openAndType("coffee beans");
     expect(screen.queryByText("Understood as")).not.toBeInTheDocument();
-    expect(screen.getByText(/Search Text "coffee beans"/)).toBeInTheDocument();
+    expect(screen.getByText("Search Text")).toBeInTheDocument();
+    expect(screen.getByText("“coffee beans”")).toBeInTheDocument();
   });
 });
