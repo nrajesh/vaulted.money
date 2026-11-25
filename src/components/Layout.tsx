@@ -3,6 +3,7 @@ import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
+import { useScrollToTopOnNavigate } from "@/hooks/useScrollToTopOnNavigate";
 import logoMarkDark from "@/assets/logo-mark-dark.svg";
 import logoMarkLight from "@/assets/logo-mark-light.svg";
 import {
@@ -495,6 +496,8 @@ const Layout = () => {
     (typeof window !== "undefined" && window.self !== window.top);
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const { openHelp } = useHelpDrawer();
+  const mainScrollRef = React.useRef<HTMLElement>(null);
+  useScrollToTopOnNavigate(mainScrollRef);
 
   React.useEffect(() => {
     if (!isLoading && !activeLedger) {
@@ -730,6 +733,7 @@ const Layout = () => {
           </div>
         </header>
         <main
+          ref={mainScrollRef}
           className={cn(
             "flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-background pb-24 pt-[calc(4rem+env(safe-area-inset-top))] md:pt-0 md:pb-0",
             isHomepageMobilePreview && "h-full overscroll-none",
