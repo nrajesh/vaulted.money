@@ -68,7 +68,7 @@ export const ActiveFilterChips = ({ filters }: { filters: ActiveFilters }) => {
   const renderChip = (label: string, onRemove: () => void, key: string) => (
     <Badge
       variant="secondary"
-      className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 hover:bg-secondary/80"
+      className="flex max-w-full min-w-0 shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap hover:bg-secondary/80 sm:shrink"
       onClick={onRemove}
       key={key}
     >
@@ -273,7 +273,9 @@ export const ActiveFilterChips = ({ filters }: { filters: ActiveFilters }) => {
       aria-label={t("filters.active.label", {
         defaultValue: "Applied filters",
       })}
-      className="flex min-h-[32px] flex-wrap items-center gap-2 px-1 text-sm"
+      // One row that scrolls sideways on phones (like the "Understood as" chips in
+      // the search box), so many filters cost one line instead of several.
+      className="flex min-h-[32px] flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1 text-sm sm:flex-wrap sm:overflow-visible sm:pb-0"
     >
       {chips.length > 0 ? (
         chips

@@ -22,6 +22,7 @@ export const searchSuggestions: AreaTranslations = {
       },
       conversational: {
         clear: "Clear",
+        searchTextHeading: "Search Text",
         done: "Done",
         suggest: {
           allMustMatch: "all filters must match",
@@ -66,6 +67,7 @@ export const searchSuggestions: AreaTranslations = {
       },
       conversational: {
         clear: "Borrar",
+        searchTextHeading: "Buscar texto",
         done: "Listo",
         suggest: {
           allMustMatch: "deben cumplirse todos los filtros",
@@ -110,6 +112,7 @@ export const searchSuggestions: AreaTranslations = {
       },
       conversational: {
         clear: "清除",
+        searchTextHeading: "搜索文本",
         done: "完成",
         suggest: {
           allMustMatch: "须满足所有筛选条件",
@@ -154,6 +157,7 @@ export const searchSuggestions: AreaTranslations = {
       },
       conversational: {
         clear: "Wissen",
+        searchTextHeading: "Zoektekst",
         done: "Klaar",
         suggest: {
           allMustMatch: "alle filters moeten kloppen",
@@ -198,6 +202,7 @@ export const searchSuggestions: AreaTranslations = {
       },
       conversational: {
         clear: "அழி",
+        searchTextHeading: "உரை தேடு",
         done: "முடிந்தது",
         suggest: {
           allMustMatch: "எல்லா வடிப்பான்களும் பொருந்த வேண்டும்",
