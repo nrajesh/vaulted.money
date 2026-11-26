@@ -109,7 +109,9 @@ describe("CurrencyManagement row gestures", () => {
   it("the rate field stays selectable although the row blocks text selection", () => {
     renderCurrencies();
     const layer = swipeLayer("EUR");
-    expect(layer.className).toMatch(/(^|\s)pointer-coarse:select-none(\s|$)/);
+    expect(layer.className).toMatch(
+      /(^|\s)any-pointer-coarse:select-none(\s|$)/,
+    );
     // The rate input and its marked box get selection back from the layer.
     expect(layer.contains(rateInput("EUR"))).toBe(true);
     expect(layer.className).toContain("[&_input]:select-text");
