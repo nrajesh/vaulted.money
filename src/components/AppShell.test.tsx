@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import AppShell from "./AppShell";
 import { isLedgerFreePath } from "@/constants/ledgerFreeRoutes";
@@ -27,6 +28,7 @@ const renderAt = (path: string) =>
       <Routes>
         <Route path="/" element={<AppShell />}>
           <Route path="settings" element={<div>settings page</div>} />
+          <Route path="backup" element={<div>backup page</div>} />
           <Route path="transactions" element={<div>transactions</div>} />
         </Route>
       </Routes>
@@ -50,6 +52,18 @@ describe("AppShell", () => {
       "aria-current",
       "page",
     );
+  });
+
+  it("opens each ledger-free page at the top of the window", async () => {
+    ledger.active = null;
+    ledger.isLoading = false;
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    renderAt("/settings");
+    scrollTo.mockClear();
+    await userEvent.click(screen.getByRole("link", { name: "Backup" }));
+    expect(screen.getByText("backup page")).toBeInTheDocument();
+    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+    scrollTo.mockRestore();
   });
 
   it("leaves ledger pages to the full layout, which sends them to the ledger list", () => {

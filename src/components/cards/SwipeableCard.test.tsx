@@ -348,10 +348,11 @@ describe("SwipeableCard", () => {
     expect(hidden).toHaveAttribute("tabindex", "0");
   });
 
-  it("stops text selection and the iOS callout on the sliding layer, so a long press is not taken over", () => {
+  it("stops text selection and the iOS callout on touch screens only, so a long press is not taken over and desktop text stays selectable", () => {
     renderCard();
     const layer = cardBody().closest("[data-swipe-content]") as HTMLElement;
-    expect(layer.className).toMatch(/(^|\s)select-none(\s|$)/);
+    expect(layer.className).toMatch(/(^|\s)pointer-coarse:select-none(\s|$)/);
+    expect(layer.className).not.toMatch(/(^|\s)select-none(\s|$)/);
     expect(layer.className).toContain("[-webkit-touch-callout:none]");
   });
 

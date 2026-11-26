@@ -1,8 +1,10 @@
+import * as React from "react";
 import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Layout from "@/components/Layout";
 import { useTheme } from "@/components/theme-provider";
+import { useScrollToTopOnNavigate } from "@/hooks/useScrollToTopOnNavigate";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useLedger } from "@/contexts/LedgerContext";
@@ -30,6 +32,10 @@ const LedgerFreeShell = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const { setTheme, resolvedTheme } = useTheme();
+  // This frame scrolls the browser window (not a <main> scroller like
+  // Layout), so the hook's window reset is what opens each page at the top.
+  const noScroller = React.useRef<HTMLElement>(null);
+  useScrollToTopOnNavigate(noScroller);
 
   return (
     <TooltipProvider>

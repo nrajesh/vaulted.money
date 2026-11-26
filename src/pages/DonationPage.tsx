@@ -99,7 +99,7 @@ export default function DonationPage() {
     }),
     t("supportPage.help.payOnce", {
       defaultValue:
-        "When Vaulted Money goes live in the stores, you can pay once to support solo development. Same app, no subscription.",
+        "You can pay once for the desktop app now, and for the phone apps when they reach the stores, to support solo development. Same app, no subscription.",
     }),
     t("supportPage.help.private", {
       defaultValue:

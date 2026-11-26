@@ -235,6 +235,62 @@ describe("continuity sync between two devices", { timeout: 30_000 }, () => {
     expect(desktopSync.onLoaded).toHaveBeenCalledTimes(1);
   });
 
+  it("ignores a sync that was still running when the folder changed", async () => {
+    const oldFolder = makeFolder();
+    const newFolder = makeFolder();
+    const phone = makeDevice({ transactions: [coffee] });
+    // The old folder already matches this device, so a run that finished
+    // would record its fingerprint as the last sync.
+    const other = makeDevice({ transactions: [coffee] });
+    await startSync(other, oldFolder).engine.syncNow();
+
+    // Hold the read of the old folder until the folder has been changed.
+    let releaseRead: () => void = () => {};
+    const readGate = new Promise<void>((resolve) => {
+      releaseRead = resolve;
+    });
+    const engine = createContinuitySync({
+      io: {
+        read: async (folder, name) => {
+          if (folder === "old") {
+            await readGate;
+            return oldFolder.io.read(folder, name);
+          }
+          return newFolder.io.read(folder, name);
+        },
+        write: (folder, name, content) =>
+          (folder === "old" ? oldFolder : newFolder).io.write(
+            folder,
+            name,
+            content,
+          ),
+      },
+      memory: phone.memory,
+      now: () => new Date(2026, 10, 21, 15, 30, 5),
+    });
+    const base = {
+      dataProvider: phone.dataProvider,
+      passphrase: null,
+      onLoaded: vi.fn(),
+    };
+    engine.configure({ ...base, folder: "old" });
+    const running = engine.syncNow();
+    // Let the run start and reach the (held) read of the old folder.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    engine.configure({ ...base, folder: "new" });
+    engine.forget();
+    releaseRead();
+    await running;
+
+    // The stale run neither loaded the old folder, recorded a last sync,
+    // nor wrote into the new folder.
+    expect(phone.dataProvider.importData).not.toHaveBeenCalled();
+    expect(phone.memory.getLastHash()).toBeNull();
+    expect(newFolder.files.size).toBe(0);
+    expect(phone.books.transactions).toEqual([coffee]);
+  });
+
   it("does not overwrite this device's unsynced change with an old file", async () => {
     const folder = makeFolder();
     const phone = makeDevice({ transactions: [coffee] });
