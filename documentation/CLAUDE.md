@@ -292,6 +292,8 @@ User-visible text goes through `t("key", { defaultValue })` and every key is add
 
 **Apps ship the app build, not the website.** `pnpm build` makes the website, including the homepage and its demo videos. iOS, Android and the desktop app use `pnpm build:app` (`vite build --mode app`), which compiles the homepage out and drops the website-only files listed in `vite.config.ts`. The `mobile:*`, `android:*`, `ios:*` and `electron:build` scripts already use it. Run `cap sync` only after `pnpm build:app`, and keep website-only assets imported from `HomePage` alone.
 
+**Check Codex's review before merging into `pre-prod` or `main`.** The Codex bot (`chatgpt-codex-connector`) reviews pull requests. Before merging any PR into `pre-prod` or `main`, read its inline comments (`gh api repos/{owner}/{repo}/pulls/<n>/comments`, filtered to that bot) and check each one against the code on the PR's head. Fix every finding that holds up, with a test where one fits, or reply on the thread saying why it doesn't apply. Do not merge with a finding unanswered. Its comments on feature branches can be skipped when the same change will go through a reviewed PR into `pre-prod`. In the first review (11 PRs, #310 to #333) all ten distinct findings were real, so treat them as likely bugs, not noise.
+
 **Promote `pre-prod` to `main` with a merge commit.** Use GitHub's "Create a merge commit" (`gh pr merge --merge`), never squash or rebase. A squash leaves `main` with commits `pre-prod` doesn't have, so the next promotion conflicts on every line both releases touched.
 
 ---

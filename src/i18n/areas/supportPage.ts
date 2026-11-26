@@ -28,7 +28,7 @@ export const supportPage: AreaTranslations = {
         allFree:
           "Every feature stays free. Paying unlocks nothing extra, and nothing is held back.",
         payOnce:
-          "When Vaulted Money goes live in the stores, you can pay once to support solo development. Same app, no subscription.",
+          "You can pay once for the desktop app now, and for the phone apps when they reach the stores, to support solo development. Same app, no subscription.",
         private:
           "Paying never links to your money data. There's no account to link it to.",
         sponsors:
@@ -71,7 +71,7 @@ export const supportPage: AreaTranslations = {
         allFree:
           "Todas las funciones siguen siendo gratuitas. Pagar no desbloquea nada extra y nada se retiene.",
         payOnce:
-          "Cuando Vaulted Money esté disponible en las tiendas, podrás pagar una sola vez para apoyar el desarrollo independiente. La misma app, sin suscripción.",
+          "Ya puedes pagar una sola vez por la app de escritorio, y por las apps móviles cuando lleguen a las tiendas, para apoyar el desarrollo independiente. La misma app, sin suscripción.",
         private:
           "Pagar nunca se vincula con tus datos financieros. No hay ninguna cuenta con la que vincularlo.",
         sponsors:
@@ -111,7 +111,7 @@ export const supportPage: AreaTranslations = {
         allFree:
           "所有功能都保持免费。付费不会解锁额外内容，也没有任何功能被保留。",
         payOnce:
-          "Vaulted Money 在应用商店上架后，你可以一次性付费，支持独立开发。同一个应用，没有订阅。",
+          "现在就可以一次性购买桌面版，手机版上架应用商店后也可以，以支持独立开发。同一个应用，没有订阅。",
         private: "付费永远不会与你的财务数据关联，因为根本没有可关联的账户。",
         sponsors: "想现在就支持？GitHub Sponsors 接受一次性或按月支持。",
         freeWays:
@@ -153,7 +153,7 @@ export const supportPage: AreaTranslations = {
         allFree:
           "Elke functie blijft gratis. Betalen ontgrendelt niets extra's en er wordt niets achtergehouden.",
         payOnce:
-          "Zodra Vaulted Money in de stores staat, kun je één keer betalen om de ontwikkeling door één persoon te steunen. Dezelfde app, geen abonnement.",
+          "Je kunt nu één keer betalen voor de desktop-app, en voor de telefoon-apps zodra ze in de stores staan, om de ontwikkeling door één persoon te steunen. Dezelfde app, geen abonnement.",
         private:
           "Betalen wordt nooit gekoppeld aan je financiële gegevens. Er is geen account om het aan te koppelen.",
         sponsors:
@@ -197,7 +197,7 @@ export const supportPage: AreaTranslations = {
         allFree:
           "எல்லா அம்சங்களும் இலவசமாகவே இருக்கும். பணம் செலுத்துவதால் கூடுதல் எதுவும் திறக்கப்படாது, எதுவும் தடுக்கப்படவும் இல்லை.",
         payOnce:
-          "Vaulted Money ஸ்டோர்களில் வெளியானதும், தனி டெவலப்பரின் பணியை ஆதரிக்க ஒருமுறை பணம் செலுத்தலாம். அதே செயலி, சந்தா இல்லை.",
+          "தனி டெவலப்பரின் பணியை ஆதரிக்க, டெஸ்க்டாப் செயலிக்கு இப்போதே ஒருமுறை பணம் செலுத்தலாம்; கைபேசி செயலிகள் ஸ்டோர்களில் வெளியானதும் அவற்றுக்கும் செலுத்தலாம். அதே செயலி, சந்தா இல்லை.",
         private:
           "பணம் செலுத்துவது உங்கள் பணத் தரவுடன் ஒருபோதும் இணைக்கப்படாது. இணைக்க எந்தக் கணக்கும் இல்லை.",
         sponsors:

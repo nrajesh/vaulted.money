@@ -398,14 +398,14 @@ The desktop app (macOS, Windows, Linux) is sold only through Polar, not the Mac 
 
 ### Product
 
-| Field        | Value                                                                                                                                    |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Name         | Vaulted Money Desktop                                                                                                                    |
-| Type         | One-time purchase, no subscription                                                                                                       |
-| Price        | €9.99, **tax included** (set on the price itself, not left to the organisation default)                                                  |
-| Delivery     | Polar file downloads: Mac (Apple Silicon and Intel), Windows, Linux                                                                      |
-| Licence keys | None. The app is MIT-licensed and free to build, and it never contacts a server, so there is no in-app licence check                     |
-| Updates      | Buyers download new versions from their Polar customer portal. There is no automatic in-app updater, because it would have to phone home |
+| Field        | Value                                                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name         | Vaulted Money Desktop                                                                                                                          |
+| Type         | One-time purchase, no subscription                                                                                                             |
+| Price        | €9.99, **tax included** (set on the price itself, not left to the organisation default)                                                        |
+| Delivery     | Polar file downloads: Mac (Apple Silicon and Intel), Windows, Linux                                                                            |
+| Licence keys | None. The app is MIT-licensed and free to build, and there is no Vaulted Money licensing or update server, so there is no in-app licence check |
+| Updates      | Buyers download new versions from their Polar customer portal. There is no automatic in-app updater, because it would have to phone home       |
 
 Description: One-time purchase of the Vaulted Money desktop app for macOS, Windows and Linux. Private and offline: your data stays on your computer.
 

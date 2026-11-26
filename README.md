@@ -229,7 +229,7 @@ Vaulted Money is free and open-source under the MIT license. If you find it usef
 | [Buy the desktop app on Polar](https://buy.polar.sh/polar_cl_E7s1fI8QHCxTneRzbXv2aSxcn0FpUuoBISI7M0cpuNB) (€9.99 one-time) | Active      |
 | [GitHub Sponsors](https://github.com/sponsors/nrajesh)                                                                     | Active      |
 
-**Which desktop file do I download?** One purchase includes macOS, Windows and Linux, and you get every file. Download new versions from your Polar customer portal (https://polar.sh/imaginest/portal) with the email you bought with. There is no automatic update check, because the app never contacts a server.
+**Which desktop file do I download?** One purchase includes macOS, Windows and Linux, and you get every file. Download new versions from your Polar customer portal (https://polar.sh/imaginest/portal) with the email you bought with. There is no automatic update check: the app has no Vaulted Money server to contact. It only reaches the internet for optional features you turn on, such as AI categorization with a provider you choose.
 
 - **Mac with an Apple chip (M1 or newer):** `mac-arm64.dmg`. **Mac with an Intel chip:** `mac-x64.dmg`.
 - **Windows:** `win-x64.exe` for most PCs, `win-arm64.exe` for Windows on Arm. Windows may warn on first launch: choose More info, then Run anyway.

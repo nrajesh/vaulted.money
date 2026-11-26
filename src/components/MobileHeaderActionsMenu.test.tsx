@@ -115,11 +115,39 @@ describe("theme choice in the phone menu", () => {
       </MemoryRouter>,
     );
     await userEvent.click(screen.getByRole("button", { name: "More actions" }));
-    expect(screen.getByRole("radio", { name: "Auto" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Light" })).not.toBeChecked();
-    await userEvent.click(screen.getByRole("radio", { name: "Light" }));
+    expect(screen.getByRole("menuitemradio", { name: "Auto" })).toBeChecked();
+    expect(
+      screen.getByRole("menuitemradio", { name: "Light" }),
+    ).not.toBeChecked();
+    await userEvent.click(screen.getByRole("menuitemradio", { name: "Light" }));
     expect(setTheme).toHaveBeenCalledWith("light");
-    await userEvent.click(screen.getByRole("radio", { name: "Auto" }));
+    await userEvent.click(screen.getByRole("menuitemradio", { name: "Auto" }));
     expect(setTheme).toHaveBeenCalledWith("system");
+  });
+
+  it("reaches and picks a theme with the keyboard", async () => {
+    const setTheme = vi.fn();
+    render(
+      <MemoryRouter>
+        <MobileHeaderActionsMenu
+          displayName="Home Budget"
+          logout={vi.fn()}
+          resolvedTheme="light"
+          theme="system"
+          setTheme={setTheme}
+          t={translate}
+        />
+      </MemoryRouter>,
+    );
+    screen.getByRole("button", { name: "More actions" }).focus();
+    await userEvent.keyboard("{Enter}");
+    const dark = screen.getByRole("menuitemradio", { name: "Dark" });
+    // Arrow keys walk the menu's items until the Dark choice has focus.
+    for (let step = 0; step < 15 && document.activeElement !== dark; step++) {
+      await userEvent.keyboard("{ArrowDown}");
+    }
+    expect(document.activeElement).toBe(dark);
+    await userEvent.keyboard("{Enter}");
+    expect(setTheme).toHaveBeenCalledWith("dark");
   });
 });

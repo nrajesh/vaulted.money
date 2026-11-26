@@ -64,6 +64,7 @@ import { useHelpDrawer } from "@/contexts/HelpDrawerContext";
 import { useDefaultAccountSelection } from "@/hooks/useDefaultAccountSelection";
 import { GlobalProgressDialog } from "@/components/dialogs/GlobalProgressDialog";
 import { useTranslation } from "react-i18next";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { LanguageSwitcher } from "@/components/language/LanguageSwitcher";
 import { FeedbackLauncher } from "@/components/feedback/FeedbackLauncher";
 import SiteFooter from "@/components/SiteFooter";
@@ -444,33 +445,33 @@ export const MobileHeaderActionsMenu = ({
           <p className="px-2 pb-2 text-[1.05rem] font-medium text-foreground">
             {t("nav.themeMenu.title", { defaultValue: "Theme" })}
           </p>
-          <div
-            role="radiogroup"
+          {/*
+           * Radix radio items, not plain buttons, so the choices join the
+           * menu's arrow-key navigation (Tab is trapped inside the menu).
+           * Choosing one keeps the menu open, like the buttons did.
+           */}
+          <DropdownMenuPrimitive.RadioGroup
+            value={theme ?? "system"}
+            onValueChange={setTheme}
             aria-label={t("nav.themeMenu.title", { defaultValue: "Theme" })}
             className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1"
           >
-            {themeChoices.map(({ value, label, Icon }) => {
-              const selected = (theme ?? "system") === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setTheme(value)}
-                  className={cn(
-                    "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    selected
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground hover:bg-background/60",
-                  )}
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+            {themeChoices.map(({ value, label, Icon }) => (
+              <DropdownMenuPrimitive.RadioItem
+                key={value}
+                value={value}
+                onSelect={(event) => event.preventDefault()}
+                className={cn(
+                  "flex min-h-11 cursor-default select-none flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring data-[highlighted]:ring-2 data-[highlighted]:ring-ring",
+                  "data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+                  "data-[state=unchecked]:text-foreground data-[state=unchecked]:hover:bg-background/60",
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {label}
+              </DropdownMenuPrimitive.RadioItem>
+            ))}
+          </DropdownMenuPrimitive.RadioGroup>
         </div>
         <DropdownMenuSeparator className="mx-1" />
         <DropdownMenuItem onClick={logout} className={actionItemClassName}>

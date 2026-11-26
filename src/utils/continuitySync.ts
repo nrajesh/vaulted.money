@@ -301,6 +301,15 @@ export const createContinuitySync = ({
   let conflict: PendingConflict | null = null;
   let queue: Promise<void> = Promise.resolve();
   let changeTimer: ReturnType<typeof setTimeout> | null = null;
+  /*
+   * Bumped whenever the folder changes, syncing stops or the last sync is
+   * forgotten. A run that started under an older generation is stale: it may
+   * still be waiting on the old folder's files, so it must not write, load or
+   * record a "last synced" fingerprint, or the next run against the new
+   * folder could mistake a different file for an earlier sync and pull it
+   * over this device's books instead of asking about a conflict.
+   */
+  let generation = 0;
   const listeners = new Set<() => void>();
 
   const setStatus = (next: SyncStatus) => {
@@ -320,8 +329,12 @@ export const createContinuitySync = ({
     setStatus({ state: "idle", lastSyncedAt });
   };
 
-  const load = async (data: unknown, hash: string) => {
-    if (!settings) return;
+  const load = async (
+    data: unknown,
+    hash: string,
+    isStale: () => boolean = () => false,
+  ) => {
+    if (!settings || isStale()) return;
     setStatus({ state: "syncing", loading: true });
     /*
      * Keep a safety copy before the file replaces this device's books, but
@@ -340,6 +353,7 @@ export const createContinuitySync = ({
       });
       if (!copy) settings.onSafetyCopyFailed?.();
     }
+    if (isStale()) return;
     await settings.dataProvider.importData(data);
     markSynced(hash);
     await settings.onLoaded();
@@ -359,12 +373,17 @@ export const createContinuitySync = ({
     if (!settings) return;
     // An open conflict waits for the person; never decide it behind their back.
     if (conflict) return;
+    const startedIn = generation;
+    const isStale = () => startedIn !== generation || !settings;
     setStatus({ state: "syncing", loading: false });
 
-    const decoded = await decodeSyncFile(await readFileText(), [
+    const fileText = await readFileText();
+    if (isStale() || !settings) return;
+    const decoded = await decodeSyncFile(fileText, [
       settings.passphrase,
       previousPassphrase,
     ]);
+    if (isStale() || !settings) return;
     // In each of these cases writing would destroy a file this device cannot
     // read, so stop and tell the person instead.
     if (decoded.kind === "locked") return setStatus({ state: "locked" });
@@ -379,6 +398,7 @@ export const createContinuitySync = ({
     const localHash = await fingerprintBooks(localEnvelope.data);
     const fileHash =
       decoded.kind === "ok" ? await fingerprintBooks(decoded.data) : null;
+    if (isStale() || !settings) return;
     const decision = decideSync({
       localHash,
       fileHash,
@@ -393,14 +413,16 @@ export const createContinuitySync = ({
       ) {
         await writeFile(SYNC_FILE_NAME, localEnvelope);
       }
+      if (isStale()) return;
       return markSynced(localHash);
     }
     if (decision === "push") {
       await writeFile(SYNC_FILE_NAME, localEnvelope);
+      if (isStale()) return;
       return markSynced(localHash);
     }
     if (decision === "pull" && decoded.kind === "ok") {
-      return load(decoded.data, fileHash as string);
+      return load(decoded.data, fileHash as string, isStale);
     }
     if (decoded.kind === "ok") {
       conflict = {
@@ -428,6 +450,7 @@ export const createContinuitySync = ({
       if (settings && next && settings.passphrase !== next.passphrase) {
         previousPassphrase = settings.passphrase;
       }
+      if (!next || !settings || settings.folder !== next.folder) generation++;
       settings = next;
       if (!next) {
         conflict = null;
@@ -486,6 +509,7 @@ export const createContinuitySync = ({
 
     /** Forget the last sync (a different folder was picked). */
     forget() {
+      generation++;
       memory.setLastHash(null);
       conflict = null;
       if (status.state !== "off") setStatus({ state: "idle", lastSyncedAt });
