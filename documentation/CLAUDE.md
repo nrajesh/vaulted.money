@@ -294,6 +294,13 @@ User-visible text goes through `t("key", { defaultValue })` and every key is add
 
 **Check Codex's review before merging into `pre-prod` or `main`.** The Codex bot (`chatgpt-codex-connector`) reviews pull requests. Before merging any PR into `pre-prod` or `main`, read its inline comments (`gh api --paginate repos/{owner}/{repo}/pulls/<n>/comments`, filtered to that bot across every page) and check each one against the code on the PR's head. Fix every finding that holds up, with a test where one fits, or reply on the thread saying why it doesn't apply. Do not merge with a finding unanswered. If a review is still running, wait up to 10 minutes, then merge if CI is green, and handle any findings that arrive later in a follow-up PR. If Codex has not started at all, comment `@codex review` to start it. Its comments on feature branches can be skipped when the same change will go through a reviewed PR into `pre-prod`. In the first review (11 PRs, #310 to #333) all ten distinct findings were real, so treat them as likely bugs, not noise.
 
+**Limit how much fixing a Codex review sets off.** Codex reviews when a PR opens, so every PR gets reviewed once. Fixing findings costs far more than the review, so keep it bounded:
+
+- **Fix by severity.** Fix P1 and P2 findings that change how the app behaves before merging. Reply on P3 findings and on ones only about documentation wording, add them to `documentation/BACKLOG.md`, and fix them later in a batch.
+- **One fix round per PR.** Fix the findings, push once, and merge when CI is green. Do not ask Codex to review the fix again (`@codex review`) unless the fix itself was risky. Findings that arrive later are answered and go to a follow-up batch, not another round on the same PR.
+- **Do not fix twice on promotion.** A `pre-prod` to `main` PR carries code Codex already reviewed in `pre-prod`. Act on findings there only if they are P1; otherwise reply and batch them.
+- **Run the full checks once per round,** not after every edit.
+
 **Promote `pre-prod` to `main` with a merge commit.** Use GitHub's "Create a merge commit" (`gh pr merge --merge`), never squash or rebase. A squash leaves `main` with commits `pre-prod` doesn't have, so the next promotion conflicts on every line both releases touched.
 
 ---
