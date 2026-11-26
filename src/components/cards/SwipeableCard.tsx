@@ -219,10 +219,11 @@ export function SwipeableCard({
           // WebKit would cancel the touch before the menu timer, or show its
           // selection bar over the menu. Fields and text marked
           // data-selectable-text get selection back (older WebKit will not
-          // edit an input inside a user-select:none parent). Only on touch
-          // screens: a mouse never swipes or long-presses, so on desktop the
-          // card's text (amounts, names) stays selectable and copyable.
-          "pointer-coarse:select-none [-webkit-touch-callout:none]",
+          // edit an input inside a user-select:none parent). Only on devices
+          // with a touch screen (any-pointer, so a laptop with a touch screen
+          // and a trackpad counts): a mouse-only desktop never swipes or
+          // long-presses, so there the card's text stays selectable.
+          "any-pointer-coarse:select-none [-webkit-touch-callout:none]",
           "[&_input]:select-text [&_textarea]:select-text [&_[data-selectable-text]]:select-text",
           !dragging &&
             !motionReduced &&
